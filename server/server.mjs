@@ -891,6 +891,119 @@ app.post('/api/csc/register-vle', (req, res) => {
   res.status(201).json({ success: true, registration });
 });
 
+// 16. DigiPay AEPS Engine (digipay.csccloud.in)
+app.post('/api/csc/digipay/transact', (req, res) => {
+  const { aadhaar, bankName, txnType = 'withdrawal', amount = 1000 } = req.body;
+  const cleanAadhaar = String(aadhaar || '').replace(/\s+/g, '');
+  
+  if (cleanAadhaar.length !== 12 || !validateVerhoeff(cleanAadhaar)) {
+    return res.status(400).json({ success: false, message: 'Invalid Aadhaar UID Verhoeff checksum digit' });
+  }
+
+  const rrn = 'NPCI' + Math.floor(100000000000 + Math.random() * 900000000000);
+  const authCode = 'AUTH' + Math.floor(100000 + Math.random() * 900000);
+  const commission = txnType === 'withdrawal' ? 15 : txnType === 'statement' ? 5 : 2;
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + commission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-DP-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `DigiPay AEPS ${txnType.toUpperCase()} Commission (${bankName})`,
+    amount: commission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:digipay_transaction', { rrn, txnType, amount, commission });
+
+  res.json({
+    success: true,
+    rrn,
+    authCode,
+    txnType,
+    amount: Number(amount),
+    bankName: bankName || 'State Bank of India',
+    vleCommission: commission,
+    vleNewBalance: db.vleProfile.walletBalance,
+    terminalId: db.vleProfile.digiPayTerminalId,
+    customerRemainingBalance: Math.floor(4500 + Math.random() * 25000),
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 17. Tele-Law Legal Aid Consultation (tele-law.in)
+app.post('/api/csc/telelaw/book', (req, res) => {
+  const { citizenName, phone, disputeType, advocateName, notes } = req.body;
+  if (!citizenName || !phone) {
+    return res.status(400).json({ success: false, message: 'Citizen Name and Phone are required' });
+  }
+
+  const caseId = 'TL-' + new Date().getFullYear() + '-' + Math.floor(1000 + Math.random() * 9000);
+  const consultation = {
+    caseId,
+    citizenName,
+    phone,
+    disputeType: disputeType || 'Land & Revenue Conflict',
+    advocateName: advocateName || 'Adv. R. C. Mishra (State Legal Services Authority)',
+    status: 'SCHEDULED',
+    scheduledTime: new Date(Date.now() + 3600000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    notes,
+    createdAt: new Date().toISOString()
+  };
+
+  const db = readDB();
+  if (!db.telelawCases) db.telelawCases = [];
+  db.telelawCases.unshift(consultation);
+  writeDB(db);
+
+  broadcastEvent('csc:telelaw_booked', consultation);
+  res.status(201).json({ success: true, consultation });
+});
+
+// 18. PMGDISHA Digital Literacy Candidate Certification (pmgdisha.in)
+app.post('/api/csc/pmgdisha/certify', (req, res) => {
+  const { candidateName, aadhaar, modulesCompleted = 5 } = req.body;
+  if (!candidateName) {
+    return res.status(400).json({ success: false, message: 'Candidate name is required' });
+  }
+
+  const certNumber = 'PMGD-' + new Date().getFullYear() + '-' + Math.floor(100000 + Math.random() * 900000);
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  const vleIncentive = 300; // Rs 300 per PMGDISHA certified rural citizen
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleIncentive).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-PMG-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `PMGDISHA VLE Training Incentive: Candidate ${candidateName}`,
+    amount: vleIncentive,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:pmgdisha_certified', { certNumber, candidateName, vleIncentive });
+
+  res.status(201).json({
+    success: true,
+    certificate: {
+      certificateNumber: certNumber,
+      candidateName,
+      grade: 'Grade A (Qualified)',
+      modulesCompleted,
+      vleIncentiveCredited: vleIncentive,
+      issuedAt: new Date().toISOString()
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

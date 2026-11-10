@@ -2759,6 +2759,11 @@
       "username": "245089123456",
       "clientId": "0f8ca686-5a31-46b8-bb51-d9834ba9fa9d",
       "createdAt": 1794322116054
+    },
+    "csc_code_l7jo8a6qmwatdyuf": {
+      "username": "245089123456",
+      "clientId": "0f8ca686-5a31-46b8-bb51-d9834ba9fa9d",
+      "createdAt": 1794322667177
     }
   },
   "vleProfile": {
@@ -2770,7 +2775,7 @@
     "district": "Patna",
     "state": "Bihar",
     "pincode": "800001",
-    "walletBalance": 2950,
+    "walletBalance": 4080,
     "digiPayTerminalId": "DP-PATNA-0912",
     "tecNumber": "TEC-2024-889123",
     "subOperators": [
@@ -2795,9 +2800,60 @@
           "PAN Card",
           "BBPS"
         ]
+      },
+      {
+        "id": "OP-03",
+        "name": "Vikash Aryan",
+        "phone": "9835001122",
+        "role": "Operator",
+        "permissions": [
+          "Banking",
+          "PAN Card",
+          "BBPS"
+        ]
       }
     ],
     "passbook": [
+      {
+        "id": "TXN-PMG-9220",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "PMGDISHA VLE Training Incentive: Candidate Priya Kumari",
+        "amount": 300,
+        "balance": 4080
+      },
+      {
+        "id": "TXN-DP-2347",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "DigiPay AEPS WITHDRAWAL Commission (State Bank of India)",
+        "amount": 15,
+        "balance": 3780
+      },
+      {
+        "id": "TXN-PB-2106",
+        "date": "2026-11-10",
+        "type": "CR",
+        "description": "Wallet Top-up via UPI",
+        "amount": 500,
+        "balance": 3765
+      },
+      {
+        "id": "TXN-PMG-6819",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "PMGDISHA VLE Training Incentive: Candidate Priya Kumari",
+        "amount": 300,
+        "balance": 3265
+      },
+      {
+        "id": "TXN-DP-4900",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "DigiPay AEPS WITHDRAWAL Commission (State Bank of India)",
+        "amount": 15,
+        "balance": 2965
+      },
       {
         "id": "TXN-PB-1482",
         "date": "2026-11-10",
@@ -2826,6 +2882,23 @@
   },
   "vleRegistrations": [
     {
+      "refNumber": "VLE-REG-2026-59081",
+      "tecNumber": "TEC-2024-90218",
+      "name": "Dr. Akul Dravin",
+      "mobile": "9876543210",
+      "email": "akul.dravin@example.com",
+      "state": "Bihar",
+      "district": "Patna",
+      "centerAddress": "Shop No. 12, Main Market, Danapur",
+      "coordinates": {
+        "latitude": 25.5941,
+        "longitude": 85.1376
+      },
+      "status": "SUBMITTED",
+      "stage": "Under District Manager Verification",
+      "submittedAt": "2026-11-10T14:57:47.252Z"
+    },
+    {
       "refNumber": "VLE-REG-2026-43315",
       "tecNumber": "TEC-2024-90218",
       "name": "Dr. Akul Dravin",
@@ -2841,6 +2914,28 @@
       "status": "SUBMITTED",
       "stage": "Under District Manager Verification",
       "submittedAt": "2026-11-10T14:48:36.147Z"
+    }
+  ],
+  "telelawCases": [
+    {
+      "caseId": "TL-2026-5740",
+      "citizenName": "Kameshwar Mahto",
+      "phone": "9835001122",
+      "disputeType": "Land & Agricultural Boundary Conflict",
+      "advocateName": "Adv. R. C. Mishra (State Legal Services Authority)",
+      "status": "SCHEDULED",
+      "scheduledTime": "09:27 PM",
+      "createdAt": "2026-11-10T14:57:47.286Z"
+    },
+    {
+      "caseId": "TL-2026-2898",
+      "citizenName": "Kameshwar Mahto",
+      "phone": "9835000000",
+      "disputeType": "Land Boundary",
+      "advocateName": "Adv. R. C. Mishra (State Legal Services Authority)",
+      "status": "SCHEDULED",
+      "scheduledTime": "09:22 PM",
+      "createdAt": "2026-11-10T14:52:30.368Z"
     }
   ]
 }

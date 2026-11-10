@@ -127,9 +127,60 @@ async function run() {
     return `Registration Token: ${res.registration.refNumber} | Stage: ${res.registration.stage}`;
   })) passed++;
 
-  // 7. Route Accessibility Verification
+  // 7. DigiPay AEPS Transaction (digipay.csccloud.in)
   total++;
-  if (await step('7. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('7. DigiPay AEPS Cash Withdrawal & Verhoeff Checksum (digipay.csccloud.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/digipay/transact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        aadhaar: '999999990019',
+        bankName: 'State Bank of India',
+        txnType: 'withdrawal',
+        amount: 2000
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.rrn) throw new Error(res.message || 'DigiPay transaction failed');
+    return `RRN: ${res.rrn} | Auth: ${res.authCode} | Bank: ${res.bankName} | VLE Surcharge: +₹${res.vleCommission} credited`;
+  })) passed++;
+
+  // 8. Tele-Law Legal Aid Video Consultation (tele-law.in)
+  total++;
+  if (await step('8. Tele-Law Legal Aid Video Consultation (tele-law.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/telelaw/book`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        citizenName: 'Kameshwar Mahto',
+        phone: '9835001122',
+        disputeType: 'Land & Agricultural Boundary Conflict'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.consultation) throw new Error('Tele-Law booking failed');
+    return `Case Token: ${res.consultation.caseId} | Advocate: "${res.consultation.advocateName}" | Status: ${res.consultation.status}`;
+  })) passed++;
+
+  // 9. PMGDISHA Candidate Exam & Certificate (pmgdisha.in)
+  total++;
+  if (await step('9. PMGDISHA Digital Literacy Candidate Certification (pmgdisha.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/pmgdisha/certify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        candidateName: 'Priya Kumari',
+        aadhaar: '999999990019'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.certificate) throw new Error('PMGDISHA certification failed');
+    return `Certificate No: ${res.certificate.certificateNumber} | Grade: ${res.certificate.grade} | VLE Incentive: +₹${res.certificate.vleIncentiveCredited}`;
+  })) passed++;
+
+  // 10. Route Accessibility Verification
+  total++;
+  if (await step('10. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,

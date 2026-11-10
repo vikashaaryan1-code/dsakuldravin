@@ -25,7 +25,12 @@ import {
   Landmark,
   BadgeCheck,
   Eye,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Fingerprint,
+  Scale,
+  Video,
+  GraduationCap,
+  Award
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Link, useNavigate } from 'react-router-dom';
@@ -43,9 +48,30 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // DigiPay AEPS State
+  const [aepsAadhaar, setAepsAadhaar] = useState('999999990019');
+  const [aepsBank, setAepsBank] = useState('State Bank of India (SBI)');
+  const [aepsTxnType, setAepsTxnType] = useState<'withdrawal' | 'balance' | 'statement'>('withdrawal');
+  const [aepsAmount, setAepsAmount] = useState<number>(2000);
+  const [aepsScanning, setAepsScanning] = useState(false);
+  const [aepsReceipt, setAepsReceipt] = useState<any | null>(null);
+
+  // Tele-Law State
+  const [telelawCitizen, setTelelawCitizen] = useState('Kameshwar Mahto');
+  const [telelawPhone, setTelelawPhone] = useState('9835001122');
+  const [telelawCategory, setTelelawCategory] = useState('Land & Agricultural Boundary Conflict');
+  const [telelawScheduled, setTelelawScheduled] = useState<any | null>(null);
+  const [telelawBooking, setTelelawBooking] = useState(false);
+
+  // PMGDISHA State
+  const [pmgCandidate, setPmgCandidate] = useState('Priya Kumari');
+  const [pmgAadhaar, setPmgAadhaar] = useState('999999990019');
+  const [pmgCertified, setPmgCertified] = useState<any | null>(null);
+  const [pmgProcessing, setPmgProcessing] = useState(false);
 
   // Top-Up Modal State
   const [isTopupOpen, setIsTopupOpen] = useState(false);
@@ -180,6 +206,108 @@ export const DigitalSevaPortal: React.FC = () => {
     setNewOpPhone('');
   };
 
+  // Handle DigiPay AEPS Transaction
+  const handleDigiPayTransact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aepsAadhaar) return;
+    setAepsScanning(true);
+    setAepsReceipt(null);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/csc/digipay/transact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          aadhaar: aepsAadhaar,
+          bankName: aepsBank,
+          txnType: aepsTxnType,
+          amount: aepsAmount
+        })
+      }).then(r => r.json());
+
+      if (!res.success) {
+        showToast('AEPS Verification Failed', res.message || 'Biometric or UID verification error', 'error');
+        return;
+      }
+
+      setAepsReceipt(res);
+      setWalletBalance(res.vleNewBalance);
+      setPassbook(prev => [
+        {
+          id: 'TXN-DP-' + Math.floor(1000 + Math.random() * 9000),
+          date: new Date().toISOString().split('T')[0],
+          type: 'CR',
+          desc: `DigiPay AEPS ${aepsTxnType.toUpperCase()} Commission (${aepsBank})`,
+          amount: res.vleCommission,
+          balance: res.vleNewBalance
+        },
+        ...prev
+      ]);
+
+      showToast('AEPS Transaction Approved', `RRN: ${res.rrn}. VLE Surcharge +₹${res.vleCommission} credited to wallet.`, 'success');
+      logAudit('DigiPay AEPS Cashout', `Processed ${aepsTxnType} for ${aepsAadhaar} at ${aepsBank}. RRN: ${res.rrn}`);
+      confetti({ particleCount: 75, spread: 60 });
+    } finally {
+      setAepsScanning(false);
+    }
+  };
+
+  // Handle Tele-Law Consultation Booking
+  const handleTelelawBook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!telelawCitizen || !telelawPhone) return;
+    setTelelawBooking(true);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/csc/telelaw/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          citizenName: telelawCitizen,
+          phone: telelawPhone,
+          disputeType: telelawCategory
+        })
+      }).then(r => r.json());
+
+      if (res.success) {
+        setTelelawScheduled(res.consultation);
+        showToast('Tele-Law Advocate Booked', `Case ID: ${res.consultation.caseId}. High Court panel advocate scheduled.`, 'success');
+        logAudit('Tele-Law Case Booked', `Citizen: ${telelawCitizen}, Case: ${res.consultation.caseId}`);
+        confetti({ particleCount: 60, spread: 50 });
+      }
+    } finally {
+      setTelelawBooking(false);
+    }
+  };
+
+  // Handle PMGDISHA Certification
+  const handlePmgdishaCertify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pmgCandidate) return;
+    setPmgProcessing(true);
+
+    try {
+      const res = await fetch('http://localhost:5000/api/csc/pmgdisha/certify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          candidateName: pmgCandidate,
+          aadhaar: pmgAadhaar
+        })
+      }).then(r => r.json());
+
+      if (res.success) {
+        setPmgCertified(res.certificate);
+        setWalletBalance((prev: number) => Number((prev + res.certificate.vleIncentiveCredited).toFixed(2)));
+        showToast('PMGDISHA Certified', `Certificate: ${res.certificate.certificateNumber}. VLE Incentive +₹${res.certificate.vleIncentiveCredited} credited!`, 'success');
+        logAudit('PMGDISHA Candidate Exam', `Candidate: ${pmgCandidate}, Cert: ${res.certificate.certificateNumber}`);
+        confetti({ particleCount: 100, spread: 70 });
+      }
+    } finally {
+      setPmgProcessing(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -294,6 +422,9 @@ export const DigitalSevaPortal: React.FC = () => {
           {[
             { id: 'dashboard', label: 'Dashboard' },
             { id: 'services', label: 'Services Catalogue (64+)' },
+            { id: 'digipay', label: 'DigiPay (AEPS & Micro-ATM)' },
+            { id: 'telelaw', label: 'Tele-Law (Legal Aid)' },
+            { id: 'pmgdisha', label: 'PMGDISHA (Training & Cert)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -724,6 +855,469 @@ export const DigitalSevaPortal: React.FC = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: DIGIPAY AEPS & MICRO-ATM (digipay.csccloud.in) */}
+        {activeTab === 'digipay' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Terminal Form */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
+                <div style={{ background: '#0F172A', color: '#34D399', padding: '0.5rem', borderRadius: '8px' }}>
+                  <Fingerprint size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    DigiPay AEPS & Micro-ATM
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                    Terminal: <strong>DP-PATNA-0912</strong> • Bank Switch: NPCI Host 2.1
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleDigiPayTransact}>
+                {/* Transaction Type */}
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.4rem' }}>
+                    Transaction Mode
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                    {[
+                      { id: 'withdrawal', label: 'Cash Out' },
+                      { id: 'balance', label: 'Balance' },
+                      { id: 'statement', label: 'Mini Stmt' }
+                    ].map(t => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setAepsTxnType(t.id as any)}
+                        style={{
+                          background: aepsTxnType === t.id ? '#16A34A' : '#F8FAFC',
+                          color: aepsTxnType === t.id ? '#FFFFFF' : '#334155',
+                          border: aepsTxnType === t.id ? '1px solid #16A34A' : '1px solid #CBD5E1',
+                          padding: '0.5rem',
+                          borderRadius: '8px',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Bank Name */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                    Citizen Bank
+                  </label>
+                  <select
+                    value={aepsBank}
+                    onChange={(e) => setAepsBank(e.target.value)}
+                    style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                  >
+                    <option value="State Bank of India (SBI)">State Bank of India (SBI)</option>
+                    <option value="Punjab National Bank (PNB)">Punjab National Bank (PNB)</option>
+                    <option value="Bank of Baroda (BoB)">Bank of Baroda (BoB)</option>
+                    <option value="HDFC Bank">HDFC Bank</option>
+                    <option value="ICICI Bank">ICICI Bank</option>
+                    <option value="Canara Bank">Canara Bank</option>
+                  </select>
+                </div>
+
+                {/* Aadhaar UID */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                    Citizen 12-Digit Aadhaar UID *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={12}
+                    value={aepsAadhaar}
+                    onChange={(e) => setAepsAadhaar(e.target.value)}
+                    placeholder="Enter Aadhaar UID"
+                    style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.95rem', letterSpacing: '0.1em', fontFamily: 'monospace' }}
+                  />
+                  <div style={{ fontSize: '0.7rem', color: '#16A34A', marginTop: '0.2rem' }}>
+                    ✓ Verhoeff D5 Checksum validated
+                  </div>
+                </div>
+
+                {/* Withdrawal Amount (if withdrawal) */}
+                {aepsTxnType === 'withdrawal' && (
+                  <div style={{ marginBottom: '1.25rem' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                      Withdrawal Amount (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={aepsAmount}
+                      onChange={(e) => setAepsAmount(Number(e.target.value))}
+                      style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '1.1rem', fontWeight: 800 }}
+                    />
+                    <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.4rem' }}>
+                      {[500, 1000, 2000, 5000].map(amt => (
+                        <button
+                          key={amt}
+                          type="button"
+                          onClick={() => setAepsAmount(amt)}
+                          style={{
+                            background: '#F1F5F9',
+                            border: '1px solid #CBD5E1',
+                            padding: '0.25rem 0.5rem',
+                            borderRadius: '4px',
+                            fontSize: '0.72rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          ₹{amt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={aepsScanning}
+                  style={{
+                    width: '100%',
+                    background: '#0F172A',
+                    color: '#34D399',
+                    border: 'none',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <Fingerprint size={20} />
+                  {aepsScanning ? 'Scanning Fingerprint on RD Service...' : 'Capture Biometric & Authorize ➔'}
+                </button>
+              </form>
+            </div>
+
+            {/* Receipt Preview */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                  AEPS Transaction Receipt
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                  Print or dispatch thermal receipt to citizen
+                </p>
+
+                {aepsReceipt ? (
+                  <div style={{ background: '#F8FAFC', padding: '1.25rem', borderRadius: '12px', border: '1.5px dashed #CBD5E1', fontFamily: 'monospace', fontSize: '0.82rem', lineHeight: 1.7 }}>
+                    <div style={{ textAlign: 'center', fontWeight: 900, fontSize: '0.95rem', marginBottom: '0.5rem', borderBottom: '1px dashed #CBD5E1', paddingBottom: '0.5rem' }}>
+                      DIGIPAY AEPS CASH RECEIPT
+                    </div>
+                    <div><strong>RRN:</strong> {aepsReceipt.rrn}</div>
+                    <div><strong>Auth Code:</strong> {aepsReceipt.authCode}</div>
+                    <div><strong>Bank:</strong> {aepsReceipt.bankName}</div>
+                    <div><strong>Aadhaar:</strong> XXXXXXXX{aepsAadhaar.slice(-4)}</div>
+                    <div><strong>Transaction:</strong> {aepsReceipt.txnType.toUpperCase()}</div>
+                    <div><strong>Amount:</strong> ₹{aepsReceipt.amount.toFixed(2)}</div>
+                    <div><strong>Remaining Balance:</strong> ₹{aepsReceipt.customerRemainingBalance.toFixed(2)}</div>
+                    <div><strong>Status:</strong> <span style={{ color: '#16A34A', fontWeight: 800 }}>SUCCESS (APPROVED)</span></div>
+                    <div style={{ borderTop: '1px dashed #CBD5E1', marginTop: '0.5rem', paddingTop: '0.5rem', color: '#16A34A', fontWeight: 700 }}>
+                      VLE Surcharge: +₹{aepsReceipt.vleCommission}.00 credited to wallet
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94A3B8' }}>
+                    <Fingerprint size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                      Awaiting biometric authorization. Receipts will generate here after bank approval.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {aepsReceipt && (
+                <button
+                  onClick={() => alert(`Printing DigiPay thermal slip for RRN: ${aepsReceipt.rrn}...`)}
+                  style={{
+                    background: '#16A34A',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.65rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
+                    marginTop: '1rem'
+                  }}
+                >
+                  <Printer size={16} /> Print Customer Thermal Slip
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: TELE-LAW (tele-law.in) */}
+        {activeTab === 'telelaw' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
+                <div style={{ background: '#1E3A8A', color: '#93C5FD', padding: '0.5rem', borderRadius: '8px' }}>
+                  <Scale size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    Tele-Law: Free Legal Advice
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                    Ministry of Law & Justice • High Court Panel Advocates
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handleTelelawBook}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                    Citizen Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={telelawCitizen}
+                    onChange={(e) => setTelelawCitizen(e.target.value)}
+                    style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                    Citizen Mobile *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={telelawPhone}
+                    onChange={(e) => setTelelawPhone(e.target.value)}
+                    style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                    Dispute / Legal Matter Category
+                  </label>
+                  <select
+                    value={telelawCategory}
+                    onChange={(e) => setTelelawCategory(e.target.value)}
+                    style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                  >
+                    <option value="Land & Agricultural Boundary Conflict">Land & Agricultural Boundary Conflict</option>
+                    <option value="Family / Domestic Matrimonial Dispute">Family / Domestic Matrimonial Dispute</option>
+                    <option value="Women Protection & Dowry Harassment">Women Protection & Dowry Harassment</option>
+                    <option value="Consumer Fraud & Debt Recovery">Consumer Fraud & Debt Recovery</option>
+                    <option value="Police FIR Registration Assistance">Police FIR Registration Assistance</option>
+                  </select>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={telelawBooking}
+                  style={{
+                    width: '100%',
+                    background: '#1E3A8A',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <Video size={18} />
+                  {telelawBooking ? 'Scheduling Consultation...' : 'Schedule Video Consultation (Free) ➔'}
+                </button>
+              </form>
+            </div>
+
+            {/* Video Room Simulator */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                Tele-Law Consultation Room
+              </h3>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                Encrypted WebRTC video bridge with High Court legal cell
+              </p>
+
+              {telelawScheduled ? (
+                <div style={{ background: '#F0F9FF', border: '1.5px solid #BAE6FD', padding: '1.25rem', borderRadius: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 800, color: '#0369A1' }}>Case ID: {telelawScheduled.caseId}</span>
+                    <span style={{ background: '#DCFCE7', color: '#166534', padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700 }}>
+                      CONNECTED
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: '#334155', lineHeight: 1.6 }}>
+                    <div><strong>Citizen:</strong> {telelawScheduled.citizenName}</div>
+                    <div><strong>Advocate:</strong> {telelawScheduled.advocateName}</div>
+                    <div><strong>Dispute:</strong> {telelawScheduled.disputeType}</div>
+                    <div><strong>Slot:</strong> Today at {telelawScheduled.scheduledTime}</div>
+                  </div>
+
+                  <div style={{ background: '#0F172A', color: '#FFFFFF', padding: '0.75rem', borderRadius: '8px', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22C55E' }} />
+                      <span style={{ fontSize: '0.75rem' }}>Live Secure Video Audio Link Active</span>
+                    </div>
+                    <button
+                      onClick={() => alert(`Joining High Court Panel Video Session for Case ${telelawScheduled.caseId}...`)}
+                      style={{ background: '#16A34A', color: '#FFFFFF', border: 'none', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      Launch Call
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94A3B8' }}>
+                  <Video size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                  <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                    No active case session. Book a consultation on the left to initiate lawyer dispatch.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: PMGDISHA (pmgdisha.in) */}
+        {activeTab === 'pmgdisha' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
+                <div style={{ background: '#7C3AED', color: '#DDD6FE', padding: '0.5rem', borderRadius: '8px' }}>
+                  <GraduationCap size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    PMGDISHA Candidate Exam & Certificate
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                    Pradhan Mantri Gramin Digital Saksharta Abhiyan • ₹300 VLE Incentive
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handlePmgdishaCertify}>
+                <div style={{ marginBottom: '1rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                    Candidate Name (Rural Citizen) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={pmgCandidate}
+                    onChange={(e) => setPmgCandidate(e.target.value)}
+                    style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
+                    Candidate Aadhaar UID *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={12}
+                    value={pmgAadhaar}
+                    onChange={(e) => setPmgAadhaar(e.target.value)}
+                    style={{ width: '100%', padding: '0.6rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem', fontFamily: 'monospace' }}
+                  />
+                </div>
+
+                <div style={{ background: '#F8FAFC', padding: '0.85rem', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '1.25rem', fontSize: '0.78rem', color: '#475569' }}>
+                  <div>✓ 20 Hours Course Completed (PC, Internet, UPI, DigiLocker)</div>
+                  <div>✓ Biometric Facial & Iris Attendance Verified</div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={pmgProcessing}
+                  style={{
+                    width: '100%',
+                    background: '#7C3AED',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  <Award size={18} />
+                  {pmgProcessing ? 'Submitting Online Exam...' : 'Conduct Online Exam & Issue Certificate ➔'}
+                </button>
+              </form>
+            </div>
+
+            {/* Certificate Preview */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                Government Digital Literacy Certificate
+              </h3>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                Official Ministry of Electronics & IT certified candidate
+              </p>
+
+              {pmgCertified ? (
+                <div style={{ background: '#FAF5FF', border: '2px solid #E9D5FF', padding: '1.5rem', borderRadius: '14px', textAlign: 'center' }}>
+                  <Award size={48} color="#7C3AED" style={{ margin: '0 auto 0.75rem' }} />
+                  <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#7C3AED', textTransform: 'uppercase' }}>
+                    Government of India • PMGDISHA
+                  </div>
+                  <h4 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0F172A', margin: '0.4rem 0' }}>
+                    {pmgCertified.candidateName}
+                  </h4>
+                  <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '0 0 0.75rem' }}>
+                    Has successfully completed the 20-Hour National Digital Literacy Curriculum and qualified with <strong>{pmgCertified.grade}</strong>.
+                  </p>
+                  <div style={{ fontSize: '0.8rem', fontFamily: 'monospace', fontWeight: 700, color: '#0F172A', background: '#FFFFFF', padding: '0.4rem 0.8rem', borderRadius: '6px', border: '1px solid #E2E8F0', display: 'inline-block' }}>
+                    Certificate: {pmgCertified.certificateNumber}
+                  </div>
+                  <div style={{ marginTop: '1rem', color: '#16A34A', fontWeight: 700, fontSize: '0.85rem' }}>
+                    ✓ ₹{pmgCertified.vleIncentiveCredited}.00 Training Incentive credited to VLE Wallet
+                  </div>
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#94A3B8' }}>
+                  <GraduationCap size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                  <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                    Conduct examination to generate verifiable candidate certificate.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         )}
