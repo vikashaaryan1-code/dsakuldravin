@@ -1761,6 +1761,74 @@ app.post('/api/csc/estore/order', (req, res) => {
   });
 });
 
+// 31. CSC Class 3 Digital Signature Certificate & e-Sign (esigns.csccloud.in / cca.gov.in)
+app.post('/api/csc/dsc/issue', (req, res) => {
+  const {
+    applicantName = 'Vikramaditya Sharma',
+    aadhaar = '999999990019',
+    mobile = '9835012345',
+    dscType = 'Class 3 Signing & Encryption (2-Year Validity)',
+    usbTokenType = 'WatchData ProxKey Plus (FIPS 140-2 Level 3 Certified)',
+    purpose = 'GeM e-Procurement, MCA21, GST & Income Tax e-Filing'
+  } = req.body;
+
+  const cleanAadhaar = String(aadhaar || '').replace(/\s+/g, '');
+  if (!applicantName || cleanAadhaar.length !== 12) {
+    return res.status(400).json({ success: false, message: 'Valid applicant name and 12-digit Aadhaar are required' });
+  }
+
+  if (!validateVerhoeff(cleanAadhaar)) {
+    return res.status(400).json({ success: false, message: 'Invalid Aadhaar checksum (Verhoeff validation failed)' });
+  }
+
+  const certSerialNumber = 'DSC-2026-' + Array.from({ length: 4 }, () => Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase()).join('-');
+  const usbTokenSerial = 'TOKEN-' + Math.floor(10000000 + Math.random() * 90000000);
+  const now = new Date();
+  const validFrom = now.toISOString().split('T')[0];
+  const validUntil = new Date(now.getFullYear() + 2, now.getMonth(), now.getDate()).toISOString().split('T')[0];
+  const vleCommission = 250; // Rs 250 VLE commission for Class 3 DSC issuance
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-DSC-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `Class 3 DSC Issuance Comm: ${applicantName} (${certSerialNumber})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:dsc_issued', { certSerialNumber, applicantName, dscType, usbTokenSerial, vleCommission });
+
+  res.status(201).json({
+    success: true,
+    dsc: {
+      certSerialNumber,
+      usbTokenSerial,
+      applicantName,
+      maskedAadhaar: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
+      mobile,
+      dscType,
+      usbTokenType,
+      purpose,
+      caAuthority: 'CSC e-Gov CA / e-Mudhra Limited (Controller of Certifying Authorities - CCA)',
+      validFrom,
+      validUntil,
+      algorithm: 'SHA-256 with RSA 2048-bit Asymmetric Cryptography',
+      status: 'ISSUED & PROGRAMMED TO CRYPTOGRAPHIC USB TOKEN',
+      issuedAt: new Date().toISOString(),
+      qrPayload: `CCA|DSC:${certSerialNumber}|NAME:${applicantName}|TYPE:${dscType}|TOKEN:${usbTokenSerial}|VALID:${validUntil}`,
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

@@ -52,9 +52,19 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'pmfby' | 'bbps' | 'ucl' | 'estore' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'pmfby' | 'bbps' | 'ucl' | 'estore' | 'dsc' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // Digital Signature Certificate (DSC) State
+  const [dscApplicant, setDscApplicant] = useState('Vikramaditya Sharma');
+  const [dscAadhaar, setDscAadhaar] = useState('999999990019');
+  const [dscMobile, setDscMobile] = useState('9835012345');
+  const [dscType, setDscType] = useState('Class 3 Signing & Encryption (2-Year Validity)');
+  const [dscUsb, setDscUsb] = useState('WatchData ProxKey Plus (FIPS 140-2 Level 3 Certified)');
+  const [dscPurpose, setDscPurpose] = useState('GeM e-Procurement, MCA21, GST & Income Tax e-Filing');
+  const [dscReceipt, setDscReceipt] = useState<any | null>(null);
+  const [dscLoading, setDscLoading] = useState(false);
 
   // Grameen e-Store State
   const [estoreCustomer, setEstoreCustomer] = useState('Brijesh Sharma');
@@ -837,6 +847,40 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  const handleIssueDSC = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDscLoading(true);
+
+    try {
+      const res = await fetch('/api/csc/dsc/issue', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicantName: dscApplicant,
+          aadhaar: dscAadhaar,
+          mobile: dscMobile,
+          dscType: dscType,
+          usbTokenType: dscUsb,
+          purpose: dscPurpose
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.dsc) {
+        setDscReceipt(res.dsc);
+        setWalletBalance(res.dsc.vleNewBalance);
+        showToast('Class 3 DSC Issued & Token Initialized', `Serial: ${res.dsc.certSerialNumber}. VLE Comm +₹${res.dsc.vleCommissionCredited} credited!`, 'success');
+        logAudit('Class 3 DSC Issuance', `Applicant: ${dscApplicant}, Serial: ${res.dsc.certSerialNumber}, Token: ${res.dsc.usbTokenSerial}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('DSC Issuance Failed', res.message || 'Unable to issue digital signature certificate', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setDscLoading(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -965,6 +1009,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'bbps', label: 'BBPS (Utility Bills)' },
             { id: 'ucl', label: 'Aadhaar UCL (Update Client Lite)' },
             { id: 'estore', label: 'Grameen e-Store (Rural Commerce)' },
+            { id: 'dsc', label: 'Digital Signature (Class 3 DSC)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -5268,6 +5313,338 @@ export const DigitalSevaPortal: React.FC = () => {
                   </h4>
                   <p style={{ fontSize: '0.8rem', maxWidth: '320px', margin: '0 auto', lineHeight: 1.5 }}>
                     Select farm inputs, solar products or electronics, enter customer panchayat address, and book order to credit ₹120 VLE fulfillment commission.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: CLASS 3 DIGITAL SIGNATURE CERTIFICATE (DSC) */}
+        {activeTab === 'dsc' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '2rem' }}>
+            {/* DSC Application Form Column */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '0.85rem' }}>
+                <div style={{ width: '42px', height: '42px', background: '#EDE9FE', color: '#7C3AED', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <BadgeCheck size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    Class 3 Digital Signature (DSC)
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
+                    CCA Licensed Certifying Authority • Cryptographic USB Token • VLE Commission: <strong style={{ color: '#16A34A' }}>+₹250.00 / Token</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Fast-Track Demo Button */}
+              <div style={{ background: '#F8FAFC', border: '1px dashed #CBD5E1', borderRadius: '8px', padding: '0.65rem 0.85rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.78rem', color: '#475569' }}>
+                  🔐 Quick Test: Fill GeM & MCA21 Tender Bidder Data
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDscApplicant('Vikramaditya Sharma');
+                    setDscAadhaar('999999990019');
+                    setDscMobile('9835012345');
+                    setDscType('Class 3 Signing & Encryption (2-Year Validity)');
+                    setDscUsb('WatchData ProxKey Plus (FIPS 140-2 Level 3 Certified)');
+                    setDscPurpose('GeM e-Procurement, MCA21, GST & Income Tax e-Filing');
+                  }}
+                  style={{
+                    background: '#7C3AED',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '0.35rem 0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Fill Verified Demo
+                </button>
+              </div>
+
+              <form onSubmit={handleIssueDSC} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                    Digital Certificate Class & Validity (प्रमाणपत्र प्रकार) *
+                  </label>
+                  <select
+                    value={dscType}
+                    onChange={e => setDscType(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                  >
+                    <option value="Class 3 Signing & Encryption (2-Year Validity)">Class 3 Combo (Signing + Encryption) - 2 Years</option>
+                    <option value="Class 3 Signing Only (2-Year Validity)">Class 3 Signing Only - 2 Years</option>
+                    <option value="Class 3 Organization / Corporate (2-Year Validity)">Class 3 Organization / Company Director - 2 Years</option>
+                    <option value="DGFT Foreign Trade Digital Signature (2-Year Validity)">DGFT IEC Import-Export Digital Signature - 2 Years</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Applicant Full Name (आवेदक का नाम) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={dscApplicant}
+                      onChange={e => setDscApplicant(e.target.value)}
+                      placeholder="e.g. Vikramaditya Sharma"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      12-Digit Aadhaar (Verhoeff Checked) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={12}
+                      value={dscAadhaar}
+                      onChange={e => setDscAadhaar(e.target.value)}
+                      placeholder="999999990019"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem', fontFamily: 'monospace' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Mobile Number (OTP Verification) *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={dscMobile}
+                      onChange={e => setDscMobile(e.target.value)}
+                      placeholder="9835012345"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Cryptographic FIPS USB Token *
+                    </label>
+                    <select
+                      value={dscUsb}
+                      onChange={e => setDscUsb(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    >
+                      <option value="WatchData ProxKey Plus (FIPS 140-2 Level 3 Certified)">WatchData ProxKey Plus (FIPS 140-2 Level 3)</option>
+                      <option value="ePass2003Auto Cryptographic Token">ePass2003Auto Cryptographic Token</option>
+                      <option value="mToken CryptoID USB Dongle">mToken CryptoID USB Dongle</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                    Regulatory Purpose / Statutory Usage *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={dscPurpose}
+                    onChange={e => setDscPurpose(e.target.value)}
+                    placeholder="e.g. GeM e-Procurement, MCA21, GST & Income Tax e-Filing"
+                    style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                {/* Cryptographic Standards Box */}
+                <div style={{ background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: '10px', padding: '0.75rem 1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#5B21B6' }}>
+                      🛡️ CCA Cryptographic Assurance Specifications
+                    </span>
+                    <span style={{ background: '#DCFCE7', color: '#16A34A', fontSize: '0.68rem', fontWeight: 800, padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                      COMPLIANT
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#6D28D9', lineHeight: 1.4 }}>
+                    • Asymmetric Key: <strong>RSA 2048-bit with SHA-256 Digest</strong><br />
+                    • Statutory Recognition: <strong>Information Technology Act, 2000 Section 35</strong><br />
+                    • Licensed Root CA: <strong>Controller of Certifying Authorities (CCA, India)</strong>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={dscLoading}
+                  style={{
+                    background: '#7C3AED',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.85rem',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.92rem',
+                    cursor: dscLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    marginTop: '0.5rem'
+                  }}
+                >
+                  {dscLoading ? <RefreshCw className="animate-spin" size={18} /> : <BadgeCheck size={18} />}
+                  <span>{dscLoading ? 'Generating Keys & Initializing Token...' : 'Issue Class 3 DSC & Program Token (+₹250 Comm)'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Official DSC Handover & Certificate Acknowledgement Column */}
+            <div>
+              {dscReceipt ? (
+                <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                  <div style={{ border: '2px solid #7C3AED', borderRadius: '12px', padding: '1.25rem', background: '#F8FAFC' }}>
+                    {/* Header */}
+                    <div style={{ textAlign: 'center', borderBottom: '2px solid #E2E8F0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <div style={{ width: '28px', height: '28px', background: '#7C3AED', color: '#FFF', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                          D
+                        </div>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0F172A', letterSpacing: '0.04em' }}>
+                          CSC CLASS 3 DIGITAL SIGNATURE CERTIFICATE
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                        Licensed by Controller of Certifying Authorities (CCA) • Ministry of Electronics & IT
+                      </div>
+                      <div style={{ display: 'inline-block', background: '#DCFCE7', color: '#16A34A', fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '20px', marginTop: '0.35rem' }}>
+                        ✓ {dscReceipt.status}
+                      </div>
+                    </div>
+
+                    {/* Certificate & Token Serial Banner */}
+                    <div style={{ background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: '8px', padding: '0.75rem', textAlign: 'center', marginBottom: '1rem' }}>
+                      <div style={{ fontSize: '0.72rem', color: '#5B21B6', fontWeight: 700, textTransform: 'uppercase' }}>
+                        X.509 Certificate Serial Number
+                      </div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#4C1D95', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
+                        {dscReceipt.certSerialNumber}
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: '#6D28D9', marginTop: '0.15rem' }}>
+                        USB Hardware Serial: <strong>{dscReceipt.usbTokenSerial}</strong> • Algorithm: <strong>RSA 2048-bit</strong>
+                      </div>
+                    </div>
+
+                    {/* Details Table */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', fontSize: '0.78rem', marginBottom: '1rem' }}>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Certificate Holder:</div>
+                        <div style={{ fontWeight: 800, color: '#0F172A' }}>{dscReceipt.applicantName}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Masked Aadhaar:</div>
+                        <div style={{ fontWeight: 600, color: '#334155', fontFamily: 'monospace' }}>{dscReceipt.maskedAadhaar}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Certificate Type:</div>
+                        <div style={{ fontWeight: 700, color: '#7C3AED' }}>{dscReceipt.dscType}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Crypto Token Model:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>{dscReceipt.usbTokenType}</div>
+                      </div>
+                      <div style={{ gridColumn: 'span 2' }}>
+                        <div style={{ color: '#64748B' }}>Authorized Purpose:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>{dscReceipt.purpose}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Issuance Date:</div>
+                        <div style={{ fontWeight: 600, color: '#16A34A' }}>{dscReceipt.validFrom}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Expiry Date:</div>
+                        <div style={{ fontWeight: 700, color: '#2563EB' }}>{dscReceipt.validUntil} (2 Yrs)</div>
+                      </div>
+                    </div>
+
+                    {/* CA Authority Box */}
+                    <div style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.78rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span style={{ color: '#64748B' }}>Certifying Authority:</span>
+                        <strong style={{ color: '#0F172A' }}>{dscReceipt.caAuthority}</strong>
+                      </div>
+                      <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '0.35rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 800, color: '#0F172A' }}>Token Status:</span>
+                        <strong style={{ color: '#16A34A' }}>ACTIVATED & READY FOR GEM / MCA21</strong>
+                      </div>
+                    </div>
+
+                    {/* QR Code and Footer */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #E2E8F0', paddingTop: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <QrCode size={38} color="#7C3AED" />
+                        <div style={{ fontSize: '0.68rem', color: '#64748B' }}>
+                          Scan to verify on cca.gov.in<br />
+                          VLE Commission: +₹{dscReceipt.vleCommissionCredited} Credited
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: '0.68rem', color: '#64748B' }}>
+                        Kendra: Akul Dravin Digital Seva Kendra<br />
+                        Date: {new Date().toLocaleDateString('en-IN')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
+                    <button
+                      onClick={() => window.print()}
+                      style={{
+                        background: '#7C3AED',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '0.65rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        fontSize: '0.82rem'
+                      }}
+                    >
+                      <Printer size={15} />
+                      <span>Print Token Handover Slip</span>
+                    </button>
+                    <button
+                      onClick={() => alert(`Downloading DSC Certificate for ${dscReceipt.applicantName} (Serial: ${dscReceipt.certSerialNumber})...`)}
+                      style={{
+                        background: '#F1F5F9',
+                        color: '#334155',
+                        border: '1px solid #CBD5E1',
+                        padding: '0.65rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontSize: '0.82rem'
+                      }}
+                    >
+                      Download PDF
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: '#FFFFFF', padding: '2.5rem 1.5rem', borderRadius: '16px', border: '1px dashed #CBD5E1', textAlign: 'center', color: '#94A3B8' }}>
+                  <BadgeCheck size={48} style={{ margin: '0 auto 1rem', opacity: 0.4, color: '#7C3AED' }} />
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '0.35rem' }}>
+                    No Certificate Issued Yet
+                  </h4>
+                  <p style={{ fontSize: '0.8rem', maxWidth: '320px', margin: '0 auto', lineHeight: 1.5 }}>
+                    Enter contractor / director details, choose FIPS crypto token, and issue Class 3 DSC to program the cryptographic dongle and credit ₹250 VLE commission.
                   </p>
                 </div>
               )}

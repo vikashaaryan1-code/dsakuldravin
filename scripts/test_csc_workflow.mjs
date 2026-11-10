@@ -411,9 +411,29 @@ async function run() {
     return `Order: ${res.order.orderId} | Rider: ${res.order.deliveryAgent} | Product: ${res.order.productName} | VLE Comm: +₹${res.order.vleCommissionCredited}`;
   })) passed++;
 
-  // 21. Route Accessibility Verification
+  // 21. CSC Class 3 Digital Signature Certificate & e-Sign (esigns.csccloud.in / cca.gov.in)
   total++;
-  if (await step('21. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('21. CSC Class 3 Digital Signature Certificate & USB Token (esigns.csccloud.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/dsc/issue`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        applicantName: 'Vikramaditya Sharma',
+        aadhaar: '999999990019',
+        mobile: '9835012345',
+        dscType: 'Class 3 Signing & Encryption (2-Year Validity)',
+        usbTokenType: 'WatchData ProxKey Plus (FIPS 140-2 Level 3 Certified)',
+        purpose: 'GeM e-Procurement, MCA21, GST & Income Tax e-Filing'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.dsc) throw new Error(res.message || 'Class 3 DSC issuance failed');
+    return `Serial: ${res.dsc.certSerialNumber} | Token: ${res.dsc.usbTokenSerial} | Holder: ${res.dsc.applicantName} | VLE Comm: +₹${res.dsc.vleCommissionCredited}`;
+  })) passed++;
+
+  // 22. Route Accessibility Verification
+  total++;
+  if (await step('22. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,
