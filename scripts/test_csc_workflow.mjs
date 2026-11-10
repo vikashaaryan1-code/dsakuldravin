@@ -86,7 +86,7 @@ async function run() {
     const res = await fetch(`${API_BASE}/csc/wallet/topup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: 500, paymentMethod: 'UPI' })
+      body: JSON.stringify({ amount: 5000, paymentMethod: 'UPI' })
     }).then(r => r.json());
 
     if (!res.success) throw new Error('Top-up failed');

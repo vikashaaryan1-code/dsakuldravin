@@ -16,55 +16,57 @@ export const CSCAuthCallbackPage: React.FC = () => {
   const redirectTo = searchParams.get('redirect_to') || '/digitalseva';
 
   useEffect(() => {
-    let isMounted = true;
+    let cancelled = false;
 
-    async function handleExchange() {
+    async function executeOAuthExchange() {
       try {
-        // Step 1: Validating code
-        setTimeout(() => {
-          if (!isMounted) return;
-          setStatusText('Exchanging Auth Code with CSC Connect Token Endpoint...');
-          setStepIndex(2);
-        }, 500);
+        // Step 1: Code Verification
+        await new Promise(r => setTimeout(r, 350));
+        if (cancelled) return;
+        setStatusText('Exchanging Auth Code with CSC Connect Token Endpoint...');
+        setStepIndex(2);
 
         // Step 2: Call token API
-        const tokenRes = await fetch('/api/csc/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code })
-        }).then(r => r.json()).catch(() => null);
+        let tokenRes: any = null;
+        try {
+          tokenRes = await fetch('/api/csc/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code })
+          }).then(r => r.json());
+        } catch (err) {
+          console.warn('Token API network fallback', err);
+        }
 
         // Step 3: Establish VLE Session
-        setTimeout(() => {
-          if (!isMounted) return;
-          setStatusText('Establishing Sovereign VLE Operator Session...');
-          setStepIndex(3);
+        await new Promise(r => setTimeout(r, 400));
+        if (cancelled) return;
+        setStatusText('Establishing Sovereign VLE Operator Session...');
+        setStepIndex(3);
 
-          setCurrentRole('vle');
-          setWalletBalance(tokenRes?.vle?.walletBalance || 2450.00);
-          logAudit('CSC Connect SSO Login', `Authenticated VLE ID: 245089123456 via OAuth code: ${code}`);
-          showToast('VLE Authorized', 'Welcome to Digital Seva Portal (VLE: Rajesh Sharma)', 'success');
-        }, 1100);
-
-        // Step 4: Redirect to Digital Seva
-        setTimeout(() => {
-          if (!isMounted) return;
-          navigate('/digitalseva');
-        }, 1700);
-
-      } catch (e) {
         setCurrentRole('vle');
-        setWalletBalance(2450.00);
-        navigate('/digitalseva');
+        if (tokenRes?.vle?.walletBalance) {
+          setWalletBalance(tokenRes.vle.walletBalance);
+        }
+        logAudit('CSC Connect SSO Login', `Authenticated VLE ID: 245089123456 via OAuth code: ${code}`);
+        showToast('VLE Authorized', 'Welcome to Digital Seva Portal (VLE: Rajesh Sharma)', 'success');
+
+        // Step 4: Instant Navigation
+        await new Promise(r => setTimeout(r, 500));
+        navigate(redirectTo, { replace: true });
+      } catch (err) {
+        console.error('OAuth flow error', err);
+        setCurrentRole('vle');
+        navigate(redirectTo, { replace: true });
       }
     }
 
-    handleExchange();
+    executeOAuthExchange();
 
     return () => {
-      isMounted = false;
+      cancelled = true;
     };
-  }, [code, navigate, setCurrentRole, setWalletBalance, showToast, logAudit]);
+  }, [code, navigate, redirectTo, setCurrentRole, setWalletBalance, showToast, logAudit]);
 
   return (
     <div style={{
@@ -147,30 +149,47 @@ export const CSCAuthCallbackPage: React.FC = () => {
           Auth Code: {code.substring(0, 24)}... | State: {state}
         </div>
 
-        {stepIndex === 3 && (
+        <div style={{ marginTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
           <button
-            onClick={() => navigate(redirectTo)}
+            onClick={() => {
+              setCurrentRole('vle');
+              navigate(redirectTo, { replace: true });
+            }}
             style={{
-              marginTop: '1.25rem',
               width: '100%',
               background: '#16A34A',
               color: '#FFFFFF',
               border: 'none',
-              padding: '0.75rem',
+              padding: '0.8rem 1rem',
               borderRadius: '8px',
               fontWeight: 800,
-              fontSize: '0.9rem',
+              fontSize: '0.92rem',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
+              boxShadow: '0 4px 12px rgba(22, 163, 74, 0.35)'
             }}
           >
-            <span>Enter Digital Seva Portal Now (पोर्टल में प्रवेश करें)</span>
+            <span>Enter Digital Seva Portal (पोर्टल में प्रवेश करें)</span>
             <span>→</span>
           </button>
-        )}
+          <button
+            onClick={() => navigate('/connect/csc')}
+            style={{
+              background: 'transparent',
+              color: '#94A3B8',
+              border: '1px solid #334155',
+              padding: '0.45rem',
+              borderRadius: '6px',
+              fontSize: '0.75rem',
+              cursor: 'pointer'
+            }}
+          >
+            Re-authenticate via CSC Connect
+          </button>
+        </div>
       </div>
     </div>
   );
