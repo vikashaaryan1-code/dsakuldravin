@@ -1606,6 +1606,79 @@ app.post('/api/csc/bbps/pay', (req, res) => {
   });
 });
 
+// 29. Aadhaar Update Client Lite - UCL Demographic & Document Update (ucl.csccloud.in / uidai.gov.in)
+app.post('/api/csc/ucl/update', (req, res) => {
+  const {
+    residentName = 'Sanjay Kumar Verma',
+    aadhaar = '999999990019',
+    mobile = '9835099887',
+    updateType = 'Mobile Number Linking',
+    documentType = 'Ration Card / Electricity Bill (Valid Proof of Address)',
+    newDetail = 'Mobile updated to +91 9835099887'
+  } = req.body;
+
+  const cleanAadhaar = String(aadhaar || '').replace(/\s+/g, '');
+  if (!residentName || cleanAadhaar.length !== 12) {
+    return res.status(400).json({ success: false, message: 'Valid Resident Name and 12-digit Aadhaar are required' });
+  }
+
+  if (!validateVerhoeff(cleanAadhaar)) {
+    return res.status(400).json({ success: false, message: 'Invalid Aadhaar checksum (Verhoeff validation failed)' });
+  }
+
+  const now = new Date();
+  const dateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  
+  // Official UIDAI 28-Digit Enrolment ID (EID): 14-digit numeric + 14-digit timestamp
+  const eidNumberPart = `${Math.floor(1000 + Math.random() * 9000)}/${Math.floor(10000 + Math.random() * 90000)}/${Math.floor(10000 + Math.random() * 90000)}`;
+  const eid = `${eidNumberPart} ${dateStr} ${timeStr}`;
+  const urn = `URN-${Math.floor(10000000 + Math.random() * 90000000)}`;
+  const vleCommission = 50; // Rs 50 VLE commission for UCL demographic update
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-UCL-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `Aadhaar UCL Update Comm: ${residentName} (${updateType})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:ucl_updated', { eid, residentName, updateType, urn, vleCommission });
+
+  res.status(201).json({
+    success: true,
+    ucl: {
+      eid,
+      urn,
+      residentName,
+      maskedAadhaar: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
+      mobile,
+      updateType,
+      documentType,
+      newDetail,
+      operatorId: 'VLE-UIDAI-245089',
+      operatorName: 'Rajesh Sharma (UIDAI Certified Supervisor)',
+      stationId: 'STAT-PATNA-0912',
+      registrar: 'CSC e-Governance Services India Limited (Code: 206)',
+      enrolmentAgency: 'CSC e-Gov Enrolment Agency (Code: 0912)',
+      feeCharged: 50.00,
+      status: 'UPDATE REQUEST ACCEPTED & FORWARDED TO UIDAI CIDR',
+      timestamp: new Date().toISOString(),
+      qrPayload: `UIDAI|EID:${eid.replace(/\s+/g, '_')}|NAME:${residentName}|TYPE:${updateType}|STATUS:ACCEPTED`,
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

@@ -369,9 +369,29 @@ async function run() {
     return `Txn: ${payRes.receipt.bbpsTxnRef} | Consumer: ${payRes.receipt.consumerName} | Amount: ₹${payRes.receipt.billAmount} | VLE Comm: +₹${payRes.receipt.vleCommissionCredited}`;
   })) passed++;
 
-  // 19. Route Accessibility Verification
+  // 19. Aadhaar Update Client Lite (UCL) Demographic Update (ucl.csccloud.in)
   total++;
-  if (await step('19. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('19. Aadhaar UCL Demographic Update & 28-Digit EID (ucl.csccloud.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/ucl/update`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        residentName: 'Sanjay Kumar Verma',
+        aadhaar: '999999990019',
+        mobile: '9835099887',
+        updateType: 'Mobile Number Linking',
+        documentType: 'Ration Card / Electricity Bill (Valid Proof of Address)',
+        newDetail: 'Update Mobile Number to +91 9835099887 and Link to Aadhaar'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.ucl) throw new Error(res.message || 'Aadhaar UCL update failed');
+    return `EID: ${res.ucl.eid} | URN: ${res.ucl.urn} | Resident: ${res.ucl.residentName} | VLE Comm: +₹${res.ucl.vleCommissionCredited}`;
+  })) passed++;
+
+  // 20. Route Accessibility Verification
+  total++;
+  if (await step('20. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,

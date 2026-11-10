@@ -52,9 +52,19 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'pmfby' | 'bbps' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'pmfby' | 'bbps' | 'ucl' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // Aadhaar UCL State
+  const [uclResident, setUclResident] = useState('Sanjay Kumar Verma');
+  const [uclAadhaar, setUclAadhaar] = useState('999999990019');
+  const [uclMobile, setUclMobile] = useState('9835099887');
+  const [uclUpdateType, setUclUpdateType] = useState('Mobile Number Linking');
+  const [uclDoc, setUclDoc] = useState('Ration Card / Electricity Bill (Valid Proof of Address)');
+  const [uclNewDetail, setUclNewDetail] = useState('Link mobile +91 9835099887 to Aadhaar');
+  const [uclReceipt, setUclReceipt] = useState<any | null>(null);
+  const [uclLoading, setUclLoading] = useState(false);
 
   // BBPS State
   const [bbpsCategory, setBbpsCategory] = useState<'Electricity' | 'LPG Gas' | 'Water' | 'Broadband'>('Electricity');
@@ -745,6 +755,40 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  const handleApplyUCL = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUclLoading(true);
+
+    try {
+      const res = await fetch('/api/csc/ucl/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          residentName: uclResident,
+          aadhaar: uclAadhaar,
+          mobile: uclMobile,
+          updateType: uclUpdateType,
+          documentType: uclDoc,
+          newDetail: uclNewDetail
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.ucl) {
+        setUclReceipt(res.ucl);
+        setWalletBalance(res.ucl.vleNewBalance);
+        showToast('Aadhaar UCL Update Queued', `EID: ${res.ucl.eid}. VLE Comm +₹${res.ucl.vleCommissionCredited} credited!`, 'success');
+        logAudit('Aadhaar UCL Demographic Update', `Resident: ${uclResident}, EID: ${res.ucl.eid}, Type: ${uclUpdateType}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('UCL Update Failed', res.message || 'Unable to submit update request to UIDAI', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setUclLoading(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -871,6 +915,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'eshram', label: 'e-Shram (Worker UAN Card)' },
             { id: 'pmfby', label: 'PMFBY (Crop Insurance)' },
             { id: 'bbps', label: 'BBPS (Utility Bills)' },
+            { id: 'ucl', label: 'Aadhaar UCL (Update Client Lite)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -4485,6 +4530,341 @@ export const DigitalSevaPortal: React.FC = () => {
                   </h4>
                   <p style={{ fontSize: '0.8rem', maxWidth: '320px', margin: '0 auto', lineHeight: 1.5 }}>
                     Enter consumer account details, fetch live bill from NPCI BBPS, and click pay to settle instantly and credit ₹20 VLE commission.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: AADHAAR UCL DEMOGRAPHIC & DOCUMENT UPDATE */}
+        {activeTab === 'ucl' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '2rem' }}>
+            {/* Form Column */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '0.85rem' }}>
+                <div style={{ width: '42px', height: '42px', background: '#FEF3C7', color: '#D97706', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Fingerprint size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    Aadhaar Update Client Lite (UCL)
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
+                    UIDAI Registrar Code 206 • Resident Demographic & Document Update • VLE Comm: <strong style={{ color: '#16A34A' }}>+₹50.00 / Update</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Fast-Track Demo Button */}
+              <div style={{ background: '#F8FAFC', border: '1px dashed #CBD5E1', borderRadius: '8px', padding: '0.65rem 0.85rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.78rem', color: '#475569' }}>
+                  🆔 Quick Test: Fill Resident Mobile Link Data
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUclResident('Sanjay Kumar Verma');
+                    setUclAadhaar('999999990019');
+                    setUclMobile('9835099887');
+                    setUclUpdateType('Mobile Number Linking');
+                    setUclDoc('Ration Card / Electricity Bill (Valid Proof of Address)');
+                    setUclNewDetail('Update Mobile Number to +91 9835099887 and Link to Aadhaar');
+                  }}
+                  style={{
+                    background: '#D97706',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '0.35rem 0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Fill Verified Demo
+                </button>
+              </div>
+
+              <form onSubmit={handleApplyUCL} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                    Aadhaar Update Category (अपडेट का प्रकार) *
+                  </label>
+                  <select
+                    value={uclUpdateType}
+                    onChange={e => setUclUpdateType(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                  >
+                    <option value="Mobile Number Linking">Mobile Number Linking & Email ID Update</option>
+                    <option value="Address Update (Proof of Address)">Address Update (Valid Proof of Address - PoA)</option>
+                    <option value="Name / DOB Correction">Name / Date of Birth (DOB) / Gender Correction</option>
+                    <option value="Document Update (PoI + PoA Free Mandate)">Mandatory 10-Year Document Update (PoI + PoA)</option>
+                    <option value="Child Enrollment (0-5 Yrs)">Child Enrollment (0 to 5 Years - Baal Aadhaar)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Resident Full Name (निवासी का नाम) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={uclResident}
+                      onChange={e => setUclResident(e.target.value)}
+                      placeholder="e.g. Sanjay Kumar Verma"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      12-Digit Aadhaar (Verhoeff Checked) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={12}
+                      value={uclAadhaar}
+                      onChange={e => setUclAadhaar(e.target.value)}
+                      placeholder="999999990019"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem', fontFamily: 'monospace' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Active Mobile Number *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={uclMobile}
+                      onChange={e => setUclMobile(e.target.value)}
+                      placeholder="9835099887"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Supporting Identity / Address Document *
+                    </label>
+                    <select
+                      value={uclDoc}
+                      onChange={e => setUclDoc(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    >
+                      <option value="Ration Card / Electricity Bill (Valid Proof of Address)">Ration Card / Electricity Bill (PoA)</option>
+                      <option value="Voter Identity Card (EPIC)">Voter Identity Card (EPIC)</option>
+                      <option value="Indian Passport">Indian Passport</option>
+                      <option value="Bank Passbook with Photo">Bank Passbook with Photo</option>
+                      <option value="PAN Card (Valid Proof of Identity)">PAN Card (Proof of Identity - PoI)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                    Particulars to be Modified (बदलाव का विवरण) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={uclNewDetail}
+                    onChange={e => setUclNewDetail(e.target.value)}
+                    placeholder="e.g. Link mobile +91 9835099887 to Aadhaar"
+                    style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                {/* Operator Hardware & Biometric Status Box */}
+                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '10px', padding: '0.75rem 1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#92400E' }}>
+                      🔒 Operator Credentials & Biometric Device Status
+                    </span>
+                    <span style={{ background: '#DCFCE7', color: '#16A34A', fontSize: '0.68rem', fontWeight: 800, padding: '0.1rem 0.4rem', borderRadius: '4px' }}>
+                      CONNECTED
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#B45309', lineHeight: 1.4 }}>
+                    • Certified Supervisor: <strong>Rajesh Sharma (VLE-UIDAI-245089)</strong><br />
+                    • RD Service: <strong>Mantra MFS100 Fingerprint Scanner (Calibrated)</strong><br />
+                    • Registrar Code: <strong>206 (CSC SPV)</strong> | Enrolment Agency: <strong>0912</strong>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={uclLoading}
+                  style={{
+                    background: '#D97706',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.85rem',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.92rem',
+                    cursor: uclLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    marginTop: '0.5rem'
+                  }}
+                >
+                  {uclLoading ? <RefreshCw className="animate-spin" size={18} /> : <ShieldCheck size={18} />}
+                  <span>{uclLoading ? 'Submitting to UIDAI CIDR...' : 'Submit Aadhaar UCL Update (+₹50 Comm)'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Official UIDAI 28-Digit Update Slip Preview Column */}
+            <div>
+              {uclReceipt ? (
+                <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                  <div style={{ border: '2px solid #D97706', borderRadius: '12px', padding: '1.25rem', background: '#F8FAFC' }}>
+                    {/* Header */}
+                    <div style={{ textAlign: 'center', borderBottom: '2px solid #E2E8F0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <div style={{ width: '28px', height: '28px', background: '#D97706', color: '#FFF', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                          U
+                        </div>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0F172A', letterSpacing: '0.04em' }}>
+                          UNIQUE IDENTIFICATION AUTHORITY OF INDIA
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                        भारत विशिष्ट पहचान प्राधिकरण • Aadhaar Update Acknowledgement Slip
+                      </div>
+                      <div style={{ display: 'inline-block', background: '#DCFCE7', color: '#16A34A', fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '20px', marginTop: '0.35rem' }}>
+                        ✓ {uclReceipt.status}
+                      </div>
+                    </div>
+
+                    {/* 28-Digit Enrolment ID (EID) Highlight */}
+                    <div style={{ background: '#FEF3C7', border: '1px solid #FCD34D', borderRadius: '8px', padding: '0.75rem', textAlign: 'center', marginBottom: '1rem' }}>
+                      <div style={{ fontSize: '0.72rem', color: '#92400E', fontWeight: 700, textTransform: 'uppercase' }}>
+                        28-Digit Enrolment Number (EID) / नामांकन संख्या
+                      </div>
+                      <div style={{ fontSize: '1rem', fontWeight: 900, color: '#78350F', fontFamily: 'monospace', letterSpacing: '0.04em' }}>
+                        {uclReceipt.eid}
+                      </div>
+                      <div style={{ fontSize: '0.68rem', color: '#B45309', marginTop: '0.15rem' }}>
+                        URN: <strong>{uclReceipt.urn}</strong> • Track at myaadhaar.uidai.gov.in
+                      </div>
+                    </div>
+
+                    {/* Details Table */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', fontSize: '0.78rem', marginBottom: '1rem' }}>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Resident Name:</div>
+                        <div style={{ fontWeight: 800, color: '#0F172A' }}>{uclReceipt.residentName}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Masked Aadhaar:</div>
+                        <div style={{ fontWeight: 700, color: '#334155', fontFamily: 'monospace' }}>{uclReceipt.maskedAadhaar}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Update Category:</div>
+                        <div style={{ fontWeight: 700, color: '#D97706' }}>{uclReceipt.updateType}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Mobile Registered:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>+91 {uclReceipt.mobile}</div>
+                      </div>
+                      <div style={{ gridColumn: 'span 2' }}>
+                        <div style={{ color: '#64748B' }}>Supporting Document:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>{uclReceipt.documentType}</div>
+                      </div>
+                      <div style={{ gridColumn: 'span 2' }}>
+                        <div style={{ color: '#64748B' }}>Particulars Updated:</div>
+                        <div style={{ fontWeight: 700, color: '#0F172A' }}>{uclReceipt.newDetail}</div>
+                      </div>
+                    </div>
+
+                    {/* Station & Fee Box */}
+                    <div style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.78rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span style={{ color: '#64748B' }}>Registrar / Enrolment Agency:</span>
+                        <strong style={{ color: '#0F172A' }}>CSC SPV (206) / EA (0912)</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span style={{ color: '#64748B' }}>Operator / Station ID:</span>
+                        <strong style={{ color: '#0F172A' }}>{uclReceipt.operatorId} ({uclReceipt.stationId})</strong>
+                      </div>
+                      <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '0.35rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 800, color: '#0F172A' }}>Total Fee Charged (Including GST):</span>
+                        <strong style={{ color: '#16A34A', fontSize: '0.95rem' }}>₹{uclReceipt.feeCharged?.toFixed(2)}</strong>
+                      </div>
+                    </div>
+
+                    {/* QR Code and Digital Seal */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #E2E8F0', paddingTop: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <QrCode size={38} color="#D97706" />
+                        <div style={{ fontSize: '0.68rem', color: '#64748B' }}>
+                          Scan to verify on uidai.gov.in<br />
+                          VLE Commission: +₹{uclReceipt.vleCommissionCredited} Credited
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: '0.68rem', color: '#64748B' }}>
+                        Center: Akul Dravin Digital Seva Kendra<br />
+                        Date: {new Date().toLocaleDateString('en-IN')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
+                    <button
+                      onClick={() => window.print()}
+                      style={{
+                        background: '#D97706',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '0.65rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        fontSize: '0.82rem'
+                      }}
+                    >
+                      <Printer size={15} />
+                      <span>Print UIDAI Slip</span>
+                    </button>
+                    <button
+                      onClick={() => alert(`Downloading UIDAI Acknowledgement for ${uclReceipt.residentName} (EID: ${uclReceipt.eid})...`)}
+                      style={{
+                        background: '#F1F5F9',
+                        color: '#334155',
+                        border: '1px solid #CBD5E1',
+                        padding: '0.65rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontSize: '0.82rem'
+                      }}
+                    >
+                      Download PDF
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: '#FFFFFF', padding: '2.5rem 1.5rem', borderRadius: '16px', border: '1px dashed #CBD5E1', textAlign: 'center', color: '#94A3B8' }}>
+                  <Fingerprint size={48} style={{ margin: '0 auto 1rem', opacity: 0.4, color: '#D97706' }} />
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '0.35rem' }}>
+                    No Update Request Processed Yet
+                  </h4>
+                  <p style={{ fontSize: '0.8rem', maxWidth: '320px', margin: '0 auto', lineHeight: 1.5 }}>
+                    Enter resident Aadhaar details, choose update category, and submit to generate the official 28-digit UIDAI EID slip and credit ₹50 VLE commission.
                   </p>
                 </div>
               )}
