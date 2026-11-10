@@ -139,6 +139,9 @@ export const Footer: React.FC = () => {
               Citizen & Digital Seva
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.82rem' }}>
+              <Link to="/digitalseva" style={{ color: '#38BDF8', fontWeight: 600 }}>CSC Digital Seva (VLE Portal)</Link>
+              <Link to="/connect/csc" style={{ color: '#4ADE80', fontWeight: 600 }}>CSC Connect (OAuth SSO)</Link>
+              <Link to="/csc" style={{ color: '#FCD34D', fontWeight: 600 }}>CSC.gov.in (National Portal)</Link>
               <Link to="/government" style={{ color: '#94A3B8', transition: 'color 0.15s' }}>Aadhaar & PAN Assistance</Link>
               <Link to="/government" style={{ color: '#94A3B8' }}>Passport Appointments</Link>
               <Link to="/government" style={{ color: '#94A3B8' }}>Birth, Caste & Domicile</Link>

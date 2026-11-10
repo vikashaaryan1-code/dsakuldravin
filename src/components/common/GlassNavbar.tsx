@@ -59,6 +59,8 @@ export const GlassNavbar: React.FC = () => {
   ];
 
   const megaMenuServices = [
+    { name: 'CSC Digital Seva (VLE)', path: '/digitalseva', desc: 'CSC Connect SSO, DigiPay AEPS, Tele-Law & PMGDISHA' },
+    { name: 'CSC Main Portal (e-Gov)', path: '/csc', desc: 'National CSC Schemes & VLE Registration with TEC' },
     { name: 'Vedic Astrology & Kundli', path: '/astrology', desc: 'Janam Kundli, 36 Guna Milan, Rashifal, Astrologers, Store' },
     { name: 'Government Seva', path: '/government', desc: 'Aadhaar, PAN, Passport, Certificates' },
     { name: 'Cyber Café Station', path: '/cyber-cafe', desc: 'PC access, Online Forms, Xerox, Printing' },
