@@ -197,9 +197,26 @@ async function run() {
     return `ABHA No: ${res.card.abhaNumber} | Address: ${res.card.abhaAddress} | VLE Comm: +₹${res.card.vleCommissionCredited}`;
   })) passed++;
 
-  // 11. Route Accessibility Verification
+  // 11. PM-KISAN Samman Nidhi eKYC & DBT Beneficiary Verification (pmkisan.gov.in)
   total++;
-  if (await step('11. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('11. PM-KISAN Samman Nidhi eKYC Verification (pmkisan.gov.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/pmkisan/ekyc`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        aadhaar: '999999990019',
+        farmerName: 'Ramesh Chandra Yadav',
+        mobile: '9835002244'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.ekyc) throw new Error(res.message || 'PM-KISAN eKYC failed');
+    return `Token: ${res.ekyc.ackToken} | Land Seeding: ${res.ekyc.landSeeding} | DBT: ${res.ekyc.dbtStatus} | VLE Comm: +₹${res.ekyc.vleCommissionCredited}`;
+  })) passed++;
+
+  // 12. Route Accessibility Verification
+  total++;
+  if (await step('12. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,

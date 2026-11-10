@@ -1057,6 +1057,57 @@ app.post('/api/csc/abha/create', (req, res) => {
   });
 });
 
+// 20. PM-KISAN Samman Nidhi eKYC & Beneficiary Service (pmkisan.gov.in)
+app.post('/api/csc/pmkisan/ekyc', (req, res) => {
+  const { aadhaar, farmerName = 'Ramesh Chandra Yadav', mobile = '9835002244' } = req.body;
+  const cleanAadhaar = String(aadhaar || '').replace(/\s+/g, '');
+  if (!cleanAadhaar || cleanAadhaar.length !== 12) {
+    return res.status(400).json({ success: false, message: 'Valid 12-digit Aadhaar number is required' });
+  }
+
+  if (!validateVerhoeff(cleanAadhaar)) {
+    return res.status(400).json({ success: false, message: 'Invalid Aadhaar checksum (Verhoeff validation failed)' });
+  }
+
+  const token = 'PMK-EKYC-2026-' + Math.floor(100000 + Math.random() * 900000);
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  const vleCommission = 15; // Rs 15 commission per eKYC update
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-PMK-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `PM-KISAN eKYC Verification: ${farmerName} (Aadhaar: ...${cleanAadhaar.slice(-4)})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:pmkisan_ekyc_done', { token, farmerName, cleanAadhaar, vleCommission });
+
+  res.status(200).json({
+    success: true,
+    ekyc: {
+      ackToken: token,
+      farmerName,
+      maskedAadhaar: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
+      mobile,
+      landSeeding: 'YES (Verified by District Revenue Dept)',
+      dbtStatus: 'ACTIVE (Aadhaar-Seeded DBT Account)',
+      ekycStatus: 'COMPLETED (SUCCESSFULLY VERIFIED)',
+      totalInstallmentsPaid: 17,
+      totalAmountDisbursed: 34000,
+      nextInstallmentStatus: 'ELIGIBLE FOR UPCOMING RELEASE',
+      verifiedAt: new Date().toISOString(),
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

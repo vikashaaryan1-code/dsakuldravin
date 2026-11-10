@@ -31,7 +31,8 @@ import {
   Video,
   GraduationCap,
   Award,
-  Heart
+  Heart,
+  Sprout
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Link, useNavigate } from 'react-router-dom';
@@ -49,9 +50,16 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // PM-KISAN State
+  const [pmkAadhaar, setPmkAadhaar] = useState('999999990019');
+  const [pmkFarmer, setPmkFarmer] = useState('Ramesh Chandra Yadav');
+  const [pmkMobile, setPmkMobile] = useState('9835002244');
+  const [pmkReceipt, setPmkReceipt] = useState<any | null>(null);
+  const [pmkLoading, setPmkLoading] = useState(false);
 
   // ABHA Health Card State
   const [abhaName, setAbhaName] = useState('Suresh Kumar');
@@ -352,6 +360,38 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  // Handle PM-KISAN eKYC
+  const handlePmkisanEkyc = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pmkAadhaar) return;
+    setPmkLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/csc/pmkisan/ekyc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          aadhaar: pmkAadhaar,
+          farmerName: pmkFarmer,
+          mobile: pmkMobile
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.ekyc) {
+        setPmkReceipt(res.ekyc);
+        setWalletBalance(res.ekyc.vleNewBalance);
+        showToast('PM-KISAN eKYC Verified', `Token: ${res.ekyc.ackToken}. VLE Commission +₹${res.ekyc.vleCommissionCredited} credited!`, 'success');
+        logAudit('PM-KISAN eKYC Verification', `Farmer: ${pmkFarmer}, Token: ${res.ekyc.ackToken}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('eKYC Failed', res.message || 'Verification error', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setPmkLoading(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -470,6 +510,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'telelaw', label: 'Tele-Law (Legal Aid)' },
             { id: 'pmgdisha', label: 'PMGDISHA (Training & Cert)' },
             { id: 'abha', label: 'Ayushman (ABHA Health Card)' },
+            { id: 'pmkisan', label: 'PM-KISAN (eKYC & DBT)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -1634,6 +1675,232 @@ export const DigitalSevaPortal: React.FC = () => {
                   </button>
                   <button
                     onClick={() => alert(`Downloading ABHA Card PDF for ${abhaCard.citizenName} (ABHA: ${abhaCard.abhaNumber})...`)}
+                    style={{
+                      background: '#F1F5F9',
+                      color: '#334155',
+                      border: '1px solid #CBD5E1',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: PM-KISAN SAMMAN NIDHI eKYC (pmkisan.gov.in) */}
+        {activeTab === 'pmkisan' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Verification Form */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                <Sprout size={22} color="#15803D" />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  PM-KISAN Samman Nidhi e-KYC Portal
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                Ministry of Agriculture & Farmers Welfare • Mandatory Biometric Aadhaar eKYC (+₹15 VLE commission)
+              </p>
+
+              <form onSubmit={handlePmkisanEkyc} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    BENEFICIARY FARMER FULL NAME (किसान का नाम)
+                  </label>
+                  <input
+                    type="text"
+                    value={pmkFarmer}
+                    onChange={(e) => setPmkFarmer(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    12-DIGIT AADHAAR NUMBER (VERHOEFF CHECKSUM VERIFIED)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={12}
+                    value={pmkAadhaar}
+                    onChange={(e) => setPmkAadhaar(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.95rem',
+                      fontFamily: 'monospace',
+                      fontWeight: 700
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    MOBILE NUMBER LINKED WITH BANK & DBT
+                  </label>
+                  <input
+                    type="text"
+                    value={pmkMobile}
+                    onChange={(e) => setPmkMobile(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem'
+                    }}
+                  />
+                </div>
+
+                <div style={{ background: '#F0FDF4', padding: '0.75rem', borderRadius: '8px', border: '1px solid #BBF7D0', fontSize: '0.75rem', color: '#166534', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <Fingerprint size={20} color="#16A34A" />
+                  <span>RD Service ready (Mantra MFS100 / Morpho E3). Biometric capture simulation connected.</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={pmkLoading}
+                  style={{
+                    background: '#15803D',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.8rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    cursor: pmkLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <Sprout size={16} />
+                  <span>{pmkLoading ? 'Verifying with PM-KISAN Portal...' : 'Authenticate Biometric & Update eKYC'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Official eKYC Status & Receipt Preview */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                  PM-KISAN e-KYC Verification Slip
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                  Department of Agriculture & Farmers Welfare • Direct Benefit Transfer (DBT)
+                </p>
+
+                {pmkReceipt ? (
+                  <div style={{
+                    background: '#F8FAFC',
+                    borderRadius: '12px',
+                    border: '2px solid #16A34A',
+                    padding: '1.25rem',
+                    boxShadow: '0 4px 15px rgba(22, 163, 74, 0.08)'
+                  }}>
+                    <div style={{ borderBottom: '1.5px dashed #CBD5E1', paddingBottom: '0.75rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 900, color: '#15803D' }}>
+                          PRADHAN MANTRI KISAN SAMMAN NIDHI
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                          Ack Token: <strong>{pmkReceipt.ackToken}</strong>
+                        </div>
+                      </div>
+                      <span style={{ background: '#DCFCE7', color: '#15803D', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        eKYC SUCCESS
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', fontSize: '0.8rem', lineHeight: 1.5 }}>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>FARMER NAME:</span>
+                        <strong>{pmkReceipt.farmerName}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>AADHAAR NO:</span>
+                        <strong style={{ fontFamily: 'monospace' }}>{pmkReceipt.maskedAadhaar}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>LAND SEEDING:</span>
+                        <strong style={{ color: '#15803D' }}>{pmkReceipt.landSeeding}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>DBT SEEDING:</span>
+                        <strong style={{ color: '#15803D' }}>{pmkReceipt.dbtStatus}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>DISBURSED INSTALLMENTS:</span>
+                        <strong>{pmkReceipt.totalInstallmentsPaid} (₹{pmkReceipt.totalAmountDisbursed.toLocaleString('en-IN')})</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>NEXT INSTALLMENT:</span>
+                        <strong style={{ color: '#2563EB' }}>{pmkReceipt.nextInstallmentStatus}</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ borderTop: '1.5px dashed #CBD5E1', marginTop: '0.75rem', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#15803D', fontWeight: 700 }}>
+                        <CheckCircle2 size={15} />
+                        <span>VLE Surcharge: +₹{pmkReceipt.vleCommissionCredited}.00 credited to wallet</span>
+                      </div>
+                      <div style={{ color: '#64748B' }}>
+                        {new Date(pmkReceipt.verifiedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#94A3B8' }}>
+                    <Sprout size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                      Enter farmer Aadhaar to verify land seeding, DBT status and execute mandatory eKYC.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {pmkReceipt && (
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                  <button
+                    onClick={() => window.print()}
+                    style={{
+                      flex: 1,
+                      background: '#15803D',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.65rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    <Printer size={15} />
+                    <span>Print eKYC Slip (पावती प्रिंट करें)</span>
+                  </button>
+                  <button
+                    onClick={() => alert(`Downloading PM-KISAN Acknowledgement Slip for ${pmkReceipt.farmerName} (Token: ${pmkReceipt.ackToken})...`)}
                     style={{
                       background: '#F1F5F9',
                       color: '#334155',
