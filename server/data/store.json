@@ -62,6 +62,32 @@
   ],
   "applications": [
     {
+      "id": "APP-54746",
+      "trackingNumber": "AD-APP-53539",
+      "serviceId": "srv-pan-new",
+      "serviceName": "PAN Card New Application",
+      "customerName": "Vikramaditya Sharma",
+      "phone": "+91 98765 43210",
+      "status": "SUBMITTED",
+      "appliedDate": "2026-11-10T14:16:32.860Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "Form 49A filed with Aadhaar KYC: 999999990019",
+      "formData": {}
+    },
+    {
+      "id": "APP-23933",
+      "trackingNumber": "AD-APP-62410",
+      "serviceId": "srv-pan-new",
+      "serviceName": "PAN Card Verification",
+      "customerName": "Test Suite Automation Runner",
+      "phone": "+91 99999 88888",
+      "status": "SUBMITTED",
+      "appliedDate": "2026-11-10T14:16:25.920Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "Application received via Cloud AI portal.",
+      "formData": {}
+    },
+    {
       "id": "APP-26807",
       "trackingNumber": "AD-APP-34589",
       "serviceId": "srv-passport-assist",
@@ -386,6 +412,42 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "AUD-1794320193071",
+      "action": "Payment Verified (₹1499) via UPI",
+      "actor": "Unified Payment Gateway",
+      "role": "FINANCE_SYSTEM",
+      "target": "INV-AD-2026-81423",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T14:16:33.071Z"
+    },
+    {
+      "id": "AUD-1794320192860",
+      "action": "New Application Submitted",
+      "actor": "Vikramaditya Sharma",
+      "role": "CUSTOMER",
+      "target": "AD-APP-53539",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T14:16:32.860Z"
+    },
+    {
+      "id": "AUD-1794320185978",
+      "action": "Payment Verified (₹1499) via UPI",
+      "actor": "Unified Payment Gateway",
+      "role": "FINANCE_SYSTEM",
+      "target": "INV-AD-2026-26518",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T14:16:25.978Z"
+    },
+    {
+      "id": "AUD-1794320185920",
+      "action": "New Application Submitted",
+      "actor": "Test Suite Automation Runner",
+      "role": "CUSTOMER",
+      "target": "AD-APP-62410",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T14:16:25.920Z"
+    },
     {
       "id": "AUD-1794319887239",
       "action": "New Application Submitted",
@@ -858,6 +920,32 @@
   "transactions": [
     {
       "verified": true,
+      "orderId": "order_ad_1794320193061_158",
+      "paymentId": "pay_ad_1794320193070_5718",
+      "signature": "b0d5ab4214f4f83219406f378a4efb29b2e845f20e2c6e3e922c0300122d5bd7",
+      "invoiceNumber": "INV-AD-2026-81423",
+      "paymentMethod": "upi",
+      "paidAt": "2026-11-10T14:16:33.071Z",
+      "status": "PAID",
+      "amount": 1499,
+      "items": [],
+      "id": "pay_ad_1794320193070_5718"
+    },
+    {
+      "verified": true,
+      "orderId": "order_ad_1794320185956_374",
+      "paymentId": "pay_ad_1794320185977_3357",
+      "signature": "379577ced87d9bb87bbc1049a64654336055dc0c5762a3bb2163a5b690d07259",
+      "invoiceNumber": "INV-AD-2026-26518",
+      "paymentMethod": "upi",
+      "paidAt": "2026-11-10T14:16:25.978Z",
+      "status": "PAID",
+      "amount": 1499,
+      "items": [],
+      "id": "pay_ad_1794320185977_3357"
+    },
+    {
+      "verified": true,
       "orderId": "order_ad_1794319524673_752",
       "paymentId": "pay_ad_1794319524687_5819",
       "signature": "bacdf49de0754f2c5515530c41b92487ec867f3c81525001c9f9261ffdfdcd6e",
@@ -1141,6 +1229,30 @@
   ],
   "crmLeads": [
     {
+      "id": "LEAD-7088",
+      "name": "Sunil Mehta",
+      "company": "Self / Individual",
+      "phone": "9811223344",
+      "email": "sunil@mehtatraders.in",
+      "serviceInterested": "General Service",
+      "estimatedValue": 10000,
+      "stage": "New",
+      "assignedExecutive": "Senior Account Manager",
+      "createdAt": "2026-11-10T14:16:32.943Z"
+    },
+    {
+      "id": "LEAD-6951",
+      "name": "Sunita Mehra",
+      "company": "Mehra Logistics Pvt Ltd",
+      "phone": "+91 98111 22334",
+      "email": "sunitamehra@example.com",
+      "serviceInterested": "GST & Corporate Tax Audit",
+      "estimatedValue": 25000,
+      "stage": "New",
+      "assignedExecutive": "Senior Account Manager",
+      "createdAt": "2026-11-10T14:16:26.000Z"
+    },
+    {
       "id": "LEAD-2486",
       "name": "Sunita Mehra",
       "company": "Mehra Logistics Pvt Ltd",
@@ -1324,6 +1436,60 @@
     }
   ],
   "journals": [
+    {
+      "id": "JRN-2026-8653",
+      "date": "2026-11-10",
+      "reference": "INV-AD-WALKTHROUGH",
+      "description": "Customer Payment Settlement for Digital Services",
+      "lines": [
+        {
+          "accountCode": "1010",
+          "accountName": "Cash & Bank Balances",
+          "debit": 3500,
+          "credit": 0
+        },
+        {
+          "accountCode": "4010",
+          "accountName": "Citizen Service Revenue",
+          "debit": 0,
+          "credit": 3000
+        },
+        {
+          "accountCode": "2020",
+          "accountName": "GST Output Liability (18%)",
+          "debit": 0,
+          "credit": 500
+        }
+      ],
+      "totalDebit": 3500,
+      "totalCredit": 3500,
+      "balanced": true,
+      "cryptographicHash": "hash_tlldc78lof"
+    },
+    {
+      "id": "JRN-2026-6771",
+      "date": "2026-11-10",
+      "reference": "INV-AD-2026-TEST",
+      "description": "Audit Test Double-Entry Posting",
+      "lines": [
+        {
+          "accountCode": "1010",
+          "accountName": "Gateway Clearing",
+          "debit": 5000,
+          "credit": 0
+        },
+        {
+          "accountCode": "4010",
+          "accountName": "Professional Fee",
+          "debit": 0,
+          "credit": 5000
+        }
+      ],
+      "totalDebit": 5000,
+      "totalCredit": 5000,
+      "balanced": true,
+      "cryptographicHash": "hash_kdslqbzaqm"
+    },
     {
       "id": "JRN-2026-8200",
       "date": "2026-11-10",
@@ -1519,6 +1685,46 @@
   ],
   "tickets": [
     {
+      "id": "TKT-8180",
+      "customerName": "Citizen",
+      "customerPhone": "",
+      "serviceCategory": "General Assistance",
+      "subject": "Biometric Appointment Reschedule Request",
+      "priority": "high",
+      "status": "Open",
+      "assignedAgent": "Priority Desk Agent",
+      "slaRemainingHours": 4,
+      "createdAt": "11/10/2026 07:46 PM",
+      "messages": [
+        {
+          "sender": "Citizen",
+          "role": "Citizen",
+          "text": "Assistance requested.",
+          "timestamp": "07:46 PM"
+        }
+      ]
+    },
+    {
+      "id": "TKT-1808",
+      "customerName": "Anil Deshmukh",
+      "customerPhone": "+91 98222 33445",
+      "serviceCategory": "Government Services",
+      "subject": "Passport appointment rescheduled request",
+      "priority": "Critical SLA",
+      "status": "Open",
+      "assignedAgent": "Priority Desk Agent",
+      "slaRemainingHours": 4,
+      "createdAt": "11/10/2026 07:46 PM",
+      "messages": [
+        {
+          "sender": "Anil Deshmukh",
+          "role": "Citizen",
+          "text": "Need urgent slot rebooking for PSK Patna.",
+          "timestamp": "07:46 PM"
+        }
+      ]
+    },
+    {
       "id": "TKT-1988",
       "customerName": "Anil Deshmukh",
       "customerPhone": "+91 98222 33445",
@@ -1661,6 +1867,32 @@
   ],
   "campaigns": [
     {
+      "id": "CMP-2026-30",
+      "name": "GST Quarterly Return Filing Alert",
+      "channel": "whatsapp",
+      "audienceSegment": "All Citizens",
+      "status": "Scheduled",
+      "scheduledDate": "2026-11-10",
+      "targetCount": 5000,
+      "sentCount": 0,
+      "deliveredCount": 0,
+      "conversionCount": 0,
+      "templateText": ""
+    },
+    {
+      "id": "CMP-2026-80",
+      "name": "VLE Regional Monsoon Growth Drive",
+      "channel": "WhatsApp Business",
+      "audienceSegment": "VLE Franchisees",
+      "status": "Scheduled",
+      "scheduledDate": "2026-11-10",
+      "targetCount": 2500,
+      "sentCount": 0,
+      "deliveredCount": 0,
+      "conversionCount": 0,
+      "templateText": "Boost your digital center daily footfall with 150+ citizen services."
+    },
+    {
       "id": "CMP-2026-64",
       "name": "VLE Regional Monsoon Growth Drive",
       "channel": "WhatsApp Business",
@@ -1755,8 +1987,8 @@
   "downlines": [],
   "affiliates": [],
   "whiteLabel": {
-    "brandName": "AKUL DRAVIN DIGITAL ENTERPRISE",
-    "tagline": "India First • Global Ready Super Platform",
+    "brandName": "SHREE BALAJI DIGITAL SEVA ENTERPRISE",
+    "tagline": "Leading Rural FinTech & Citizen Super Hub",
     "primaryColor": "#059669",
     "accentColor": "#10b981",
     "customDomain": "seva.shreebalaji.in",
