@@ -1024,29 +1024,129 @@ app.get('/api/csc/vle-profile', (req, res) => {
 });
 
 app.post('/api/csc/wallet/topup', (req, res) => {
-  const { amount, paymentMethod = 'UPI' } = req.body;
+  const { amount, paymentMethod = 'UPI', utr, senderUpi, bankAccount, ifsc } = req.body;
   const numAmount = Number(amount);
   if (!numAmount || numAmount <= 0) {
     return res.status(400).json({ success: false, message: 'Valid amount is required' });
   }
 
+  // Validate UTR / Transaction ID (standard Indian banking UTR is 12 digits/alphanumeric)
+  const cleanUtr = String(utr || '').trim().toUpperCase();
+  if (paymentMethod === 'UPI' || paymentMethod === 'BANK_TRANSFER' || paymentMethod === 'QR_SCANNER') {
+    if (!cleanUtr || cleanUtr.length < 8) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Valid 12-digit Banking UTR / Transaction Reference ID is mandatory for payment verification.' 
+      });
+    }
+  }
+
   const db = readDB();
   if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+
+  // Check for duplicate UTR to prevent double credit fraud
+  if (!db.verifiedUtrs) db.verifiedUtrs = [];
+  if (cleanUtr && db.verifiedUtrs.includes(cleanUtr)) {
+    return res.status(400).json({ 
+      success: false, 
+      message: `UTR / Reference ${cleanUtr} has already been utilized and settled.` 
+    });
+  }
+  if (cleanUtr) {
+    db.verifiedUtrs.push(cleanUtr);
+  }
+
   db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + numAmount).toFixed(2));
   
+  const txnId = 'TXN-PB-' + Math.floor(1000 + Math.random() * 9000);
   const passbookEntry = {
-    id: 'TXN-PB-' + Math.floor(1000 + Math.random() * 9000),
+    id: txnId,
     date: new Date().toISOString().split('T')[0],
     type: 'CR',
-    description: `Wallet Top-up via ${paymentMethod}`,
+    description: `Wallet Top-up via ${paymentMethod} (UTR: ${cleanUtr || 'INSTANT'})`,
     amount: numAmount,
-    balance: db.vleProfile.walletBalance
+    balance: db.vleProfile.walletBalance,
+    utr: cleanUtr || 'INSTANT',
+    senderUpi: senderUpi || 'user@upi',
+    bankAccount: bankAccount || 'N/A',
+    status: 'VERIFIED & SETTLED'
   };
   db.vleProfile.passbook.unshift(passbookEntry);
+
+  // Also log to general ledger audit
+  db.auditLogs.unshift({
+    id: 'AUD-' + Date.now(),
+    action: `ADCS Wallet Top-Up Verified (₹${numAmount}) [UTR: ${cleanUtr}]`,
+    actor: 'ADCS National Payment Switch',
+    role: 'VLE_OPERATOR',
+    target: txnId,
+    status: 'SUCCESS',
+    timestamp: new Date().toISOString()
+  });
+
   writeDB(db);
 
   broadcastEvent('csc:wallet_updated', { walletBalance: db.vleProfile.walletBalance, entry: passbookEntry });
-  res.json({ success: true, walletBalance: db.vleProfile.walletBalance, entry: passbookEntry });
+  res.json({ 
+    success: true, 
+    walletBalance: db.vleProfile.walletBalance, 
+    entry: passbookEntry,
+    message: `Payment of ₹${numAmount} successfully verified with UTR ${cleanUtr}. Balance updated.`
+  });
+});
+
+// Bank Payout / Account Transfer (Wallet to Bank Account)
+app.post('/api/csc/wallet/transfer-to-bank', (req, res) => {
+  const { amount, accountNumber, ifsc, accountHolder, bankName } = req.body;
+  const numAmount = Number(amount);
+  if (!numAmount || numAmount <= 0) {
+    return res.status(400).json({ success: false, message: 'Valid transfer amount is required' });
+  }
+  if (!accountNumber || accountNumber.length < 9) {
+    return res.status(400).json({ success: false, message: 'Valid bank account number is required' });
+  }
+  if (!ifsc || !/^[A-Z]{4}0[A-Z0-9]{6}$/.test(String(ifsc).trim().toUpperCase())) {
+    return res.status(400).json({ success: false, message: 'Valid 11-character Indian IFSC code required (e.g. SBIN0001234)' });
+  }
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+
+  if (db.vleProfile.walletBalance < numAmount) {
+    return res.status(400).json({ 
+      success: false, 
+      message: `Insufficient wallet balance (₹${db.vleProfile.walletBalance}) for payout of ₹${numAmount}.` 
+    });
+  }
+
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance - numAmount).toFixed(2));
+  const payoutUtr = 'IMPS' + Math.floor(100000000000 + Math.random() * 900000000000);
+  const txnId = 'TXN-OUT-' + Math.floor(1000 + Math.random() * 9000);
+
+  const passbookEntry = {
+    id: txnId,
+    date: new Date().toISOString().split('T')[0],
+    type: 'DR',
+    description: `Payout Transfer to A/C: XXXXXX${String(accountNumber).slice(-4)} (${bankName || 'Bank'}) [IMPS RRN: ${payoutUtr}]`,
+    amount: numAmount,
+    balance: db.vleProfile.walletBalance,
+    utr: payoutUtr,
+    accountHolder: accountHolder || 'Center Beneficiary',
+    bankName: bankName || 'Nationalized Bank',
+    status: 'IMPS TRANSFERRED'
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+
+  writeDB(db);
+  broadcastEvent('csc:wallet_updated', { walletBalance: db.vleProfile.walletBalance, entry: passbookEntry });
+
+  res.json({
+    success: true,
+    walletBalance: db.vleProfile.walletBalance,
+    payoutUtr,
+    payoutEntry: passbookEntry,
+    message: `₹${numAmount} successfully transferred to ${accountHolder} (A/C: XXXXXX${String(accountNumber).slice(-4)}) via IMPS.`
+  });
 });
 
 app.post('/api/csc/operators', (req, res) => {

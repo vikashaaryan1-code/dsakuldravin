@@ -95,10 +95,10 @@ async function run() {
     const res = await fetch(`${API_BASE}/csc/wallet/topup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: 5000, paymentMethod: 'UPI' })
+      body: JSON.stringify({ amount: 5000, paymentMethod: 'UPI', utr: '431902847291' })
     }).then(r => r.json());
 
-    if (!res.success) throw new Error('Top-up failed');
+    if (!res.success) throw new Error('Top-up failed: ' + (res.message || ''));
     return `Credited: ₹${res.entry.amount} via UPI. New VLE Wallet Balance: ₹${res.walletBalance} (Passbook: ${res.entry.id})`;
   })) passed++;
 
