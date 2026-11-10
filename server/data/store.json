@@ -62,6 +62,32 @@
   ],
   "applications": [
     {
+      "id": "APP-68622",
+      "trackingNumber": "AD-APP-83696",
+      "serviceId": "srv-abha-health-card",
+      "serviceName": "Ayushman Bharat ABHA Health Card & PM-JAY Cover",
+      "customerName": "Suresh Chandra Yadav",
+      "phone": "+91 99887 76655",
+      "status": "SUBMITTED",
+      "appliedDate": "2026-11-10T14:49:13.251Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "ABHA 14-digit generation with Aadhaar OTP verification",
+      "formData": {}
+    },
+    {
+      "id": "APP-74047",
+      "trackingNumber": "AD-APP-39901",
+      "serviceId": "srv-pan-new",
+      "serviceName": "PAN Card Verification",
+      "customerName": "Test Suite Automation Runner",
+      "phone": "+91 99999 88888",
+      "status": "SUBMITTED",
+      "appliedDate": "2026-11-10T14:49:01.246Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "Application received via Cloud AI portal.",
+      "formData": {}
+    },
+    {
       "id": "APP-27024",
       "trackingNumber": "AD-APP-43844",
       "serviceId": "srv-pan-new",
@@ -490,6 +516,42 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "AUD-1794322153286",
+      "action": "Payment Verified (₹50) via UPI",
+      "actor": "Unified Payment Gateway",
+      "role": "FINANCE_SYSTEM",
+      "target": "INV-AD-2026-81739",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T14:49:13.286Z"
+    },
+    {
+      "id": "AUD-1794322153251",
+      "action": "New Application Submitted",
+      "actor": "Suresh Chandra Yadav",
+      "role": "CUSTOMER",
+      "target": "AD-APP-83696",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T14:49:13.251Z"
+    },
+    {
+      "id": "AUD-1794322141347",
+      "action": "Payment Verified (₹1499) via UPI",
+      "actor": "Unified Payment Gateway",
+      "role": "FINANCE_SYSTEM",
+      "target": "INV-AD-2026-39858",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T14:49:01.347Z"
+    },
+    {
+      "id": "AUD-1794322141246",
+      "action": "New Application Submitted",
+      "actor": "Test Suite Automation Runner",
+      "role": "CUSTOMER",
+      "target": "AD-APP-39901",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T14:49:01.246Z"
+    },
     {
       "id": "AUD-1794320649338",
       "action": "Payment Verified (₹1499) via UPI",
@@ -1106,6 +1168,32 @@
   "transactions": [
     {
       "verified": true,
+      "orderId": "order_ad_1794322153276_202",
+      "paymentId": "pay_ad_1794322153286_2877",
+      "signature": "28788fe3e2c1aa1e53d6d9b541c43e0d98d1eaa722b42a397127f48abfb76a5d",
+      "invoiceNumber": "INV-AD-2026-81739",
+      "paymentMethod": "upi",
+      "paidAt": "2026-11-10T14:49:13.286Z",
+      "status": "PAID",
+      "amount": 50,
+      "items": [],
+      "id": "pay_ad_1794322153286_2877"
+    },
+    {
+      "verified": true,
+      "orderId": "order_ad_1794322141329_268",
+      "paymentId": "pay_ad_1794322141342_8276",
+      "signature": "4fa31b0fa3c2ade5c9cee004d9af2378f226e8114a77a77b503804d366533881",
+      "invoiceNumber": "INV-AD-2026-39858",
+      "paymentMethod": "upi",
+      "paidAt": "2026-11-10T14:49:01.347Z",
+      "status": "PAID",
+      "amount": 1499,
+      "items": [],
+      "id": "pay_ad_1794322141342_8276"
+    },
+    {
+      "verified": true,
       "orderId": "order_ad_1794320649321_725",
       "paymentId": "pay_ad_1794320649338_5079",
       "signature": "7ef847f82c3bf5805bf47defdc0a226e5553b741ed64ee6bab7a5310a7749a6d",
@@ -1493,6 +1581,18 @@
   ],
   "crmLeads": [
     {
+      "id": "LEAD-4266",
+      "name": "Sunita Mehra",
+      "company": "Mehra Logistics Pvt Ltd",
+      "phone": "+91 98111 22334",
+      "email": "sunitamehra@example.com",
+      "serviceInterested": "GST & Corporate Tax Audit",
+      "estimatedValue": 25000,
+      "stage": "New",
+      "assignedExecutive": "Senior Account Manager",
+      "createdAt": "2026-11-10T14:49:01.359Z"
+    },
+    {
       "id": "LEAD-7024",
       "name": "Sunita Mehra",
       "company": "Mehra Logistics Pvt Ltd",
@@ -1708,6 +1808,72 @@
     }
   ],
   "journals": [
+    {
+      "id": "JRN-2026-9971",
+      "date": "2026-11-10",
+      "reference": "INV-AD-BATCH-SETTLEMENT",
+      "description": "Daily Aggregate Citizen Fee Settlement & VLE Commission Disbursement",
+      "lines": [
+        {
+          "accountCode": "1010",
+          "accountName": "Cash & Bank Balances",
+          "debit": 11800,
+          "credit": 0
+        },
+        {
+          "accountCode": "4010",
+          "accountName": "Citizen Service Revenue",
+          "debit": 0,
+          "credit": 8000
+        },
+        {
+          "accountCode": "2020",
+          "accountName": "GST Output Liability (18%)",
+          "debit": 0,
+          "credit": 1800
+        },
+        {
+          "accountCode": "5010",
+          "accountName": "VLE Operator Commission Expense",
+          "debit": 2000,
+          "credit": 0
+        },
+        {
+          "accountCode": "2010",
+          "accountName": "VLE Wallet Payable Balance",
+          "debit": 0,
+          "credit": 4000
+        }
+      ],
+      "totalDebit": 13800,
+      "totalCredit": 13800,
+      "balanced": true,
+      "cryptographicHash": "hash_8wkulxsgqb"
+    },
+    {
+      "id": "JRN-2026-5588",
+      "date": "2026-11-10",
+      "reference": "INV-AD-2026-TEST",
+      "description": "Audit Test Double-Entry Posting",
+      "lines": [
+        {
+          "accountCode": "1010",
+          "accountName": "Gateway Clearing",
+          "debit": 5000,
+          "credit": 0
+        },
+        {
+          "accountCode": "4010",
+          "accountName": "Professional Fee",
+          "debit": 0,
+          "credit": 5000
+        }
+      ],
+      "totalDebit": 5000,
+      "totalCredit": 5000,
+      "balanced": true,
+      "cryptographicHash": "hash_4c50l0prt8"
+    },
     {
       "id": "JRN-2026-7556",
       "date": "2026-11-10",
@@ -2173,6 +2339,26 @@
   ],
   "tickets": [
     {
+      "id": "TKT-1864",
+      "customerName": "Anil Deshmukh",
+      "customerPhone": "+91 98222 33445",
+      "serviceCategory": "Government Services",
+      "subject": "Passport appointment rescheduled request",
+      "priority": "Critical SLA",
+      "status": "Open",
+      "assignedAgent": "Priority Desk Agent",
+      "slaRemainingHours": 4,
+      "createdAt": "11/10/2026 08:19 PM",
+      "messages": [
+        {
+          "sender": "Anil Deshmukh",
+          "role": "Citizen",
+          "text": "Need urgent slot rebooking for PSK Patna.",
+          "timestamp": "08:19 PM"
+        }
+      ]
+    },
+    {
       "id": "TKT-2084",
       "customerName": "Anil Deshmukh",
       "customerPhone": "+91 98222 33445",
@@ -2394,6 +2580,19 @@
     }
   ],
   "campaigns": [
+    {
+      "id": "CMP-2026-97",
+      "name": "VLE Regional Monsoon Growth Drive",
+      "channel": "WhatsApp Business",
+      "audienceSegment": "VLE Franchisees",
+      "status": "Scheduled",
+      "scheduledDate": "2026-11-10",
+      "targetCount": 2500,
+      "sentCount": 0,
+      "deliveredCount": 0,
+      "conversionCount": 0,
+      "templateText": "Boost your digital center daily footfall with 150+ citizen services."
+    },
     {
       "id": "CMP-2026-38",
       "name": "VLE Regional Monsoon Growth Drive",
