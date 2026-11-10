@@ -613,10 +613,10 @@ export const ServiceApplicationModal: React.FC = () => {
                   <div style={{ borderBottom: '2px solid #0B3B60', paddingBottom: '0.75rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div>
                       <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0B3B60', letterSpacing: '0.04em' }}>
-                        COMMON SERVICES CENTER (CSC)
+                        AKUL DRAVIN DIGITAL SERVICES (ADCS)
                       </div>
                       <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>
-                        Ministry of Electronics & IT, Government of India • Digital Seva Portal
+                        Akul Dravin Digital Services • ADCS Sovereign Citizen Network
                       </div>
                     </div>
                     <div style={{
@@ -658,8 +658,8 @@ export const ServiceApplicationModal: React.FC = () => {
                       <strong>{city}, {state}</strong>
                     </div>
                     <div>
-                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>VLE KENDRA / वीएलई केंद्र:</span>
-                      <strong>Akul Dravin CSC Kendra (VLE: 245089123456)</strong>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>ADCS KENDRA / केंद्र:</span>
+                      <strong>Akul Dravin Digital Services Kendra (Operator ID: 245089123456)</strong>
                     </div>
                     <div>
                       <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>FEE PAID / भुगतान राशि:</span>
@@ -670,7 +670,7 @@ export const ServiceApplicationModal: React.FC = () => {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px dashed #CBD5E1', paddingTop: '0.75rem', fontSize: '0.75rem', color: '#64748B' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <ShieldCheck size={16} color="#16A34A" />
-                      <span>Security Digitally Signed & Verified (CSC Connect OAuth 2.0 Gateway)</span>
+                      <span>Security Digitally Signed & Verified (ADCS Connect OAuth 2.0 Gateway)</span>
                     </div>
                     <div style={{ fontWeight: 700, color: '#16A34A' }}>
                       STATUS: SUBMITTED
@@ -755,7 +755,7 @@ export const ServiceApplicationModal: React.FC = () => {
                     }}
                   >
                     <Printer size={16} />
-                    <span>Print CSC Acknowledgement Slip</span>
+                    <span>Print ADCS Acknowledgement Slip</span>
                   </button>
                 )}
 

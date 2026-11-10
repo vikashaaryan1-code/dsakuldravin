@@ -957,13 +957,13 @@ app.patch('/api/erp/inventory/:id/stock', (req, res) => {
   res.json({ success: true, item });
 });
 
-// 15. CSC Connect OAuth 2.0 & Digital Seva Engine
+// 15. ADCS Connect OAuth 2.0 & Sovereign Services Engine
 const DEFAULT_VLE_PROFILE = {
   cscId: '245089123456',
   vleName: 'Rajesh Sharma',
-  email: 'vle.rajesh.sharma@csc.gov.in',
+  email: 'operator@ad-digital.in',
   phone: '9876543210',
-  centerName: 'Akul Dravin Digital Seva Kendra',
+  centerName: 'Akul Dravin Digital Services Kendra (ADCS)',
   district: 'Patna',
   state: 'Bihar',
   pincode: '800001',
@@ -1875,8 +1875,8 @@ app.post('/api/csc/ucl/update', (req, res) => {
       operatorId: 'VLE-UIDAI-245089',
       operatorName: 'Rajesh Sharma (UIDAI Certified Supervisor)',
       stationId: 'STAT-PATNA-0912',
-      registrar: 'CSC e-Governance Services India Limited (Code: 206)',
-      enrolmentAgency: 'CSC e-Gov Enrolment Agency (Code: 0912)',
+      registrar: 'Akul Dravin Digital Services (ADCS Network Code: 206)',
+      enrolmentAgency: 'ADCS Sovereign Enrolment Agency (Code: 0912)',
       feeCharged: 50.00,
       status: 'UPDATE REQUEST ACCEPTED & FORWARDED TO UIDAI CIDR',
       timestamp: new Date().toISOString(),
@@ -1960,7 +1960,7 @@ app.post('/api/csc/estore/order', (req, res) => {
       paymentMode,
       deliveryAgent: 'Kiran Devi (Gramin e-Store Village Rider)',
       estimatedDelivery: 'Next Working Day (Doorstep Rural Delivery)',
-      status: 'CONFIRMED & DISPATCHED FROM REGIONAL CSC HUB',
+      status: 'CONFIRMED & DISPATCHED FROM REGIONAL ADCS HUB',
       timestamp: new Date().toISOString(),
       qrPayload: `ESTORE|ORDER:${orderId}|CUST:${customerName}|PROD:${productName}|AMT:${parsedAmount}|STATUS:DISPATCHED`,
       vleCommissionCredited: vleCommission,
@@ -2024,7 +2024,7 @@ app.post('/api/csc/dsc/issue', (req, res) => {
       dscType,
       usbTokenType,
       purpose,
-      caAuthority: 'CSC e-Gov CA / e-Mudhra Limited (Controller of Certifying Authorities - CCA)',
+      caAuthority: 'ADCS Trust Authority / e-Mudhra Licensed CA (Controller of Certifying Authorities - CCA)',
       validFrom,
       validUntil,
       algorithm: 'SHA-256 with RSA 2048-bit Asymmetric Cryptography',
@@ -2035,6 +2035,24 @@ app.post('/api/csc/dsc/issue', (req, res) => {
       vleNewBalance: db.vleProfile.walletBalance
     }
   });
+});
+
+// 32. ADCS API & Gateway Connectors Configuration Storage
+app.get('/api/admin/api-connectors', (req, res) => {
+  const db = readDB();
+  res.json({ success: true, connectors: db.apiConnectors || {} });
+});
+
+app.post('/api/admin/api-connectors', (req, res) => {
+  const { connectors } = req.body;
+  if (!connectors || typeof connectors !== 'object') {
+    return res.status(400).json({ success: false, message: 'Connectors object required' });
+  }
+  const db = readDB();
+  db.apiConnectors = { ...(db.apiConnectors || {}), ...connectors };
+  writeDB(db);
+  broadcastEvent('connectors:updated', { connectors: db.apiConnectors });
+  res.json({ success: true, connectors: db.apiConnectors });
 });
 
 // Start Server

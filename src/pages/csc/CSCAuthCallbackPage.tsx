@@ -23,7 +23,7 @@ export const CSCAuthCallbackPage: React.FC = () => {
         // Step 1: Code Verification
         await new Promise(r => setTimeout(r, 350));
         if (cancelled) return;
-        setStatusText('Exchanging Auth Code with CSC Connect Token Endpoint...');
+        setStatusText('Exchanging Auth Code with ADCS Connect Token Endpoint...');
         setStepIndex(2);
 
         // Step 2: Call token API
@@ -41,15 +41,15 @@ export const CSCAuthCallbackPage: React.FC = () => {
         // Step 3: Establish VLE Session
         await new Promise(r => setTimeout(r, 400));
         if (cancelled) return;
-        setStatusText('Establishing Sovereign VLE Operator Session...');
+        setStatusText('Establishing Sovereign ADCS Operator Session...');
         setStepIndex(3);
 
         setCurrentRole('vle');
         if (tokenRes?.vle?.walletBalance) {
           setWalletBalance(tokenRes.vle.walletBalance);
         }
-        logAudit('CSC Connect SSO Login', `Authenticated VLE ID: 245089123456 via OAuth code: ${code}`);
-        showToast('VLE Authorized', 'Welcome to Digital Seva Portal (VLE: Rajesh Sharma)', 'success');
+        logAudit('ADCS Connect SSO Login', `Authenticated Operator ID: 245089123456 via OAuth code: ${code}`);
+        showToast('ADCS Operator Authorized', 'Welcome to Akul Dravin Digital Services (ADCS)', 'success');
 
         // Step 4: Instant Navigation
         await new Promise(r => setTimeout(r, 500));
@@ -108,7 +108,7 @@ export const CSCAuthCallbackPage: React.FC = () => {
         </div>
 
         <h2 style={{ fontSize: '1.4rem', fontWeight: 800, margin: '0 0 0.5rem', color: '#F8FAFC' }}>
-          CSC CONNECT SINGLE SIGN-ON
+          ADCS CONNECT SINGLE SIGN-ON
         </h2>
         <p style={{ fontSize: '0.88rem', color: '#94A3B8', margin: '0 0 2rem' }}>
           {statusText}
@@ -119,7 +119,7 @@ export const CSCAuthCallbackPage: React.FC = () => {
           {[
             { num: 1, label: 'Authorize' },
             { num: 2, label: 'Token Exchange' },
-            { num: 3, label: 'Digital Seva' }
+            { num: 3, label: 'ADCS Portal' }
           ].map((item) => (
             <div key={item.num} style={{ flex: 1, textAlign: 'center' }}>
               <div style={{
@@ -172,7 +172,7 @@ export const CSCAuthCallbackPage: React.FC = () => {
               boxShadow: '0 4px 12px rgba(22, 163, 74, 0.35)'
             }}
           >
-            <span>Enter Digital Seva Portal (पोर्टल में प्रवेश करें)</span>
+            <span>Enter Akul Dravin Digital Services (ADCS)</span>
             <span>→</span>
           </button>
           <button
@@ -187,7 +187,7 @@ export const CSCAuthCallbackPage: React.FC = () => {
               cursor: 'pointer'
             }}
           >
-            Re-authenticate via CSC Connect
+            Re-authenticate via ADCS Connect
           </button>
         </div>
       </div>

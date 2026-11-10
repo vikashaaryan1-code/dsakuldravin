@@ -112,31 +112,31 @@ export const CSCConnectLoginPage: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F0F4F8', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif' }}>
-      {/* Top CSC Government Strip */}
+      {/* Top ADCS Government & Sovereign Strip */}
       <header style={{ background: '#0F172A', color: '#FFFFFF', padding: '0.8rem 2rem', borderBottom: '3px solid #16A34A' }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div style={{ width: '40px', height: '40px', background: '#16A34A', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#FFFFFF', fontSize: '1.2rem' }}>
-                CSC
+                ADCS
               </div>
               <div>
-                <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.02em' }}>CSC CONNECT</div>
-                <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>Digital Seva Single Sign-On (SSO) Service</div>
+                <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.02em' }}>ADCS CONNECT</div>
+                <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>Akul Dravin Digital Services Single Sign-On (SSO)</div>
               </div>
             </div>
             <span style={{ color: '#475569', fontSize: '1.2rem' }}>|</span>
             <div style={{ fontSize: '0.8rem', color: '#CBD5E1' }}>
-              Ministry of Electronics & Information Technology • Government of India
+              Akul Dravin Digital Services • Unified Citizen & Enterprise Infrastructure
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', fontSize: '0.82rem' }}>
             <Link to="/csc" style={{ color: '#E2E8F0', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Building2 size={15} color="#16A34A" /> CSC Main Portal
+              <Building2 size={15} color="#16A34A" /> ADCS Sovereign Portal
             </Link>
             <Link to="/register-vle" style={{ color: '#E2E8F0', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <FileText size={15} color="#F59E0B" /> VLE Registration
+              <FileText size={15} color="#F59E0B" /> Partner Registration
             </Link>
             <span style={{ background: '#1E293B', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px solid #334155' }}>
               OAuth 2.0 Auth Server
@@ -200,9 +200,9 @@ export const CSCConnectLoginPage: React.FC = () => {
               <div style={{ display: 'inline-flex', padding: '0.5rem', background: '#16A34A', borderRadius: '50%', marginBottom: '0.5rem' }}>
                 <ShieldCheck size={28} color="#FFFFFF" />
               </div>
-              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0 0 0.2rem' }}>CSC CONNECT LOGIN</h2>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0 0 0.2rem' }}>ADCS CONNECT LOGIN</h2>
               <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0 }}>
-                Single Sign-On for VLEs & Digital Seva Kendra Operators
+                Single Sign-On for Akul Dravin Digital Services (ADCS) Operators & Partners
               </p>
             </div>
 
@@ -225,10 +225,10 @@ export const CSCConnectLoginPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Username / CSC ID */}
+              {/* Username / ADCS ID */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '0.4rem' }}>
-                  CSC ID / Username / Email
+                  ADCS ID / Username / Email
                 </label>
                 <div style={{ position: 'relative' }}>
                   <User size={18} color="#94A3B8" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
@@ -236,7 +236,7 @@ export const CSCConnectLoginPage: React.FC = () => {
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter 12-digit CSC ID or username"
+                    placeholder="Enter 12-digit ADCS ID or username"
                     style={{
                       width: '100%',
                       padding: '0.65rem 0.75rem 0.65rem 2.5rem',
@@ -352,7 +352,7 @@ export const CSCConnectLoginPage: React.FC = () => {
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
                   />
-                  Remember my CSC ID
+                  Remember my ADCS ID
                 </label>
                 <span style={{ color: '#059669', fontWeight: 600 }}>SSL 256-Bit Encrypted</span>
               </div>
@@ -382,11 +382,11 @@ export const CSCConnectLoginPage: React.FC = () => {
                 {isLoading ? (
                   <>
                     <RefreshCw size={16} className="animate-spin" />
-                    Authorizing with CSC Connect...
+                    Authorizing with ADCS Connect...
                   </>
                 ) : (
                   <>
-                    Sign In to Digital Seva
+                    Sign In to Akul Dravin Digital Services (ADCS)
                     <ArrowRight size={18} />
                   </>
                 )}
@@ -405,12 +405,12 @@ export const CSCConnectLoginPage: React.FC = () => {
 
           {/* Bottom Help Desk */}
           <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.8rem', color: '#64748B' }}>
-            New to CSC?{' '}
+            New to ADCS?{' '}
             <Link to="/register-vle" style={{ color: '#16A34A', fontWeight: 700, textDecoration: 'none' }}>
-              Register as a Village Level Entrepreneur (VLE)
+              Register as an Akul Dravin Digital Services Partner
             </Link>
             <div style={{ marginTop: '0.5rem', fontSize: '0.74rem', color: '#94A3B8' }}>
-              Toll-Free Helpline: 1800 121 3468 • helpdesk@csc.gov.in
+              Toll-Free Helpline: 1800 120 4568 • support@ad-digital.in
             </div>
           </div>
 
@@ -419,7 +419,7 @@ export const CSCConnectLoginPage: React.FC = () => {
 
       {/* Footer */}
       <footer style={{ background: '#0F172A', color: '#94A3B8', padding: '1rem 2rem', fontSize: '0.75rem', textAlign: 'center', borderTop: '1px solid #1E293B' }}>
-        CSC e-Governance Services India Limited • Special Purpose Vehicle (CSC SPV) • Government of India
+        Akul Dravin Digital Services Private Limited • ADCS Sovereign Citizen Network • All Rights Reserved
       </footer>
     </div>
   );

@@ -31,7 +31,7 @@ export const RoleSwitcherBar: React.FC = () => {
 
   const roles: { role: UserRole; label: string; icon: React.ReactNode; path: string }[] = [
     { role: 'customer', label: t.roleCustomer, icon: <User size={13} />, path: '/customer/dashboard' },
-    { role: 'vle', label: 'Digital Seva (CSC VLE)', icon: <Store size={13} />, path: '/digitalseva' },
+    { role: 'vle', label: 'ADCS Kendra (Akul Dravin Digital Services)', icon: <Store size={13} />, path: '/digitalseva' },
     { role: 'cafe_operator', label: t.roleCafe, icon: <Monitor size={13} />, path: '/cyber-cafe/operator' },
     { role: 'franchise', label: t.roleFranchise, icon: <Building size={13} />, path: '/franchise/dashboard' },
     { role: 'distributor', label: 'Distributor Hub', icon: <Network size={13} />, path: '/distributor/dashboard' },
@@ -110,9 +110,9 @@ export const RoleSwitcherBar: React.FC = () => {
             border: 'none',
             cursor: 'pointer'
           }}
-          title="Open CSC Connect OAuth 2.0 Single Sign-On"
+          title="Open ADCS Connect OAuth 2.0 Single Sign-On"
         >
-          🔐 CSC Connect
+          🔐 ADCS Connect
         </button>
 
         <button
@@ -130,9 +130,9 @@ export const RoleSwitcherBar: React.FC = () => {
             border: '1px solid rgba(255, 255, 255, 0.15)',
             cursor: 'pointer'
           }}
-          title="Open CSC Official National Portal"
+          title="Open Akul Dravin Digital Services Sovereign Hub"
         >
-          🏛️ CSC.gov.in
+          🏛️ ADCS Hub
         </button>
 
         <div style={{

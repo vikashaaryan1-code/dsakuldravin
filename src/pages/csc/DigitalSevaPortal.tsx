@@ -34,7 +34,11 @@ import {
   Heart,
   Sprout,
   Car,
-  Ticket
+  Ticket,
+  Settings,
+  Key,
+  Globe,
+  Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
@@ -236,6 +240,18 @@ export const DigitalSevaPortal: React.FC = () => {
   const [newOpName, setNewOpName] = useState('');
   const [newOpPhone, setNewOpPhone] = useState('');
 
+  // ADCS Live API & Gateway Connector Hub State
+  const [isConnectorModalOpen, setIsConnectorModalOpen] = useState(false);
+  const [selectedConnectorId, setSelectedConnectorId] = useState<string>('digipay');
+  const [connectorsConfig, setConnectorsConfig] = useState<Record<string, { endpoint: string; apiKey: string; merchantId?: string; webhookSecret?: string; enabled: boolean }>>(() => {
+    try {
+      const saved = localStorage.getItem('adcs_api_config');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
   // Passbook transactions
   const [passbook, setPassbook] = useState([
     { id: 'TXN-PB-9941', date: '2026-11-10', type: 'CR', desc: 'VLE Commission: Form 49A PAN Application', amount: 50, balance: 2450.00 },
@@ -244,7 +260,7 @@ export const DigitalSevaPortal: React.FC = () => {
     { id: 'TXN-PB-9938', date: '2026-11-09', type: 'CR', desc: 'DigiPay AEPS Cash Out Surcharge', amount: 35, balance: 450.00 },
   ]);
 
-  // Live VLE Profile & Balance Sync
+  // Live VLE Profile & Balance Sync & API Connectors Sync
   React.useEffect(() => {
     let isMounted = true;
     fetch('/api/csc/vle-profile')
@@ -263,8 +279,38 @@ export const DigitalSevaPortal: React.FC = () => {
         }
       })
       .catch(() => {});
+
+    fetch('/api/admin/api-connectors')
+      .then(r => r.json())
+      .then(data => {
+        if (!isMounted || !data?.success || !data?.connectors) return;
+        setConnectorsConfig(prev => ({ ...data.connectors, ...prev }));
+      })
+      .catch(() => {});
+
     return () => { isMounted = false; };
   }, []);
+
+  // Save Connector Configuration
+  const handleSaveConnector = async (id: string, config: { endpoint: string; apiKey: string; merchantId?: string; webhookSecret?: string; enabled: boolean }) => {
+    const updated = {
+      ...connectorsConfig,
+      [id]: config
+    };
+    setConnectorsConfig(updated);
+    try {
+      localStorage.setItem('adcs_api_config', JSON.stringify(updated));
+      await fetch('/api/admin/api-connectors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ connectors: updated })
+      });
+      showToast('API Connector Saved', `Configuration for ${id.toUpperCase()} updated successfully.`, 'success');
+      logAudit('ADCS Connector Update', `Updated API endpoint/credentials for service: ${id}`);
+    } catch {
+      showToast('API Connector Saved Locally', `Saved to browser state for ${id.toUpperCase()}.`, 'success');
+    }
+  };
 
   // Handle Wallet Top-Up
   const handleTopup = async () => {
@@ -326,7 +372,7 @@ export const DigitalSevaPortal: React.FC = () => {
         feePaid: govtFee + vleCommission,
         city: 'Patna Center #104',
         state: 'Bihar',
-        notes: `Filing through Digital Seva Portal. Applicant Aadhaar: ${applicantAadhaar || 'Verified'}`
+        notes: `Filing through Akul Dravin Digital Services (ADCS) Sovereign Portal. Applicant Aadhaar: ${applicantAadhaar || 'Verified'}`
       });
 
       // Deduct govt fee and credit commission
@@ -340,7 +386,7 @@ export const DigitalSevaPortal: React.FC = () => {
       ]);
 
       showToast('Service Application Submitted', `Token: ${trackingId} generated. Receipt dispatched to customer.`, 'success');
-      logAudit('Digital Seva Service Filing', `Filed ${selectedService.title} for ${applicantName}. Token: ${trackingId}`);
+      logAudit('ADCS Sovereign Filing', `Filed ${selectedService.title} for ${applicantName}. Token: ${trackingId}`);
       confetti({ particleCount: 90, spread: 70 });
 
       setIsApplying(false);
@@ -943,21 +989,21 @@ export const DigitalSevaPortal: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F1F5F9', fontFamily: 'Inter, system-ui, sans-serif' }}>
-      {/* 1. Official CSC Digital Seva Top Bar */}
+      {/* 1. Official ADCS Sovereign Services Top Bar */}
       <header style={{ background: '#0F172A', color: '#FFFFFF', borderBottom: '3px solid #16A34A', position: 'sticky', top: 0, zIndex: 40 }}>
         {/* Tier 1 Header */}
         <div style={{ padding: '0.6rem 2rem', borderBottom: '1px solid #1E293B', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-              <div style={{ width: '38px', height: '38px', background: '#16A34A', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1.2rem', color: '#FFFFFF' }}>
-                CSC
+              <div style={{ width: '44px', height: '38px', background: '#16A34A', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '1rem', color: '#FFFFFF' }}>
+                ADCS
               </div>
               <div>
                 <div style={{ fontWeight: 800, fontSize: '1.1rem', letterSpacing: '0.02em', color: '#FFFFFF' }}>
-                  DIGITAL SEVA PORTAL
+                  AKUL DRAVIN DIGITAL SERVICES (ADCS) PORTAL
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>
-                  CSC e-Governance Services India Limited
+                  Akul Dravin Digital Services Private Limited
                 </div>
               </div>
             </div>
@@ -967,7 +1013,7 @@ export const DigitalSevaPortal: React.FC = () => {
             {/* VLE Center Identity */}
             <div style={{ fontSize: '0.8rem', color: '#CBD5E1' }}>
               <span style={{ color: '#34D399', fontWeight: 700 }}>VLE ID:</span> 245089123456 &nbsp;•&nbsp;
-              <span style={{ color: '#FCD34D', fontWeight: 700 }}>Kendra:</span> Akul Dravin Digital Seva Kendra (Patna, Bihar)
+              <span style={{ color: '#FCD34D', fontWeight: 700 }}>Kendra:</span> Akul Dravin Digital Services Kendra (ADCS) (Patna, Bihar)
             </div>
           </div>
 
@@ -1010,6 +1056,29 @@ export const DigitalSevaPortal: React.FC = () => {
               </button>
             </div>
 
+            {/* ADCS API Gateway Connectors Configuration Hub Trigger */}
+            <button
+              onClick={() => setIsConnectorModalOpen(true)}
+              title="Configure Live API Endpoints & Gateway Keys"
+              style={{
+                background: '#3B82F6',
+                color: '#FFFFFF',
+                border: 'none',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
+              }}
+            >
+              <Settings size={15} />
+              <span>API Connectors</span>
+            </button>
+
             {/* VLE Profile Avatar & Log Out */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', borderLeft: '1px solid #334155', paddingLeft: '1rem' }}>
               <div style={{ textAlign: 'right' }}>
@@ -1018,7 +1087,7 @@ export const DigitalSevaPortal: React.FC = () => {
               </div>
               <button
                 onClick={() => navigate('/connect/csc')}
-                title="Logout of CSC Connect"
+                title="Logout of ADCS Connect"
                 style={{
                   background: 'transparent',
                   border: '1px solid #475569',
@@ -4139,8 +4208,8 @@ export const DigitalSevaPortal: React.FC = () => {
                     {/* Header */}
                     <div style={{ textAlign: 'center', borderBottom: '2px solid #E2E8F0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                        <div style={{ width: '28px', height: '28px', background: '#16A34A', color: '#FFF', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
-                          CSC
+                        <div style={{ width: '38px', height: '28px', background: '#16A34A', color: '#FFF', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.78rem' }}>
+                          ADCS
                         </div>
                         <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0F172A', letterSpacing: '0.04em' }}>
                           PRADHAN MANTRI FASAL BIMA YOJANA (PMFBY)
@@ -4220,7 +4289,7 @@ export const DigitalSevaPortal: React.FC = () => {
                         </div>
                       </div>
                       <div style={{ textAlign: 'right', fontSize: '0.68rem', color: '#64748B' }}>
-                        Issued by: Akul Dravin Digital Seva Kendra<br />
+                        Issued by: Akul Dravin Digital Services Kendra (ADCS)<br />
                         Date: {new Date().toLocaleDateString('en-IN')}
                       </div>
                     </div>
@@ -4556,7 +4625,7 @@ export const DigitalSevaPortal: React.FC = () => {
                         </span>
                       </div>
                       <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
-                        National Payments Corporation of India (NPCI) • CSC e-Gov
+                        National Payments Corporation of India (NPCI) • ADCS Network
                       </div>
                       <div style={{ display: 'inline-block', background: '#DCFCE7', color: '#16A34A', fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '20px', marginTop: '0.35rem' }}>
                         ✓ {bbpsReceipt.status}
@@ -4625,7 +4694,7 @@ export const DigitalSevaPortal: React.FC = () => {
                         </div>
                       </div>
                       <div style={{ textAlign: 'right', fontSize: '0.68rem', color: '#64748B' }}>
-                        Agent: Akul Dravin Digital Seva Kendra<br />
+                        Agent: Akul Dravin Digital Services Kendra (ADCS)<br />
                         Date: {new Date().toLocaleDateString('en-IN')}
                       </div>
                     </div>
@@ -4841,7 +4910,7 @@ export const DigitalSevaPortal: React.FC = () => {
                   <div style={{ fontSize: '0.72rem', color: '#B45309', lineHeight: 1.4 }}>
                     • Certified Supervisor: <strong>Rajesh Sharma (VLE-UIDAI-245089)</strong><br />
                     • RD Service: <strong>Mantra MFS100 Fingerprint Scanner (Calibrated)</strong><br />
-                    • Registrar Code: <strong>206 (CSC SPV)</strong> | Enrolment Agency: <strong>0912</strong>
+                    • Registrar Code: <strong>206 (ADCS Network)</strong> | Enrolment Agency: <strong>0912</strong>
                   </div>
                 </div>
 
@@ -4938,7 +5007,7 @@ export const DigitalSevaPortal: React.FC = () => {
                     <div style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.78rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
                         <span style={{ color: '#64748B' }}>Registrar / Enrolment Agency:</span>
-                        <strong style={{ color: '#0F172A' }}>CSC SPV (206) / EA (0912)</strong>
+                        <strong style={{ color: '#0F172A' }}>ADCS Network (206) / EA (0912)</strong>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
                         <span style={{ color: '#64748B' }}>Operator / Station ID:</span>
@@ -4960,7 +5029,7 @@ export const DigitalSevaPortal: React.FC = () => {
                         </div>
                       </div>
                       <div style={{ textAlign: 'right', fontSize: '0.68rem', color: '#64748B' }}>
-                        Center: Akul Dravin Digital Seva Kendra<br />
+                        Center: Akul Dravin Digital Services Kendra (ADCS)<br />
                         Date: {new Date().toLocaleDateString('en-IN')}
                       </div>
                     </div>
@@ -5031,7 +5100,7 @@ export const DigitalSevaPortal: React.FC = () => {
                 </div>
                 <div>
                   <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                    CSC Grameen e-Store (ग्रामीण ई-स्टोर)
+                    ADCS Grameen e-Store (ग्रामीण ई-स्टोर)
                   </h3>
                   <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
                     MeitY Rural Commerce & Farm Distribution • VLE Fulfillment Comm: <strong style={{ color: '#16A34A' }}>+₹120.00 / Order</strong>
@@ -5236,7 +5305,7 @@ export const DigitalSevaPortal: React.FC = () => {
                           G
                         </div>
                         <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0F172A', letterSpacing: '0.04em' }}>
-                          CSC GRAMEEN E-STORE RURAL LOGISTICS
+                          ADCS GRAMEEN E-STORE RURAL LOGISTICS
                         </span>
                       </div>
                       <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
@@ -5314,7 +5383,7 @@ export const DigitalSevaPortal: React.FC = () => {
                         </div>
                       </div>
                       <div style={{ textAlign: 'right', fontSize: '0.68rem', color: '#64748B' }}>
-                        Hub: Akul Dravin Digital Seva Kendra<br />
+                        Hub: Akul Dravin Digital Services Kendra (ADCS)<br />
                         Date: {new Date().toLocaleDateString('en-IN')}
                       </div>
                     </div>
@@ -5568,7 +5637,7 @@ export const DigitalSevaPortal: React.FC = () => {
                           D
                         </div>
                         <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0F172A', letterSpacing: '0.04em' }}>
-                          CSC CLASS 3 DIGITAL SIGNATURE CERTIFICATE
+                          ADCS CLASS 3 DIGITAL SIGNATURE CERTIFICATE
                         </span>
                       </div>
                       <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
@@ -5646,7 +5715,7 @@ export const DigitalSevaPortal: React.FC = () => {
                         </div>
                       </div>
                       <div style={{ textAlign: 'right', fontSize: '0.68rem', color: '#64748B' }}>
-                        Kendra: Akul Dravin Digital Seva Kendra<br />
+                        Kendra: Akul Dravin Digital Services Kendra (ADCS)<br />
                         Date: {new Date().toLocaleDateString('en-IN')}
                       </div>
                     </div>
@@ -5759,7 +5828,7 @@ export const DigitalSevaPortal: React.FC = () => {
                       </td>
                       <td style={{ padding: '0.65rem 0.8rem', textAlign: 'right' }}>
                         <button
-                          onClick={() => alert(`Reprinting official CSC acknowledgement receipt for Token: ${app.id}...`)}
+                          onClick={() => alert(`reprinting official ADCS acknowledgement receipt for Token: ${app.id}...`)}
                           style={{
                             background: '#F1F5F9',
                             border: '1px solid #CBD5E1',
@@ -5876,7 +5945,7 @@ export const DigitalSevaPortal: React.FC = () => {
         {activeTab === 'support' && (
           <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
-              CSC Digital Seva Grievance & SLA Support Desk
+              ADCS Sovereign Services Grievance & SLA Support Desk
             </h3>
             <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '0 0 1.5rem' }}>
               Direct district manager escalation, technical helpdesk, and transaction refund tickets.
@@ -5887,13 +5956,13 @@ export const DigitalSevaPortal: React.FC = () => {
                 <div style={{ fontWeight: 700, color: '#0F172A', marginBottom: '0.5rem' }}>District Manager (DM) Patna</div>
                 <div style={{ fontSize: '0.8rem', color: '#334155', lineHeight: 1.6 }}>
                   <div><strong>Name:</strong> Shri Alok Verma</div>
-                  <div><strong>Email:</strong> dm.patna@csc.gov.in</div>
+                  <div><strong>Email:</strong> patna.hub@akuldravin.com</div>
                   <div><strong>Phone:</strong> +91 94310 99881</div>
                 </div>
               </div>
 
               <div style={{ background: '#F8FAFC', padding: '1.25rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                <div style={{ fontWeight: 700, color: '#0F172A', marginBottom: '0.5rem' }}>CSC Central Helpdesk</div>
+                <div style={{ fontWeight: 700, color: '#0F172A', marginBottom: '0.5rem' }}>ADCS Sovereign Helpdesk</div>
                 <div style={{ fontSize: '0.8rem', color: '#334155', lineHeight: 1.6 }}>
                   <div><strong>Toll-Free:</strong> 1800 121 3468</div>
                   <div><strong>DigiPay AEPS Desk:</strong> 011-49754975</div>
@@ -6075,7 +6144,7 @@ export const DigitalSevaPortal: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
               <div>
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, background: '#DCFCE7', color: '#166534', padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
-                  CSC Assisted Portal Filing
+                  ADCS Assisted Sovereign Filing
                 </span>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '0.4rem 0 0' }}>
                   {selectedService.title}
@@ -6163,6 +6232,267 @@ export const DigitalSevaPortal: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 4. MODAL: ADCS API & External Gateway Configuration Hub */}
+      {isConnectorModalOpen && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(15, 23, 42, 0.75)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ background: '#FFFFFF', width: '100%', maxWidth: '850px', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+            {/* Modal Header */}
+            <div style={{ background: '#0F172A', color: '#FFFFFF', padding: '1.25rem 1.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #3B82F6' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '38px', height: '38px', background: '#3B82F6', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Settings size={20} color="#FFFFFF" />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, letterSpacing: '0.02em' }}>
+                    ADCS API & External Gateway Configuration Hub
+                  </h3>
+                  <p style={{ fontSize: '0.75rem', color: '#94A3B8', margin: 0 }}>
+                    Connect live third-party API keys, endpoints, merchant credentials, and webhooks for real-time workflows.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsConnectorModalOpen(false)}
+                style={{ background: '#1E293B', border: '1px solid #334155', color: '#94A3B8', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body: Left Sidebar + Right Form */}
+            <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', flex: 1, overflow: 'hidden' }}>
+              {/* Left Service Selector */}
+              <div style={{ background: '#F8FAFC', borderRight: '1px solid #E2E8F0', padding: '1rem', overflowY: 'auto' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', marginBottom: '0.75rem', letterSpacing: '0.05em' }}>
+                  Flagship Services (22)
+                </div>
+                {[
+                  { id: 'digipay', name: 'DigiPay AEPS & ATM', tag: 'NPCI / FinTech' },
+                  { id: 'telelaw', name: 'Tele-Law Video Portal', tag: 'Dept of Justice' },
+                  { id: 'pmgdisha', name: 'PMGDISHA Digital Literacy', tag: 'MeitY' },
+                  { id: 'abha', name: 'Ayushman Bharat ABHA', tag: 'NHA' },
+                  { id: 'pmkisan', name: 'PM-KISAN e-KYC', tag: 'Agriculture' },
+                  { id: 'fastag', name: 'NETC FASTag 2.0', tag: 'NPCI / IHMCL' },
+                  { id: 'irctc', name: 'IRCTC Railway Booking', tag: 'Indian Railways' },
+                  { id: 'pan', name: 'UTIITSL / NSDL PAN', tag: 'Income Tax' },
+                  { id: 'edistrict', name: 'e-District State Portal', tag: 'State Portal' },
+                  { id: 'eshram', name: 'e-Shram National DB', tag: 'Ministry of Labour' },
+                  { id: 'pmfby', name: 'PM Fasal Bima (PMFBY)', tag: 'Crop Insurance' },
+                  { id: 'bbps', name: 'Bharat BillPay (BBPS)', tag: 'NPCI' },
+                  { id: 'ucl', name: 'Aadhaar UCL Client', tag: 'UIDAI' },
+                  { id: 'estore', name: 'ADCS Grameen e-Store', tag: 'Rural Commerce' },
+                  { id: 'dsc', name: 'Class 3 DSC & e-Sign', tag: 'CCA' },
+                  { id: 'gemini', name: 'Google Gemini Cloud AI', tag: 'LLM Gateway' },
+                  { id: 'payment', name: 'Razorpay / Cashfree', tag: 'Payment Gateway' }
+                ].map((s) => {
+                  const isConfigured = Boolean(connectorsConfig[s.id]?.apiKey || connectorsConfig[s.id]?.endpoint);
+                  const isSelected = selectedConnectorId === s.id;
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedConnectorId(s.id)}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '0.65rem 0.75rem',
+                        borderRadius: '8px',
+                        marginBottom: '0.4rem',
+                        border: isSelected ? '1px solid #3B82F6' : '1px solid #E2E8F0',
+                        background: isSelected ? '#EFF6FF' : '#FFFFFF',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '0.15rem'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.82rem', fontWeight: isSelected ? 800 : 600, color: isSelected ? '#1D4ED8' : '#0F172A' }}>
+                          {s.name}
+                        </span>
+                        <span style={{
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          padding: '0.1rem 0.4rem',
+                          borderRadius: '10px',
+                          background: isConfigured ? '#DCFCE7' : '#F1F5F9',
+                          color: isConfigured ? '#16A34A' : '#94A3B8'
+                        }}>
+                          {isConfigured ? 'Live Connected' : 'Simulated'}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '0.68rem', color: '#64748B' }}>{s.tag}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Right Configuration Form */}
+              <div style={{ padding: '1.5rem', overflowY: 'auto' }}>
+                {(() => {
+                  const current = connectorsConfig[selectedConnectorId] || { endpoint: '', apiKey: '', merchantId: '', webhookSecret: '', enabled: false };
+                  return (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', paddingBottom: '0.75rem', borderBottom: '1px solid #E2E8F0' }}>
+                        <div>
+                          <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0F172A', margin: 0, textTransform: 'uppercase' }}>
+                            {selectedConnectorId} Gateway Settings
+                          </h4>
+                          <span style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                            Configure production credentials to forward real transactions to external endpoints.
+                          </span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: current.enabled ? '#16A34A' : '#64748B' }}>
+                            {current.enabled ? 'Enabled' : 'Disabled'}
+                          </span>
+                          <input
+                            type="checkbox"
+                            checked={Boolean(current.enabled)}
+                            onChange={(e) => {
+                              handleSaveConnector(selectedConnectorId, { ...current, enabled: e.target.checked });
+                            }}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                          🌐 External API Endpoint / Target URL
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.55rem 0.75rem' }}>
+                          <Globe size={16} color="#64748B" style={{ marginRight: '0.5rem' }} />
+                          <input
+                            type="url"
+                            value={current.endpoint || ''}
+                            onChange={(e) => {
+                              setConnectorsConfig({
+                                ...connectorsConfig,
+                                [selectedConnectorId]: { ...current, endpoint: e.target.value }
+                              });
+                            }}
+                            placeholder="https://api.provider.gov.in/v2/gateway"
+                            style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontSize: '0.85rem' }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ marginBottom: '1rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                          🔑 API Key / Bearer Secret / Auth Token
+                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.55rem 0.75rem' }}>
+                          <Key size={16} color="#64748B" style={{ marginRight: '0.5rem' }} />
+                          <input
+                            type="password"
+                            value={current.apiKey || ''}
+                            onChange={(e) => {
+                              setConnectorsConfig({
+                                ...connectorsConfig,
+                                [selectedConnectorId]: { ...current, apiKey: e.target.value }
+                              });
+                            }}
+                            placeholder="sk_live_..."
+                            style={{ width: '100%', background: 'transparent', border: 'none', outline: 'none', fontSize: '0.85rem' }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                            🏢 Terminal ID / Merchant ID
+                          </label>
+                          <input
+                            type="text"
+                            value={current.merchantId || ''}
+                            onChange={(e) => {
+                              setConnectorsConfig({
+                                ...connectorsConfig,
+                                [selectedConnectorId]: { ...current, merchantId: e.target.value }
+                              });
+                            }}
+                            placeholder="e.g. MERCH-PATNA-0912"
+                            style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                            🔒 Webhook Signature Secret
+                          </label>
+                          <input
+                            type="password"
+                            value={current.webhookSecret || ''}
+                            onChange={(e) => {
+                              setConnectorsConfig({
+                                ...connectorsConfig,
+                                [selectedConnectorId]: { ...current, webhookSecret: e.target.value }
+                              });
+                            }}
+                            placeholder="whsec_..."
+                            style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ background: '#F1F5F9', padding: '0.85rem', borderRadius: '8px', marginBottom: '1.25rem', fontSize: '0.75rem', color: '#475569', lineHeight: 1.5 }}>
+                        💡 <strong>Sovereign Dual-Mode Engine:</strong> If an endpoint or API key is not supplied, the platform automatically operates in high-fidelity mathematical emulation mode (valid Verhoeff checksums, verifiable QR payloads, audit log signatures, and live balance settlements).
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = { ...connectorsConfig };
+                            delete updated[selectedConnectorId];
+                            setConnectorsConfig(updated);
+                            localStorage.setItem('adcs_api_config', JSON.stringify(updated));
+                            showToast('Credentials Cleared', `Reset ${selectedConnectorId} to sovereign emulation mode.`, 'info');
+                          }}
+                          style={{
+                            background: '#FFFFFF',
+                            border: '1px solid #CBD5E1',
+                            color: '#64748B',
+                            padding: '0.6rem 1rem',
+                            borderRadius: '8px',
+                            fontWeight: 600,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Clear Credentials
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSaveConnector(selectedConnectorId, { ...current, enabled: true })}
+                          style={{
+                            background: '#16A34A',
+                            border: 'none',
+                            color: '#FFFFFF',
+                            padding: '0.6rem 1.25rem',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.4rem'
+                          }}
+                        >
+                          <Check size={16} />
+                          <span>Save & Apply Connector</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
           </div>
         </div>
       )}

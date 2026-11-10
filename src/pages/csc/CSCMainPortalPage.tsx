@@ -71,7 +71,7 @@ export const CSCMainPortalPage: React.FC = () => {
 
       setRegResult(generated);
       showToast('VLE Application Filed', `Reference No: ${generated.refNumber} generated. Under DM verification.`, 'success');
-      logAudit('CSC VLE Registration', `Submitted application with TEC: ${tecNumber} for ${vleName}`);
+      logAudit('ADCS Partner Registration', `Submitted application with TEC: ${tecNumber} for ${vleName}`);
       confetti({ particleCount: 80, spread: 60 });
     } finally {
       setIsSubmitting(false);
@@ -80,22 +80,22 @@ export const CSCMainPortalPage: React.FC = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8FAFC', fontFamily: 'Inter, system-ui, sans-serif' }}>
-      {/* 1. National Tricolor Government Strip */}
+      {/* 1. National Tricolor Strip */}
       <div style={{ height: '4px', background: 'linear-gradient(to right, #FF9933 33%, #FFFFFF 33%, #FFFFFF 66%, #138808 66%)' }} />
 
-      {/* 2. Official CSC Header */}
+      {/* 2. Official ADCS Header */}
       <header style={{ background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '0.8rem 2rem' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-            <div style={{ width: '48px', height: '48px', background: '#16A34A', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontWeight: 900, fontSize: '1.4rem' }}>
-              CSC
+            <div style={{ width: '48px', height: '48px', background: '#16A34A', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontWeight: 900, fontSize: '1.3rem' }}>
+              ADCS
             </div>
             <div>
               <div style={{ fontWeight: 800, fontSize: '1.25rem', color: '#0F172A', letterSpacing: '0.01em' }}>
-                COMMON SERVICES CENTERS
+                AKUL DRAVIN DIGITAL SERVICES
               </div>
               <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
-                Digital India • Ministry of Electronics & IT • Government of India
+                ADCS Sovereign Citizen Network • Enterprise Digital Platform
               </div>
             </div>
           </div>
@@ -118,7 +118,7 @@ export const CSCMainPortalPage: React.FC = () => {
                 boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)'
               }}
             >
-              CSC Connect Login ➔
+              ADCS Connect Login ➔
             </button>
 
             <button
@@ -134,7 +134,7 @@ export const CSCMainPortalPage: React.FC = () => {
                 cursor: 'pointer'
               }}
             >
-              Digital Seva Portal
+              ADCS Portal
             </button>
           </div>
         </div>
@@ -145,9 +145,9 @@ export const CSCMainPortalPage: React.FC = () => {
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', gap: '1rem' }}>
           {[
             { id: 'overview', label: 'Ecosystem Overview' },
-            { id: 'schemes', label: 'National Schemes (DigiPay, PMGDisha)' },
-            { id: 'register', label: 'VLE Registration (register.csc.gov.in)' },
-            { id: 'locate', label: 'Locate Nearest CSC Kendra' }
+            { id: 'schemes', label: 'ADCS National Schemes (DigiPay, ABHA, PMFBY)' },
+            { id: 'register', label: 'ADCS Partner Registration' },
+            { id: 'locate', label: 'Locate Nearest ADCS Kendra' }
           ].map(tab => (
             <button
               key={tab.id}
@@ -185,13 +185,13 @@ export const CSCMainPortalPage: React.FC = () => {
               boxShadow: '0 10px 30px rgba(0,0,0,0.15)'
             }}>
               <span style={{ background: '#16A34A', color: '#FFFFFF', fontSize: '0.72rem', fontWeight: 800, padding: '0.25rem 0.65rem', borderRadius: '4px', textTransform: 'uppercase' }}>
-                Pan-India Digital Infrastructure
+                Pan-India Sovereign Digital Infrastructure
               </span>
               <h1 style={{ fontSize: '2.4rem', fontWeight: 900, margin: '0.75rem 0 0.5rem', lineHeight: 1.2 }}>
-                Empowering Rural India Through Digital Seva Kendras
+                Empowering India Through Akul Dravin Digital Services (ADCS)
               </h1>
               <p style={{ fontSize: '1rem', color: '#CBD5E1', maxWidth: '750px', lineHeight: 1.6, margin: '0 0 1.75rem' }}>
-                A strategic cornerstone of the Digital India programme. Access hundreds of Central and State government services, banking, insurance, telemedicine, and education at your doorstep.
+                The sovereign backbone of Digital India. Access hundreds of Central and State citizen services, banking, insurance, telemedicine, and education at your doorstep through authorized ADCS Kendras.
               </p>
 
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
@@ -211,7 +211,7 @@ export const CSCMainPortalPage: React.FC = () => {
                     gap: '0.5rem'
                   }}
                 >
-                  Enter CSC Connect (OAuth SSO) <ArrowRight size={16} />
+                  Enter ADCS Connect (OAuth SSO) <ArrowRight size={16} />
                 </button>
                 <button
                   onClick={() => setActiveTab('register')}
@@ -226,7 +226,7 @@ export const CSCMainPortalPage: React.FC = () => {
                     cursor: 'pointer'
                   }}
                 >
-                  Apply for New VLE Kendra
+                  Apply for New ADCS Kendra
                 </button>
               </div>
             </div>
@@ -234,10 +234,10 @@ export const CSCMainPortalPage: React.FC = () => {
             {/* National Statistics Strip */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
               {[
-                { label: 'Active CSC Kendras', val: '5,50,000+', desc: 'Across 28 States & 8 UTs' },
+                { label: 'Active ADCS Kendras', val: '5,50,000+', desc: 'Across 28 States & 8 UTs' },
                 { label: 'Gram Panchayats Covered', val: '2,50,000+', desc: '100% Rural Penetration' },
                 { label: 'Monthly Financial GTV', val: '₹14,500 Cr+', desc: 'AEPS, BBPS & DBT Transfers' },
-                { label: 'Women VLE Entrepreneurs', val: '85,000+', desc: 'Leading Rural Digital Economy' }
+                { label: 'Women ADCS Entrepreneurs', val: '85,000+', desc: 'Leading Rural Digital Economy' }
               ].map((stat, idx) => (
                 <div key={idx} style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
                   <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600, textTransform: 'uppercase' }}>{stat.label}</div>
@@ -253,7 +253,7 @@ export const CSCMainPortalPage: React.FC = () => {
         {activeTab === 'schemes' && (
           <div>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0F172A', marginBottom: '1.5rem' }}>
-              Flagship Government Schemes Operational on Digital Seva
+              Flagship Citizen Schemes Operational on Akul Dravin Digital Services (ADCS)
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
@@ -272,7 +272,7 @@ export const CSCMainPortalPage: React.FC = () => {
                 { title: 'e-Shram National Worker Card', desc: 'NDUW registration issuing 12-digit UAN cards with ₹2.00 Lakh PMSBY accidental insurance cover for unorganized sector workers.', tag: 'Ministry of Labour', comm: '₹40 per worker', tabKey: 'eshram' },
                 { title: 'Tele-Law: Access to Justice', desc: 'Connecting rural citizens with Panel Lawyers of the High Court & State Legal Services Authority via live video bridge consultations.', tag: 'Ministry of Law', comm: 'Free Legal Aid', tabKey: 'telelaw' },
                 { title: 'PMGDISHA (Digital Literacy)', desc: 'Pradhan Mantri Gramin Digital Saksharta Abhiyan training 6 crore rural households in computers, smartphones, and online banking.', tag: 'Education (MeitY)', comm: '₹300 per certified candidate', tabKey: 'pmgdisha' },
-                { title: 'CSC Grameen e-Store', desc: 'Hyperlocal e-commerce app connecting rural grocery shops, farmers, solar equipment, and self-help groups for doorstep delivery.', tag: 'Rural E-Commerce', comm: '₹120 per fulfillment', tabKey: 'estore' }
+                { title: 'ADCS Grameen e-Store', desc: 'Hyperlocal e-commerce platform connecting rural grocery shops, farmers, solar equipment, and self-help groups for doorstep delivery.', tag: 'Rural E-Commerce', comm: '₹120 per fulfillment', tabKey: 'estore' }
               ].map((scheme, idx) => (
                 <div key={idx} style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -305,7 +305,7 @@ export const CSCMainPortalPage: React.FC = () => {
                       gap: '0.35rem'
                     }}
                   >
-                    Launch on Digital Seva ➔
+                    Launch on ADCS Portal ➔
                   </button>
                 </div>
               ))}
@@ -313,7 +313,7 @@ export const CSCMainPortalPage: React.FC = () => {
           </div>
         )}
 
-        {/* REGISTER VLE TAB */}
+        {/* REGISTER ADCS KENDRA TAB */}
         {activeTab === 'register' && (
           <div style={{ maxWidth: '720px', margin: '0 auto' }}>
             <div style={{ background: '#FFFFFF', padding: '2rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 15px rgba(0,0,0,0.04)' }}>
@@ -323,10 +323,10 @@ export const CSCMainPortalPage: React.FC = () => {
                 </div>
                 <div>
                   <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                    VLE Registration (register.csc.gov.in)
+                    ADCS Kendra Partner Registration
                   </h2>
                   <p style={{ fontSize: '0.82rem', color: '#64748B', margin: 0 }}>
-                    Official application for setting up an authorized Common Services Center
+                    Official application for setting up an authorized Akul Dravin Digital Services Kendra
                   </p>
                 </div>
               </div>
@@ -337,13 +337,13 @@ export const CSCMainPortalPage: React.FC = () => {
                     <CheckCircle2 size={32} color="#FFFFFF" />
                   </div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#166534', margin: '0 0 0.5rem' }}>
-                    VLE Application Submitted Successfully!
+                    ADCS Partner Application Submitted Successfully!
                   </h3>
                   <div style={{ fontSize: '1rem', fontFamily: 'monospace', fontWeight: 800, color: '#0F172A', background: '#FFFFFF', padding: '0.65rem 1rem', borderRadius: '8px', border: '1px solid #CBD5E1', display: 'inline-block', margin: '0.5rem 0' }}>
                     Reference No: {regResult.refNumber}
                   </div>
                   <p style={{ fontSize: '0.85rem', color: '#475569', margin: '0.5rem 0 1.5rem' }}>
-                    Status: <strong>{regResult.stage}</strong>. The District Manager will visit your shop premises for physical GPS verification within 7 working days.
+                    Status: <strong>{regResult.stage}</strong>. The Akul Dravin Digital Services Operations Desk will verify your center premises within 7 working days.
                   </p>
                   <button
                     onClick={() => navigate('/connect/csc')}
@@ -357,7 +357,7 @@ export const CSCMainPortalPage: React.FC = () => {
                       cursor: 'pointer'
                     }}
                   >
-                    Proceed to CSC Connect Login ➔
+                    Proceed to ADCS Connect Login ➔
                   </button>
                 </div>
               ) : (
@@ -376,7 +376,7 @@ export const CSCMainPortalPage: React.FC = () => {
                       style={{ width: '100%', padding: '0.65rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
                     />
                     <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.3rem' }}>
-                      Mandatory as per CSC SPV guidelines. Get certified at teccertificate.com.
+                      Mandatory as per ADCS Network guidelines. Get certified at teccertificate.com.
                     </div>
                   </div>
 
@@ -438,7 +438,7 @@ export const CSCMainPortalPage: React.FC = () => {
 
                   <div style={{ marginBottom: '1.5rem' }}>
                     <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: '#334155', marginBottom: '0.3rem' }}>
-                      Proposed CSC Kendra Shop Address (with Geotag Lat/Long) *
+                      Proposed ADCS Kendra Shop Address (with Geotag Lat/Long) *
                     </label>
                     <textarea
                       required
@@ -476,10 +476,10 @@ export const CSCMainPortalPage: React.FC = () => {
         {activeTab === 'locate' && (
           <div style={{ background: '#FFFFFF', padding: '2rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
-              Locate Your Nearest Authorized CSC Kendra
+              Locate Your Nearest Authorized ADCS Kendra
             </h2>
             <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '0 0 1.5rem' }}>
-              Search across 5,50,000+ certified VLE centers for biometric services, certificates, and DigiPay ATM cashouts.
+              Search across certified ADCS Kendra partner centers for biometric services, certificates, and DigiPay ATM cashouts.
             </p>
 
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
@@ -517,11 +517,11 @@ export const CSCMainPortalPage: React.FC = () => {
             {/* Center Results */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
               {[
-                { name: 'Akul Dravin Digital Seva Kendra', id: '245089123456', vle: 'Rajesh Sharma', addr: 'Shop No. 12, Main Market, Danapur, Patna - 800001', district: 'Patna', pincode: '800001', dist: '0.4 km away', phone: '+91 98765 43210' },
-                { name: 'Shree Balaji CSC Center', id: '245089998124', vle: 'Anand Verma', addr: 'Opposite Block Office, Bailey Road, Patna - 800014', district: 'Patna', pincode: '800014', dist: '1.8 km away', phone: '+91 98351 00221' },
-                { name: 'Patna Gramin Seva Kendra', id: '245081124590', vle: 'Pooja Kumari', addr: 'Near State Bank, Saguna More, Patna - 801503', district: 'Patna', pincode: '801503', dist: '3.2 km away', phone: '+91 94310 88771' },
-                { name: 'Mithila Digital Seva Center', id: '245082299101', vle: 'Rameshwar Jha', addr: 'Station Road, Darbhanga - 846004', district: 'Darbhanga', pincode: '846004', dist: 'Hub Center', phone: '+91 98350 11223' },
-                { name: 'Muzaffarpur Smart CSC Hub', id: '245083399202', vle: 'Kavita Singh', addr: 'Motijheel Market, Muzaffarpur - 842001', district: 'Muzaffarpur', pincode: '842001', dist: 'Hub Center', phone: '+91 98350 44556' }
+                { name: 'Akul Dravin Digital Services Kendra', id: '245089123456', vle: 'Rajesh Sharma', addr: 'Shop No. 12, Main Market, Danapur, Patna - 800001', district: 'Patna', pincode: '800001', dist: '0.4 km away', phone: '+91 98765 43210' },
+                { name: 'Shree Balaji ADCS Center', id: '245089998124', vle: 'Anand Verma', addr: 'Opposite Block Office, Bailey Road, Patna - 800014', district: 'Patna', pincode: '800014', dist: '1.8 km away', phone: '+91 98351 00221' },
+                { name: 'Patna Gramin ADCS Kendra', id: '245081124590', vle: 'Pooja Kumari', addr: 'Near State Bank, Saguna More, Patna - 801503', district: 'Patna', pincode: '801503', dist: '3.2 km away', phone: '+91 94310 88771' },
+                { name: 'Mithila ADCS Kendra Hub', id: '245082299101', vle: 'Rameshwar Jha', addr: 'Station Road, Darbhanga - 846004', district: 'Darbhanga', pincode: '846004', dist: 'Hub Center', phone: '+91 98350 11223' },
+                { name: 'Muzaffarpur Smart ADCS Hub', id: '245083399202', vle: 'Kavita Singh', addr: 'Motijheel Market, Muzaffarpur - 842001', district: 'Muzaffarpur', pincode: '842001', dist: 'Hub Center', phone: '+91 98350 44556' }
               ]
               .filter(c => {
                 const dMatch = !searchDistrict.trim() || c.district.toLowerCase().includes(searchDistrict.trim().toLowerCase()) || c.addr.toLowerCase().includes(searchDistrict.trim().toLowerCase());
