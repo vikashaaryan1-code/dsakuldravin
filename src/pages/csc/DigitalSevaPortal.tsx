@@ -37,10 +37,13 @@ import {
   Ticket
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 export const DigitalSevaPortal: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+
   const { 
     services, 
     applications, 
@@ -52,7 +55,20 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'pmfby' | 'bbps' | 'ucl' | 'estore' | 'dsc' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'pmfby' | 'bbps' | 'ucl' | 'estore' | 'dsc' | 'orders' | 'operators' | 'support'>(() => {
+    const validTabs = ['dashboard', 'services', 'wallet', 'digipay', 'telelaw', 'pmgdisha', 'abha', 'pmkisan', 'fastag', 'irctc', 'pan', 'edistrict', 'eshram', 'pmfby', 'bbps', 'ucl', 'estore', 'dsc', 'orders', 'operators', 'support'];
+    return (validTabs.includes(tabParam || '') ? tabParam : 'dashboard') as any;
+  });
+
+  // Re-sync activeTab if search parameter changes
+  React.useEffect(() => {
+    if (tabParam) {
+      const validTabs = ['dashboard', 'services', 'wallet', 'digipay', 'telelaw', 'pmgdisha', 'abha', 'pmkisan', 'fastag', 'irctc', 'pan', 'edistrict', 'eshram', 'pmfby', 'bbps', 'ucl', 'estore', 'dsc', 'orders', 'operators', 'support'];
+      if (validTabs.includes(tabParam)) {
+        setActiveTab(tabParam as any);
+      }
+    }
+  }, [tabParam]);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
 

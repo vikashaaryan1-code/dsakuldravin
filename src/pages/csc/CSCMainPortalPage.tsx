@@ -258,21 +258,21 @@ export const CSCMainPortalPage: React.FC = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
               {[
-                { title: 'Aadhaar UCL (Update Client Lite)', desc: 'Authorized UIDAI demographic update client for mobile linking, address change, and mandatory 10-year PoI/PoA document renewals with 28-digit EID issuance.', tag: 'UIDAI Registrar 206', comm: '₹50 per update' },
-                { title: 'DigiPay (AEPS & Micro-ATM)', desc: 'Biometric Aadhaar Enabled Payment System allowing cash deposit, cash withdrawal, and mini-statements for all 54 commercial banks.', tag: 'Financial Inclusion', comm: 'Up to ₹15 per tx' },
-                { title: 'BBPS (Bharat Bill Payment System)', desc: 'NPCI integrated bill payment for electricity DISCOMs, LPG cylinders, water supply, and municipal taxes with zero surcharge and thermal receipt.', tag: 'NPCI Utility', comm: '₹20 per bill' },
-                { title: 'PM Fasal Bima Yojana (PMFBY)', desc: 'Comprehensive crop insurance coverage against natural calamities for Kharif & Rabi seasons with land Khasra seeding and instant policy slip.', tag: 'Ministry of Agriculture', comm: '₹100 per policy' },
-                { title: 'Class 3 Digital Signature (DSC)', desc: 'CCA licensed 2048-bit asymmetric cryptographic certificates programmed into FIPS 140-2 Level 3 USB tokens for GeM, MCA21, and e-tenders.', tag: 'CCA Certifying Authority', comm: '₹250 per token' },
-                { title: 'IRCTC Railway PRS Ticketing', desc: 'Direct Indian Railways passenger reservation booking, PNR allocation, berth selection, tatkal ticketing, and electronic reservation slips.', tag: 'Indian Railways CRIS', comm: '₹40 AC / ₹20 SL' },
-                { title: 'Ayushman Bharat ABHA Health Card', desc: 'Creation of 14-digit ABHA IDs and golden cards offering ₹5,00,000 per family per year for secondary and tertiary care hospitalization.', tag: 'Health (NHA / ABDM)', comm: '₹50 per issuance' },
-                { title: 'PM Kisan Samman Nidhi', desc: 'Mandatory biometric eKYC, new farmer enrollment, land seeding verification, and bank DBT seeding for ₹6,000 annual farmer assistance.', tag: 'Agriculture DBT', comm: '₹15 per eKYC' },
-                { title: 'FASTag 2.0 (NETC Toll Services)', desc: 'Instant vehicle RFID tag issuance and balance recharge integrated with NHAI and NPCI national electronic toll collection.', tag: 'NHAI / MoRTH', comm: '₹40 issuance / ₹15 topup' },
-                { title: 'UTIITSL / NSDL PAN Services', desc: 'Form 49A Indian citizen applications, CSF corrections, AO code assignment, and physical card dispatch with instant coupon tracking.', tag: 'Income Tax Department', comm: '₹50 per application' },
-                { title: 'e-District State Revenue Services', desc: 'Issuance of Domicile (निवास), Caste (जाति), and Income (आय) certificates with digital signatures of Sub-Divisional Magistrates.', tag: 'State Revenue Dept', comm: '₹30 per certificate' },
-                { title: 'e-Shram National Worker Card', desc: 'NDUW registration issuing 12-digit UAN cards with ₹2.00 Lakh PMSBY accidental insurance cover for unorganized sector workers.', tag: 'Ministry of Labour', comm: '₹40 per worker' },
-                { title: 'Tele-Law: Access to Justice', desc: 'Connecting rural citizens with Panel Lawyers of the High Court & State Legal Services Authority via live video bridge consultations.', tag: 'Ministry of Law', comm: 'Free Legal Aid' },
-                { title: 'PMGDISHA (Digital Literacy)', desc: 'Pradhan Mantri Gramin Digital Saksharta Abhiyan training 6 crore rural households in computers, smartphones, and online banking.', tag: 'Education (MeitY)', comm: '₹300 per certified candidate' },
-                { title: 'CSC Grameen e-Store', desc: 'Hyperlocal e-commerce app connecting rural grocery shops, farmers, solar equipment, and self-help groups for doorstep delivery.', tag: 'Rural E-Commerce', comm: '₹120 per fulfillment' }
+                { title: 'Aadhaar UCL (Update Client Lite)', desc: 'Authorized UIDAI demographic update client for mobile linking, address change, and mandatory 10-year PoI/PoA document renewals with 28-digit EID issuance.', tag: 'UIDAI Registrar 206', comm: '₹50 per update', tabKey: 'ucl' },
+                { title: 'DigiPay (AEPS & Micro-ATM)', desc: 'Biometric Aadhaar Enabled Payment System allowing cash deposit, cash withdrawal, and mini-statements for all 54 commercial banks.', tag: 'Financial Inclusion', comm: 'Up to ₹15 per tx', tabKey: 'digipay' },
+                { title: 'BBPS (Bharat Bill Payment System)', desc: 'NPCI integrated bill payment for electricity DISCOMs, LPG cylinders, water supply, and municipal taxes with zero surcharge and thermal receipt.', tag: 'NPCI Utility', comm: '₹20 per bill', tabKey: 'bbps' },
+                { title: 'PM Fasal Bima Yojana (PMFBY)', desc: 'Comprehensive crop insurance coverage against natural calamities for Kharif & Rabi seasons with land Khasra seeding and instant policy slip.', tag: 'Ministry of Agriculture', comm: '₹100 per policy', tabKey: 'pmfby' },
+                { title: 'Class 3 Digital Signature (DSC)', desc: 'CCA licensed 2048-bit asymmetric cryptographic certificates programmed into FIPS 140-2 Level 3 USB tokens for GeM, MCA21, and e-tenders.', tag: 'CCA Certifying Authority', comm: '₹250 per token', tabKey: 'dsc' },
+                { title: 'IRCTC Railway PRS Ticketing', desc: 'Direct Indian Railways passenger reservation booking, PNR allocation, berth selection, tatkal ticketing, and electronic reservation slips.', tag: 'Indian Railways CRIS', comm: '₹40 AC / ₹20 SL', tabKey: 'irctc' },
+                { title: 'Ayushman Bharat ABHA Health Card', desc: 'Creation of 14-digit ABHA IDs and golden cards offering ₹5,00,000 per family per year for secondary and tertiary care hospitalization.', tag: 'Health (NHA / ABDM)', comm: '₹50 per issuance', tabKey: 'abha' },
+                { title: 'PM Kisan Samman Nidhi', desc: 'Mandatory biometric eKYC, new farmer enrollment, land seeding verification, and bank DBT seeding for ₹6,000 annual farmer assistance.', tag: 'Agriculture DBT', comm: '₹15 per eKYC', tabKey: 'pmkisan' },
+                { title: 'FASTag 2.0 (NETC Toll Services)', desc: 'Instant vehicle RFID tag issuance and balance recharge integrated with NHAI and NPCI national electronic toll collection.', tag: 'NHAI / MoRTH', comm: '₹40 issuance / ₹15 topup', tabKey: 'fastag' },
+                { title: 'UTIITSL / NSDL PAN Services', desc: 'Form 49A Indian citizen applications, CSF corrections, AO code assignment, and physical card dispatch with instant coupon tracking.', tag: 'Income Tax Department', comm: '₹50 per application', tabKey: 'pan' },
+                { title: 'e-District State Revenue Services', desc: 'Issuance of Domicile (निवास), Caste (जाति), and Income (आय) certificates with digital signatures of Sub-Divisional Magistrates.', tag: 'State Revenue Dept', comm: '₹30 per certificate', tabKey: 'edistrict' },
+                { title: 'e-Shram National Worker Card', desc: 'NDUW registration issuing 12-digit UAN cards with ₹2.00 Lakh PMSBY accidental insurance cover for unorganized sector workers.', tag: 'Ministry of Labour', comm: '₹40 per worker', tabKey: 'eshram' },
+                { title: 'Tele-Law: Access to Justice', desc: 'Connecting rural citizens with Panel Lawyers of the High Court & State Legal Services Authority via live video bridge consultations.', tag: 'Ministry of Law', comm: 'Free Legal Aid', tabKey: 'telelaw' },
+                { title: 'PMGDISHA (Digital Literacy)', desc: 'Pradhan Mantri Gramin Digital Saksharta Abhiyan training 6 crore rural households in computers, smartphones, and online banking.', tag: 'Education (MeitY)', comm: '₹300 per certified candidate', tabKey: 'pmgdisha' },
+                { title: 'CSC Grameen e-Store', desc: 'Hyperlocal e-commerce app connecting rural grocery shops, farmers, solar equipment, and self-help groups for doorstep delivery.', tag: 'Rural E-Commerce', comm: '₹120 per fulfillment', tabKey: 'estore' }
               ].map((scheme, idx) => (
                 <div key={idx} style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
@@ -290,7 +290,7 @@ export const CSCMainPortalPage: React.FC = () => {
                     {scheme.desc}
                   </p>
                   <button
-                    onClick={() => navigate('/digitalseva')}
+                    onClick={() => navigate(`/digitalseva?tab=${scheme.tabKey}`)}
                     style={{
                       background: '#F1F5F9',
                       border: '1px solid #CBD5E1',
@@ -514,24 +514,67 @@ export const CSCMainPortalPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Mock Center Results */}
+            {/* Center Results */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
               {[
-                { name: 'Akul Dravin Digital Seva Kendra', id: '245089123456', vle: 'Rajesh Sharma', addr: 'Shop No. 12, Main Market, Danapur, Patna - 800001', dist: '0.4 km away', phone: '+91 98765 43210' },
-                { name: 'Shree Balaji CSC Center', id: '245089998124', vle: 'Anand Verma', addr: 'Opposite Block Office, Bailey Road, Patna - 800014', dist: '1.8 km away', phone: '+91 98351 00221' },
-                { name: 'Patna Gramin Seva Kendra', id: '245081124590', vle: 'Pooja Kumari', addr: 'Near State Bank, Saguna More, Patna - 801503', dist: '3.2 km away', phone: '+91 94310 88771' }
-              ].map((c, idx) => (
-                <div key={idx} style={{ background: '#F8FAFC', padding: '1.25rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16A34A', background: '#DCFCE7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
-                      Certified Active
-                    </span>
-                    <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>{c.dist}</span>
+                { name: 'Akul Dravin Digital Seva Kendra', id: '245089123456', vle: 'Rajesh Sharma', addr: 'Shop No. 12, Main Market, Danapur, Patna - 800001', district: 'Patna', pincode: '800001', dist: '0.4 km away', phone: '+91 98765 43210' },
+                { name: 'Shree Balaji CSC Center', id: '245089998124', vle: 'Anand Verma', addr: 'Opposite Block Office, Bailey Road, Patna - 800014', district: 'Patna', pincode: '800014', dist: '1.8 km away', phone: '+91 98351 00221' },
+                { name: 'Patna Gramin Seva Kendra', id: '245081124590', vle: 'Pooja Kumari', addr: 'Near State Bank, Saguna More, Patna - 801503', district: 'Patna', pincode: '801503', dist: '3.2 km away', phone: '+91 94310 88771' },
+                { name: 'Mithila Digital Seva Center', id: '245082299101', vle: 'Rameshwar Jha', addr: 'Station Road, Darbhanga - 846004', district: 'Darbhanga', pincode: '846004', dist: 'Hub Center', phone: '+91 98350 11223' },
+                { name: 'Muzaffarpur Smart CSC Hub', id: '245083399202', vle: 'Kavita Singh', addr: 'Motijheel Market, Muzaffarpur - 842001', district: 'Muzaffarpur', pincode: '842001', dist: 'Hub Center', phone: '+91 98350 44556' }
+              ]
+              .filter(c => {
+                const dMatch = !searchDistrict.trim() || c.district.toLowerCase().includes(searchDistrict.trim().toLowerCase()) || c.addr.toLowerCase().includes(searchDistrict.trim().toLowerCase());
+                const pMatch = !searchPincode.trim() || c.pincode.includes(searchPincode.trim());
+                return dMatch && pMatch;
+              })
+              .map((c, idx) => (
+                <div key={idx} style={{ background: '#F8FAFC', padding: '1.25rem', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#16A34A', background: '#DCFCE7', padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
+                        Certified Active
+                      </span>
+                      <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>{c.dist}</span>
+                    </div>
+                    <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.25rem' }}>{c.name}</h4>
+                    <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '0.3rem' }}><strong>VLE:</strong> {c.vle} (ID: {c.id})</div>
+                    <div style={{ fontSize: '0.75rem', color: '#64748B', marginBottom: '0.75rem' }}>{c.addr}</div>
                   </div>
-                  <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.25rem' }}>{c.name}</h4>
-                  <div style={{ fontSize: '0.75rem', color: '#475569', marginBottom: '0.3rem' }}><strong>VLE:</strong> {c.vle} (ID: {c.id})</div>
-                  <div style={{ fontSize: '0.75rem', color: '#64748B', marginBottom: '0.5rem' }}>{c.addr}</div>
-                  <div style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700 }}>📞 {c.phone}</div>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                    <a
+                      href={`tel:${c.phone}`}
+                      style={{
+                        flex: 1,
+                        background: '#DCFCE7',
+                        color: '#166534',
+                        textDecoration: 'none',
+                        padding: '0.45rem',
+                        borderRadius: '6px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        textAlign: 'center'
+                      }}
+                    >
+                      📞 Call VLE
+                    </a>
+                    <button
+                      onClick={() => showToast('Appointment Requested', `Doorstep Seva request dispatched to ${c.vle}.`, 'success')}
+                      style={{
+                        flex: 1,
+                        background: '#16A34A',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '0.45rem',
+                        borderRadius: '6px',
+                        fontSize: '0.78rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Book Visit
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
