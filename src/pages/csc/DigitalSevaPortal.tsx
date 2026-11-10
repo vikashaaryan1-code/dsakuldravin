@@ -52,9 +52,20 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // e-District State
+  const [edCertType, setEdCertType] = useState('Residential / Domicile Certificate (निवास प्रमाण पत्र)');
+  const [edApplicant, setEdApplicant] = useState('Pooja Kumari');
+  const [edFather, setEdFather] = useState('Sunil Kumar');
+  const [edAadhaar, setEdAadhaar] = useState('999999990019');
+  const [edDistrict, setEdDistrict] = useState('Patna');
+  const [edTehsil, setEdTehsil] = useState('Danapur');
+  const [edIncome, setEdIncome] = useState('₹1,80,000');
+  const [edReceipt, setEdReceipt] = useState<any | null>(null);
+  const [edLoading, setEdLoading] = useState(false);
 
   // PAN Card State
   const [panApplicant, setPanApplicant] = useState('Vikramaditya Sharma');
@@ -525,6 +536,42 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  // Handle e-District State Certificate Application
+  const handleEdistrictApply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!edApplicant || !edAadhaar) return;
+    setEdLoading(true);
+    try {
+      const res = await fetch('/api/csc/edistrict/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          certificateType: edCertType,
+          applicantName: edApplicant,
+          fatherName: edFather,
+          aadhaar: edAadhaar,
+          district: edDistrict,
+          tehsil: edTehsil,
+          annualIncome: edIncome
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.certificate) {
+        setEdReceipt(res.certificate);
+        setWalletBalance(res.certificate.vleNewBalance);
+        showToast('Certificate Application Approved', `Cert No: ${res.certificate.certificateNumber}. VLE Comm +₹${res.certificate.vleCommissionCredited} credited!`, 'success');
+        logAudit('e-District Certificate Filing', `Applicant: ${edApplicant}, Cert: ${res.certificate.certificateNumber}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('Application Failed', res.message || 'Error processing certificate', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setEdLoading(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -647,6 +694,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'fastag', label: 'FASTag 2.0 (NETC Toll)' },
             { id: 'irctc', label: 'IRCTC (Railway Booking)' },
             { id: 'pan', label: 'PAN Card (UTIITSL / NSDL)' },
+            { id: 'edistrict', label: 'e-District (Certificates)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -2840,6 +2888,294 @@ export const DigitalSevaPortal: React.FC = () => {
                   </button>
                   <button
                     onClick={() => alert(`Downloading PAN Acknowledgement Slip for Coupon ${panReceipt.couponNumber}...`)}
+                    style={{
+                      background: '#F1F5F9',
+                      color: '#334155',
+                      border: '1px solid #CBD5E1',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: e-DISTRICT CITIZEN SERVICES (edistrict.csccloud.in) */}
+        {activeTab === 'edistrict' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Form */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                <FileText size={22} color="#D97706" />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  e-District State Revenue Services
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                Department of Revenue & Land Reforms • Instant Certificate Application (+₹30 VLE commission, Govt Fee: ₹30)
+              </p>
+
+              <form onSubmit={handleEdistrictApply} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    SELECT CERTIFICATE SERVICE (सेवा का प्रकार)
+                  </label>
+                  <select
+                    value={edCertType}
+                    onChange={(e) => setEdCertType(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    <option value="Residential / Domicile Certificate (निवास प्रमाण पत्र)">Residential / Domicile Certificate (निवास प्रमाण पत्र)</option>
+                    <option value="Income Certificate (आय प्रमाण पत्र)">Income Certificate (आय प्रमाण पत्र)</option>
+                    <option value="Caste Certificate - OBC/EWS/SC/ST (जाति प्रमाण पत्र)">Caste Certificate - OBC/EWS/SC/ST (जाति प्रमाण पत्र)</option>
+                    <option value="Non-Creamy Layer (NCL) Certificate">Non-Creamy Layer (NCL) Certificate</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    APPLICANT FULL NAME (आवेदक का पूरा नाम)
+                  </label>
+                  <input
+                    type="text"
+                    value={edApplicant}
+                    onChange={(e) => setEdApplicant(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    FATHER / HUSBAND FULL NAME (पिता / पति का नाम)
+                  </label>
+                  <input
+                    type="text"
+                    value={edFather}
+                    onChange={(e) => setEdFather(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    12-DIGIT AADHAAR NUMBER (VERHOEFF CHECKSUM VERIFIED)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={12}
+                    value={edAadhaar}
+                    onChange={(e) => setEdAadhaar(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.95rem',
+                      fontFamily: 'monospace',
+                      fontWeight: 700
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      DISTRICT (जिला)
+                    </label>
+                    <input
+                      type="text"
+                      value={edDistrict}
+                      onChange={(e) => setEdDistrict(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      TEHSIL / ANCHAL (अंचल)
+                    </label>
+                    <input
+                      type="text"
+                      value={edTehsil}
+                      onChange={(e) => setEdTehsil(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ background: '#FEF3C7', padding: '0.75rem', borderRadius: '8px', border: '1px solid #FDE68A', fontSize: '0.75rem', color: '#92400E', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <ShieldCheck size={20} color="#D97706" />
+                  <span>Sub-Divisional Revenue Officer digital signature key validated. Auto-dispatched to citizen DigiLocker.</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={edLoading}
+                  style={{
+                    background: '#D97706',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.8rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    cursor: edLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <FileText size={16} />
+                  <span>{edLoading ? 'Submitting to Revenue Dept...' : 'Submit & Issue Digital Certificate'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Certificate Preview */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                  e-District State Revenue Certificate
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                  Government of Bihar • Department of Revenue & Land Reforms
+                </p>
+
+                {edReceipt ? (
+                  <div style={{
+                    background: '#F8FAFC',
+                    borderRadius: '12px',
+                    border: '2px solid #D97706',
+                    padding: '1.25rem',
+                    boxShadow: '0 4px 15px rgba(217, 119, 6, 0.08)'
+                  }}>
+                    <div style={{ borderBottom: '1.5px dashed #CBD5E1', paddingBottom: '0.75rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 900, color: '#D97706' }}>
+                          OFFICE OF THE REVENUE OFFICER / SDM
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                          Certificate No: <strong>{edReceipt.certificateNumber}</strong>
+                        </div>
+                      </div>
+                      <span style={{ background: '#FEF3C7', color: '#92400E', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        {edReceipt.status}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', fontSize: '0.8rem', lineHeight: 1.5 }}>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>SERVICE:</span>
+                        <strong style={{ color: '#D97706' }}>{edReceipt.certificateType.split('(')[0].trim()}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>BENEFICIARY:</span>
+                        <strong>{edReceipt.applicantName}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>FATHER / GUARDIAN:</span>
+                        <strong>{edReceipt.fatherName}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>JURISDICTION:</span>
+                        <strong>{edReceipt.tehsil}, {edReceipt.district}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>AADHAAR VERIFIED:</span>
+                        <strong style={{ fontFamily: 'monospace' }}>{edReceipt.maskedAadhaar}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>ISSUING AUTHORITY:</span>
+                        <strong style={{ color: '#16A34A' }}>{edReceipt.issuingAuthority}</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ borderTop: '1.5px dashed #CBD5E1', marginTop: '0.75rem', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#16A34A', fontWeight: 700 }}>
+                        <CheckCircle2 size={15} />
+                        <span>VLE Commission: +₹{edReceipt.vleCommissionCredited}.00 credited to wallet</span>
+                      </div>
+                      <div style={{ color: '#64748B' }}>
+                        {new Date(edReceipt.issuedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#94A3B8' }}>
+                    <FileText size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                      Fill resident details and authenticate Aadhaar to generate digitally signed Revenue Certificate.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {edReceipt && (
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                  <button
+                    onClick={() => window.print()}
+                    style={{
+                      flex: 1,
+                      background: '#D97706',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.65rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    <Printer size={15} />
+                    <span>Print Certificate (प्रमाण पत्र प्रिंट करें)</span>
+                  </button>
+                  <button
+                    onClick={() => alert(`Downloading e-District Certificate ${edReceipt.certificateNumber} for ${edReceipt.applicantName}...`)}
                     style={{
                       background: '#F1F5F9',
                       color: '#334155',

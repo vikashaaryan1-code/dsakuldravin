@@ -271,9 +271,29 @@ async function run() {
     return `Ack No: ${res.pan.ackNumber} | Coupon: ${res.pan.couponNumber} | AO Code: ${res.pan.aoCode} | VLE Comm: +₹${res.pan.vleCommissionCredited}`;
   })) passed++;
 
-  // 15. Route Accessibility Verification
+  // 15. e-District State Certificate Services (edistrict.csccloud.in)
   total++;
-  if (await step('15. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('15. e-District Certificate Application & Verification (edistrict.csccloud.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/edistrict/apply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        certificateType: 'Residential / Domicile Certificate (निवास प्रमाण पत्र)',
+        applicantName: 'Pooja Kumari',
+        fatherName: 'Sunil Kumar',
+        aadhaar: '999999990019',
+        district: 'Patna',
+        tehsil: 'Danapur'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.certificate) throw new Error(res.message || 'e-District application failed');
+    return `Cert No: ${res.certificate.certificateNumber} | Authority: ${res.certificate.issuingAuthority} | VLE Comm: +₹${res.certificate.vleCommissionCredited}`;
+  })) passed++;
+
+  // 16. Route Accessibility Verification
+  total++;
+  if (await step('16. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,

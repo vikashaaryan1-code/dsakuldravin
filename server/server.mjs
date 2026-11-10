@@ -1287,6 +1287,69 @@ app.post('/api/csc/pan/apply', (req, res) => {
   });
 });
 
+// 24. e-District State Citizen Services Engine (edistrict.csccloud.in)
+app.post('/api/csc/edistrict/apply', (req, res) => {
+  const {
+    certificateType = 'Residential / Domicile Certificate (निवास प्रमाण पत्र)',
+    applicantName = 'Pooja Kumari',
+    fatherName = 'Sunil Kumar',
+    aadhaar = '999999990019',
+    district = 'Patna',
+    tehsil = 'Danapur',
+    annualIncome = '₹1,80,000'
+  } = req.body;
+
+  const cleanAadhaar = String(aadhaar || '').replace(/\s+/g, '');
+  if (!applicantName || cleanAadhaar.length !== 12) {
+    return res.status(400).json({ success: false, message: 'Valid Applicant Name and 12-digit Aadhaar are required' });
+  }
+
+  if (!validateVerhoeff(cleanAadhaar)) {
+    return res.status(400).json({ success: false, message: 'Invalid Aadhaar checksum (Verhoeff validation failed)' });
+  }
+
+  const certificateNumber = 'ED-2026-' + Math.floor(100000 + Math.random() * 900000);
+  const vleCommission = 30;
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-ED-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `e-District Service Comm: ${certificateType.split('(')[0].trim()} (${applicantName})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:edistrict_applied', { certificateNumber, certificateType, applicantName, vleCommission });
+
+  res.status(201).json({
+    success: true,
+    certificate: {
+      certificateNumber,
+      certificateType,
+      applicantName,
+      fatherName,
+      district,
+      tehsil,
+      annualIncome,
+      maskedAadhaar: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
+      issuingAuthority: 'Sub-Divisional Magistrate (SDM) / Revenue Officer, Danapur',
+      status: 'DIGITALLY SIGNED & VERIFIED',
+      validity: 'Valid across Central & State Govt Institutions',
+      issuedAt: new Date().toISOString(),
+      qrPayload: `EDISTRICT|CERT:${certificateNumber}|NAME:${applicantName}|DEPT:REVENUE|VERIFIED`,
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);
