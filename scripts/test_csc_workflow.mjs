@@ -335,9 +335,43 @@ async function run() {
     return `Policy: ${res.policy.policyNumber} | Sum Insured: ₹${res.policy.sumInsured} | Farmer Premium: ₹${res.policy.farmerPremium} | VLE Comm: +₹${res.policy.vleCommissionCredited}`;
   })) passed++;
 
-  // 18. Route Accessibility Verification
+  // 18. Bharat Bill Payment System - Electricity Bill Payment (bbps.csccloud.in)
   total++;
-  if (await step('18. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('18. BBPS Utility Bill Fetch & Instant Surcharge Settlement (bbps.csccloud.in)', async () => {
+    // A. Fetch Bill
+    const fetchRes = await fetch(`${API_BASE}/csc/bbps/fetch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        category: 'Electricity',
+        billerName: 'South Bihar Power Distribution Co. Ltd (SBPDCL)',
+        consumerNumber: '104859302194'
+      })
+    }).then(r => r.json());
+
+    if (!fetchRes.success || !fetchRes.bill) throw new Error(fetchRes.message || 'BBPS bill fetch failed');
+
+    // B. Settle Bill
+    const payRes = await fetch(`${API_BASE}/csc/bbps/pay`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        category: fetchRes.bill.category,
+        billerName: fetchRes.bill.billerName,
+        consumerNumber: fetchRes.bill.consumerNumber,
+        consumerName: fetchRes.bill.consumerName,
+        consumerMobile: '9835012345',
+        billAmount: fetchRes.bill.billAmount
+      })
+    }).then(r => r.json());
+
+    if (!payRes.success || !payRes.receipt) throw new Error(payRes.message || 'BBPS bill payment failed');
+    return `Txn: ${payRes.receipt.bbpsTxnRef} | Consumer: ${payRes.receipt.consumerName} | Amount: ₹${payRes.receipt.billAmount} | VLE Comm: +₹${payRes.receipt.vleCommissionCredited}`;
+  })) passed++;
+
+  // 19. Route Accessibility Verification
+  total++;
+  if (await step('19. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,

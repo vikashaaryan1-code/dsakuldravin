@@ -52,9 +52,19 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'pmfby' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'pmfby' | 'bbps' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // BBPS State
+  const [bbpsCategory, setBbpsCategory] = useState<'Electricity' | 'LPG Gas' | 'Water' | 'Broadband'>('Electricity');
+  const [bbpsBiller, setBbpsBiller] = useState('South Bihar Power Distribution Co. Ltd (SBPDCL)');
+  const [bbpsConsumerNo, setBbpsConsumerNo] = useState('104859302194');
+  const [bbpsConsumerMobile, setBbpsConsumerMobile] = useState('9835012345');
+  const [bbpsBillDetails, setBbpsBillDetails] = useState<any | null>(null);
+  const [bbpsReceipt, setBbpsReceipt] = useState<any | null>(null);
+  const [bbpsFetching, setBbpsFetching] = useState(false);
+  const [bbpsPaying, setBbpsPaying] = useState(false);
 
   // PMFBY Crop Insurance State
   const [fbyFarmer, setFbyFarmer] = useState('Ramdhani Yadav');
@@ -671,6 +681,70 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  const handleFetchBBPSBill = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBbpsFetching(true);
+    setBbpsBillDetails(null);
+    setBbpsReceipt(null);
+
+    try {
+      const res = await fetch('/api/csc/bbps/fetch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: bbpsCategory,
+          billerName: bbpsBiller,
+          consumerNumber: bbpsConsumerNo
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.bill) {
+        setBbpsBillDetails(res.bill);
+        showToast('Bill Fetched Successfully', `Consumer: ${res.bill.consumerName} • Amount Due: ₹${res.bill.billAmount}`, 'info');
+      } else {
+        showToast('Bill Fetch Failed', res.message || 'Consumer account not found in BBPS registry', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setBbpsFetching(false);
+    }
+  };
+
+  const handlePayBBPSBill = async () => {
+    if (!bbpsBillDetails) return;
+    setBbpsPaying(true);
+
+    try {
+      const res = await fetch('/api/csc/bbps/pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category: bbpsCategory,
+          billerName: bbpsBiller,
+          consumerNumber: bbpsConsumerNo,
+          consumerName: bbpsBillDetails.consumerName,
+          consumerMobile: bbpsConsumerMobile,
+          billAmount: bbpsBillDetails.billAmount
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.receipt) {
+        setBbpsReceipt(res.receipt);
+        setWalletBalance(res.receipt.vleNewBalance);
+        showToast('BBPS Bill Settled', `Txn: ${res.receipt.bbpsTxnRef}. VLE Comm +₹${res.receipt.vleCommissionCredited} credited!`, 'success');
+        logAudit('BBPS Bill Settlement', `Biller: ${bbpsBiller}, Consumer: ${bbpsBillDetails.consumerName}, Amount: ₹${bbpsBillDetails.billAmount}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('Payment Failed', res.message || 'Unable to process bill payment', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setBbpsPaying(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -796,6 +870,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'edistrict', label: 'e-District (Certificates)' },
             { id: 'eshram', label: 'e-Shram (Worker UAN Card)' },
             { id: 'pmfby', label: 'PMFBY (Crop Insurance)' },
+            { id: 'bbps', label: 'BBPS (Utility Bills)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -4005,6 +4080,411 @@ export const DigitalSevaPortal: React.FC = () => {
                   </h4>
                   <p style={{ fontSize: '0.8rem', maxWidth: '320px', margin: '0 auto', lineHeight: 1.5 }}>
                     Enter farmer land details and submit to generate the official PMFBY Crop Insurance Certificate and credit ₹100 VLE commission.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: BBPS BHARAT BILL PAYMENT SYSTEM */}
+        {activeTab === 'bbps' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '2rem' }}>
+            {/* Bill Fetch & Payment Column */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '0.85rem' }}>
+                <div style={{ width: '42px', height: '42px', background: '#DBEAFE', color: '#2563EB', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <DollarSign size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    Bharat Bill Payment System (BBPS)
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
+                    NPCI Bharat BillPay • Instant Bill Fetch & Surcharge Free • VLE Commission: <strong style={{ color: '#16A34A' }}>+₹20.00 / Bill</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Fast-Track Demo Fill Button */}
+              <div style={{ background: '#F8FAFC', border: '1px dashed #CBD5E1', borderRadius: '8px', padding: '0.65rem 0.85rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.78rem', color: '#475569' }}>
+                  ⚡ Quick Test: Fill SBPDCL Electricity Account
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBbpsCategory('Electricity');
+                    setBbpsBiller('South Bihar Power Distribution Co. Ltd (SBPDCL)');
+                    setBbpsConsumerNo('104859302194');
+                    setBbpsConsumerMobile('9835012345');
+                  }}
+                  style={{
+                    background: '#2563EB',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '0.35rem 0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Fill Demo Account
+                </button>
+              </div>
+
+              <form onSubmit={handleFetchBBPSBill} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                    Bill Category (श्रेणी) *
+                  </label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                    {(['Electricity', 'LPG Gas', 'Water', 'Broadband'] as const).map(cat => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => {
+                          setBbpsCategory(cat);
+                          if (cat === 'Electricity') setBbpsBiller('South Bihar Power Distribution Co. Ltd (SBPDCL)');
+                          if (cat === 'LPG Gas') setBbpsBiller('Indane LPG Cylinder (Indian Oil)');
+                          if (cat === 'Water') setBbpsBiller('Delhi Jal Board (DJB)');
+                          if (cat === 'Broadband') setBbpsBiller('BSNL Landline & FTTH');
+                          setBbpsBillDetails(null);
+                        }}
+                        style={{
+                          padding: '0.6rem 0.4rem',
+                          borderRadius: '8px',
+                          border: bbpsCategory === cat ? '2px solid #2563EB' : '1px solid #CBD5E1',
+                          background: bbpsCategory === cat ? '#EFF6FF' : '#FFFFFF',
+                          color: bbpsCategory === cat ? '#1D4ED8' : '#475569',
+                          fontWeight: bbpsCategory === cat ? 800 : 600,
+                          fontSize: '0.78rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                    Biller Name (बिल प्रदाता) *
+                  </label>
+                  <select
+                    value={bbpsBiller}
+                    onChange={e => {
+                      setBbpsBiller(e.target.value);
+                      setBbpsBillDetails(null);
+                    }}
+                    style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                  >
+                    {bbpsCategory === 'Electricity' && (
+                      <>
+                        <option value="South Bihar Power Distribution Co. Ltd (SBPDCL)">South Bihar Power Distribution Co. Ltd (SBPDCL)</option>
+                        <option value="North Bihar Power Distribution Co. Ltd (NBPDCL)">North Bihar Power Distribution Co. Ltd (NBPDCL)</option>
+                        <option value="BSES Rajdhani Power Limited (BRPL)">BSES Rajdhani Power Limited (BRPL)</option>
+                        <option value="Tata Power Delhi Distribution (TPDDL)">Tata Power Delhi Distribution (TPDDL)</option>
+                        <option value="Uttar Pradesh Power Corporation (UPPCL)">Uttar Pradesh Power Corporation (UPPCL)</option>
+                        <option value="Punjab State Power Corporation (PSPCL)">Punjab State Power Corporation (PSPCL)</option>
+                      </>
+                    )}
+                    {bbpsCategory === 'LPG Gas' && (
+                      <>
+                        <option value="Indane LPG Cylinder (Indian Oil)">Indane LPG Cylinder (Indian Oil)</option>
+                        <option value="Bharat Gas (BPCL)">Bharat Gas (BPCL)</option>
+                        <option value="HP Gas (HPCL)">HP Gas (HPCL)</option>
+                      </>
+                    )}
+                    {bbpsCategory === 'Water' && (
+                      <>
+                        <option value="Delhi Jal Board (DJB)">Delhi Jal Board (DJB)</option>
+                        <option value="Patna Municipal Corporation Water">Patna Municipal Corporation Water</option>
+                        <option value="Municipal Corporation of Greater Mumbai (MCGM)">Municipal Corporation of Greater Mumbai (MCGM)</option>
+                      </>
+                    )}
+                    {bbpsCategory === 'Broadband' && (
+                      <>
+                        <option value="BSNL Landline & FTTH">BSNL Landline & FTTH</option>
+                        <option value="Airtel Broadband">Airtel Broadband</option>
+                        <option value="JioFiber Postpaid">JioFiber Postpaid</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Consumer / Account / CA Number *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={bbpsConsumerNo}
+                      onChange={e => {
+                        setBbpsConsumerNo(e.target.value);
+                        setBbpsBillDetails(null);
+                      }}
+                      placeholder="e.g. 104859302194"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem', fontFamily: 'monospace' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Customer Mobile *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={bbpsConsumerMobile}
+                      onChange={e => setBbpsConsumerMobile(e.target.value)}
+                      placeholder="9835012345"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={bbpsFetching}
+                  style={{
+                    background: '#2563EB',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    cursor: bbpsFetching ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  {bbpsFetching ? <RefreshCw className="animate-spin" size={16} /> : <Search size={16} />}
+                  <span>{bbpsFetching ? 'Connecting to NPCI BBPS...' : 'Fetch Bill from NPCI BBPS'}</span>
+                </button>
+              </form>
+
+              {/* Fetched Bill Card & Pay Button */}
+              {bbpsBillDetails && (
+                <div style={{ marginTop: '1.25rem', background: '#F8FAFC', border: '1px solid #BFDBFE', borderRadius: '12px', padding: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 800, color: '#1E40AF' }}>
+                      📋 Bill Details Retrieved
+                    </span>
+                    <span style={{ background: '#FEE2E2', color: '#DC2626', fontSize: '0.72rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '4px' }}>
+                      {bbpsBillDetails.status}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '0.78rem', marginBottom: '0.85rem' }}>
+                    <div>
+                      <span style={{ color: '#64748B' }}>Consumer Name:</span>
+                      <div style={{ fontWeight: 700, color: '#0F172A' }}>{bbpsBillDetails.consumerName}</div>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748B' }}>Bill Number:</span>
+                      <div style={{ fontWeight: 600, color: '#334155', fontFamily: 'monospace' }}>{bbpsBillDetails.billNumber}</div>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748B' }}>Bill Date:</span>
+                      <div style={{ fontWeight: 600, color: '#334155' }}>{bbpsBillDetails.billDate}</div>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748B' }}>Due Date:</span>
+                      <div style={{ fontWeight: 700, color: '#DC2626' }}>{bbpsBillDetails.dueDate}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#EFF6FF', border: '1px solid #93C5FD', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div>
+                      <div style={{ fontSize: '0.75rem', color: '#1E40AF' }}>Total Payable Amount:</div>
+                      <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#1E3A8A' }}>
+                        ₹{bbpsBillDetails.billAmount.toLocaleString('en-IN')}.00
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', fontSize: '0.72rem', color: '#16A34A', fontWeight: 700 }}>
+                      +₹20.00 VLE Comm<br />Auto-Credited
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handlePayBBPSBill}
+                    disabled={bbpsPaying || walletBalance < bbpsBillDetails.billAmount}
+                    style={{
+                      width: '100%',
+                      background: walletBalance < bbpsBillDetails.billAmount ? '#94A3B8' : '#16A34A',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.85rem',
+                      borderRadius: '8px',
+                      fontWeight: 800,
+                      fontSize: '0.92rem',
+                      cursor: (bbpsPaying || walletBalance < bbpsBillDetails.billAmount) ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem'
+                    }}
+                  >
+                    {bbpsPaying ? <RefreshCw className="animate-spin" size={18} /> : <CreditCard size={18} />}
+                    <span>
+                      {bbpsPaying 
+                        ? 'Processing Settlement...' 
+                        : walletBalance < bbpsBillDetails.billAmount
+                        ? `Insufficient Balance (Top-up Required)`
+                        : `Pay ₹${bbpsBillDetails.billAmount} from VLE Wallet (+₹20 Comm)`
+                      }
+                    </span>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* BBPS Official Thermal Slip Preview Column */}
+            <div>
+              {bbpsReceipt ? (
+                <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                  <div style={{ border: '2px solid #2563EB', borderRadius: '12px', padding: '1.25rem', background: '#F8FAFC' }}>
+                    {/* Header */}
+                    <div style={{ textAlign: 'center', borderBottom: '2px solid #E2E8F0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <div style={{ width: '28px', height: '28px', background: '#2563EB', color: '#FFF', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                          B
+                        </div>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0F172A', letterSpacing: '0.04em' }}>
+                          BHARAT BILL PAYMENT SYSTEM (BBPS)
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                        National Payments Corporation of India (NPCI) • CSC e-Gov
+                      </div>
+                      <div style={{ display: 'inline-block', background: '#DCFCE7', color: '#16A34A', fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '20px', marginTop: '0.35rem' }}>
+                        ✓ {bbpsReceipt.status}
+                      </div>
+                    </div>
+
+                    {/* Details Table */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', fontSize: '0.78rem', marginBottom: '1rem' }}>
+                      <div>
+                        <div style={{ color: '#64748B' }}>BBPS Txn Reference:</div>
+                        <div style={{ fontWeight: 800, color: '#0F172A', fontFamily: 'monospace', fontSize: '0.82rem' }}>{bbpsReceipt.bbpsTxnRef}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>NPCI Auth Code:</div>
+                        <div style={{ fontWeight: 700, color: '#2563EB', fontFamily: 'monospace' }}>{bbpsReceipt.authCode}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Biller:</div>
+                        <div style={{ fontWeight: 700, color: '#0F172A' }}>{bbpsReceipt.billerName}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Category:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>{bbpsReceipt.category}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Consumer / CA No:</div>
+                        <div style={{ fontWeight: 700, color: '#334155', fontFamily: 'monospace' }}>{bbpsReceipt.consumerNumber}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Consumer Name:</div>
+                        <div style={{ fontWeight: 700, color: '#0F172A' }}>{bbpsReceipt.consumerName}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Customer Mobile:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>+91 {bbpsReceipt.consumerMobile}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Payment Mode:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>{bbpsReceipt.paymentMode}</div>
+                      </div>
+                    </div>
+
+                    {/* Amount Box */}
+                    <div style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.78rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span style={{ color: '#64748B' }}>Bill Amount:</span>
+                        <strong style={{ color: '#0F172A', fontSize: '0.9rem' }}>₹{bbpsReceipt.billAmount?.toLocaleString('en-IN')}.00</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span style={{ color: '#64748B' }}>BBPS Surcharge / Convenience Fee:</span>
+                        <strong style={{ color: '#16A34A' }}>₹0.00 (FREE)</strong>
+                      </div>
+                      <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '0.35rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 800, color: '#0F172A' }}>Total Amount Deducted:</span>
+                        <strong style={{ color: '#1E3A8A', fontSize: '1rem' }}>₹{bbpsReceipt.totalPaid?.toLocaleString('en-IN')}.00</strong>
+                      </div>
+                    </div>
+
+                    {/* QR Code and Footer */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #E2E8F0', paddingTop: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <QrCode size={38} color="#2563EB" />
+                        <div style={{ fontSize: '0.68rem', color: '#64748B' }}>
+                          Scan to verify on bharatbillpay.com<br />
+                          VLE Commission: +₹{bbpsReceipt.vleCommissionCredited} Credited
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: '0.68rem', color: '#64748B' }}>
+                        Agent: Akul Dravin Digital Seva Kendra<br />
+                        Date: {new Date().toLocaleDateString('en-IN')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Print & Download Actions */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
+                    <button
+                      onClick={() => window.print()}
+                      style={{
+                        background: '#2563EB',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '0.65rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        fontSize: '0.82rem'
+                      }}
+                    >
+                      <Printer size={15} />
+                      <span>Print Thermal Slip</span>
+                    </button>
+                    <button
+                      onClick={() => alert(`Downloading BBPS Tax Invoice for ${bbpsReceipt.consumerName} (Ref: ${bbpsReceipt.bbpsTxnRef})...`)}
+                      style={{
+                        background: '#F1F5F9',
+                        color: '#334155',
+                        border: '1px solid #CBD5E1',
+                        padding: '0.65rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontSize: '0.82rem'
+                      }}
+                    >
+                      Download PDF
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: '#FFFFFF', padding: '2.5rem 1.5rem', borderRadius: '16px', border: '1px dashed #CBD5E1', textAlign: 'center', color: '#94A3B8' }}>
+                  <DollarSign size={48} style={{ margin: '0 auto 1rem', opacity: 0.4, color: '#2563EB' }} />
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '0.35rem' }}>
+                    No Bill Paid Yet
+                  </h4>
+                  <p style={{ fontSize: '0.8rem', maxWidth: '320px', margin: '0 auto', lineHeight: 1.5 }}>
+                    Enter consumer account details, fetch live bill from NPCI BBPS, and click pay to settle instantly and credit ₹20 VLE commission.
                   </p>
                 </div>
               )}

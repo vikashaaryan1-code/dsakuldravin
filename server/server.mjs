@@ -1486,6 +1486,126 @@ app.post('/api/csc/pmfby/apply', (req, res) => {
   });
 });
 
+// 27. Bharat Bill Payment System - Bill Fetch (bbps.csccloud.in / bharatbillpay.com)
+app.post('/api/csc/bbps/fetch', (req, res) => {
+  const {
+    category = 'Electricity',
+    billerName = 'South Bihar Power Distribution Co. Ltd (SBPDCL)',
+    consumerNumber = '104859302194'
+  } = req.body;
+
+  if (!consumerNumber || consumerNumber.trim().length < 5) {
+    return res.status(400).json({ success: false, message: 'Valid Consumer / Account Number is required' });
+  }
+
+  const hash = Array.from(consumerNumber).reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const sampleAmounts = [1480, 2350, 890, 3120, 1740, 650];
+  const billAmount = sampleAmounts[hash % sampleAmounts.length];
+  const sampleNames = ['Mahendra Pratap Singh', 'Sunil Kumar Sharma', 'Shanti Devi', 'Rajendra Prasad Verma', 'Anand Kumar Mishra'];
+  const consumerName = sampleNames[hash % sampleNames.length];
+
+  const now = new Date();
+  const billDate = new Date(now.getFullYear(), now.getMonth(), 5).toISOString().split('T')[0];
+  const dueDate = new Date(now.getFullYear(), now.getMonth(), 25).toISOString().split('T')[0];
+
+  res.json({
+    success: true,
+    bill: {
+      category,
+      billerName,
+      consumerNumber,
+      consumerName,
+      billNumber: 'BILL-2026-' + Math.floor(100000 + Math.random() * 900000),
+      billDate,
+      dueDate,
+      billAmount,
+      currency: 'INR',
+      status: 'UNPAID',
+      billerStatus: 'ACTIVE & CONNECTED TO NPCI BBPS'
+    }
+  });
+});
+
+// 28. Bharat Bill Payment System - Instant Bill Payment Settlement
+app.post('/api/csc/bbps/pay', (req, res) => {
+  const {
+    category = 'Electricity',
+    billerName = 'South Bihar Power Distribution Co. Ltd (SBPDCL)',
+    consumerNumber = '104859302194',
+    consumerName = 'Mahendra Pratap Singh',
+    consumerMobile = '9835012345',
+    billAmount = 1480
+  } = req.body;
+
+  const parsedAmount = Number(billAmount);
+  if (!consumerNumber || isNaN(parsedAmount) || parsedAmount <= 0) {
+    return res.status(400).json({ success: false, message: 'Valid Consumer Number and positive Bill Amount are required' });
+  }
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+
+  if (db.vleProfile.walletBalance < parsedAmount) {
+    return res.status(400).json({
+      success: false,
+      message: `Insufficient VLE wallet balance. Required: ₹${parsedAmount}, Available: ₹${db.vleProfile.walletBalance}. Please top up your wallet.`
+    });
+  }
+
+  const vleCommission = 20; // Rs 20 BBPS VLE Commission per successful bill payment
+  // Net deduction: billAmount deducted, then commission credited
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance - parsedAmount + vleCommission).toFixed(2));
+
+  const bbpsTxnRef = 'BBPS-2026-' + Math.floor(1000000000 + Math.random() * 9000000000);
+  const authCode = 'AUTH-BBP-' + Math.floor(100000 + Math.random() * 900000);
+
+  // Add Debit Passbook Entry for Bill Payment
+  db.vleProfile.passbook.unshift({
+    id: 'TXN-BBP-D-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'DR',
+    desc: `BBPS ${category} Bill: ${billerName} (A/C: ${consumerNumber})`,
+    amount: parsedAmount,
+    balance: Number((db.vleProfile.walletBalance - vleCommission).toFixed(2))
+  });
+
+  // Add Credit Passbook Entry for VLE Commission
+  db.vleProfile.passbook.unshift({
+    id: 'TXN-BBP-C-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `BBPS VLE Commission: ${consumerName} (${billerName})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  });
+
+  writeDB(db);
+
+  broadcastEvent('csc:bbps_paid', { bbpsTxnRef, billerName, consumerNumber, billAmount: parsedAmount, vleCommission });
+
+  res.status(201).json({
+    success: true,
+    receipt: {
+      bbpsTxnRef,
+      authCode,
+      category,
+      billerName,
+      consumerNumber,
+      consumerName,
+      consumerMobile,
+      billAmount: parsedAmount,
+      convenienceFee: 0.00,
+      totalPaid: parsedAmount,
+      paymentMode: 'CSC_VLE_WALLET_AGENT',
+      paymentTimestamp: new Date().toISOString(),
+      status: 'PAYMENT SUCCESSFUL & NPCI SETTLED',
+      qrPayload: `BBPS|TXN:${bbpsTxnRef}|BILLER:${billerName}|AC:${consumerNumber}|AMT:${parsedAmount}|STATUS:PAID`,
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);
