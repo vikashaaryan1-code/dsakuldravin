@@ -178,9 +178,28 @@ async function run() {
     return `Certificate No: ${res.certificate.certificateNumber} | Grade: ${res.certificate.grade} | VLE Incentive: +₹${res.certificate.vleIncentiveCredited}`;
   })) passed++;
 
-  // 10. Route Accessibility Verification
+  // 10. Ayushman Bharat ABHA Health Card Generation (abdm.gov.in)
   total++;
-  if (await step('10. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('10. Ayushman Bharat ABHA Health Card Generation (abdm.gov.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/abha/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: 'Suresh Kumar',
+        aadhaar: '999999990019',
+        mobile: '9835123456',
+        dob: '1988-06-15',
+        gender: 'Male'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.card) throw new Error(res.message || 'ABHA Card generation failed');
+    return `ABHA No: ${res.card.abhaNumber} | Address: ${res.card.abhaAddress} | VLE Comm: +₹${res.card.vleCommissionCredited}`;
+  })) passed++;
+
+  // 11. Route Accessibility Verification
+  total++;
+  if (await step('11. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,

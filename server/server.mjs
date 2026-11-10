@@ -1004,6 +1004,59 @@ app.post('/api/csc/pmgdisha/certify', (req, res) => {
   });
 });
 
+// 19. Ayushman Bharat Digital Mission (ABDM) ABHA Health Card Generator
+app.post('/api/csc/abha/create', (req, res) => {
+  const { name, aadhaar, mobile, dob, gender = 'Male' } = req.body;
+  if (!name || !aadhaar) {
+    return res.status(400).json({ success: false, message: 'Citizen Name and Aadhaar are required' });
+  }
+
+  const cleanAadhaar = String(aadhaar).replace(/\s+/g, '');
+  if (cleanAadhaar.length === 12 && !validateVerhoeff(cleanAadhaar)) {
+    return res.status(400).json({ success: false, message: 'Invalid Aadhaar checksum (Verhoeff validation failed)' });
+  }
+
+  const abhaNumber = `91-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
+  const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10);
+  const abhaAddress = `${cleanName}${Math.floor(10 + Math.random() * 90)}@abdm`;
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  const vleCommission = 50; // Rs 50 VLE commission for ABHA Card generation
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-ABHA-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `Ayushman ABHA Card Creation: ${name} (${abhaAddress})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:abha_created', { abhaNumber, abhaAddress, citizenName: name, vleCommission });
+
+  res.status(201).json({
+    success: true,
+    card: {
+      abhaNumber,
+      abhaAddress,
+      citizenName: name,
+      gender,
+      dob: dob || '01/01/1990',
+      mobile: mobile || '9876543210',
+      maskedAadhaar: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
+      scheme: 'National Health Authority (NHA) • ABDM',
+      qrPayload: `ABDM|${abhaNumber}|${abhaAddress}|${name}|ACTIVE`,
+      issuedAt: new Date().toISOString(),
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

@@ -30,7 +30,8 @@ import {
   Scale,
   Video,
   GraduationCap,
-  Award
+  Award,
+  Heart
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Link, useNavigate } from 'react-router-dom';
@@ -48,9 +49,18 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // ABHA Health Card State
+  const [abhaName, setAbhaName] = useState('Suresh Kumar');
+  const [abhaAadhaar, setAbhaAadhaar] = useState('999999990019');
+  const [abhaMobile, setAbhaMobile] = useState('9835123456');
+  const [abhaDob, setAbhaDob] = useState('1988-06-15');
+  const [abhaGender, setAbhaGender] = useState('Male');
+  const [abhaCard, setAbhaCard] = useState<any | null>(null);
+  const [abhaLoading, setAbhaLoading] = useState(false);
 
   // DigiPay AEPS State
   const [aepsAadhaar, setAepsAadhaar] = useState('999999990019');
@@ -308,6 +318,40 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  // Handle Ayushman ABHA Health Card Generation
+  const handleAbhaGenerate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!abhaName || !abhaAadhaar) return;
+    setAbhaLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/csc/abha/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: abhaName,
+          aadhaar: abhaAadhaar,
+          mobile: abhaMobile,
+          dob: abhaDob,
+          gender: abhaGender
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.card) {
+        setAbhaCard(res.card);
+        setWalletBalance(res.card.vleNewBalance);
+        showToast('ABHA Health Card Generated', `ABHA ID: ${res.card.abhaNumber}. VLE Commission +₹${res.card.vleCommissionCredited} credited!`, 'success');
+        logAudit('Ayushman ABHA Enrollment', `Citizen: ${abhaName}, ABHA: ${res.card.abhaNumber}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('Generation Failed', res.message || 'Verification error', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setAbhaLoading(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -425,6 +469,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'digipay', label: 'DigiPay (AEPS & Micro-ATM)' },
             { id: 'telelaw', label: 'Tele-Law (Legal Aid)' },
             { id: 'pmgdisha', label: 'PMGDISHA (Training & Cert)' },
+            { id: 'abha', label: 'Ayushman (ABHA Health Card)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -1316,6 +1361,291 @@ export const DigitalSevaPortal: React.FC = () => {
                   <p style={{ margin: 0, fontSize: '0.85rem' }}>
                     Conduct examination to generate verifiable candidate certificate.
                   </p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: AYUSHMAN BHARAT ABHA HEALTH CARD (abdm.gov.in) */}
+        {activeTab === 'abha' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Enrollment Form */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                <Heart size={22} color="#DC2626" />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  Ayushman Bharat Digital Health Account (ABHA)
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                National Health Authority (NHA) • Generate official 14-digit Ayushman Health Card (+₹50 VLE commission)
+              </p>
+
+              <form onSubmit={handleAbhaGenerate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    CITIZEN FULL NAME (AS PER AADHAAR)
+                  </label>
+                  <input
+                    type="text"
+                    value={abhaName}
+                    onChange={(e) => setAbhaName(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    12-DIGIT AADHAAR NUMBER (VERHOEFF CHECKSUM VERIFIED)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={12}
+                    value={abhaAadhaar}
+                    onChange={(e) => setAbhaAadhaar(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.95rem',
+                      fontFamily: 'monospace',
+                      fontWeight: 700
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      MOBILE NUMBER
+                    </label>
+                    <input
+                      type="text"
+                      value={abhaMobile}
+                      onChange={(e) => setAbhaMobile(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      DATE OF BIRTH
+                    </label>
+                    <input
+                      type="date"
+                      value={abhaDob}
+                      onChange={(e) => setAbhaDob(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    GENDER
+                  </label>
+                  <select
+                    value={abhaGender}
+                    onChange={(e) => setAbhaGender(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem'
+                    }}
+                  >
+                    <option value="Male">Male / पुरुष</option>
+                    <option value="Female">Female / महिला</option>
+                    <option value="Transgender">Other / अन्य</option>
+                  </select>
+                </div>
+
+                <div style={{ background: '#ECFDF5', padding: '0.75rem', borderRadius: '8px', border: '1px solid #A7F3D0', fontSize: '0.75rem', color: '#065F46', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <ShieldCheck size={18} color="#059669" />
+                  <span>Beneficiary Aadhaar e-KYC consent authorized under Ayushman Bharat Digital Mission guidelines.</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={abhaLoading}
+                  style={{
+                    background: '#DC2626',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.8rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    cursor: abhaLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <Heart size={16} />
+                  <span>{abhaLoading ? 'Generating ABHA Card...' : 'Verify & Generate Official ABHA Card'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Official ABHA Card Preview */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                  Ayushman Bharat Health Account (ABHA) Card
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                  Government of India • Ministry of Health & Family Welfare
+                </p>
+
+                {abhaCard ? (
+                  <div style={{
+                    background: '#FFFFFF',
+                    borderRadius: '16px',
+                    border: '2px solid #0284C7',
+                    overflow: 'hidden',
+                    boxShadow: '0 10px 25px rgba(2, 132, 199, 0.15)',
+                    position: 'relative'
+                  }}>
+                    {/* Tricolor Top Stripe */}
+                    <div style={{ height: '6px', background: 'linear-gradient(to right, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%)' }} />
+
+                    {/* Card Header */}
+                    <div style={{ background: '#0369A1', color: '#FFFFFF', padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 900, letterSpacing: '0.04em' }}>
+                          NATIONAL HEALTH AUTHORITY (NHA)
+                        </div>
+                        <div style={{ fontSize: '0.65rem', opacity: 0.9 }}>
+                          Ayushman Bharat Digital Mission (ABDM)
+                        </div>
+                      </div>
+                      <div style={{ background: '#FFFFFF', color: '#0369A1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 800 }}>
+                        ABHA CARD
+                      </div>
+                    </div>
+
+                    {/* Card Body */}
+                    <div style={{ padding: '1.25rem', display: 'grid', gridTemplateColumns: '80px 1fr', gap: '1rem', alignItems: 'center' }}>
+                      <div style={{
+                        width: '80px',
+                        height: '95px',
+                        background: '#E2E8F0',
+                        borderRadius: '8px',
+                        border: '1.5px solid #CBD5E1',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#64748B'
+                      }}>
+                        <Users size={32} />
+                        <span style={{ fontSize: '0.62rem', fontWeight: 700, marginTop: '0.25rem' }}>PHOTO</span>
+                      </div>
+
+                      <div style={{ fontSize: '0.82rem', lineHeight: 1.5 }}>
+                        <div style={{ fontSize: '1rem', fontWeight: 900, color: '#0F172A' }}>
+                          {abhaCard.citizenName}
+                        </div>
+                        <div style={{ color: '#64748B', fontSize: '0.75rem' }}>
+                          DOB: {abhaCard.dob} | Gender: {abhaCard.gender}
+                        </div>
+                        <div style={{ marginTop: '0.4rem' }}>
+                          <span style={{ fontSize: '0.68rem', color: '#64748B', display: 'block', fontWeight: 700 }}>ABHA NUMBER:</span>
+                          <strong style={{ fontSize: '1.1rem', color: '#0369A1', letterSpacing: '0.05em' }}>
+                            {abhaCard.abhaNumber}
+                          </strong>
+                        </div>
+                        <div style={{ marginTop: '0.2rem' }}>
+                          <span style={{ fontSize: '0.68rem', color: '#64748B', display: 'block', fontWeight: 700 }}>ABHA ADDRESS:</span>
+                          <span style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A' }}>
+                            {abhaCard.abhaAddress}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Footer */}
+                    <div style={{ background: '#F0F9FF', borderTop: '1px solid #BAE6FD', padding: '0.6rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#0369A1', fontWeight: 700 }}>
+                        <QrCode size={16} />
+                        <span>Scan for PHR & Hospital EHR Access</span>
+                      </div>
+                      <div style={{ color: '#16A34A', fontWeight: 800 }}>
+                        STATUS: ACTIVE
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#94A3B8' }}>
+                    <Heart size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                      Enter citizen details and authenticate Aadhaar to generate the official ABHA Health Card.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {abhaCard && (
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                  <button
+                    onClick={() => window.print()}
+                    style={{
+                      flex: 1,
+                      background: '#0369A1',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.65rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    <Printer size={15} />
+                    <span>Print ABHA Card (प्रिंट करें)</span>
+                  </button>
+                  <button
+                    onClick={() => alert(`Downloading ABHA Card PDF for ${abhaCard.citizenName} (ABHA: ${abhaCard.abhaNumber})...`)}
+                    style={{
+                      background: '#F1F5F9',
+                      color: '#334155',
+                      border: '1px solid #CBD5E1',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Download PDF
+                  </button>
                 </div>
               )}
             </div>
