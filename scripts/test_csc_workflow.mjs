@@ -11,7 +11,16 @@
  */
 
 const API_BASE = 'http://localhost:5000/api';
-const WEB_BASE = 'http://localhost:3001';
+
+async function resolveWebBase() {
+  for (const port of [3000, 3001]) {
+    try {
+      const res = await fetch(`http://localhost:${port}/digitalseva`);
+      if (res.status === 200) return `http://localhost:${port}`;
+    } catch {}
+  }
+  return 'http://localhost:3000';
+}
 
 async function step(title, fn) {
   process.stdout.write(`\n⏳ ${title}... `);
@@ -434,12 +443,13 @@ async function run() {
   // 22. Route Accessibility Verification
   total++;
   if (await step('22. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+    const activeWebBase = await resolveWebBase();
     const endpoints = [
-      `${WEB_BASE}/connect/csc`,
-      `${WEB_BASE}/account/authorize`,
-      `${WEB_BASE}/digitalseva`,
-      `${WEB_BASE}/csc`,
-      `${WEB_BASE}/register-vle`
+      `${activeWebBase}/connect/csc`,
+      `${activeWebBase}/account/authorize`,
+      `${activeWebBase}/digitalseva`,
+      `${activeWebBase}/csc`,
+      `${activeWebBase}/register-vle`
     ];
 
     let reachable = 0;
@@ -448,8 +458,8 @@ async function run() {
       if (resp.status === 200) reachable++;
     }
 
-    if (reachable !== endpoints.length) throw new Error(`Only ${reachable}/${endpoints.length} routes responded with 200`);
-    return `All ${endpoints.length} CSC & Digital Seva routes responded with HTTP 200 OK.`;
+    if (reachable !== endpoints.length) throw new Error(`Only ${reachable}/${endpoints.length} routes responded with 200 on ${activeWebBase}`);
+    return `All ${endpoints.length} CSC & Digital Seva routes responded with HTTP 200 OK (${activeWebBase}).`;
   })) passed++;
 
   console.log('\n========================================================================');
