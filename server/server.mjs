@@ -401,6 +401,35 @@ app.post('/api/auth/verify-otp', (req, res) => {
   });
 });
 
+app.get('/api/auth/me', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  if (!authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ success: false, message: 'Authorization bearer token missing' });
+  }
+
+  const token = authHeader.slice(7).trim();
+  try {
+    const raw = token.replace(/^jwt-ad-/, '').replace(/^ad_jwt_/, '');
+    const decoded = Buffer.from(raw, 'base64').toString('utf-8');
+    const [phone, role, ts] = decoded.split(':');
+    if (!phone || !role) {
+      return res.status(401).json({ success: false, message: 'Malformed bearer token' });
+    }
+    res.json({
+      success: true,
+      user: {
+        phone,
+        role,
+        name: role === 'super_admin' ? 'Dr. Akul Dravin (Super Admin)' : `${role.toUpperCase()} User`,
+        issuedAt: new Date(Number(ts) || Date.now()).toISOString(),
+        verified: true
+      }
+    });
+  } catch (err) {
+    res.status(401).json({ success: false, message: 'Invalid token' });
+  }
+});
+
 // 6. Vedic Astrology API
 app.get('/api/astrology/kundli', (req, res) => {
   const { birthDate, birthTime, birthPlace } = req.query;

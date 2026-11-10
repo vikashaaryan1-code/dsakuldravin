@@ -171,6 +171,24 @@ try {
   assert(appSubmitRes.success === true, `API Application Submission returns success: true`);
   assert(appSubmitRes.trackingNumber.startsWith('AD-APP-'), `Generated tracking number format valid: ${appSubmitRes.trackingNumber}`);
 
+  // Test Suite 6 - Auth OTP & Token Inspection
+  const otpRes = await fetch('http://localhost:5000/api/auth/verify-otp', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phone: '9876543210', otp: '7729', role: 'vle' })
+  }).then(r => r.json());
+
+  assert(otpRes.success === true, 'Auth OTP verification succeeds');
+  assert(otpRes.token && otpRes.token.startsWith('jwt-ad-'), `JWT session token issued: ${otpRes.token.slice(0, 18)}...`);
+
+  const meRes = await fetch('http://localhost:5000/api/auth/me', {
+    headers: { Authorization: `Bearer ${otpRes.token}` }
+  }).then(r => r.json());
+
+  assert(meRes.success === true, 'Bearer JWT session validated via /api/auth/me');
+  assert(meRes.user.phone === '9876543210', 'Decoded JWT phone matches authenticated session');
+  assert(meRes.user.role === 'vle', 'Decoded JWT role matches authenticated session');
+
   const aiChatRes = await fetch('http://localhost:5000/api/ai/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

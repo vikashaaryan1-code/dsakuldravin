@@ -98,6 +98,14 @@ export const apiClient = {
     });
   },
 
+  async getCurrentUser(token?: string) {
+    const bearer = token || (typeof localStorage !== 'undefined' ? localStorage.getItem('ad_auth_token') : '') || '';
+    if (!bearer) return null;
+    return fetchJSON<{ success: boolean; user: any }>(`${API_BASE}/auth/me`, {
+      headers: { Authorization: `Bearer ${bearer}` }
+    });
+  },
+
   /**
    * Vedic Astrology Calculations
    */
