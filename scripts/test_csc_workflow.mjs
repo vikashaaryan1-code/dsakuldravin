@@ -252,9 +252,28 @@ async function run() {
     return `PNR: ${res.ticket.pnr} | Train: ${res.ticket.trainNumber} | Status: ${res.ticket.bookingStatus} | VLE Comm: +₹${res.ticket.vleCommissionCredited}`;
   })) passed++;
 
-  // 14. Route Accessibility Verification
+  // 14. UTIITSL / NSDL PAN Card Services (pan.csccloud.in)
   total++;
-  if (await step('14. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('14. UTIITSL PAN Card Application & Acknowledgement (pan.csccloud.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/pan/apply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        applicantName: 'Vikramaditya Sharma',
+        fatherName: 'Rajendra Prasad Sharma',
+        aadhaar: '999999990019',
+        dob: '1992-05-14',
+        panType: 'Form 49A (New Indian Citizen)'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.pan) throw new Error(res.message || 'PAN application failed');
+    return `Ack No: ${res.pan.ackNumber} | Coupon: ${res.pan.couponNumber} | AO Code: ${res.pan.aoCode} | VLE Comm: +₹${res.pan.vleCommissionCredited}`;
+  })) passed++;
+
+  // 15. Route Accessibility Verification
+  total++;
+  if (await step('15. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,

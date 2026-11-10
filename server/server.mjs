@@ -1222,6 +1222,71 @@ app.post('/api/csc/irctc/book', (req, res) => {
   });
 });
 
+// 23. UTIITSL / NSDL PAN Card Services Engine (pan.csccloud.in)
+app.post('/api/csc/pan/apply', (req, res) => {
+  const { 
+    applicantName = 'Vikramaditya Sharma', 
+    fatherName = 'Rajendra Prasad Sharma', 
+    aadhaar = '999999990019', 
+    dob = '1992-05-14',
+    panType = 'Form 49A (New Indian Citizen)',
+    cardMode = 'Both Physical PAN Card & e-PAN'
+  } = req.body;
+
+  const cleanAadhaar = String(aadhaar || '').replace(/\s+/g, '');
+  if (!applicantName || cleanAadhaar.length !== 12) {
+    return res.status(400).json({ success: false, message: 'Valid Applicant Name and 12-digit Aadhaar are required' });
+  }
+
+  if (!validateVerhoeff(cleanAadhaar)) {
+    return res.status(400).json({ success: false, message: 'Invalid Aadhaar checksum (Verhoeff validation failed)' });
+  }
+
+  const ackNumber = '8810' + Math.floor(10000000000 + Math.random() * 90000000000);
+  const couponNumber = 'U-2026-' + Math.floor(100000 + Math.random() * 900000);
+  const govtFee = 107;
+  const vleCommission = 50;
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  // Wallet receives commission
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-PAN-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `UTIITSL PAN Comm: Coupon ${couponNumber} (${applicantName})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:pan_filed', { ackNumber, couponNumber, applicantName, vleCommission });
+
+  res.status(201).json({
+    success: true,
+    pan: {
+      ackNumber,
+      couponNumber,
+      applicantName,
+      fatherName,
+      dob,
+      maskedAadhaar: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
+      panType,
+      cardMode,
+      applicationFee: govtFee,
+      aoCode: 'PTN-W-104-1 (Ward 4(1), Patna)',
+      status: 'VERIFIED & DISPATCHED TO INCOME TAX DEPT (CBDT)',
+      expectedDelivery: '3 - 5 Working Days (Digital e-PAN to Email)',
+      filedAt: new Date().toISOString(),
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

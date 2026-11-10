@@ -52,9 +52,19 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // PAN Card State
+  const [panApplicant, setPanApplicant] = useState('Vikramaditya Sharma');
+  const [panFather, setPanFather] = useState('Rajendra Prasad Sharma');
+  const [panAadhaar, setPanAadhaar] = useState('999999990019');
+  const [panDob, setPanDob] = useState('1992-05-14');
+  const [panType, setPanType] = useState('Form 49A (New Indian Citizen)');
+  const [panMode, setPanMode] = useState('Both Physical PAN Card & e-PAN');
+  const [panReceipt, setPanReceipt] = useState<any | null>(null);
+  const [panLoading, setPanLoading] = useState(false);
 
   // IRCTC State
   const [railTrain, setRailTrain] = useState('12309 (Patna Rajdhani Express)');
@@ -480,6 +490,41 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  // Handle UTIITSL PAN Card Application
+  const handlePanApply = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!panApplicant || !panAadhaar) return;
+    setPanLoading(true);
+    try {
+      const res = await fetch('/api/csc/pan/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          applicantName: panApplicant,
+          fatherName: panFather,
+          aadhaar: panAadhaar,
+          dob: panDob,
+          panType,
+          cardMode: panMode
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.pan) {
+        setPanReceipt(res.pan);
+        setWalletBalance(res.pan.vleNewBalance);
+        showToast('PAN Application Filed', `Coupon: ${res.pan.couponNumber}. VLE Comm +₹${res.pan.vleCommissionCredited} credited!`, 'success');
+        logAudit('UTIITSL PAN Card Filing', `Applicant: ${panApplicant}, Ack: ${res.pan.ackNumber}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('Filing Failed', res.message || 'Error filing PAN application', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setPanLoading(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -601,6 +646,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'pmkisan', label: 'PM-KISAN (eKYC & DBT)' },
             { id: 'fastag', label: 'FASTag 2.0 (NETC Toll)' },
             { id: 'irctc', label: 'IRCTC (Railway Booking)' },
+            { id: 'pan', label: 'PAN Card (UTIITSL / NSDL)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -2527,6 +2573,273 @@ export const DigitalSevaPortal: React.FC = () => {
                   </button>
                   <button
                     onClick={() => alert(`Downloading IRCTC Ticket Slip for PNR: ${railTicket.pnr}...`)}
+                    style={{
+                      background: '#F1F5F9',
+                      color: '#334155',
+                      border: '1px solid #CBD5E1',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: UTIITSL PAN SERVICES (pan.csccloud.in) */}
+        {activeTab === 'pan' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Form */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                <CreditCard size={22} color="#0D9488" />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  UTIITSL / NSDL PAN Card Services
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                Income Tax Department (CBDT) • Form 49A Instant Filing (+₹50 VLE commission, Govt Fee: ₹107)
+              </p>
+
+              <form onSubmit={handlePanApply} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    APPLICANT FULL NAME (आवेदक का पूरा नाम)
+                  </label>
+                  <input
+                    type="text"
+                    value={panApplicant}
+                    onChange={(e) => setPanApplicant(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    FATHER'S FULL NAME (पिता का नाम)
+                  </label>
+                  <input
+                    type="text"
+                    value={panFather}
+                    onChange={(e) => setPanFather(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    12-DIGIT AADHAAR NUMBER (VERHOEFF CHECKSUM VERIFIED)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={12}
+                    value={panAadhaar}
+                    onChange={(e) => setPanAadhaar(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.95rem',
+                      fontFamily: 'monospace',
+                      fontWeight: 700
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      DATE OF BIRTH
+                    </label>
+                    <input
+                      type="date"
+                      value={panDob}
+                      onChange={(e) => setPanDob(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      APPLICATION TYPE
+                    </label>
+                    <select
+                      value={panType}
+                      onChange={(e) => setPanType(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    >
+                      <option value="Form 49A (New Indian Citizen)">Form 49A (New Indian Citizen)</option>
+                      <option value="CSF (Changes / Correction in PAN)">CSF (PAN Changes / Correction)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ background: '#F0FDFA', padding: '0.75rem', borderRadius: '8px', border: '1px solid #CCFBF1', fontSize: '0.75rem', color: '#0F766E', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <ShieldCheck size={20} color="#0D9488" />
+                  <span>Aadhaar demographic authentication approved. Physical PAN dispatch to citizen address enabled.</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={panLoading}
+                  style={{
+                    background: '#0D9488',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.8rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    cursor: panLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <CreditCard size={16} />
+                  <span>{panLoading ? 'Submitting to UTIITSL...' : 'Submit Form 49A & Issue Acknowledgement'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Receipt Preview */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                  UTIITSL PAN Acknowledgement Slip
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                  Income Tax Department • Government of India
+                </p>
+
+                {panReceipt ? (
+                  <div style={{
+                    background: '#F8FAFC',
+                    borderRadius: '12px',
+                    border: '2px solid #0D9488',
+                    padding: '1.25rem',
+                    boxShadow: '0 4px 15px rgba(13, 148, 136, 0.08)'
+                  }}>
+                    <div style={{ borderBottom: '1.5px dashed #CBD5E1', paddingBottom: '0.75rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 900, color: '#0D9488' }}>
+                          UTI INFRASTRUCTURE TECHNOLOGY AND SERVICES LIMITED
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                          Coupon: <strong>{panReceipt.couponNumber}</strong>
+                        </div>
+                      </div>
+                      <span style={{ background: '#CCFBF1', color: '#0F766E', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        FILED SUCCESS
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', fontSize: '0.8rem', lineHeight: 1.5 }}>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>ACKNOWLEDGEMENT NO:</span>
+                        <strong style={{ fontFamily: 'monospace', color: '#0D9488', fontSize: '0.92rem' }}>{panReceipt.ackNumber}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>APPLICANT NAME:</span>
+                        <strong>{panReceipt.applicantName}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>FATHER'S NAME:</span>
+                        <strong>{panReceipt.fatherName}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>AO CODE:</span>
+                        <strong style={{ fontFamily: 'monospace' }}>{panReceipt.aoCode}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>APPLICATION FEE:</span>
+                        <strong>₹{panReceipt.applicationFee}.00</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>EXPECTED DELIVERY:</span>
+                        <strong style={{ color: '#16A34A' }}>{panReceipt.expectedDelivery}</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ borderTop: '1.5px dashed #CBD5E1', marginTop: '0.75rem', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#16A34A', fontWeight: 700 }}>
+                        <CheckCircle2 size={15} />
+                        <span>VLE Commission: +₹{panReceipt.vleCommissionCredited}.00 credited to wallet</span>
+                      </div>
+                      <div style={{ color: '#64748B' }}>
+                        {new Date(panReceipt.filedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#94A3B8' }}>
+                    <CreditCard size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                      Fill applicant details and verify Aadhaar to generate official UTIITSL PAN Acknowledgement receipt.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {panReceipt && (
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                  <button
+                    onClick={() => window.print()}
+                    style={{
+                      flex: 1,
+                      background: '#0D9488',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.65rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    <Printer size={15} />
+                    <span>Print Acknowledgement (पावती प्रिंट करें)</span>
+                  </button>
+                  <button
+                    onClick={() => alert(`Downloading PAN Acknowledgement Slip for Coupon ${panReceipt.couponNumber}...`)}
                     style={{
                       background: '#F1F5F9',
                       color: '#334155',
