@@ -146,7 +146,7 @@ export const DigitalSevaPortal: React.FC = () => {
     setIsTopupProcessing(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/csc/wallet/topup', {
+      const res = await fetch('/api/csc/wallet/topup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: topupAmount, paymentMethod: topupMethod })
@@ -252,7 +252,7 @@ export const DigitalSevaPortal: React.FC = () => {
     setAepsReceipt(null);
 
     try {
-      const res = await fetch('http://localhost:5000/api/csc/digipay/transact', {
+      const res = await fetch('/api/csc/digipay/transact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -297,7 +297,7 @@ export const DigitalSevaPortal: React.FC = () => {
     setTelelawBooking(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/csc/telelaw/book', {
+      const res = await fetch('/api/csc/telelaw/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -325,7 +325,7 @@ export const DigitalSevaPortal: React.FC = () => {
     setPmgProcessing(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/csc/pmgdisha/certify', {
+      const res = await fetch('/api/csc/pmgdisha/certify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -352,7 +352,7 @@ export const DigitalSevaPortal: React.FC = () => {
     if (!abhaName || !abhaAadhaar) return;
     setAbhaLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/csc/abha/create', {
+      const res = await fetch('/api/csc/abha/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -386,7 +386,7 @@ export const DigitalSevaPortal: React.FC = () => {
     if (!pmkAadhaar) return;
     setPmkLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/csc/pmkisan/ekyc', {
+      const res = await fetch('/api/csc/pmkisan/ekyc', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -418,7 +418,7 @@ export const DigitalSevaPortal: React.FC = () => {
     if (!ftVehicle) return;
     setFtLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/csc/fastag/transact', {
+      const res = await fetch('/api/csc/fastag/transact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -451,7 +451,7 @@ export const DigitalSevaPortal: React.FC = () => {
     if (!railPassenger) return;
     setRailLoading(true);
     try {
-      const res = await fetch('http://localhost:5000/api/csc/irctc/book', {
+      const res = await fetch('/api/csc/irctc/book', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

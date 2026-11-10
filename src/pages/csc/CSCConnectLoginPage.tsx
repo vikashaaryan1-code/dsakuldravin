@@ -72,7 +72,7 @@ export const CSCConnectLoginPage: React.FC = () => {
 
     try {
       // Call backend OAuth authorization endpoint
-      const res = await fetch('http://localhost:5000/api/csc/authorize', {
+      const res = await fetch('/api/csc/authorize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

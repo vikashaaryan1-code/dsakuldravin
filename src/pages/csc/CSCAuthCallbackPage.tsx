@@ -28,7 +28,7 @@ export const CSCAuthCallbackPage: React.FC = () => {
         }, 500);
 
         // Step 2: Call token API
-        const tokenRes = await fetch('http://localhost:5000/api/csc/token', {
+        const tokenRes = await fetch('/api/csc/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code })
