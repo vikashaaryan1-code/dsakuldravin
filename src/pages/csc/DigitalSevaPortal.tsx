@@ -52,9 +52,18 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // e-Shram State
+  const [esWorker, setEsWorker] = useState('Manoj Kumar Paswan');
+  const [esAadhaar, setEsAadhaar] = useState('999999990019');
+  const [esMobile, setEsMobile] = useState('9835003344');
+  const [esOccupation, setEsOccupation] = useState('Construction / Bricklayer & Mason (राजमिस्त्री)');
+  const [esBlood, setEsBlood] = useState('O+');
+  const [esReceipt, setEsReceipt] = useState<any | null>(null);
+  const [esLoading, setEsLoading] = useState(false);
 
   // e-District State
   const [edCertType, setEdCertType] = useState('Residential / Domicile Certificate (निवास प्रमाण पत्र)');
@@ -572,6 +581,40 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  // Handle e-Shram Worker Registration
+  const handleEshramEnroll = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!esWorker || !esAadhaar) return;
+    setEsLoading(true);
+    try {
+      const res = await fetch('/api/csc/eshram/enroll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workerName: esWorker,
+          aadhaar: esAadhaar,
+          mobile: esMobile,
+          occupation: esOccupation,
+          bloodGroup: esBlood
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.eshram) {
+        setEsReceipt(res.eshram);
+        setWalletBalance(res.eshram.vleNewBalance);
+        showToast('e-Shram Card Generated', `UAN: ${res.eshram.uanNumber}. VLE Comm +₹${res.eshram.vleCommissionCredited} credited!`, 'success');
+        logAudit('e-Shram NDUW Enrollment', `Worker: ${esWorker}, UAN: ${res.eshram.uanNumber}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('Enrollment Failed', res.message || 'Error creating e-Shram card', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setEsLoading(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -695,6 +738,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'irctc', label: 'IRCTC (Railway Booking)' },
             { id: 'pan', label: 'PAN Card (UTIITSL / NSDL)' },
             { id: 'edistrict', label: 'e-District (Certificates)' },
+            { id: 'eshram', label: 'e-Shram (Worker UAN Card)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -3176,6 +3220,299 @@ export const DigitalSevaPortal: React.FC = () => {
                   </button>
                   <button
                     onClick={() => alert(`Downloading e-District Certificate ${edReceipt.certificateNumber} for ${edReceipt.applicantName}...`)}
+                    style={{
+                      background: '#F1F5F9',
+                      color: '#334155',
+                      border: '1px solid #CBD5E1',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: e-SHRAM WORKER REGISTRATION (eshram.csccloud.in) */}
+        {activeTab === 'eshram' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Form */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                <BadgeCheck size={22} color="#0284C7" />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  e-Shram National Worker Registration
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                Ministry of Labour & Employment • Universal Account Number (UAN) Issuance (+₹40 VLE commission, Free for Citizen)
+              </p>
+
+              <form onSubmit={handleEshramEnroll} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    UNORGANIZED WORKER FULL NAME (श्रमिक का पूरा नाम)
+                  </label>
+                  <input
+                    type="text"
+                    value={esWorker}
+                    onChange={(e) => setEsWorker(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    12-DIGIT AADHAAR NUMBER (VERHOEFF CHECKSUM VERIFIED)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={12}
+                    value={esAadhaar}
+                    onChange={(e) => setEsAadhaar(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.95rem',
+                      fontFamily: 'monospace',
+                      fontWeight: 700
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      MOBILE NUMBER
+                    </label>
+                    <input
+                      type="text"
+                      value={esMobile}
+                      onChange={(e) => setEsMobile(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      BLOOD GROUP
+                    </label>
+                    <select
+                      value={esBlood}
+                      onChange={(e) => setEsBlood(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    >
+                      <option value="O+">O Positive (O+)</option>
+                      <option value="A+">A Positive (A+)</option>
+                      <option value="B+">B Positive (B+)</option>
+                      <option value="AB+">AB Positive (AB+)</option>
+                      <option value="O-">O Negative (O-)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    PRIMARY OCCUPATION / SECTOR (व्यवसाय)
+                  </label>
+                  <select
+                    value={esOccupation}
+                    onChange={(e) => setEsOccupation(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem'
+                    }}
+                  >
+                    <option value="Construction / Bricklayer & Mason (राजमिस्त्री)">Construction / Bricklayer & Mason (राजमिस्त्री)</option>
+                    <option value="Agriculture & Allied Worker (कृषि मजदूर)">Agriculture & Allied Worker (कृषि मजदूर)</option>
+                    <option value="Street Vendor / Hawkers (ठेला / फेरीवाला)">Street Vendor / Hawkers (ठेला / फेरीवाला)</option>
+                    <option value="Domestic / Household Worker (घरेलू कामगार)">Domestic / Household Worker (घरेलू कामगार)</option>
+                    <option value="Auto / Taxi / E-Rickshaw Driver (चालक)">Auto / Taxi / E-Rickshaw Driver (चालक)</option>
+                    <option value="Electrician / Plumber / Carpenter (कारीगर)">Electrician / Plumber / Carpenter (कारीगर)</option>
+                  </select>
+                </div>
+
+                <div style={{ background: '#F0F9FF', padding: '0.75rem', borderRadius: '8px', border: '1px solid #BAE6FD', fontSize: '0.75rem', color: '#0369A1', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <ShieldCheck size={20} color="#0284C7" />
+                  <span>Includes free Pradhan Mantri Suraksha Bima Yojana (PMSBY) ₹2.00 Lakh accidental death & disability cover.</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={esLoading}
+                  style={{
+                    background: '#0284C7',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.8rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    cursor: esLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <BadgeCheck size={16} />
+                  <span>{esLoading ? 'Enrolling in NDUW Database...' : 'Register Worker & Issue Official UAN Card'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Official e-Shram UAN Card Preview */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                  e-Shram Universal Account Number (UAN) Card
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                  Ministry of Labour & Employment • Government of India
+                </p>
+
+                {esReceipt ? (
+                  <div style={{
+                    background: '#FEF9C3',
+                    borderRadius: '16px',
+                    border: '2px solid #CA8A04',
+                    overflow: 'hidden',
+                    boxShadow: '0 10px 25px rgba(202, 138, 4, 0.15)',
+                    position: 'relative'
+                  }}>
+                    {/* Tricolor Stripe */}
+                    <div style={{ height: '6px', background: 'linear-gradient(to right, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%)' }} />
+
+                    {/* Card Header */}
+                    <div style={{ background: '#1E3A8A', color: '#FFFFFF', padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 900, letterSpacing: '0.04em' }}>
+                          MINISTRY OF LABOUR & EMPLOYMENT
+                        </div>
+                        <div style={{ fontSize: '0.65rem', opacity: 0.9 }}>
+                          National Database of Unorganized Workers (e-Shram)
+                        </div>
+                      </div>
+                      <div style={{ background: '#FACC15', color: '#1E3A8A', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 900 }}>
+                        e-SHRAM CARD
+                      </div>
+                    </div>
+
+                    {/* Card Body */}
+                    <div style={{ padding: '1.25rem', display: 'grid', gridTemplateColumns: '80px 1fr', gap: '1rem', alignItems: 'center' }}>
+                      <div style={{
+                        width: '80px',
+                        height: '95px',
+                        background: '#FEF08A',
+                        borderRadius: '8px',
+                        border: '1.5px solid #EAB308',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#854D0E'
+                      }}>
+                        <Users size={32} />
+                        <span style={{ fontSize: '0.62rem', fontWeight: 700, marginTop: '0.25rem' }}>PHOTO</span>
+                      </div>
+
+                      <div style={{ fontSize: '0.82rem', lineHeight: 1.5 }}>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#1E3A8A' }}>
+                          {esReceipt.workerName}
+                        </div>
+                        <div style={{ color: '#475569', fontSize: '0.75rem' }}>
+                          Blood Group: <strong>{esReceipt.bloodGroup}</strong> | Aadhaar: {esReceipt.maskedAadhaar}
+                        </div>
+                        <div style={{ marginTop: '0.35rem' }}>
+                          <span style={{ fontSize: '0.65rem', color: '#854D0E', display: 'block', fontWeight: 800 }}>UNIVERSAL ACCOUNT NUMBER (UAN):</span>
+                          <strong style={{ fontSize: '1.15rem', color: '#1E3A8A', letterSpacing: '0.08em', fontFamily: 'monospace' }}>
+                            {esReceipt.uanNumber}
+                          </strong>
+                        </div>
+                        <div style={{ marginTop: '0.2rem' }}>
+                          <span style={{ fontSize: '0.65rem', color: '#854D0E', display: 'block', fontWeight: 700 }}>PRIMARY OCCUPATION:</span>
+                          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A' }}>
+                            {esReceipt.occupation}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Card Footer */}
+                    <div style={{ background: '#FEF08A', borderTop: '1px solid #FDE047', padding: '0.6rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#854D0E', fontWeight: 700 }}>
+                        <QrCode size={16} />
+                        <span>PMSBY ₹2.0 Lakh Cover Active</span>
+                      </div>
+                      <div style={{ color: '#16A34A', fontWeight: 800 }}>
+                        STATUS: ENROLLED
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#94A3B8' }}>
+                    <BadgeCheck size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                      Enter worker details and authenticate Aadhaar to generate official e-Shram UAN Card.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {esReceipt && (
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                  <button
+                    onClick={() => window.print()}
+                    style={{
+                      flex: 1,
+                      background: '#1E3A8A',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.65rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    <Printer size={15} />
+                    <span>Print UAN Card (प्रिंट करें)</span>
+                  </button>
+                  <button
+                    onClick={() => alert(`Downloading e-Shram Card for ${esReceipt.workerName} (UAN: ${esReceipt.uanNumber})...`)}
                     style={{
                       background: '#F1F5F9',
                       color: '#334155',

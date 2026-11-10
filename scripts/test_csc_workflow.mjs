@@ -291,9 +291,27 @@ async function run() {
     return `Cert No: ${res.certificate.certificateNumber} | Authority: ${res.certificate.issuingAuthority} | VLE Comm: +₹${res.certificate.vleCommissionCredited}`;
   })) passed++;
 
-  // 16. Route Accessibility Verification
+  // 16. e-Shram National Database of Unorganized Workers (eshram.csccloud.in)
   total++;
-  if (await step('16. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('16. e-Shram Worker UAN Registration (eshram.csccloud.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/eshram/enroll`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        workerName: 'Manoj Kumar Paswan',
+        aadhaar: '999999990019',
+        mobile: '9835003344',
+        occupation: 'Construction / Bricklayer & Mason (राजमिस्त्री)'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.eshram) throw new Error(res.message || 'e-Shram enrollment failed');
+    return `UAN: ${res.eshram.uanNumber} | Benefit: ${res.eshram.benefit} | VLE Comm: +₹${res.eshram.vleCommissionCredited}`;
+  })) passed++;
+
+  // 17. Route Accessibility Verification
+  total++;
+  if (await step('17. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,

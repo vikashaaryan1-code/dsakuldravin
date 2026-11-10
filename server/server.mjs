@@ -1350,6 +1350,64 @@ app.post('/api/csc/edistrict/apply', (req, res) => {
   });
 });
 
+// 25. e-Shram National Database of Unorganized Workers (eshram.csccloud.in)
+app.post('/api/csc/eshram/enroll', (req, res) => {
+  const {
+    workerName = 'Manoj Kumar Paswan',
+    aadhaar = '999999990019',
+    mobile = '9835003344',
+    occupation = 'Construction / Bricklayer & Mason (राजमिस्त्री)',
+    bloodGroup = 'O+'
+  } = req.body;
+
+  const cleanAadhaar = String(aadhaar || '').replace(/\s+/g, '');
+  if (!workerName || cleanAadhaar.length !== 12) {
+    return res.status(400).json({ success: false, message: 'Valid Worker Name and 12-digit Aadhaar are required' });
+  }
+
+  if (!validateVerhoeff(cleanAadhaar)) {
+    return res.status(400).json({ success: false, message: 'Invalid Aadhaar checksum (Verhoeff validation failed)' });
+  }
+
+  const uanNumber = `1009 ${Math.floor(1000 + Math.random() * 9000)} ${Math.floor(1000 + Math.random() * 9000)}`;
+  const vleCommission = 40; // Rs 40 VLE commission for e-Shram registration
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-ESH-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `e-Shram UAN Card Comm: ${workerName} (UAN: ${uanNumber})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:eshram_enrolled', { uanNumber, workerName, occupation, vleCommission });
+
+  res.status(201).json({
+    success: true,
+    eshram: {
+      uanNumber,
+      workerName,
+      maskedAadhaar: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
+      mobile,
+      occupation,
+      bloodGroup,
+      benefit: 'Pradhan Mantri Suraksha Bima Yojana (PMSBY) ₹2.00 Lakh Cover Included',
+      status: 'ACTIVE & ENROLLED IN NDUW',
+      issuedAt: new Date().toISOString(),
+      qrPayload: `ESHRAM|UAN:${uanNumber.replace(/\s+/g, '')}|NAME:${workerName}|OCC:${occupation}|ACTIVE`,
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);
