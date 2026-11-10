@@ -42,7 +42,7 @@ export const AstroAgentPage: React.FC = () => {
   // Agent / VLE State
   const agentProfile = {
     vleId: 'VLE-DEL-8921',
-    centerName: 'AD Digital Seva & Jyotish Kendra (Janakpuri Center)',
+    centerName: 'Akul Dravin Digital Services (ADCS) Kendra (Janakpuri Center)',
     operatorName: 'राजेश कुमार वर्मा (Rajesh Kumar Verma)',
     walletBalance: 14850,
     monthlyEarnings: 38400,

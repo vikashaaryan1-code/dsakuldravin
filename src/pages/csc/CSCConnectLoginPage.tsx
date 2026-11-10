@@ -55,7 +55,7 @@ export const CSCConnectLoginPage: React.FC = () => {
     setErrorMsg('');
 
     if (!username.trim()) {
-      setErrorMsg('Please enter your CSC ID or Username.');
+      setErrorMsg('Please enter your ADCS ID or Username.');
       return;
     }
     if (!password) {
@@ -85,7 +85,7 @@ export const CSCConnectLoginPage: React.FC = () => {
       }).then(r => r.json());
 
       const authCode = res.code || 'csc_auth_' + Date.now();
-      showToast('CSC Connect Verified', 'Single Sign-On authentication authorized. Redirecting to Digital Seva...', 'success');
+      showToast('ADCS Connect Verified', 'Single Sign-On authentication authorized. Redirecting to ADCS Portal...', 'success');
 
       // Emulate OAuth redirect to callback URI
       setTimeout(() => {
