@@ -25,6 +25,7 @@ export const DocumentCenterPage: React.FC = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [newDocName, setNewDocName] = useState('');
   const [newDocCategory, setNewDocCategory] = useState<'Identity' | 'Address' | 'Business' | 'Tax' | 'Property' | 'Education'>('Identity');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [ocrScanning, setOcrScanning] = useState(false);
 
   const categories = ['All', 'Identity', 'Tax', 'Property', 'Education', 'Business'];
@@ -35,24 +36,65 @@ export const DocumentCenterPage: React.FC = () => {
     return matchCat && matchSearch;
   });
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 10 * 1024 * 1024) {
+        showToast('File Too Large', 'Maximum document size is 10 MB.', 'warning');
+        return;
+      }
+      setSelectedFile(file);
+      if (!newDocName.trim()) {
+        const cleanName = file.name.replace(/\.[^/.]+$/, '');
+        setNewDocName(cleanName);
+      }
+    }
+  };
+
   const handleUploadSubmit = () => {
-    if (!newDocName.trim()) return;
+    if (!newDocName.trim() && !selectedFile) return;
     setOcrScanning(true);
 
-    setTimeout(() => {
-      uploadDocument({
-        name: newDocName.endsWith('.pdf') ? newDocName : `${newDocName}.pdf`,
-        category: newDocCategory,
-        fileType: 'PDF',
-        status: 'verified',
-        size: (Math.random() * 3 + 0.8).toFixed(1) + ' MB',
-        ocrConfidence: Number((Math.random() * 3 + 96).toFixed(1)),
-      });
+    const docName = newDocName.trim() || (selectedFile ? selectedFile.name : 'Document.pdf');
+    const ext = selectedFile ? selectedFile.name.split('.').pop()?.toUpperCase() || 'PDF' : 'PDF';
+    const fileSizeStr = selectedFile ? `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB` : '1.4 MB';
 
-      setOcrScanning(false);
-      setIsUploading(false);
-      setNewDocName('');
-    }, 800);
+    if (selectedFile) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        uploadDocument({
+          name: docName.includes('.') ? docName : `${docName}.${ext.toLowerCase()}`,
+          category: newDocCategory,
+          fileType: ext,
+          status: 'verified',
+          size: fileSizeStr,
+          ocrConfidence: Number((Math.random() * 3 + 96).toFixed(1)),
+        });
+        setOcrScanning(false);
+        setIsUploading(false);
+        setNewDocName('');
+        setSelectedFile(null);
+      };
+      reader.onerror = () => {
+        setOcrScanning(false);
+        showToast('Upload Error', 'Could not process selected file.', 'warning');
+      };
+      reader.readAsDataURL(selectedFile);
+    } else {
+      setTimeout(() => {
+        uploadDocument({
+          name: docName.endsWith('.pdf') ? docName : `${docName}.pdf`,
+          category: newDocCategory,
+          fileType: 'PDF',
+          status: 'verified',
+          size: fileSizeStr,
+          ocrConfidence: Number((Math.random() * 3 + 96).toFixed(1)),
+        });
+        setOcrScanning(false);
+        setIsUploading(false);
+        setNewDocName('');
+      }, 500);
+    }
   };
 
   return (
@@ -354,6 +396,22 @@ export const DocumentCenterPage: React.FC = () => {
                 <option value="Education">Educational (10th/12th/Degree Certificates)</option>
                 <option value="Business">Business (COI, GST, MOA, AOA, Trade License)</option>
               </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Attach File (PDF, PNG, JPG)</label>
+              <input
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg"
+                onChange={handleFileChange}
+                className="form-input"
+                style={{ padding: '0.45rem', cursor: 'pointer' }}
+              />
+              {selectedFile && (
+                <div style={{ fontSize: '0.75rem', color: '#10B981', marginTop: '0.35rem', fontWeight: 600 }}>
+                  ✓ Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(0)} KB)
+                </div>
+              )}
             </div>
 
             {ocrScanning && (
