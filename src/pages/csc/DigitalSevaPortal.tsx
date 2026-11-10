@@ -52,9 +52,25 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'pmfby' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // PMFBY Crop Insurance State
+  const [fbyFarmer, setFbyFarmer] = useState('Ramdhani Yadav');
+  const [fbyAadhaar, setFbyAadhaar] = useState('999999990019');
+  const [fbyMobile, setFbyMobile] = useState('9835012345');
+  const [fbyState, setFbyState] = useState('Bihar');
+  const [fbyDistrict, setFbyDistrict] = useState('Patna');
+  const [fbyVillage, setFbyVillage] = useState('Danapur Cantonment');
+  const [fbyKhasra, setFbyKhasra] = useState('Khata: 142 / Khasra: 589/2');
+  const [fbySeason, setFbySeason] = useState('Kharif 2026');
+  const [fbyCrop, setFbyCrop] = useState('Paddy / धान (Fine Variety)');
+  const [fbyArea, setFbyArea] = useState<number>(2.5);
+  const [fbySumInsured, setFbySumInsured] = useState<number>(125000);
+  const [fbyCompany, setFbyCompany] = useState('Agriculture Insurance Company of India Ltd (AIC)');
+  const [fbyPolicy, setFbyPolicy] = useState<any | null>(null);
+  const [fbyLoading, setFbyLoading] = useState(false);
 
   // e-Shram State
   const [esWorker, setEsWorker] = useState('Manoj Kumar Paswan');
@@ -615,6 +631,46 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  const handleApplyPMFBY = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFbyLoading(true);
+
+    try {
+      const res = await fetch('/api/csc/pmfby/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          farmerName: fbyFarmer,
+          aadhaar: fbyAadhaar,
+          mobile: fbyMobile,
+          state: fbyState,
+          district: fbyDistrict,
+          village: fbyVillage,
+          khasraKhatauni: fbyKhasra,
+          season: fbySeason,
+          cropName: fbyCrop,
+          areaHectares: fbyArea,
+          sumInsured: fbySumInsured,
+          insuranceCompany: fbyCompany
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.policy) {
+        setFbyPolicy(res.policy);
+        setWalletBalance(res.policy.vleNewBalance);
+        showToast('PMFBY Crop Policy Issued', `Policy: ${res.policy.policyNumber}. VLE Comm +₹${res.policy.vleCommissionCredited} credited!`, 'success');
+        logAudit('PMFBY Crop Insurance', `Farmer: ${fbyFarmer}, Policy: ${res.policy.policyNumber}, Sum: ₹${fbySumInsured}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('Policy Issuance Failed', res.message || 'Error creating crop insurance policy', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setFbyLoading(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -739,6 +795,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'pan', label: 'PAN Card (UTIITSL / NSDL)' },
             { id: 'edistrict', label: 'e-District (Certificates)' },
             { id: 'eshram', label: 'e-Shram (Worker UAN Card)' },
+            { id: 'pmfby', label: 'PMFBY (Crop Insurance)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -3525,6 +3582,430 @@ export const DigitalSevaPortal: React.FC = () => {
                   >
                     Download PDF
                   </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: PMFBY CROP INSURANCE */}
+        {activeTab === 'pmfby' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1fr', gap: '2rem' }}>
+            {/* Form Column */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '0.85rem' }}>
+                <div style={{ width: '42px', height: '42px', background: '#DCFCE7', color: '#16A34A', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Sprout size={22} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    PM Fasal Bima Yojana (PMFBY)
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: '#64748B', margin: 0 }}>
+                    Ministry of Agriculture & Farmers Welfare • VLE Commission: <strong style={{ color: '#16A34A' }}>+₹100.00 / Policy</strong>
+                  </p>
+                </div>
+              </div>
+
+              {/* Fast-Track Demo Button */}
+              <div style={{ background: '#F8FAFC', border: '1px dashed #CBD5E1', borderRadius: '8px', padding: '0.65rem 0.85rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.78rem', color: '#475569' }}>
+                  🚀 Quick Test: Pre-fill Bihar Kharif Paddy data
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setFbyFarmer('Ramdhani Yadav');
+                    setFbyAadhaar('999999990019');
+                    setFbyMobile('9835012345');
+                    setFbyState('Bihar');
+                    setFbyDistrict('Patna');
+                    setFbyVillage('Danapur Cantonment');
+                    setFbyKhasra('Khata: 142 / Khasra: 589/2');
+                    setFbySeason('Kharif 2026');
+                    setFbyCrop('Paddy / धान (Fine Variety)');
+                    setFbyArea(2.5);
+                    setFbySumInsured(125000);
+                    setFbyCompany('Agriculture Insurance Company of India Ltd (AIC)');
+                  }}
+                  style={{
+                    background: '#16A34A',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '0.35rem 0.75rem',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Fill Verified Demo
+                </button>
+              </div>
+
+              <form onSubmit={handleApplyPMFBY} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Farmer Name (किसान का नाम) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={fbyFarmer}
+                      onChange={e => setFbyFarmer(e.target.value)}
+                      placeholder="e.g. Ramdhani Yadav"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      12-Digit Aadhaar (Verhoeff Checked) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={12}
+                      value={fbyAadhaar}
+                      onChange={e => setFbyAadhaar(e.target.value)}
+                      placeholder="999999990019"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem', fontFamily: 'monospace' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Mobile Number (मोबाइल नंबर) *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={fbyMobile}
+                      onChange={e => setFbyMobile(e.target.value)}
+                      placeholder="9835012345"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Land Record (Khata / Khasra No) *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={fbyKhasra}
+                      onChange={e => setFbyKhasra(e.target.value)}
+                      placeholder="Khata: 142 / Khasra: 589/2"
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      State *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={fbyState}
+                      onChange={e => setFbyState(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      District *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={fbyDistrict}
+                      onChange={e => setFbyDistrict(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Village / Panchayat *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={fbyVillage}
+                      onChange={e => setFbyVillage(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Season (मौसम) *
+                    </label>
+                    <select
+                      value={fbySeason}
+                      onChange={e => setFbySeason(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    >
+                      <option value="Kharif 2026">Kharif 2026 (खरीफ - 2.0% Farmer Premium)</option>
+                      <option value="Rabi 2026-27">Rabi 2026-27 (रबी - 1.5% Farmer Premium)</option>
+                      <option value="Commercial 2026">Commercial / Horticultural (5.0%)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Crop Name (फसल) *
+                    </label>
+                    <select
+                      value={fbyCrop}
+                      onChange={e => setFbyCrop(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    >
+                      <option value="Paddy / धान (Fine Variety)">Paddy / धान (Fine Variety)</option>
+                      <option value="Wheat / गेहूं (High Yield)">Wheat / गेहूं (High Yield)</option>
+                      <option value="Maize / मक्का (Hybrid)">Maize / मक्का (Hybrid)</option>
+                      <option value="Mustard / सरसों">Mustard / सरसों</option>
+                      <option value="Gram / चना">Gram / चना</option>
+                      <option value="Sugarcane / गन्ना">Sugarcane / गन्ना</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Area Insured (Hectares) *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      required
+                      value={fbyArea}
+                      onChange={e => setFbyArea(Number(e.target.value))}
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                      Sum Insured / बीमित राशि (₹) *
+                    </label>
+                    <input
+                      type="number"
+                      step="1000"
+                      min="10000"
+                      required
+                      value={fbySumInsured}
+                      onChange={e => setFbySumInsured(Number(e.target.value))}
+                      style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem', fontWeight: 700 }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.35rem' }}>
+                    Authorized Insurance Company *
+                  </label>
+                  <select
+                    value={fbyCompany}
+                    onChange={e => setFbyCompany(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem', border: '1px solid #CBD5E1', borderRadius: '8px', fontSize: '0.85rem' }}
+                  >
+                    <option value="Agriculture Insurance Company of India Ltd (AIC)">Agriculture Insurance Company of India Ltd (AIC)</option>
+                    <option value="HDFC ERGO General Insurance Co. Ltd">HDFC ERGO General Insurance Co. Ltd</option>
+                    <option value="SBI General Insurance Co. Ltd">SBI General Insurance Co. Ltd</option>
+                    <option value="Bajaj Allianz General Insurance Co. Ltd">Bajaj Allianz General Insurance Co. Ltd</option>
+                  </select>
+                </div>
+
+                {/* Real-time Premium Breakdown */}
+                <div style={{ background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: '10px', padding: '0.85rem 1rem' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#065F46', marginBottom: '0.4rem' }}>
+                    📊 Premium Calculation Breakdown (PMFBY Scheme Guidelines)
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#047857', marginBottom: '0.2rem' }}>
+                    <span>Farmer Payable Share ({fbySeason.toLowerCase().includes('rabi') ? '1.5%' : '2.0%'}):</span>
+                    <strong>₹{(fbySumInsured * (fbySeason.toLowerCase().includes('rabi') ? 0.015 : 0.02)).toFixed(0)}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#047857' }}>
+                    <span>Govt Subsidy (Central + State 8.0%):</span>
+                    <strong>₹{(fbySumInsured * 0.08).toFixed(0)}</strong>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={fbyLoading}
+                  style={{
+                    background: '#16A34A',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.85rem',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    fontSize: '0.92rem',
+                    cursor: fbyLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    marginTop: '0.5rem'
+                  }}
+                >
+                  {fbyLoading ? <RefreshCw className="animate-spin" size={18} /> : <ShieldCheck size={18} />}
+                  <span>{fbyLoading ? 'Processing Policy...' : 'Issue PMFBY Crop Insurance Policy (+₹100 Comm)'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Policy Preview Column */}
+            <div>
+              {fbyPolicy ? (
+                <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+                  <div style={{ border: '2px solid #16A34A', borderRadius: '12px', padding: '1.25rem', background: '#F8FAFC' }}>
+                    {/* Header */}
+                    <div style={{ textAlign: 'center', borderBottom: '2px solid #E2E8F0', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                        <div style={{ width: '28px', height: '28px', background: '#16A34A', color: '#FFF', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: '0.85rem' }}>
+                          CSC
+                        </div>
+                        <span style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0F172A', letterSpacing: '0.04em' }}>
+                          PRADHAN MANTRI FASAL BIMA YOJANA (PMFBY)
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                        Ministry of Agriculture and Farmers Welfare • Government of India
+                      </div>
+                      <div style={{ display: 'inline-block', background: '#DCFCE7', color: '#16A34A', fontSize: '0.72rem', fontWeight: 800, padding: '0.2rem 0.6rem', borderRadius: '20px', marginTop: '0.35rem' }}>
+                        ✓ {fbyPolicy.status}
+                      </div>
+                    </div>
+
+                    {/* Details Table */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', fontSize: '0.78rem', marginBottom: '1rem' }}>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Policy Number:</div>
+                        <div style={{ fontWeight: 800, color: '#0F172A', fontFamily: 'monospace', fontSize: '0.85rem' }}>{fbyPolicy.policyNumber}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Farmer Name:</div>
+                        <div style={{ fontWeight: 700, color: '#0F172A' }}>{fbyPolicy.farmerName}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Masked Aadhaar:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>{fbyPolicy.maskedAadhaar}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Mobile:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>+91 {fbyPolicy.mobile}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Season & Crop:</div>
+                        <div style={{ fontWeight: 700, color: '#16A34A' }}>{fbyPolicy.season} • {fbyPolicy.cropName}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Insured Area:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>{fbyPolicy.areaHectares} Hectares</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Land Coordinates:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>{fbyPolicy.khasraKhatauni}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Location:</div>
+                        <div style={{ fontWeight: 600, color: '#334155' }}>{fbyPolicy.village}, {fbyPolicy.district}, {fbyPolicy.state}</div>
+                      </div>
+                    </div>
+
+                    {/* Premium Summary Box */}
+                    <div style={{ background: '#FFFFFF', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.75rem', marginBottom: '1rem', fontSize: '0.78rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span style={{ color: '#64748B' }}>Sum Insured:</span>
+                        <strong style={{ color: '#0F172A', fontSize: '0.85rem' }}>₹{fbyPolicy.sumInsured?.toLocaleString('en-IN')}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span style={{ color: '#64748B' }}>Farmer Premium Paid:</span>
+                        <strong style={{ color: '#16A34A' }}>₹{fbyPolicy.farmerPremium?.toLocaleString('en-IN')}</strong>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span style={{ color: '#64748B' }}>Central & State Subsidy:</span>
+                        <strong style={{ color: '#3B82F6' }}>₹{fbyPolicy.govtSubsidy?.toLocaleString('en-IN')}</strong>
+                      </div>
+                      <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '0.35rem', display: 'flex', justifyContent: 'space-between' }}>
+                        <span style={{ fontWeight: 700, color: '#334155' }}>Insurer:</span>
+                        <strong style={{ color: '#0F172A' }}>{fbyPolicy.insuranceCompany}</strong>
+                      </div>
+                    </div>
+
+                    {/* QR Code and Digital Seal */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #E2E8F0', paddingTop: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <QrCode size={38} color="#16A34A" />
+                        <div style={{ fontSize: '0.68rem', color: '#64748B' }}>
+                          Scan to verify on pmfby.gov.in<br />
+                          VLE Commission: +₹{fbyPolicy.vleCommissionCredited} Credited
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: '0.68rem', color: '#64748B' }}>
+                        Issued by: Akul Dravin Digital Seva Kendra<br />
+                        Date: {new Date().toLocaleDateString('en-IN')}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '1rem' }}>
+                    <button
+                      onClick={() => window.print()}
+                      style={{
+                        background: '#16A34A',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '0.65rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.4rem',
+                        fontSize: '0.82rem'
+                      }}
+                    >
+                      <Printer size={15} />
+                      <span>Print Policy Slip</span>
+                    </button>
+                    <button
+                      onClick={() => alert(`Downloading PMFBY Certificate for ${fbyPolicy.farmerName} (Policy: ${fbyPolicy.policyNumber})...`)}
+                      style={{
+                        background: '#F1F5F9',
+                        color: '#334155',
+                        border: '1px solid #CBD5E1',
+                        padding: '0.65rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        fontSize: '0.82rem'
+                      }}
+                    >
+                      Download PDF
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: '#FFFFFF', padding: '2.5rem 1.5rem', borderRadius: '16px', border: '1px dashed #CBD5E1', textAlign: 'center', color: '#94A3B8' }}>
+                  <Sprout size={48} style={{ margin: '0 auto 1rem', opacity: 0.4, color: '#16A34A' }} />
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginBottom: '0.35rem' }}>
+                    No Policy Issued Yet
+                  </h4>
+                  <p style={{ fontSize: '0.8rem', maxWidth: '320px', margin: '0 auto', lineHeight: 1.5 }}>
+                    Enter farmer land details and submit to generate the official PMFBY Crop Insurance Certificate and credit ₹100 VLE commission.
+                  </p>
                 </div>
               )}
             </div>

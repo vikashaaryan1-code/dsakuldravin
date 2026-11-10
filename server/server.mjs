@@ -1408,6 +1408,84 @@ app.post('/api/csc/eshram/enroll', (req, res) => {
   });
 });
 
+// 26. Pradhan Mantri Fasal Bima Yojana (pmfby.gov.in / insurance.csccloud.in)
+app.post('/api/csc/pmfby/apply', (req, res) => {
+  const {
+    farmerName = 'Ramdhani Yadav',
+    aadhaar = '999999990019',
+    mobile = '9835012345',
+    state = 'Bihar',
+    district = 'Patna',
+    village = 'Danapur Cantonment',
+    khasraKhatauni = 'Khata: 142 / Khasra: 589/2',
+    season = 'Kharif 2026',
+    cropName = 'Paddy / धान (Fine Variety)',
+    areaHectares = 2.5,
+    sumInsured = 125000,
+    insuranceCompany = 'Agriculture Insurance Company of India Ltd (AIC)'
+  } = req.body;
+
+  const cleanAadhaar = String(aadhaar || '').replace(/\s+/g, '');
+  if (!farmerName || cleanAadhaar.length !== 12) {
+    return res.status(400).json({ success: false, message: 'Farmer name and 12-digit Aadhaar are required' });
+  }
+
+  if (!validateVerhoeff(cleanAadhaar)) {
+    return res.status(400).json({ success: false, message: 'Invalid Aadhaar checksum (Verhoeff validation failed)' });
+  }
+
+  const policyNumber = 'PMFBY-2026-' + Math.floor(100000 + Math.random() * 900000);
+  const farmerRate = season.toLowerCase().includes('rabi') ? 0.015 : 0.02; // 1.5% Rabi, 2% Kharif
+  const farmerPremium = Math.round(sumInsured * farmerRate);
+  const govtSubsidy = Math.round(sumInsured * 0.08); // 8% Govt subsidy share
+  const totalPremium = farmerPremium + govtSubsidy;
+  const vleCommission = 100; // Rs 100 VLE commission for Crop Insurance filing
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-FBY-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `PMFBY Crop Insurance Comm: ${farmerName} (${cropName})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:pmfby_applied', { policyNumber, farmerName, cropName, sumInsured, vleCommission });
+
+  res.status(201).json({
+    success: true,
+    policy: {
+      policyNumber,
+      farmerName,
+      maskedAadhaar: `XXXX-XXXX-${cleanAadhaar.slice(-4)}`,
+      mobile,
+      state,
+      district,
+      village,
+      khasraKhatauni,
+      season,
+      cropName,
+      areaHectares,
+      sumInsured,
+      farmerPremium,
+      govtSubsidy,
+      totalPremium,
+      insuranceCompany,
+      status: 'POLICY ISSUED & COVERED UNDER PMFBY',
+      issuedAt: new Date().toISOString(),
+      qrPayload: `PMFBY|POLICY:${policyNumber}|FARMER:${farmerName}|CROP:${cropName}|SUM:${sumInsured}|ACTIVE`,
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

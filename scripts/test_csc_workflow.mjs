@@ -309,9 +309,35 @@ async function run() {
     return `UAN: ${res.eshram.uanNumber} | Benefit: ${res.eshram.benefit} | VLE Comm: +₹${res.eshram.vleCommissionCredited}`;
   })) passed++;
 
-  // 17. Route Accessibility Verification
+  // 17. Pradhan Mantri Fasal Bima Yojana (pmfby.gov.in / insurance.csccloud.in)
   total++;
-  if (await step('17. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('17. PMFBY Farmer Crop Insurance Policy (pmfby.gov.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/pmfby/apply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        farmerName: 'Ramdhani Yadav',
+        aadhaar: '999999990019',
+        mobile: '9835012345',
+        state: 'Bihar',
+        district: 'Patna',
+        village: 'Danapur Cantonment',
+        khasraKhatauni: 'Khata: 142 / Khasra: 589/2',
+        season: 'Kharif 2026',
+        cropName: 'Paddy / धान (Fine Variety)',
+        areaHectares: 2.5,
+        sumInsured: 125000,
+        insuranceCompany: 'Agriculture Insurance Company of India Ltd (AIC)'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.policy) throw new Error(res.message || 'PMFBY crop insurance failed');
+    return `Policy: ${res.policy.policyNumber} | Sum Insured: ₹${res.policy.sumInsured} | Farmer Premium: ₹${res.policy.farmerPremium} | VLE Comm: +₹${res.policy.vleCommissionCredited}`;
+  })) passed++;
+
+  // 18. Route Accessibility Verification
+  total++;
+  if (await step('18. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,
