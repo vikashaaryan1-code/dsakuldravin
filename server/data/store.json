@@ -62,6 +62,58 @@
   ],
   "applications": [
     {
+      "id": "APP-19426",
+      "trackingNumber": "AD-APP-99259",
+      "serviceId": "srv-abha-health-card",
+      "serviceName": "Ayushman Bharat ABHA Health Card & PM-JAY Cover",
+      "customerName": "Suresh Chandra Yadav",
+      "phone": "+91 99887 76655",
+      "status": "SUBMITTED",
+      "appliedDate": "2026-11-10T23:05:58.236Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "ABHA 14-digit generation with Aadhaar OTP verification",
+      "formData": {}
+    },
+    {
+      "id": "APP-46755",
+      "trackingNumber": "AD-APP-69186",
+      "serviceId": "srv-company-pvt-ltd",
+      "serviceName": "Private Limited Company Incorporation",
+      "customerName": "Aarav Gupta",
+      "phone": "+91 98765 43210",
+      "status": "APPROVED",
+      "appliedDate": "2026-11-10T23:05:57.042Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "Government SPICe+ approval confirmed.",
+      "formData": {}
+    },
+    {
+      "id": "APP-31756",
+      "trackingNumber": "AD-APP-44571",
+      "serviceId": "srv-pan-new",
+      "serviceName": "PAN Card New Application",
+      "customerName": "Vikramaditya Sharma",
+      "phone": "+91 98765 43210",
+      "status": "SUBMITTED",
+      "appliedDate": "2026-11-10T23:05:55.621Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "Form 49A filed with Aadhaar KYC: 999999990019",
+      "formData": {}
+    },
+    {
+      "id": "APP-48574",
+      "trackingNumber": "AD-APP-60894",
+      "serviceId": "srv-pan-new",
+      "serviceName": "PAN Card Verification",
+      "customerName": "Test Suite Automation Runner",
+      "phone": "+91 99999 88888",
+      "status": "SUBMITTED",
+      "appliedDate": "2026-11-10T23:05:52.641Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "Application received via Cloud AI portal.",
+      "formData": {}
+    },
+    {
       "id": "APP-68384",
       "trackingNumber": "AD-APP-37528",
       "serviceId": "srv-abha-health-card",
@@ -1569,6 +1621,87 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "AUD-1794351958285",
+      "action": "Payment Verified (₹50) via UPI",
+      "actor": "Unified Payment Gateway",
+      "role": "FINANCE_SYSTEM",
+      "target": "INV-AD-2026-84969",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T23:05:58.285Z"
+    },
+    {
+      "id": "AUD-1794351958236",
+      "action": "New Application Submitted",
+      "actor": "Suresh Chandra Yadav",
+      "role": "CUSTOMER",
+      "target": "AD-APP-99259",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T23:05:58.236Z"
+    },
+    {
+      "id": "AUD-1794351957099",
+      "action": "Application Status Changed to APPROVED",
+      "actor": "LEGAL_DESK",
+      "role": "LEGAL_DESK",
+      "target": "AD-APP-69186",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T23:05:57.099Z"
+    },
+    {
+      "id": "AUD-1794351957077",
+      "action": "Payment Verified (₹6999) via UPI",
+      "actor": "Unified Payment Gateway",
+      "role": "FINANCE_SYSTEM",
+      "target": "INV-AD-2026-48794",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T23:05:57.077Z"
+    },
+    {
+      "id": "AUD-1794351957042",
+      "action": "New Application Submitted",
+      "actor": "Aarav Gupta",
+      "role": "CUSTOMER",
+      "target": "AD-APP-69186",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T23:05:57.042Z"
+    },
+    {
+      "id": "AUD-1794351955839",
+      "action": "Payment Verified (₹1499) via UPI",
+      "actor": "Unified Payment Gateway",
+      "role": "FINANCE_SYSTEM",
+      "target": "INV-AD-2026-65310",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T23:05:55.839Z"
+    },
+    {
+      "id": "AUD-1794351955622",
+      "action": "New Application Submitted",
+      "actor": "Vikramaditya Sharma",
+      "role": "CUSTOMER",
+      "target": "AD-APP-44571",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T23:05:55.622Z"
+    },
+    {
+      "id": "AUD-1794351952697",
+      "action": "Payment Verified (₹1499) via UPI",
+      "actor": "Unified Payment Gateway",
+      "role": "FINANCE_SYSTEM",
+      "target": "INV-AD-2026-57143",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T23:05:52.697Z"
+    },
+    {
+      "id": "AUD-1794351952641",
+      "action": "New Application Submitted",
+      "actor": "Test Suite Automation Runner",
+      "role": "CUSTOMER",
+      "target": "AD-APP-60894",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T23:05:52.641Z"
+    },
     {
       "id": "AUD-1794351695575",
       "action": "Payment Verified (₹50) via UPI",
@@ -3859,6 +3992,58 @@
   "transactions": [
     {
       "verified": true,
+      "orderId": "order_ad_1794351958269_592",
+      "paymentId": "pay_ad_1794351958284_9466",
+      "signature": "cf3010ba628b5a5045cd8a8f48236f0b86799ebd04887004627955e2db24efed",
+      "invoiceNumber": "INV-AD-2026-84969",
+      "paymentMethod": "upi",
+      "paidAt": "2026-11-10T23:05:58.284Z",
+      "status": "PAID",
+      "amount": 50,
+      "items": [],
+      "id": "pay_ad_1794351958284_9466"
+    },
+    {
+      "verified": true,
+      "orderId": "order_ad_1794351957063_285",
+      "paymentId": "pay_ad_1794351957077_5712",
+      "signature": "b82ee5db91c0573cef7c3d835ec4c637d31b5db0257fb901afba4f13cb8df63e",
+      "invoiceNumber": "INV-AD-2026-48794",
+      "paymentMethod": "upi",
+      "paidAt": "2026-11-10T23:05:57.077Z",
+      "status": "PAID",
+      "amount": 6999,
+      "items": [],
+      "id": "pay_ad_1794351957077_5712"
+    },
+    {
+      "verified": true,
+      "orderId": "order_ad_1794351955827_300",
+      "paymentId": "pay_ad_1794351955838_4550",
+      "signature": "0a8b447857ac84579056bd1b759caa3e55ccc451fa7021056608eaa22269cf67",
+      "invoiceNumber": "INV-AD-2026-65310",
+      "paymentMethod": "upi",
+      "paidAt": "2026-11-10T23:05:55.839Z",
+      "status": "PAID",
+      "amount": 1499,
+      "items": [],
+      "id": "pay_ad_1794351955838_4550"
+    },
+    {
+      "verified": true,
+      "orderId": "order_ad_1794351952669_910",
+      "paymentId": "pay_ad_1794351952696_4673",
+      "signature": "8f4ca30ceb7d4a130b38c174c8857de5faaea756c7298a998144e0f4007c9faf",
+      "invoiceNumber": "INV-AD-2026-57143",
+      "paymentMethod": "upi",
+      "paidAt": "2026-11-10T23:05:52.697Z",
+      "status": "PAID",
+      "amount": 1499,
+      "items": [],
+      "id": "pay_ad_1794351952696_4673"
+    },
+    {
+      "verified": true,
       "orderId": "order_ad_1794351695562_640",
       "paymentId": "pay_ad_1794351695575_4472",
       "signature": "c69af992a82df6709ab7c673be89598f7ea500c25bd519138e547e99dc38fe81",
@@ -5325,6 +5510,30 @@
   ],
   "crmLeads": [
     {
+      "id": "LEAD-1157",
+      "name": "Sunil Mehta",
+      "company": "Self / Individual",
+      "phone": "9811223344",
+      "email": "sunil@mehtatraders.in",
+      "serviceInterested": "General Service",
+      "estimatedValue": 10000,
+      "stage": "New",
+      "assignedExecutive": "Senior Account Manager",
+      "createdAt": "2026-11-10T23:05:55.714Z"
+    },
+    {
+      "id": "LEAD-9627",
+      "name": "Sunita Mehra",
+      "company": "Mehra Logistics Pvt Ltd",
+      "phone": "+91 98111 22334",
+      "email": "sunitamehra@example.com",
+      "serviceInterested": "GST & Corporate Tax Audit",
+      "estimatedValue": 25000,
+      "stage": "New",
+      "assignedExecutive": "Senior Account Manager",
+      "createdAt": "2026-11-10T23:05:52.729Z"
+    },
+    {
       "id": "LEAD-3716",
       "name": "Sunil Mehta",
       "company": "Self / Individual",
@@ -6044,6 +6253,102 @@
     }
   ],
   "journals": [
+    {
+      "id": "JRN-2026-1748",
+      "date": "2026-11-10",
+      "reference": "INV-AD-BATCH-SETTLEMENT",
+      "description": "Daily Aggregate Citizen Fee Settlement & VLE Commission Disbursement",
+      "lines": [
+        {
+          "accountCode": "1010",
+          "accountName": "Cash & Bank Balances",
+          "debit": 11800,
+          "credit": 0
+        },
+        {
+          "accountCode": "4010",
+          "accountName": "Citizen Service Revenue",
+          "debit": 0,
+          "credit": 8000
+        },
+        {
+          "accountCode": "2020",
+          "accountName": "GST Output Liability (18%)",
+          "debit": 0,
+          "credit": 1800
+        },
+        {
+          "accountCode": "5010",
+          "accountName": "VLE Operator Commission Expense",
+          "debit": 2000,
+          "credit": 0
+        },
+        {
+          "accountCode": "2010",
+          "accountName": "VLE Wallet Payable Balance",
+          "debit": 0,
+          "credit": 4000
+        }
+      ],
+      "totalDebit": 13800,
+      "totalCredit": 13800,
+      "balanced": true,
+      "cryptographicHash": "hash_0hekzs2iqz"
+    },
+    {
+      "id": "JRN-2026-9691",
+      "date": "2026-11-10",
+      "reference": "INV-AD-WALKTHROUGH",
+      "description": "Customer Payment Settlement for Digital Services",
+      "lines": [
+        {
+          "accountCode": "1010",
+          "accountName": "Cash & Bank Balances",
+          "debit": 3500,
+          "credit": 0
+        },
+        {
+          "accountCode": "4010",
+          "accountName": "Citizen Service Revenue",
+          "debit": 0,
+          "credit": 3000
+        },
+        {
+          "accountCode": "2020",
+          "accountName": "GST Output Liability (18%)",
+          "debit": 0,
+          "credit": 500
+        }
+      ],
+      "totalDebit": 3500,
+      "totalCredit": 3500,
+      "balanced": true,
+      "cryptographicHash": "hash_e3bdvkh5yr"
+    },
+    {
+      "id": "JRN-2026-2494",
+      "date": "2026-11-10",
+      "reference": "INV-AD-2026-TEST",
+      "description": "Audit Test Double-Entry Posting",
+      "lines": [
+        {
+          "accountCode": "1010",
+          "accountName": "Gateway Clearing",
+          "debit": 5000,
+          "credit": 0
+        },
+        {
+          "accountCode": "4010",
+          "accountName": "Professional Fee",
+          "debit": 0,
+          "credit": 5000
+        }
+      ],
+      "totalDebit": 5000,
+      "totalCredit": 5000,
+      "balanced": true,
+      "cryptographicHash": "hash_8o7bqf1aiq"
+    },
     {
       "id": "JRN-2026-7015",
       "date": "2026-11-10",
@@ -8519,6 +8824,46 @@
   ],
   "tickets": [
     {
+      "id": "TKT-1749",
+      "customerName": "Citizen",
+      "customerPhone": "",
+      "serviceCategory": "General Assistance",
+      "subject": "Biometric Appointment Reschedule Request",
+      "priority": "high",
+      "status": "Open",
+      "assignedAgent": "Priority Desk Agent",
+      "slaRemainingHours": 4,
+      "createdAt": "11/11/2026 04:35 AM",
+      "messages": [
+        {
+          "sender": "Citizen",
+          "role": "Citizen",
+          "text": "Assistance requested.",
+          "timestamp": "04:35 AM"
+        }
+      ]
+    },
+    {
+      "id": "TKT-4428",
+      "customerName": "Anil Deshmukh",
+      "customerPhone": "+91 98222 33445",
+      "serviceCategory": "Government Services",
+      "subject": "Passport appointment rescheduled request",
+      "priority": "Critical SLA",
+      "status": "Open",
+      "assignedAgent": "Priority Desk Agent",
+      "slaRemainingHours": 4,
+      "createdAt": "11/11/2026 04:35 AM",
+      "messages": [
+        {
+          "sender": "Anil Deshmukh",
+          "role": "Citizen",
+          "text": "Need urgent slot rebooking for PSK Patna.",
+          "timestamp": "04:35 AM"
+        }
+      ]
+    },
+    {
       "id": "TKT-5416",
       "customerName": "Citizen",
       "customerPhone": "",
@@ -9581,6 +9926,32 @@
   ],
   "campaigns": [
     {
+      "id": "CMP-2026-96",
+      "name": "GST Quarterly Return Filing Alert",
+      "channel": "whatsapp",
+      "audienceSegment": "All Citizens",
+      "status": "Scheduled",
+      "scheduledDate": "2026-11-10",
+      "targetCount": 5000,
+      "sentCount": 0,
+      "deliveredCount": 0,
+      "conversionCount": 0,
+      "templateText": ""
+    },
+    {
+      "id": "CMP-2026-27",
+      "name": "VLE Regional Monsoon Growth Drive",
+      "channel": "WhatsApp Business",
+      "audienceSegment": "VLE Franchisees",
+      "status": "Scheduled",
+      "scheduledDate": "2026-11-10",
+      "targetCount": 2500,
+      "sentCount": 0,
+      "deliveredCount": 0,
+      "conversionCount": 0,
+      "templateText": "Boost your digital center daily footfall with 150+ citizen services."
+    },
+    {
       "id": "CMP-2026-48",
       "name": "GST Quarterly Return Filing Alert",
       "channel": "whatsapp",
@@ -10492,6 +10863,16 @@
       "username": "245089123456",
       "clientId": "0f8ca686-5a31-46b8-bb51-d9834ba9fa9d",
       "createdAt": 1794351691727
+    },
+    "csc_code_pmchzwxwmwbasmja": {
+      "username": "245089123456",
+      "clientId": "0f8ca686-5a31-46b8-bb51-d9834ba9fa9d",
+      "createdAt": 1794351904548
+    },
+    "csc_code_qver9yr1mwbatoow": {
+      "username": "245089123456",
+      "clientId": "0f8ca686-5a31-46b8-bb51-d9834ba9fa9d",
+      "createdAt": 1794351953988
     }
   },
   "vleProfile": {
@@ -10503,7 +10884,7 @@
     "district": "Patna",
     "state": "Bihar",
     "pincode": "800001",
-    "walletBalance": 6575,
+    "walletBalance": 8435,
     "digiPayTerminalId": "DP-PATNA-0912",
     "tecNumber": "TEC-2024-889123",
     "subOperators": [
@@ -10968,9 +11349,303 @@
           "PAN Card",
           "BBPS"
         ]
+      },
+      {
+        "id": "OP-043",
+        "name": "Vikash Aryan",
+        "phone": "9835001122",
+        "role": "Operator",
+        "permissions": [
+          "Banking",
+          "PAN Card",
+          "BBPS"
+        ]
+      },
+      {
+        "id": "OP-044",
+        "name": "Vikash Aryan",
+        "phone": "9835001122",
+        "role": "Operator",
+        "permissions": [
+          "Banking",
+          "PAN Card",
+          "BBPS"
+        ]
       }
     ],
     "passbook": [
+      {
+        "id": "TXN-DSC-3887",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "Class 3 DSC Issuance Comm: Vikramaditya Sharma (DSC-2026-1BE9-D2B-55F-8EC)",
+        "amount": 250,
+        "balance": 8435
+      },
+      {
+        "id": "TXN-EST-C-9084",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "e-Store VLE Delivery Incentive: Order ESTORE-2026-67851688",
+        "amount": 120,
+        "balance": 8185
+      },
+      {
+        "id": "TXN-EST-D-9808",
+        "date": "2026-11-10",
+        "type": "DR",
+        "desc": "Grameen eStore Order: IFFCO Nano Urea (Liquid) + Solar DC Sprayer 16L (Brijesh Sharma)",
+        "amount": 3450,
+        "balance": 8065
+      },
+      {
+        "id": "TXN-UCL-5213",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "Aadhaar UCL Update Comm: Sanjay Kumar Verma (Mobile Number Linking)",
+        "amount": 50,
+        "balance": 11515
+      },
+      {
+        "id": "TXN-BBP-C-6964",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "BBPS VLE Commission: Shanti Devi (South Bihar Power Distribution Co. Ltd (SBPDCL))",
+        "amount": 20,
+        "balance": 11465
+      },
+      {
+        "id": "TXN-BBP-D-8815",
+        "date": "2026-11-10",
+        "type": "DR",
+        "desc": "BBPS Electricity Bill: South Bihar Power Distribution Co. Ltd (SBPDCL) (A/C: 104859302194)",
+        "amount": 1740,
+        "balance": 11445
+      },
+      {
+        "id": "TXN-FBY-6896",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "PMFBY Crop Insurance Comm: Ramdhani Yadav (Paddy / धान (Fine Variety))",
+        "amount": 100,
+        "balance": 13185
+      },
+      {
+        "id": "TXN-ESH-8882",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "e-Shram UAN Card Comm: Manoj Kumar Paswan (UAN: 1009 4025 1101)",
+        "amount": 40,
+        "balance": 13085
+      },
+      {
+        "id": "TXN-ED-7203",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "e-District Service Comm: Residential / Domicile Certificate (Pooja Kumari)",
+        "amount": 30,
+        "balance": 13045
+      },
+      {
+        "id": "TXN-PAN-8267",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "UTIITSL PAN Comm: Coupon U-2026-993030 (Vikramaditya Sharma)",
+        "amount": 50,
+        "balance": 13015
+      },
+      {
+        "id": "TXN-RAIL-2096",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "IRCTC Booking Comm: PNR 245-1493145 (Sanjay Kumar)",
+        "amount": 40,
+        "balance": 12965
+      },
+      {
+        "id": "TXN-FT-6938",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "FASTag ISSUE: BR-01-AB-1234 (Amit Vikram)",
+        "amount": 40,
+        "balance": 12925
+      },
+      {
+        "id": "TXN-PMK-7987",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "PM-KISAN eKYC Verification: Ramesh Chandra Yadav (Aadhaar: ...0019)",
+        "amount": 15,
+        "balance": 12885
+      },
+      {
+        "id": "TXN-ABHA-9310",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "Ayushman ABHA Card Creation: Suresh Kumar (sureshkuma26@abdm)",
+        "amount": 50,
+        "balance": 12870
+      },
+      {
+        "id": "TXN-PMG-6676",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "PMGDISHA VLE Training Incentive: Candidate Priya Kumari",
+        "amount": 300,
+        "balance": 12820
+      },
+      {
+        "id": "TXN-DP-3499",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "DigiPay AEPS WITHDRAWAL Commission (State Bank of India)",
+        "amount": 15,
+        "balance": 12520
+      },
+      {
+        "id": "TXN-PB-4329",
+        "date": "2026-11-10",
+        "type": "CR",
+        "description": "Wallet Top-up via UPI",
+        "amount": 5000,
+        "balance": 12505
+      },
+      {
+        "id": "TXN-DSC-9653",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "Class 3 DSC Issuance Comm: Vikramaditya Sharma (DSC-2026-CB6-1593-19FB-151D)",
+        "amount": 250,
+        "balance": 7505
+      },
+      {
+        "id": "TXN-EST-C-4916",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "e-Store VLE Delivery Incentive: Order ESTORE-2026-98660907",
+        "amount": 120,
+        "balance": 7255
+      },
+      {
+        "id": "TXN-EST-D-8277",
+        "date": "2026-11-10",
+        "type": "DR",
+        "desc": "Grameen eStore Order: IFFCO Nano Urea (Liquid) + Solar DC Sprayer 16L (Brijesh Sharma)",
+        "amount": 3450,
+        "balance": 7135
+      },
+      {
+        "id": "TXN-UCL-4582",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "Aadhaar UCL Update Comm: Sanjay Kumar Verma (Mobile Number Linking)",
+        "amount": 50,
+        "balance": 10585
+      },
+      {
+        "id": "TXN-BBP-C-2796",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "BBPS VLE Commission: Shanti Devi (South Bihar Power Distribution Co. Ltd (SBPDCL))",
+        "amount": 20,
+        "balance": 10535
+      },
+      {
+        "id": "TXN-BBP-D-6777",
+        "date": "2026-11-10",
+        "type": "DR",
+        "desc": "BBPS Electricity Bill: South Bihar Power Distribution Co. Ltd (SBPDCL) (A/C: 104859302194)",
+        "amount": 1740,
+        "balance": 10515
+      },
+      {
+        "id": "TXN-FBY-8149",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "PMFBY Crop Insurance Comm: Ramdhani Yadav (Paddy / धान (Fine Variety))",
+        "amount": 100,
+        "balance": 12255
+      },
+      {
+        "id": "TXN-ESH-1907",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "e-Shram UAN Card Comm: Manoj Kumar Paswan (UAN: 1009 4805 7685)",
+        "amount": 40,
+        "balance": 12155
+      },
+      {
+        "id": "TXN-ED-1229",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "e-District Service Comm: Residential / Domicile Certificate (Pooja Kumari)",
+        "amount": 30,
+        "balance": 12115
+      },
+      {
+        "id": "TXN-PAN-6224",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "UTIITSL PAN Comm: Coupon U-2026-429658 (Vikramaditya Sharma)",
+        "amount": 50,
+        "balance": 12085
+      },
+      {
+        "id": "TXN-RAIL-9724",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "IRCTC Booking Comm: PNR 245-8723335 (Sanjay Kumar)",
+        "amount": 40,
+        "balance": 12035
+      },
+      {
+        "id": "TXN-FT-9954",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "FASTag ISSUE: BR-01-AB-1234 (Amit Vikram)",
+        "amount": 40,
+        "balance": 11995
+      },
+      {
+        "id": "TXN-PMK-2761",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "PM-KISAN eKYC Verification: Ramesh Chandra Yadav (Aadhaar: ...0019)",
+        "amount": 15,
+        "balance": 11955
+      },
+      {
+        "id": "TXN-ABHA-3059",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "Ayushman ABHA Card Creation: Suresh Kumar (sureshkuma58@abdm)",
+        "amount": 50,
+        "balance": 11940
+      },
+      {
+        "id": "TXN-PMG-3718",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "PMGDISHA VLE Training Incentive: Candidate Priya Kumari",
+        "amount": 300,
+        "balance": 11890
+      },
+      {
+        "id": "TXN-DP-1765",
+        "date": "2026-11-10",
+        "type": "CR",
+        "desc": "DigiPay AEPS WITHDRAWAL Commission (State Bank of India)",
+        "amount": 15,
+        "balance": 11590
+      },
+      {
+        "id": "TXN-PB-6179",
+        "date": "2026-11-10",
+        "type": "CR",
+        "description": "Wallet Top-up via UPI",
+        "amount": 5000,
+        "balance": 11575
+      },
       {
         "id": "TXN-DSC-3953",
         "date": "2026-11-10",
@@ -14311,6 +14986,40 @@
   },
   "vleRegistrations": [
     {
+      "refNumber": "VLE-REG-2026-61731",
+      "tecNumber": "TEC-2024-90218",
+      "name": "Dr. Akul Dravin",
+      "mobile": "9876543210",
+      "email": "akul.dravin@example.com",
+      "state": "Bihar",
+      "district": "Patna",
+      "centerAddress": "Shop No. 12, Main Market, Danapur",
+      "coordinates": {
+        "latitude": 25.5941,
+        "longitude": 85.1376
+      },
+      "status": "SUBMITTED",
+      "stage": "Under District Manager Verification",
+      "submittedAt": "2026-11-10T23:05:54.113Z"
+    },
+    {
+      "refNumber": "VLE-REG-2026-27739",
+      "tecNumber": "TEC-2024-90218",
+      "name": "Dr. Akul Dravin",
+      "mobile": "9876543210",
+      "email": "akul.dravin@example.com",
+      "state": "Bihar",
+      "district": "Patna",
+      "centerAddress": "Shop No. 12, Main Market, Danapur",
+      "coordinates": {
+        "latitude": 25.5941,
+        "longitude": 85.1376
+      },
+      "status": "SUBMITTED",
+      "stage": "Under District Manager Verification",
+      "submittedAt": "2026-11-10T23:05:04.748Z"
+    },
+    {
       "refNumber": "VLE-REG-2026-25331",
       "tecNumber": "TEC-2024-90218",
       "name": "Dr. Akul Dravin",
@@ -15009,6 +15718,26 @@
     }
   ],
   "telelawCases": [
+    {
+      "caseId": "TL-2026-7215",
+      "citizenName": "Kameshwar Mahto",
+      "phone": "9835001122",
+      "disputeType": "Land & Agricultural Boundary Conflict",
+      "advocateName": "Adv. R. C. Mishra (State Legal Services Authority)",
+      "status": "SCHEDULED",
+      "scheduledTime": "05:35 AM",
+      "createdAt": "2026-11-10T23:05:54.153Z"
+    },
+    {
+      "caseId": "TL-2026-9453",
+      "citizenName": "Kameshwar Mahto",
+      "phone": "9835001122",
+      "disputeType": "Land & Agricultural Boundary Conflict",
+      "advocateName": "Adv. R. C. Mishra (State Legal Services Authority)",
+      "status": "SCHEDULED",
+      "scheduledTime": "05:35 AM",
+      "createdAt": "2026-11-10T23:05:04.801Z"
+    },
     {
       "caseId": "TL-2026-3225",
       "citizenName": "Kameshwar Mahto",
