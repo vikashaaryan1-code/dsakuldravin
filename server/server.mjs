@@ -1679,6 +1679,88 @@ app.post('/api/csc/ucl/update', (req, res) => {
   });
 });
 
+// 30. CSC Grameen e-Store (grameenestore.in / estore.csccloud.in)
+app.post('/api/csc/estore/order', (req, res) => {
+  const {
+    customerName = 'Brijesh Sharma',
+    customerMobile = '9835012345',
+    deliveryPanchayat = 'Danapur Cantonment Gram Panchayat',
+    itemCategory = 'Farm Inputs & Solar Technology',
+    productName = 'IFFCO Nano Urea (Liquid) + Solar DC Sprayer 16L',
+    quantity = 2,
+    orderAmount = 3450,
+    paymentMode = 'VLE_WALLET_DISBURSAL'
+  } = req.body;
+
+  const parsedAmount = Number(orderAmount);
+  if (!customerName || !customerMobile || isNaN(parsedAmount) || parsedAmount <= 0) {
+    return res.status(400).json({ success: false, message: 'Valid customer name, mobile, and order amount are required' });
+  }
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+
+  if (paymentMode === 'VLE_WALLET_DISBURSAL' && db.vleProfile.walletBalance < parsedAmount) {
+    return res.status(400).json({
+      success: false,
+      message: `Insufficient VLE wallet balance. Required: ₹${parsedAmount}, Available: ₹${db.vleProfile.walletBalance}. Please top up your wallet.`
+    });
+  }
+
+  const orderId = 'ESTORE-2026-' + Math.floor(10000000 + Math.random() * 90000000);
+  const vleCommission = 120; // Rs 120 VLE fulfillment & delivery incentive
+
+  if (paymentMode === 'VLE_WALLET_DISBURSAL') {
+    db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance - parsedAmount + vleCommission).toFixed(2));
+    db.vleProfile.passbook.unshift({
+      id: 'TXN-EST-D-' + Math.floor(1000 + Math.random() * 9000),
+      date: new Date().toISOString().split('T')[0],
+      type: 'DR',
+      desc: `Grameen eStore Order: ${productName} (${customerName})`,
+      amount: parsedAmount,
+      balance: Number((db.vleProfile.walletBalance - vleCommission).toFixed(2))
+    });
+  } else {
+    db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+  }
+
+  db.vleProfile.passbook.unshift({
+    id: 'TXN-EST-C-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `e-Store VLE Delivery Incentive: Order ${orderId}`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  });
+
+  writeDB(db);
+
+  broadcastEvent('csc:estore_ordered', { orderId, customerName, productName, orderAmount: parsedAmount, vleCommission });
+
+  res.status(201).json({
+    success: true,
+    order: {
+      orderId,
+      customerName,
+      customerMobile,
+      deliveryPanchayat,
+      itemCategory,
+      productName,
+      quantity,
+      orderAmount: parsedAmount,
+      deliveryCharge: 0.00,
+      paymentMode,
+      deliveryAgent: 'Kiran Devi (Gramin e-Store Village Rider)',
+      estimatedDelivery: 'Next Working Day (Doorstep Rural Delivery)',
+      status: 'CONFIRMED & DISPATCHED FROM REGIONAL CSC HUB',
+      timestamp: new Date().toISOString(),
+      qrPayload: `ESTORE|ORDER:${orderId}|CUST:${customerName}|PROD:${productName}|AMT:${parsedAmount}|STATUS:DISPATCHED`,
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

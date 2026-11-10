@@ -389,9 +389,31 @@ async function run() {
     return `EID: ${res.ucl.eid} | URN: ${res.ucl.urn} | Resident: ${res.ucl.residentName} | VLE Comm: +₹${res.ucl.vleCommissionCredited}`;
   })) passed++;
 
-  // 20. Route Accessibility Verification
+  // 20. CSC Grameen e-Store Rural Commerce (grameenestore.in / estore.csccloud.in)
   total++;
-  if (await step('20. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('20. CSC Grameen e-Store Order & Fulfillment (grameenestore.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/estore/order`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customerName: 'Brijesh Sharma',
+        customerMobile: '9835012345',
+        deliveryPanchayat: 'Danapur Cantonment Gram Panchayat',
+        itemCategory: 'Farm Inputs & Solar Technology',
+        productName: 'IFFCO Nano Urea (Liquid) + Solar DC Sprayer 16L',
+        quantity: 2,
+        orderAmount: 3450,
+        paymentMode: 'VLE_WALLET_DISBURSAL'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.order) throw new Error(res.message || 'Grameen e-Store order failed');
+    return `Order: ${res.order.orderId} | Rider: ${res.order.deliveryAgent} | Product: ${res.order.productName} | VLE Comm: +₹${res.order.vleCommissionCredited}`;
+  })) passed++;
+
+  // 21. Route Accessibility Verification
+  total++;
+  if (await step('21. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,
