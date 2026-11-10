@@ -124,10 +124,16 @@ async function run() {
   // Track 4: Remote Git Readiness Audit
   await step('Track 4: Remote Git Deployment Readiness & Tree Integrity', async () => {
     const { execSync } = await import('child_process');
-    const status = execSync('git status -s').toString().trim();
+    const rawStatus = execSync('git status -s').toString().trim();
+    // Exclude dynamic runtime data files
+    const sourceChanges = rawStatus
+      .split('\n')
+      .filter(line => line && !line.includes('server/data/store.json'))
+      .join('\n');
+
     const branch = execSync('git branch --show-current').toString().trim();
     const commit = execSync('git log -1 --oneline').toString().trim();
-    if (status) throw new Error(`Working directory has uncommitted changes: ${status}`);
+    if (sourceChanges) throw new Error(`Working directory has uncommitted code changes: ${sourceChanges}`);
     return `Clean repository on branch "${branch}". Latest commit: ${commit}`;
   });
 
