@@ -272,8 +272,62 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('ad_wallet_balance', walletBalance.toString());
   }, [walletBalance]);
 
-  // Live Real-Time Multi-Tenant Server-Sent Events (SSE) Synchronization
+  // Live Real-Time Multi-Tenant Server-Sent Events (SSE) Synchronization & Hydration
   useEffect(() => {
+    let isMounted = true;
+    const hydrateFromServer = async () => {
+      try {
+        const [servicesRes, appsRes, stationsRes, leadsRes, empRes, invRes] = await Promise.allSettled([
+          apiClient.getServices(),
+          apiClient.getApplications(),
+          apiClient.getWorkstations(),
+          apiClient.getCRMLeads(),
+          apiClient.getEmployees(),
+          apiClient.getInventory()
+        ]);
+
+        if (!isMounted) return;
+
+        if (servicesRes.status === 'fulfilled' && servicesRes.value?.services?.length) {
+          setServices(prev => {
+            const serverServices = servicesRes.value!.services;
+            const existingIds = new Set(serverServices.map((s: any) => s.id));
+            const uniqueLocal = prev.filter(s => !existingIds.has(s.id));
+            return [...serverServices, ...uniqueLocal];
+          });
+        }
+
+        if (appsRes.status === 'fulfilled' && appsRes.value?.applications?.length) {
+          setApplications(prev => {
+            const serverApps = appsRes.value!.applications;
+            const existingIds = new Set(serverApps.map((a: any) => a.id));
+            const uniqueLocal = prev.filter(a => !existingIds.has(a.id));
+            return [...serverApps, ...uniqueLocal];
+          });
+        }
+
+        if (stationsRes.status === 'fulfilled' && stationsRes.value?.workstations?.length) {
+          setWorkstations(stationsRes.value!.workstations);
+        }
+
+        if (leadsRes.status === 'fulfilled' && leadsRes.value?.leads?.length) {
+          setCrmLeads(leadsRes.value!.leads);
+        }
+
+        if (empRes.status === 'fulfilled' && empRes.value?.employees?.length) {
+          setEmployees(empRes.value!.employees);
+        }
+
+        if (invRes.status === 'fulfilled' && invRes.value?.inventory?.length) {
+          setInventory(invRes.value!.inventory);
+        }
+      } catch (err) {
+        console.info('[AppContext] Server hydration skipped, running in sovereign local mode');
+      }
+    };
+
+    hydrateFromServer();
+
     const unsubscribe = apiClient.subscribeToEvents((event) => {
       if (event.type === 'application:created') {
         const payload = event.payload;
@@ -298,10 +352,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else if (event.type === 'crm:stage_updated') {
         const payload = event.payload;
         setCrmLeads(prev => prev.map(l => l.id === payload.id ? { ...l, stage: payload.stage } : l));
+      } else if (event.type === 'document:uploaded') {
+        const payload = event.payload;
+        setDocuments(prev => [payload, ...prev.filter(d => d.id !== payload.id)]);
+        showToast('Document Vault', `Document "${payload.fileName}" verified and vaulted.`, 'info');
+      } else if (event.type === 'hrms:attendance_updated') {
+        const payload = event.payload;
+        setEmployees(prev => prev.map(e => e.id === payload.id ? { ...e, attendanceStatus: payload.status } : e));
+      } else if (event.type === 'hrms:employee_created') {
+        const payload = event.payload;
+        setEmployees(prev => [payload, ...prev.filter(e => e.id !== payload.id)]);
+      } else if (event.type === 'erp:stock_updated') {
+        const payload = event.payload;
+        setInventory(prev => prev.map(i => i.id === payload.id ? { ...i, stockQuantity: payload.stockQuantity } : i));
+      } else if (event.type === 'erp:inventory_created') {
+        const payload = event.payload;
+        setInventory(prev => [payload, ...prev.filter(i => i.id !== payload.id)]);
       }
     });
 
     return () => {
+      isMounted = false;
       if (typeof unsubscribe === 'function') unsubscribe();
     };
   }, []);
@@ -578,13 +649,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // HRMS Attendance
   const toggleEmployeeAttendance = (empId: string) => {
+    let nextStatus: 'Present' | 'Absent' = 'Present';
     setEmployees(prev => prev.map(emp => {
       if (emp.id === empId) {
-        const nextStatus = emp.attendanceStatus === 'Present' ? 'Absent' : 'Present';
+        nextStatus = emp.attendanceStatus === 'Present' ? 'Absent' : 'Present';
         return { ...emp, attendanceStatus: nextStatus };
       }
       return emp;
     }));
+    apiClient.toggleEmployeeAttendance(empId, nextStatus).catch(() => {});
     showToast('Attendance Updated', `Staff member attendance logged.`, 'info');
   };
 
@@ -596,6 +669,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return item;
     }));
+    apiClient.updateInventoryStock(invId, { delta }).catch(() => {});
     showToast('Inventory Stock Adjusted', `Stock quantity updated.`, 'info');
   };
 
@@ -607,6 +681,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       uploadDate: new Date().toISOString().substring(0, 10),
     };
     setDocuments(prev => [newDoc, ...prev]);
+    apiClient.uploadDocument({
+      fileName: doc.name,
+      docType: doc.category || doc.fileType,
+      applicantName: 'Citizen Applicant'
+    }).catch(() => {});
     showToast('Document Uploaded to Vault', `${doc.name} saved to local prototype vault.`, 'success');
   };
 

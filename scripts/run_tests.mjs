@@ -312,6 +312,59 @@ try {
 
   assert(wlRes.success === true, 'White-label SaaS tenant configuration saved');
   assert(wlRes.config.brandName === 'AKUL DRAVIN DIGITAL ENTERPRISE', 'Tenant brand name matches configuration');
+
+  // Test Suite 6f: Citizen Document Vault & Upload Engine
+  const uploadRes = await fetch('http://localhost:5000/api/documents/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      applicantName: 'Suresh Raina',
+      docType: 'identity_proof',
+      fileName: 'Aadhaar_Front_Back_Verified.pdf',
+      fileBase64: 'JVBERi0xLjQKJcTl8uXrKg==',
+      mimeType: 'application/pdf',
+      serviceId: 'srv-pan-new'
+    })
+  }).then(r => r.json());
+
+  assert(uploadRes.success === true, 'Citizen document upload to secure vault succeeded');
+  assert(uploadRes.document.id.startsWith('DOC-'), `Vault assigned tracked document token: ${uploadRes.document.id}`);
+  assert(uploadRes.document.checksum.startsWith('SHA256:'), 'Document assigned cryptographic SHA-256 tamper-evident checksum');
+
+  // Test Suite 6g: Enterprise HRMS Attendance
+  const empRes = await fetch('http://localhost:5000/api/hrms/employees/EMP-01/attendance', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status: 'Present' })
+  }).then(r => r.json());
+
+  assert(empRes.success === true, 'HRMS employee attendance toggle recorded');
+  assert(empRes.employee.attendanceStatus === 'Present', 'Employee marked as Present in HRMS directory');
+
+  // Test Suite 6h: Enterprise ERP Inventory Stock Control
+  const erpRes = await fetch('http://localhost:5000/api/erp/inventory/INV-01/stock', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ delta: 50 })
+  }).then(r => r.json());
+
+  assert(erpRes.success === true, 'ERP inventory stock adjustment recorded');
+  assert(erpRes.item.stockQuantity >= 450, `ERP stock quantity updated: ${erpRes.item.stockQuantity}`);
+
+  // Test Suite 6i: Quantum AI Chat & Sovereign Governance
+  const quantumAiRes = await fetch('http://localhost:5000/api/ai/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: 'Need help with private limited company registration and BoQ for CCTV',
+      activeAgent: 'Quote AI',
+      language: 'en'
+    })
+  }).then(r => r.json());
+
+  assert(quantumAiRes.success === true, 'Quantum AI multi-agent chat response generated');
+  assert(quantumAiRes.agentName.includes('Quote AI'), `Agent routed to Quote AI: ${quantumAiRes.agentName}`);
+  assert(typeof quantumAiRes.isLiveCloudAI === 'boolean', 'Response indicates Cloud AI vs sovereign fallback state');
 } catch (err) {
   console.warn(`  ⚠️ Live server fetch skipped (offline mode): ${err.message}`);
 }

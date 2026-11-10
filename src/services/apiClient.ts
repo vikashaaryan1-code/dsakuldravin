@@ -229,6 +229,69 @@ export const apiClient = {
   },
 
   /**
+   * Citizen Document Vault & Upload Engine
+   */
+  async getDocuments() {
+    return fetchJSON<{ success: boolean; count: number; documents: any[] }>(`${API_BASE}/documents`);
+  },
+
+  async uploadDocument(docData: {
+    applicantName?: string;
+    docType?: string;
+    fileName: string;
+    fileBase64?: string;
+    mimeType?: string;
+    serviceId?: string;
+  }) {
+    return fetchJSON<{ success: boolean; document: any }>(`${API_BASE}/documents/upload`, {
+      method: 'POST',
+      body: JSON.stringify(docData)
+    });
+  },
+
+  /**
+   * Enterprise HRMS
+   */
+  async getEmployees() {
+    return fetchJSON<{ success: boolean; count: number; employees: any[] }>(`${API_BASE}/hrms/employees`);
+  },
+
+  async addEmployee(employee: any) {
+    return fetchJSON<{ success: boolean; employee: any }>(`${API_BASE}/hrms/employees`, {
+      method: 'POST',
+      body: JSON.stringify(employee)
+    });
+  },
+
+  async toggleEmployeeAttendance(id: string, status?: string) {
+    return fetchJSON<{ success: boolean; employee: any }>(`${API_BASE}/hrms/employees/${id}/attendance`, {
+      method: 'POST',
+      body: JSON.stringify({ status })
+    });
+  },
+
+  /**
+   * Enterprise ERP Inventory
+   */
+  async getInventory() {
+    return fetchJSON<{ success: boolean; count: number; inventory: any[] }>(`${API_BASE}/erp/inventory`);
+  },
+
+  async addInventoryItem(item: any) {
+    return fetchJSON<{ success: boolean; item: any }>(`${API_BASE}/erp/inventory`, {
+      method: 'POST',
+      body: JSON.stringify(item)
+    });
+  },
+
+  async updateInventoryStock(id: string, deltaOrQuantity: { delta?: number; stockQuantity?: number }) {
+    return fetchJSON<{ success: boolean; item: any }>(`${API_BASE}/erp/inventory/${id}/stock`, {
+      method: 'PATCH',
+      body: JSON.stringify(deltaOrQuantity)
+    });
+  },
+
+  /**
    * Real-Time Server-Sent Events (SSE) Listener
    */
   subscribeToEvents(onEvent: (event: { type: string; payload: any; timestamp: string }) => void) {
@@ -266,6 +329,26 @@ export const apiClient = {
       });
 
       source.addEventListener('workstation:session_stopped', (e: MessageEvent) => {
+        try { onEvent(JSON.parse(e.data)); } catch (err) {}
+      });
+
+      source.addEventListener('document:uploaded', (e: MessageEvent) => {
+        try { onEvent(JSON.parse(e.data)); } catch (err) {}
+      });
+
+      source.addEventListener('hrms:employee_created', (e: MessageEvent) => {
+        try { onEvent(JSON.parse(e.data)); } catch (err) {}
+      });
+
+      source.addEventListener('hrms:attendance_updated', (e: MessageEvent) => {
+        try { onEvent(JSON.parse(e.data)); } catch (err) {}
+      });
+
+      source.addEventListener('erp:inventory_created', (e: MessageEvent) => {
+        try { onEvent(JSON.parse(e.data)); } catch (err) {}
+      });
+
+      source.addEventListener('erp:stock_updated', (e: MessageEvent) => {
         try { onEvent(JSON.parse(e.data)); } catch (err) {}
       });
 

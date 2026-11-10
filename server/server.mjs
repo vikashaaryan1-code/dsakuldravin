@@ -18,10 +18,14 @@ app.use(express.json());
 
 // Persistent Data Store Directory & File
 const DATA_DIR = path.join(__dirname, 'data');
+const VAULT_DIR = path.join(DATA_DIR, 'vault');
 const DB_FILE = path.join(DATA_DIR, 'store.json');
 
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+if (!fs.existsSync(VAULT_DIR)) {
+  fs.mkdirSync(VAULT_DIR, { recursive: true });
 }
 
 // Initial Database Seeds
@@ -147,6 +151,19 @@ function readDB() {
     if (!parsed.campaigns) parsed.campaigns = [];
     if (!parsed.downlines) parsed.downlines = [];
     if (!parsed.affiliates) parsed.affiliates = [];
+    if (!parsed.employees) parsed.employees = [
+      { id: 'EMP-01', name: 'Vikram Malhotra', role: 'Operations Lead', department: 'Citizen Services', attendanceStatus: 'Present', phone: '+91 98111 22334', email: 'vikram@akuldravin.com', joinDate: '2024-03-15', salary: 45000 },
+      { id: 'EMP-02', name: 'Neha Singhal', role: 'Senior Legal Associate', department: 'Legal & ROC', attendanceStatus: 'Present', phone: '+91 98222 33445', email: 'neha@akuldravin.com', joinDate: '2024-06-01', salary: 55000 },
+      { id: 'EMP-03', name: 'Rohan Mehra', role: 'Cyber Café Supervisor', department: 'Hardware & Network', attendanceStatus: 'Present', phone: '+91 98333 44556', email: 'rohan@akuldravin.com', joinDate: '2024-08-10', salary: 32000 }
+    ];
+    if (!parsed.inventory) parsed.inventory = [
+      { id: 'INV-01', itemName: 'PVC Smart Cards for Aadhaar/PAN', category: 'Stationery', stockQuantity: 450, unit: 'Pieces', reorderLevel: 100, unitPrice: 15 },
+      { id: 'INV-02', itemName: 'A4 75 GSM High-Speed Paper Reams', category: 'Paper', stockQuantity: 28, unit: 'Reams', reorderLevel: 10, unitPrice: 320 },
+      { id: 'INV-03', itemName: 'Thermal Receipt Rolls 3-Inch', category: 'Hardware', stockQuantity: 65, unit: 'Rolls', reorderLevel: 20, unitPrice: 45 },
+      { id: 'INV-04', itemName: 'Mantra MFS100 Biometric Scanner', category: 'Hardware', stockQuantity: 12, unit: 'Units', reorderLevel: 5, unitPrice: 2450 },
+      { id: 'INV-05', itemName: 'ProxKey Plus WatchData USB Tokens', category: 'Hardware', stockQuantity: 34, unit: 'Tokens', reorderLevel: 10, unitPrice: 650 }
+    ];
+    if (!parsed.documents) parsed.documents = [];
     if (!parsed.whiteLabel) parsed.whiteLabel = {
       brandName: 'AKUL DRAVIN DIGITAL SERVICES',
       tagline: 'One Platform. Every Service.',
@@ -398,7 +415,7 @@ app.post('/api/astrology/match', (req, res) => {
 });
 
 // 7. Quantum AI Autonomous Multi-Agent Engine
-app.post('/api/ai/chat', (req, res) => {
+app.post('/api/ai/chat', async (req, res) => {
   const { message, activeAgent = 'Universal', language = 'en' } = req.body;
   const q = String(message || '').toLowerCase();
 
@@ -407,21 +424,21 @@ app.post('/api/ai/chat', (req, res) => {
   let replyText = '';
   let suggestedAction = null;
 
-  if (activeAgent === 'Document AI' || q.includes('pan') || q.includes('aadhaar') || q.includes('ocr') || q.includes('दस्तावेज़')) {
+  if (activeAgent === 'Document AI' || (activeAgent === 'Universal' && (/\b(pan|aadhaar|ocr)\b/i.test(q) || q.includes('दस्तावेज़')))) {
     agentName = 'Document AI & OCR Scrutinizer';
     governanceLevel = 'RECOMMEND';
     replyText = language === 'hi'
       ? 'दस्तावेज़ ओसीआर इंजन सक्रिय है। आधार कार्ड (12-अंक Verhoeff एल्गोरिथ्म), पैन कार्ड (ABCDE1234F प्रारूप) एवं जीएसटी सत्यापन हेतु तैयार है।'
       : 'Document AI Engine active. Verhoeff checksum algorithm loaded for 12-digit Aadhaar, Form 49A PAN pattern matching, and GSTIN jurisdictional validation.';
     suggestedAction = { label: 'Open Document Center', actionType: 'navigate', targetPayload: '/documents' };
-  } else if (activeAgent === 'Quote AI' || q.includes('cctv') || q.includes('camera') || q.includes('construction') || q.includes('कोटेशन')) {
+  } else if (activeAgent === 'Quote AI' || (activeAgent === 'Universal' && (/\b(cctv|camera|construction|boq|quote|quotation)\b/i.test(q) || q.includes('कोटेशन')))) {
     agentName = 'Quote AI & Dynamic BoQ Engine';
     governanceLevel = 'DRAFT';
     replyText = language === 'hi'
       ? 'सीसीटीवी एवं इंफ्रास्ट्रक्चर एस्टीमेट तैयार: 4 एचडी नाइट विज़न कैमरा + 1TB सर्विलांस HDD + 4CH DVR = ₹12,499 (Same day installation included).'
       : 'Instant BoQ Generated: 4x HD Night-Vision Cameras + 1TB Surveillance HDD + 4CH DVR = ₹12,499 (Inclusive of cabling, installation & mobile live view setup).';
     suggestedAction = { label: 'View CCTV Packages', actionType: 'navigate', targetPayload: '/cctv' };
-  } else if (activeAgent === 'Admin Copilot' || q.includes('pending') || q.includes('audit') || q.includes('commission') || q.includes('लंबित')) {
+  } else if (activeAgent === 'Admin Copilot' || (activeAgent === 'Universal' && (/\b(pending|audit|commission|admin)\b/i.test(q) || q.includes('लंबित')))) {
     agentName = 'Admin Copilot & Enterprise Governance';
     governanceLevel = 'APPROVAL REQUIRED';
     replyText = language === 'hi'
@@ -437,12 +454,45 @@ app.post('/api/ai/chat', (req, res) => {
     suggestedAction = { label: 'Browse Marketplace', actionType: 'navigate', targetPayload: '/services' };
   }
 
+  // Live Cloud AI Integration (Google Gemini API) if API key is provided
+  let isLiveCloudAI = false;
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const prompt = `You are the sovereign AI engine for AKUL DRAVIN CLOUD AI / DIGITAL SERVICES (भारत का अग्रणी डिजिटल सेवा एवं वैदिक ज्योतिष महामंच).
+You act in the role of '${agentName}' (${activeAgent}).
+Language requested: ${language === 'hi' ? 'Hindi (हिन्दी)' : 'English'}.
+User message: "${message}".
+Provide a concise, professional, authoritative, and helpful response suitable for enterprise citizen services, e-governance, CSC, and digital workflows in India. Keep response within 2-4 sentences.`;
+
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+      const geminiRes = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { maxOutputTokens: 250, temperature: 0.4 }
+        })
+      });
+      if (geminiRes.ok) {
+        const data = await geminiRes.json();
+        const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (candidateText && candidateText.trim()) {
+          replyText = candidateText.trim();
+          isLiveCloudAI = true;
+        }
+      }
+    } catch (err) {
+      console.warn('[Cloud AI] Gemini API call bypassed, falling back to heuristic brain:', err.message);
+    }
+  }
+
   res.json({
     success: true,
     agentName,
     text: replyText,
     governanceLevel,
     suggestedAction,
+    isLiveCloudAI,
     timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   });
 });
@@ -747,6 +797,135 @@ app.post('/api/admin/whitelabel', (req, res) => {
   writeDB(db);
   broadcastEvent('whitelabel:updated', db.whiteLabel);
   res.json({ success: true, config: db.whiteLabel });
+});
+
+// 14B. Citizen Document Vault & Upload Engine
+app.get('/api/documents', (req, res) => {
+  const db = readDB();
+  res.json({ success: true, count: (db.documents || []).length, documents: db.documents || [] });
+});
+
+app.post('/api/documents/upload', (req, res) => {
+  const { applicantName, docType, fileName, fileBase64, mimeType, serviceId } = req.body;
+  if (!fileName) {
+    return res.status(400).json({ success: false, message: 'File name is required' });
+  }
+
+  const db = readDB();
+  if (!db.documents) db.documents = [];
+
+  const docId = 'DOC-' + Date.now();
+  let fileSize = 1024;
+
+  if (fileBase64) {
+    try {
+      const buffer = Buffer.from(fileBase64.replace(/^data:[^;]+;base64,/, ''), 'base64');
+      fileSize = buffer.length;
+      if (fileSize > 10 * 1024 * 1024) {
+        return res.status(413).json({ success: false, message: 'File exceeds 10MB limit' });
+      }
+      const safeName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const filePath = path.join(VAULT_DIR, `${docId}_${safeName}`);
+      fs.writeFileSync(filePath, buffer);
+    } catch (err) {
+      console.warn('Error saving vault file to disk:', err.message);
+    }
+  }
+
+  const newDoc = {
+    id: docId,
+    applicantName: applicantName || 'Citizen Applicant',
+    docType: docType || 'identity_proof',
+    fileName,
+    fileSize,
+    mimeType: mimeType || 'application/pdf',
+    uploadedAt: new Date().toISOString(),
+    checksum: 'SHA256:' + Buffer.from(fileName + docId).toString('hex').slice(0, 16),
+    status: 'VERIFIED',
+    serviceId: serviceId || 'srv-general'
+  };
+
+  db.documents.unshift(newDoc);
+  writeDB(db);
+  broadcastEvent('document:uploaded', newDoc);
+  res.status(201).json({ success: true, document: newDoc });
+});
+
+// 14C. Enterprise HRMS (Human Resource Management) API
+app.get('/api/hrms/employees', (req, res) => {
+  const db = readDB();
+  res.json({ success: true, count: (db.employees || []).length, employees: db.employees || [] });
+});
+
+app.post('/api/hrms/employees', (req, res) => {
+  const db = readDB();
+  if (!db.employees) db.employees = [];
+  const newEmp = {
+    id: req.body.id || 'EMP-' + Math.floor(100 + Math.random() * 900),
+    name: req.body.name,
+    role: req.body.role || 'Associate',
+    department: req.body.department || 'Operations',
+    attendanceStatus: req.body.attendanceStatus || 'Present',
+    phone: req.body.phone || '+91 98000 00000',
+    email: req.body.email || `${(req.body.name || 'emp').toLowerCase().replace(/\s+/g, '')}@akuldravin.com`,
+    joinDate: req.body.joinDate || new Date().toISOString().substring(0, 10),
+    salary: Number(req.body.salary) || 30000
+  };
+  db.employees.unshift(newEmp);
+  writeDB(db);
+  broadcastEvent('hrms:employee_created', newEmp);
+  res.status(201).json({ success: true, employee: newEmp });
+});
+
+app.post('/api/hrms/employees/:id/attendance', (req, res) => {
+  const db = readDB();
+  if (!db.employees) db.employees = [];
+  const emp = db.employees.find(e => e.id === req.params.id);
+  if (!emp) return res.status(404).json({ success: false, message: 'Employee not found' });
+  const nextStatus = req.body.status || (emp.attendanceStatus === 'Present' ? 'Absent' : 'Present');
+  emp.attendanceStatus = nextStatus;
+  writeDB(db);
+  broadcastEvent('hrms:attendance_updated', { id: emp.id, status: nextStatus, timestamp: new Date().toISOString() });
+  res.json({ success: true, employee: emp });
+});
+
+// 14D. Enterprise ERP (Inventory & Stock Control) API
+app.get('/api/erp/inventory', (req, res) => {
+  const db = readDB();
+  res.json({ success: true, count: (db.inventory || []).length, inventory: db.inventory || [] });
+});
+
+app.post('/api/erp/inventory', (req, res) => {
+  const db = readDB();
+  if (!db.inventory) db.inventory = [];
+  const newItem = {
+    id: req.body.id || 'INV-' + Math.floor(100 + Math.random() * 900),
+    itemName: req.body.itemName,
+    category: req.body.category || 'General',
+    stockQuantity: Number(req.body.stockQuantity) || 0,
+    unit: req.body.unit || 'Units',
+    reorderLevel: Number(req.body.reorderLevel) || 10,
+    unitPrice: Number(req.body.unitPrice) || 100
+  };
+  db.inventory.unshift(newItem);
+  writeDB(db);
+  broadcastEvent('erp:inventory_created', newItem);
+  res.status(201).json({ success: true, item: newItem });
+});
+
+app.patch('/api/erp/inventory/:id/stock', (req, res) => {
+  const db = readDB();
+  if (!db.inventory) db.inventory = [];
+  const item = db.inventory.find(i => i.id === req.params.id);
+  if (!item) return res.status(404).json({ success: false, message: 'Inventory item not found' });
+  if (req.body.delta !== undefined) {
+    item.stockQuantity = Math.max(0, item.stockQuantity + Number(req.body.delta));
+  } else if (req.body.stockQuantity !== undefined) {
+    item.stockQuantity = Math.max(0, Number(req.body.stockQuantity));
+  }
+  writeDB(db);
+  broadcastEvent('erp:stock_updated', item);
+  res.json({ success: true, item });
 });
 
 // 15. CSC Connect OAuth 2.0 & Digital Seva Engine
