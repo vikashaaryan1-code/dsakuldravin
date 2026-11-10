@@ -1157,6 +1157,71 @@ app.post('/api/csc/fastag/transact', (req, res) => {
   });
 });
 
+// 22. IRCTC Railway Ticket Reservation Engine (irctc.csccloud.in)
+app.post('/api/csc/irctc/book', (req, res) => {
+  const { 
+    trainNumber = '12309 (Rajdhani Express)', 
+    fromStation = 'NDLS - New Delhi', 
+    toStation = 'PNBE - Patna Jn', 
+    passengerName = 'Sanjay Kumar', 
+    journeyClass = '3A', 
+    journeyDate = '2026-11-20',
+    quota = 'General'
+  } = req.body;
+
+  if (!passengerName) {
+    return res.status(400).json({ success: false, message: 'Passenger name is required' });
+  }
+
+  const pnr = '245-' + Math.floor(1000000 + Math.random() * 9000000);
+  const coach = journeyClass === '3A' ? 'B3' : journeyClass === '2A' ? 'A1' : 'S4';
+  const berth = Math.floor(10 + Math.random() * 60) + ' (LB - Lower Berth)';
+  const fare = journeyClass === '3A' ? 1650 : journeyClass === '2A' ? 2450 : 540;
+  const vleCommission = journeyClass === 'SL' ? 20 : 40;
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-RAIL-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `IRCTC Booking Comm: PNR ${pnr} (${passengerName})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:irctc_booked', { pnr, passengerName, trainNumber, vleCommission });
+
+  res.status(201).json({
+    success: true,
+    ticket: {
+      pnr,
+      trainNumber,
+      trainName: 'Patna Tejas Rajdhani Express',
+      fromStation,
+      toStation,
+      passengerName,
+      age: 38,
+      gender: 'Male',
+      journeyDate,
+      journeyClass,
+      quota,
+      bookingStatus: `CNF / ${coach} / ${berth}`,
+      currentStatus: 'CONFIRMED',
+      fare,
+      chartStatus: 'CHART NOT PREPARED',
+      qrPayload: `IRCTC|PNR:${pnr}|TRAIN:12309|DATE:${journeyDate}|STATUS:CNF`,
+      bookedAt: new Date().toISOString(),
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

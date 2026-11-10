@@ -33,7 +33,8 @@ import {
   Award,
   Heart,
   Sprout,
-  Car
+  Car,
+  Ticket
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Link, useNavigate } from 'react-router-dom';
@@ -51,9 +52,19 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // IRCTC State
+  const [railTrain, setRailTrain] = useState('12309 (Patna Rajdhani Express)');
+  const [railFrom, setRailFrom] = useState('NDLS - New Delhi');
+  const [railTo, setRailTo] = useState('PNBE - Patna Jn');
+  const [railPassenger, setRailPassenger] = useState('Sanjay Kumar');
+  const [railClass, setRailClass] = useState<'3A' | '2A' | 'SL'>('3A');
+  const [railDate, setRailDate] = useState('2026-11-20');
+  const [railTicket, setRailTicket] = useState<any | null>(null);
+  const [railLoading, setRailLoading] = useState(false);
 
   // FASTag State
   const [ftVehicle, setFtVehicle] = useState('BR-01-AB-1234');
@@ -434,6 +445,41 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  // Handle IRCTC Railway Booking
+  const handleIrctcBook = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!railPassenger) return;
+    setRailLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/csc/irctc/book', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trainNumber: railTrain,
+          fromStation: railFrom,
+          toStation: railTo,
+          passengerName: railPassenger,
+          journeyClass: railClass,
+          journeyDate: railDate
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.ticket) {
+        setRailTicket(res.ticket);
+        setWalletBalance(res.ticket.vleNewBalance);
+        showToast('IRCTC Ticket Confirmed', `PNR: ${res.ticket.pnr}. VLE Comm +₹${res.ticket.vleCommissionCredited} credited!`, 'success');
+        logAudit('IRCTC Ticket Booking', `Passenger: ${railPassenger}, PNR: ${res.ticket.pnr}, Class: ${railClass}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('Booking Failed', res.message || 'Error processing IRCTC booking', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setRailLoading(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -554,6 +600,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'abha', label: 'Ayushman (ABHA Health Card)' },
             { id: 'pmkisan', label: 'PM-KISAN (eKYC & DBT)' },
             { id: 'fastag', label: 'FASTag 2.0 (NETC Toll)' },
+            { id: 'irctc', label: 'IRCTC (Railway Booking)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -2195,6 +2242,291 @@ export const DigitalSevaPortal: React.FC = () => {
                   </button>
                   <button
                     onClick={() => alert(`Downloading FASTag Receipt for ${ftReceipt.vehicleNumber} (Tag ID: ${ftReceipt.tagId})...`)}
+                    style={{
+                      background: '#F1F5F9',
+                      color: '#334155',
+                      border: '1px solid #CBD5E1',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: IRCTC RAILWAY RESERVATION (irctc.csccloud.in) */}
+        {activeTab === 'irctc' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Form */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                <Ticket size={22} color="#EA580C" />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  IRCTC Railway Reservation Desk
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                Indian Railways / CRIS Gateway • Authorized Agent Ticket Booking (+₹40 AC / +₹20 SL commission)
+              </p>
+
+              <form onSubmit={handleIrctcBook} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    SELECT TRAIN (ट्रेन चुनें)
+                  </label>
+                  <select
+                    value={railTrain}
+                    onChange={(e) => setRailTrain(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    <option value="12309 (Patna Rajdhani Express)">12309 - Patna Tejas Rajdhani Express (NDLS ➔ PNBE)</option>
+                    <option value="12394 (Sampoorna Kranti Express)">12394 - Sampoorna Kranti Superfast Express (NDLS ➔ PNBE)</option>
+                    <option value="22436 (Vande Bharat Express)">22436 - Vande Bharat Express (NDLS ➔ BSB)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      FROM STATION (कहाँ से)
+                    </label>
+                    <input
+                      type="text"
+                      value={railFrom}
+                      onChange={(e) => setRailFrom(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      TO STATION (कहाँ तक)
+                    </label>
+                    <input
+                      type="text"
+                      value={railTo}
+                      onChange={(e) => setRailTo(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    PASSENGER FULL NAME (यात्री का नाम)
+                  </label>
+                  <input
+                    type="text"
+                    value={railPassenger}
+                    onChange={(e) => setRailPassenger(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      TRAVEL CLASS
+                    </label>
+                    <select
+                      value={railClass}
+                      onChange={(e) => setRailClass(e.target.value as any)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    >
+                      <option value="3A">AC 3 Tier (3A) - +₹40 Comm</option>
+                      <option value="2A">AC 2 Tier (2A) - +₹40 Comm</option>
+                      <option value="SL">Sleeper Class (SL) - +₹20 Comm</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      JOURNEY DATE
+                    </label>
+                    <input
+                      type="date"
+                      value={railDate}
+                      onChange={(e) => setRailDate(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ background: '#FFF7ED', padding: '0.75rem', borderRadius: '8px', border: '1px solid #FFEDD5', fontSize: '0.75rem', color: '#9A3412', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <ShieldCheck size={20} color="#EA580C" />
+                  <span>CRIS PRS Gateway connected. Instant confirmation under General & Tatkal booking quotas.</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={railLoading}
+                  style={{
+                    background: '#EA580C',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.8rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    cursor: railLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <Ticket size={16} />
+                  <span>{railLoading ? 'Reserving Ticket with IRCTC...' : `Book Confirmed ${railClass} Ticket`}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* E-Ticket Preview */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                  Electronic Reservation Slip (ERS)
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                  Indian Railways Catering & Tourism Corporation (IRCTC) • CRIS PRS
+                </p>
+
+                {railTicket ? (
+                  <div style={{
+                    background: '#F8FAFC',
+                    borderRadius: '12px',
+                    border: '2px solid #EA580C',
+                    padding: '1.25rem',
+                    boxShadow: '0 4px 15px rgba(234, 88, 12, 0.08)'
+                  }}>
+                    <div style={{ borderBottom: '1.5px dashed #CBD5E1', paddingBottom: '0.75rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 900, color: '#EA580C' }}>
+                          INDIAN RAILWAYS • E-TICKET
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#0F172A' }}>
+                          PNR: <strong style={{ letterSpacing: '0.05em', color: '#EA580C', fontSize: '0.95rem' }}>{railTicket.pnr}</strong>
+                        </div>
+                      </div>
+                      <span style={{ background: '#FFEDD5', color: '#C2410C', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        {railTicket.currentStatus}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', fontSize: '0.8rem', lineHeight: 1.5 }}>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>TRAIN:</span>
+                        <strong>{railTicket.trainNumber}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>PASSENGER:</span>
+                        <strong>{railTicket.passengerName} (M/38)</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>FROM ➔ TO:</span>
+                        <strong>{railTicket.fromStation} ➔ {railTicket.toStation}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>BERTH / SEAT:</span>
+                        <strong style={{ color: '#16A34A' }}>{railTicket.bookingStatus}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>CLASS & QUOTA:</span>
+                        <strong>{railTicket.journeyClass} | {railTicket.quota}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>TOTAL FARE:</span>
+                        <strong style={{ color: '#EA580C' }}>₹{railTicket.fare}.00</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ borderTop: '1.5px dashed #CBD5E1', marginTop: '0.75rem', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#16A34A', fontWeight: 700 }}>
+                        <CheckCircle2 size={15} />
+                        <span>VLE Commission: +₹{railTicket.vleCommissionCredited}.00 credited to wallet</span>
+                      </div>
+                      <div style={{ color: '#64748B' }}>
+                        Travel: {railTicket.journeyDate}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#94A3B8' }}>
+                    <Ticket size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                      Search trains and enter passenger details to book confirmed IRCTC e-tickets instantly.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {railTicket && (
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                  <button
+                    onClick={() => window.print()}
+                    style={{
+                      flex: 1,
+                      background: '#EA580C',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.65rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    <Printer size={15} />
+                    <span>Print Ticket Slip (ERS प्रिंट करें)</span>
+                  </button>
+                  <button
+                    onClick={() => alert(`Downloading IRCTC Ticket Slip for PNR: ${railTicket.pnr}...`)}
                     style={{
                       background: '#F1F5F9',
                       color: '#334155',

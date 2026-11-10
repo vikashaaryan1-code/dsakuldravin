@@ -232,9 +232,29 @@ async function run() {
     return `Tag: ${res.fastag.tagId} | Vehicle: ${res.fastag.vehicleNumber} | NPCI Ref: ${res.fastag.npciTxnId} | VLE Comm: +₹${res.fastag.vleCommissionCredited}`;
   })) passed++;
 
-  // 13. Route Accessibility Verification
+  // 13. IRCTC Railway Ticket Reservation (irctc.csccloud.in)
   total++;
-  if (await step('13. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('13. IRCTC Railway Ticket Reservation (irctc.csccloud.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/irctc/book`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        trainNumber: '12309 (Patna Rajdhani Express)',
+        fromStation: 'NDLS - New Delhi',
+        toStation: 'PNBE - Patna Jn',
+        passengerName: 'Sanjay Kumar',
+        journeyClass: '3A',
+        journeyDate: '2026-11-20'
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.ticket) throw new Error(res.message || 'IRCTC booking failed');
+    return `PNR: ${res.ticket.pnr} | Train: ${res.ticket.trainNumber} | Status: ${res.ticket.bookingStatus} | VLE Comm: +₹${res.ticket.vleCommissionCredited}`;
+  })) passed++;
+
+  // 14. Route Accessibility Verification
+  total++;
+  if (await step('14. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,
