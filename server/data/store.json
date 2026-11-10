@@ -62,6 +62,19 @@
   ],
   "applications": [
     {
+      "id": "APP-26807",
+      "trackingNumber": "AD-APP-34589",
+      "serviceId": "srv-passport-assist",
+      "serviceName": "Passport Appointment & Application Assistance",
+      "customerName": "Rahul Verma",
+      "phone": "+91 98765 12340",
+      "status": "SUBMITTED",
+      "appliedDate": "2026-11-10T14:11:27.239Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "Application initiated online. Payment mode: UPI. Simulated OCR score: 98.2% (Demo Scrutiny).",
+      "formData": {}
+    },
+    {
       "id": "APP-97325",
       "trackingNumber": "AD-APP-67294",
       "serviceId": "srv-company-pvt-ltd",
@@ -373,6 +386,15 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "AUD-1794319887239",
+      "action": "New Application Submitted",
+      "actor": "Rahul Verma",
+      "role": "CUSTOMER",
+      "target": "AD-APP-34589",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-10T14:11:27.239Z"
+    },
     {
       "id": "AUD-1794319524704",
       "action": "Application Status Changed to APPROVED",
