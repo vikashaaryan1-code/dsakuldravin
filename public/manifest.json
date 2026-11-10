@@ -1,0 +1,18 @@
+{
+  "short_name": "AD Digital",
+  "name": "AKUL DRAVIN DIGITAL SERVICES - Enterprise Super Platform",
+  "description": "Unified Digital Services, FinTech, VLE Network, Cyber Café & Business ERP",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#090d16",
+  "theme_color": "#2563eb",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "categories": ["business", "finance", "productivity", "utilities"]
+}

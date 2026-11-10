@@ -1,0 +1,46 @@
+name: CI/CD Pipeline - Test, Build & Deploy
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  audit-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Environment (Node 20)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Run Automated Astrology & Algorithm Tests
+        run: node scripts/run_tests.mjs
+
+      - name: Build Production Artifacts
+        run: npm run build
+
+      - name: Generate Acrobat PDF Certificates & Audit Dossier
+        run: node scripts/generate_acrobat_pdf.cjs
+
+      - name: Verify Robots & Sitemap
+        run: |
+          test -f dist/robots.txt || cp public/robots.txt dist/
+          test -f dist/sitemap.xml || cp public/sitemap.xml dist/
+          cp *.pdf dist/
+
+      - name: Upload Production Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-build-dist
+          path: dist/
+          retention-days: 14

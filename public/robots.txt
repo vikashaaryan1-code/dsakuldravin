@@ -1,0 +1,30 @@
+# Robots.txt for AKUL DRAVIN DIGITAL SERVICES & VEDIC ASTROLOGY
+User-agent: *
+Allow: /
+Allow: /astrology
+Allow: /astrology/*
+Allow: /kundli
+Allow: /matchmaking
+Allow: /rashifal
+Allow: /panchang
+Allow: /tarot
+Allow: /numerology
+Allow: /gemstones
+Allow: /astrologers
+Allow: /astro-store
+Allow: /astro-blog
+Allow: /process
+Allow: /certificate
+Allow: /agent
+Allow: /track
+
+# Disallow Private Portals & Internal Dashboards
+Disallow: /admin
+Disallow: /admin/*
+Disallow: /astro-admin
+Disallow: /astrology/admin
+Disallow: /employee/*
+Disallow: /customer/*
+Disallow: /vle/*
+
+Sitemap: https://ad-digital.in/sitemap.xml

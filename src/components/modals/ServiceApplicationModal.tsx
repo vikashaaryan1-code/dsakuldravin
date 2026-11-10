@@ -1,0 +1,647 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useApp } from '../../store/AppContext';
+import { apiClient } from '../../services/apiClient';
+import { 
+  X, 
+  CheckCircle2, 
+  UploadCloud, 
+  FileText, 
+  Clock, 
+  ShieldCheck, 
+  ArrowRight, 
+  CreditCard, 
+  QrCode, 
+  Sparkles,
+  AlertCircle
+} from 'lucide-react';
+import confetti from 'canvas-confetti';
+
+export const ServiceApplicationModal: React.FC = () => {
+  const navigate = useNavigate();
+  const { 
+    isApplyModalOpen, 
+    setIsApplyModalOpen, 
+    selectedServiceForApply, 
+    submitApplication,
+    setIsTrackerOpen,
+    setActiveTrackerQuery,
+    language 
+  } = useApp();
+
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [applicantName, setApplicantName] = useState('Rahul Verma');
+  const [applicantPhone, setApplicantPhone] = useState('+91 98765 12340');
+  const [applicantEmail, setApplicantEmail] = useState('rahul.verma@gmail.com');
+  const [state, setState] = useState('Bihar');
+  const [city, setCity] = useState('Patna');
+  const [uploadedFiles, setUploadedFiles] = useState<string[]>([]);
+  const [docNumberInput, setDocNumberInput] = useState('999999990019');
+  const [scrutinyResult, setScrutinyResult] = useState<{ isValid: boolean; reason: string } | null>(null);
+  const [isScrutinizing, setIsScrutinizing] = useState(false);
+  const [isOCRValidating, setIsOCRValidating] = useState(false);
+  const [ocrScore, setOcrScore] = useState<number | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'wallet'>('upi');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [generatedAppId, setGeneratedAppId] = useState<string | null>(null);
+
+  if (!isApplyModalOpen || !selectedServiceForApply) return null;
+
+  const service = selectedServiceForApply;
+  const basePrice = service.basePrice;
+  const govtFee = service.govtFee || 0;
+  const professionalFee = service.professionalFee || 0;
+  const gst = Math.round((basePrice * 18) / 100);
+  const totalAmount = basePrice + govtFee + gst;
+
+  const handleLiveDocumentScrutiny = async () => {
+    if (!docNumberInput) return;
+    setIsScrutinizing(true);
+    const docType = service.title.toLowerCase().includes('pan') ? 'pan' : 'aadhaar';
+    const result = await apiClient.scrutinizeDocument(docType, docNumberInput);
+    if (result) {
+      setScrutinyResult({ isValid: result.isValid, reason: result.reason });
+      if (result.isValid) {
+        setUploadedFiles(prev => [...prev, `${docType.toUpperCase()}_Verified_${docNumberInput.slice(-4)}.pdf`]);
+      }
+    }
+    setIsScrutinizing(false);
+  };
+
+  const handleSimulatedUpload = (docName: string) => {
+    setIsOCRValidating(true);
+    setTimeout(() => {
+      setUploadedFiles(prev => [...prev, `${docName.replace(/\s+/g, '_')}_verified.pdf`]);
+      setOcrScore(Math.floor(95 + Math.random() * 5));
+      setIsOCRValidating(false);
+    }, 600);
+  };
+
+  const handleConfirmAndPay = () => {
+    setIsSubmitting(true);
+    setTimeout(() => {
+      const newId = submitApplication({
+        serviceId: service.id,
+        serviceName: service.title,
+        category: service.category,
+        applicantName,
+        applicantPhone,
+        applicantEmail,
+        city,
+        state,
+        feePaid: totalAmount,
+        documentsUploaded: uploadedFiles.length > 0 ? uploadedFiles : ['Aadhaar_Document_Verified.pdf'],
+        notes: `Application initiated online. Payment mode: ${paymentMethod.toUpperCase()}. Simulated OCR score: 98.2% (Demo Scrutiny).`,
+      });
+
+      setGeneratedAppId(newId);
+      setIsSubmitting(false);
+      setStep(4);
+
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+    }, 1000);
+  };
+
+  const closeModal = () => {
+    setIsApplyModalOpen(false);
+    setStep(1);
+    setGeneratedAppId(null);
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      background: 'rgba(10, 25, 47, 0.72)',
+      backdropFilter: 'blur(8px)',
+      WebkitBackdropFilter: 'blur(8px)',
+      zIndex: 9999,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '1.5rem',
+      animation: 'fadeIn 0.2s ease-out',
+    }}>
+      <div 
+        style={{
+          width: '100%',
+          maxWidth: '680px',
+          background: '#FFFFFF',
+          borderRadius: '24px',
+          boxShadow: '0 25px 60px rgba(0, 0, 0, 0.3)',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          maxHeight: '90vh',
+          border: '1px solid rgba(245, 158, 11, 0.3)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{
+          padding: '1.25rem 1.5rem',
+          borderBottom: '1px solid #E2E8F0',
+          background: '#F8FAFC',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.2rem' }}>
+              <span className="badge badge-blue">{service.category.toUpperCase()}</span>
+              {service.badge && <span className="badge badge-gold">{service.badge}</span>}
+            </div>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F' }}>
+              {language === 'hi' ? service.titleHi : service.title}
+            </h3>
+          </div>
+
+          <button onClick={closeModal} style={{ padding: '0.4rem', color: '#64748B' }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Multi-Step Wizard Indicator */}
+        {step < 4 && (
+          <div style={{
+            display: 'flex',
+            borderBottom: '1px solid #E2E8F0',
+            background: '#FFFFFF',
+            fontSize: '0.78rem',
+            fontWeight: 700,
+          }}>
+            {[
+              { num: 1, label: 'Applicant Details' },
+              { num: 2, label: 'Document Checklist & OCR' },
+              { num: 3, label: 'Transparent Pricing & Pay' },
+            ].map(s => {
+              const isActive = step === s.num;
+              const isPast = step > s.num;
+              return (
+                <div
+                  key={s.num}
+                  style={{
+                    flex: 1,
+                    padding: '0.65rem 0.5rem',
+                    textAlign: 'center',
+                    borderBottom: isActive ? '3px solid #1D4ED8' : '3px solid transparent',
+                    color: isActive ? '#1D4ED8' : isPast ? '#059669' : '#94A3B8',
+                    background: isActive ? '#EFF6FF' : 'transparent',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.35rem',
+                  }}
+                >
+                  <span>{isPast ? '✓' : s.num}.</span>
+                  <span>{s.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Wizard Body */}
+        <div style={{ padding: '1.5rem', overflowY: 'auto', flex: 1 }}>
+          {/* STEP 1: Applicant Details */}
+          {step === 1 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{
+                background: '#F8FAFC',
+                borderRadius: '12px',
+                padding: '0.85rem',
+                border: '1px solid #E2E8F0',
+                fontSize: '0.82rem',
+                color: '#475569',
+              }}>
+                <div style={{ fontWeight: 700, color: '#0A192F', marginBottom: '0.2rem' }}>
+                  Service SLA Commitment:
+                </div>
+                Estimated processing timeline: <strong>{service.timeline}</strong>. Guaranteed expert assistance with regular SMS and in-app alerts.
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Applicant / Business Full Name *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={applicantName}
+                  onChange={(e) => setApplicantName(e.target.value)}
+                  placeholder="e.g. Vikram Sharma"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Phone (WhatsApp enabled) *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={applicantPhone}
+                    onChange={(e) => setApplicantPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Email Address *</label>
+                  <input
+                    type="email"
+                    className="form-input"
+                    value={applicantEmail}
+                    onChange={(e) => setApplicantEmail(e.target.value)}
+                    placeholder="name@example.com"
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">State *</label>
+                  <select
+                    className="form-select"
+                    value={state}
+                    onChange={(e) => setState(e.target.value)}
+                  >
+                    <option value="Bihar">Bihar</option>
+                    <option value="Jharkhand">Jharkhand</option>
+                    <option value="Uttar Pradesh">Uttar Pradesh</option>
+                    <option value="Delhi">Delhi NCT</option>
+                    <option value="Maharashtra">Maharashtra</option>
+                    <option value="Karnataka">Karnataka</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">District / City *</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    placeholder="e.g. Patna"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={() => setStep(2)}
+                className="btn-primary btn-lg"
+                style={{ width: '100%', marginTop: '0.5rem' }}
+              >
+                <span>Continue to Document Checklist</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* STEP 2: Document Checklist & OCR Scrutiny */}
+          {step === 2 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+                  Required Document Uploads
+                </h4>
+                <p style={{ fontSize: '0.82rem', color: '#64748B' }}>
+                  Our Quantum AI Document engine will perform instant OCR quality check, readability verification, and duplicate screening.
+                </p>
+              </div>
+
+              <div style={{
+                background: '#F8FAFC',
+                borderRadius: '14px',
+                padding: '1rem',
+                border: '1px solid #E2E8F0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.65rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0A192F', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldCheck size={16} color="#1D4ED8" />
+                    <span>Real-Time Verhoeff & Statutory ID Checksum</span>
+                  </div>
+                  <span className="badge badge-blue" style={{ fontSize: '0.68rem' }}>AI Powered</span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    value={docNumberInput}
+                    onChange={(e) => setDocNumberInput(e.target.value)}
+                    placeholder="Enter Aadhaar (12 digits) or PAN (e.g. ABCDE1234F)"
+                    style={{
+                      flex: 1,
+                      padding: '0.5rem 0.75rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.85rem',
+                      outline: 'none'
+                    }}
+                  />
+                  <button
+                    onClick={handleLiveDocumentScrutiny}
+                    disabled={isScrutinizing}
+                    className="btn-primary btn-sm"
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    {isScrutinizing ? 'Verifying...' : 'Validate ID'}
+                  </button>
+                </div>
+
+                {scrutinyResult && (
+                  <div style={{
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '8px',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    background: scrutinyResult.isValid ? '#DCFCE7' : '#FEE2E2',
+                    color: scrutinyResult.isValid ? '#15803D' : '#B91C1C',
+                    border: `1px solid ${scrutinyResult.isValid ? '#86EFAC' : '#FCA5A5'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}>
+                    {scrutinyResult.isValid ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                    <span>{scrutinyResult.reason}</span>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {service.requiredDocs.map((doc, idx) => {
+                  const isUploaded = uploadedFiles.some(f => f.toLowerCase().includes(doc.slice(0, 5).toLowerCase()));
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '12px',
+                        border: isUploaded ? '1.5px solid #10B981' : '1px solid #E2E8F0',
+                        background: isUploaded ? '#F0FDF4' : '#FFFFFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '1rem',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '8px',
+                          background: isUploaded ? '#DCFCE7' : '#F1F5F9',
+                          color: isUploaded ? '#059669' : '#64748B',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}>
+                          {isUploaded ? <CheckCircle2 size={18} /> : <FileText size={18} />}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0A192F' }}>
+                            {doc}
+                          </div>
+                          <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                            {isUploaded ? 'Verified via Quantum OCR (98.4% Confidence)' : 'Required for statutory filing'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => handleSimulatedUpload(doc)}
+                        disabled={isUploaded || isOCRValidating}
+                        style={{
+                          padding: '0.4rem 0.8rem',
+                          borderRadius: '8px',
+                          background: isUploaded ? '#10B981' : '#1D4ED8',
+                          color: '#FFFFFF',
+                          fontWeight: 600,
+                          fontSize: '0.78rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          opacity: isOCRValidating ? 0.6 : 1,
+                        }}
+                      >
+                        <UploadCloud size={14} />
+                        <span>{isUploaded ? 'Verified' : 'Upload & Scan'}</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {isOCRValidating && (
+                <div style={{
+                  padding: '0.75rem',
+                  borderRadius: '10px',
+                  background: '#EFF6FF',
+                  border: '1px solid #BFDBFE',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.82rem',
+                  color: '#1D4ED8',
+                }}>
+                  <Sparkles size={16} className="animate-pulse-glow" />
+                  <span>Quantum AI Scanning: Checking tamper signatures & OCR name consistency...</span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => setStep(1)}
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={() => setStep(3)}
+                  className="btn-primary"
+                  style={{ flex: 2 }}
+                >
+                  <span>Review Quote & Proceed</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 3: Transparent Pricing & Checkout */}
+          {step === 3 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div style={{
+                background: '#F8FAFC',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                border: '1px solid #E2E8F0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.65rem',
+                fontSize: '0.88rem',
+              }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+                  TRANSPARENT PRICING BREAKDOWN:
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569' }}>
+                  <span>Platform / Base Professional Fee</span>
+                  <span style={{ fontWeight: 600 }}>₹{basePrice.toLocaleString('en-IN')}</span>
+                </div>
+                {govtFee > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569' }}>
+                    <span>Statutory Department / Portal Fee</span>
+                    <span style={{ fontWeight: 600 }}>₹{govtFee.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569' }}>
+                  <span>GST (18% - ITC Eligible)</span>
+                  <span style={{ fontWeight: 600 }}>₹{gst.toLocaleString('en-IN')}</span>
+                </div>
+                <div style={{
+                  borderTop: '1px solid #CBD5E1',
+                  paddingTop: '0.75rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  fontSize: '1.15rem',
+                  fontWeight: 800,
+                  color: '#0A192F',
+                }}>
+                  <span>Final Total to Pay</span>
+                  <span style={{ color: '#1D4ED8' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
+                </div>
+              </div>
+
+              {/* Payment Gateway choice */}
+              <div>
+                <label className="form-label" style={{ marginBottom: '0.5rem' }}>
+                  Select Payment Method:
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
+                  {[
+                    { id: 'upi', label: 'Instant UPI / QR', icon: <QrCode size={18} /> },
+                    { id: 'card', label: 'Debit / Credit Card', icon: <CreditCard size={18} /> },
+                    { id: 'wallet', label: 'AD Wallet Balance', icon: <Sparkles size={18} /> },
+                  ].map(m => (
+                    <button
+                      key={m.id}
+                      onClick={() => setPaymentMethod(m.id as any)}
+                      style={{
+                        padding: '0.85rem 0.65rem',
+                        borderRadius: '12px',
+                        border: paymentMethod === m.id ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                        background: paymentMethod === m.id ? '#EFF6FF' : '#FFFFFF',
+                        color: paymentMethod === m.id ? '#1D4ED8' : '#475569',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                      }}
+                    >
+                      {m.icon}
+                      <span>{m.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  onClick={() => setStep(2)}
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  Back
+                </button>
+                <button
+                  onClick={handleConfirmAndPay}
+                  disabled={isSubmitting}
+                  className="btn-gold btn-lg"
+                  style={{ flex: 2, fontWeight: 800 }}
+                >
+                  {isSubmitting ? 'Processing Payment...' : `Pay ₹${totalAmount.toLocaleString('en-IN')} & Generate Token`}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: Success & Token Dispatch */}
+          {step === 4 && (
+            <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '50%',
+                background: '#ECFDF5',
+                color: '#059669',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 1.25rem',
+              }}>
+                <CheckCircle2 size={36} />
+              </div>
+
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+                Application Generated Successfully!
+              </h3>
+              <p style={{ fontSize: '0.88rem', color: '#64748B', marginBottom: '1.5rem' }}>
+                Assigned to regional verification queue with live SMS notification alerts.
+              </p>
+
+              <div style={{
+                background: '#EFF6FF',
+                border: '1.5px dashed #93C5FD',
+                borderRadius: '16px',
+                padding: '1.25rem',
+                marginBottom: '1.75rem',
+                display: 'inline-block',
+                minWidth: '280px',
+              }}>
+                <div style={{ fontSize: '0.75rem', color: '#1D4ED8', fontWeight: 700, textTransform: 'uppercase' }}>
+                  YOUR UNIQUE APPLICATION TOKEN
+                </div>
+                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0A192F', letterSpacing: '0.05em' }}>
+                  {generatedAppId}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '0.25rem' }}>
+                  Use this token anytime to track progress live
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                <button
+                  onClick={() => {
+                    closeModal();
+                    if (generatedAppId) {
+                      setActiveTrackerQuery(generatedAppId);
+                      navigate('/track?q=' + generatedAppId);
+                    }
+                  }}
+                  className="btn-primary"
+                >
+                  <span>Track Status Live</span>
+                  <ArrowRight size={15} />
+                </button>
+
+                <button
+                  onClick={closeModal}
+                  className="btn-secondary"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
