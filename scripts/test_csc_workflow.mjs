@@ -214,9 +214,27 @@ async function run() {
     return `Token: ${res.ekyc.ackToken} | Land Seeding: ${res.ekyc.landSeeding} | DBT: ${res.ekyc.dbtStatus} | VLE Comm: +₹${res.ekyc.vleCommissionCredited}`;
   })) passed++;
 
-  // 12. Route Accessibility Verification
+  // 12. FASTag Electronic Toll Services (fastag.csccloud.in)
   total++;
-  if (await step('12. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
+  if (await step('12. FASTag 2.0 Vehicle Tag Services (fastag.csccloud.in)', async () => {
+    const res = await fetch(`${API_BASE}/csc/fastag/transact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        vehicleNumber: 'BR-01-AB-1234',
+        customerName: 'Amit Vikram',
+        txnType: 'issue',
+        amount: 500
+      })
+    }).then(r => r.json());
+
+    if (!res.success || !res.fastag) throw new Error(res.message || 'FASTag transaction failed');
+    return `Tag: ${res.fastag.tagId} | Vehicle: ${res.fastag.vehicleNumber} | NPCI Ref: ${res.fastag.npciTxnId} | VLE Comm: +₹${res.fastag.vleCommissionCredited}`;
+  })) passed++;
+
+  // 13. Route Accessibility Verification
+  total++;
+  if (await step('13. Live Frontend Route Accessibility (CSC Connect, Digital Seva, Main Portal)', async () => {
     const endpoints = [
       `${WEB_BASE}/connect/csc`,
       `${WEB_BASE}/account/authorize`,

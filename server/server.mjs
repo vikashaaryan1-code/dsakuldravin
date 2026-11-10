@@ -1108,6 +1108,55 @@ app.post('/api/csc/pmkisan/ekyc', (req, res) => {
   });
 });
 
+// 21. NPCI NETC FASTag Electronic Toll Services (fastag.csccloud.in)
+app.post('/api/csc/fastag/transact', (req, res) => {
+  const { vehicleNumber, txnType = 'recharge', amount = 500, customerName = 'Amit Vikram' } = req.body;
+  if (!vehicleNumber) {
+    return res.status(400).json({ success: false, message: 'Vehicle registration number is required' });
+  }
+
+  const cleanVehicle = String(vehicleNumber).toUpperCase().trim();
+  const numAmount = Number(amount);
+  const tagId = 'NETC-TAG-' + Math.floor(10000000 + Math.random() * 90000000);
+  const npciTxnId = 'NPCI-FASTAG-' + Math.floor(1000000000 + Math.random() * 9000000000);
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  const vleCommission = txnType === 'issue' ? 40 : 15;
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + vleCommission).toFixed(2));
+
+  const passbookEntry = {
+    id: 'TXN-FT-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    desc: `FASTag ${txnType.toUpperCase()}: ${cleanVehicle} (${customerName})`,
+    amount: vleCommission,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:fastag_done', { tagId, npciTxnId, vehicleNumber: cleanVehicle, vleCommission });
+
+  res.status(200).json({
+    success: true,
+    fastag: {
+      tagId,
+      npciTxnId,
+      vehicleNumber: cleanVehicle,
+      customerName,
+      vehicleClass: 'VC4 (Car / Jeep / Van)',
+      txnType: txnType.toUpperCase(),
+      amount: numAmount,
+      tagBalance: 1250.00,
+      status: 'ACTIVE & TOLL-READY',
+      issuedAt: new Date().toISOString(),
+      vleCommissionCredited: vleCommission,
+      vleNewBalance: db.vleProfile.walletBalance
+    }
+  });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

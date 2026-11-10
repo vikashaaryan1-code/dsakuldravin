@@ -32,7 +32,8 @@ import {
   GraduationCap,
   Award,
   Heart,
-  Sprout
+  Sprout,
+  Car
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Link, useNavigate } from 'react-router-dom';
@@ -50,9 +51,17 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'orders' | 'operators' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'orders' | 'operators' | 'support'>('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedServiceCategory, setSelectedServiceCategory] = useState<string>('all');
+
+  // FASTag State
+  const [ftVehicle, setFtVehicle] = useState('BR-01-AB-1234');
+  const [ftCustomer, setFtCustomer] = useState('Amit Vikram');
+  const [ftTxnType, setFtTxnType] = useState<'recharge' | 'issue'>('recharge');
+  const [ftAmount, setFtAmount] = useState<number>(500);
+  const [ftReceipt, setFtReceipt] = useState<any | null>(null);
+  const [ftLoading, setFtLoading] = useState(false);
 
   // PM-KISAN State
   const [pmkAadhaar, setPmkAadhaar] = useState('999999990019');
@@ -392,6 +401,39 @@ export const DigitalSevaPortal: React.FC = () => {
     }
   };
 
+  // Handle FASTag Transaction
+  const handleFastagTransact = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!ftVehicle) return;
+    setFtLoading(true);
+    try {
+      const res = await fetch('http://localhost:5000/api/csc/fastag/transact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          vehicleNumber: ftVehicle,
+          customerName: ftCustomer,
+          txnType: ftTxnType,
+          amount: ftAmount
+        })
+      }).then(r => r.json());
+
+      if (res.success && res.fastag) {
+        setFtReceipt(res.fastag);
+        setWalletBalance(res.fastag.vleNewBalance);
+        showToast('FASTag Transaction Complete', `Tag ID: ${res.fastag.tagId}. VLE Comm +₹${res.fastag.vleCommissionCredited} credited!`, 'success');
+        logAudit('FASTag Service Execution', `Vehicle: ${ftVehicle}, Tag: ${res.fastag.tagId}`);
+        confetti({ particleCount: 100, spread: 70 });
+      } else {
+        showToast('Transaction Failed', res.message || 'Error processing FASTag', 'error');
+      }
+    } catch (err: any) {
+      showToast('Network Error', err.message, 'error');
+    } finally {
+      setFtLoading(false);
+    }
+  };
+
   const filteredServicesList = services.filter(s => {
     const matchSearch = s.title.toLowerCase().includes(searchQuery.toLowerCase()) || s.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchCat = selectedServiceCategory === 'all' || s.category === selectedServiceCategory;
@@ -511,6 +553,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'pmgdisha', label: 'PMGDISHA (Training & Cert)' },
             { id: 'abha', label: 'Ayushman (ABHA Health Card)' },
             { id: 'pmkisan', label: 'PM-KISAN (eKYC & DBT)' },
+            { id: 'fastag', label: 'FASTag 2.0 (NETC Toll)' },
             { id: 'wallet', label: 'Wallet & Passbook' },
             { id: 'orders', label: 'Order History & Receipts' },
             { id: 'operators', label: 'Operator Management' },
@@ -1901,6 +1944,257 @@ export const DigitalSevaPortal: React.FC = () => {
                   </button>
                   <button
                     onClick={() => alert(`Downloading PM-KISAN Acknowledgement Slip for ${pmkReceipt.farmerName} (Token: ${pmkReceipt.ackToken})...`)}
+                    style={{
+                      background: '#F1F5F9',
+                      color: '#334155',
+                      border: '1px solid #CBD5E1',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: FASTAG 2.0 NETC TOLL (fastag.csccloud.in) */}
+        {activeTab === 'fastag' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Form */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                <Car size={22} color="#4F46E5" />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                  FASTag 2.0 Electronic Toll Services
+                </h3>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                NPCI NETC Portal • Instant Vehicle Tag Issuance & Wallet Recharge (+₹40/₹15 VLE commission)
+              </p>
+
+              <form onSubmit={handleFastagTransact} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    VEHICLE REGISTRATION NUMBER (गाड़ी नंबर)
+                  </label>
+                  <input
+                    type="text"
+                    value={ftVehicle}
+                    onChange={(e) => setFtVehicle(e.target.value.toUpperCase())}
+                    placeholder="e.g. BR-01-AB-1234"
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.95rem',
+                      fontFamily: 'monospace',
+                      fontWeight: 700,
+                      letterSpacing: '0.05em'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    VEHICLE OWNER / CUSTOMER NAME
+                  </label>
+                  <input
+                    type="text"
+                    value={ftCustomer}
+                    onChange={(e) => setFtCustomer(e.target.value)}
+                    required
+                    style={{
+                      width: '100%',
+                      padding: '0.65rem 0.85rem',
+                      borderRadius: '8px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '0.88rem',
+                      fontWeight: 600
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      TRANSACTION TYPE
+                    </label>
+                    <select
+                      value={ftTxnType}
+                      onChange={(e) => setFtTxnType(e.target.value as any)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem'
+                      }}
+                    >
+                      <option value="recharge">Toll Recharge (+₹15 Comm)</option>
+                      <option value="issue">Issue New RFID Tag (+₹40 Comm)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      AMOUNT (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={ftAmount}
+                      onChange={(e) => setFtAmount(Number(e.target.value))}
+                      min={100}
+                      step={50}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem 0.85rem',
+                        borderRadius: '8px',
+                        border: '1px solid #CBD5E1',
+                        fontSize: '0.88rem',
+                        fontWeight: 700
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ background: '#EEF2FF', padding: '0.75rem', borderRadius: '8px', border: '1px solid #C7D2FE', fontSize: '0.75rem', color: '#3730A3', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <ShieldCheck size={20} color="#4F46E5" />
+                  <span>NPCI NETC Electronic Toll switch online. Auto-whitelisted across all NHAI National Highway Plazas.</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={ftLoading}
+                  style={{
+                    background: '#4F46E5',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.8rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    cursor: ftLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <Car size={16} />
+                  <span>{ftLoading ? 'Processing FASTag...' : `Execute FASTag ${ftTxnType === 'issue' ? 'Issuance' : 'Recharge'}`}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Receipt Preview */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                  NETC FASTag Transaction Slip
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                  National Electronic Toll Collection • NPCI Certified
+                </p>
+
+                {ftReceipt ? (
+                  <div style={{
+                    background: '#F8FAFC',
+                    borderRadius: '12px',
+                    border: '2px solid #4F46E5',
+                    padding: '1.25rem',
+                    boxShadow: '0 4px 15px rgba(79, 70, 229, 0.08)'
+                  }}>
+                    <div style={{ borderBottom: '1.5px dashed #CBD5E1', paddingBottom: '0.75rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 900, color: '#4F46E5' }}>
+                          NATIONAL ELECTRONIC TOLL COLLECTION
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                          Tag ID: <strong>{ftReceipt.tagId}</strong>
+                        </div>
+                      </div>
+                      <span style={{ background: '#E0E7FF', color: '#4338CA', padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        {ftReceipt.status}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.5rem', fontSize: '0.8rem', lineHeight: 1.5 }}>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>VEHICLE NUMBER:</span>
+                        <strong style={{ fontFamily: 'monospace', color: '#0F172A', fontSize: '0.95rem' }}>{ftReceipt.vehicleNumber}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>OWNER NAME:</span>
+                        <strong>{ftReceipt.customerName}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>VEHICLE CLASS:</span>
+                        <strong>{ftReceipt.vehicleClass}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>AMOUNT PROCESSED:</span>
+                        <strong style={{ color: '#16A34A' }}>₹{ftReceipt.amount}.00</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>CURRENT BALANCE:</span>
+                        <strong style={{ color: '#4F46E5' }}>₹{ftReceipt.tagBalance.toFixed(2)}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>NPCI TXN REF:</span>
+                        <strong style={{ fontSize: '0.7rem', fontFamily: 'monospace' }}>{ftReceipt.npciTxnId}</strong>
+                      </div>
+                    </div>
+
+                    <div style={{ borderTop: '1.5px dashed #CBD5E1', marginTop: '0.75rem', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#16A34A', fontWeight: 700 }}>
+                        <CheckCircle2 size={15} />
+                        <span>VLE Commission: +₹{ftReceipt.vleCommissionCredited}.00 credited to wallet</span>
+                      </div>
+                      <div style={{ color: '#64748B' }}>
+                        {new Date(ftReceipt.issuedAt).toLocaleDateString()}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#94A3B8' }}>
+                    <Car size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                      Enter vehicle details to recharge existing FASTag or issue new NHAI-compliant RFID tag.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {ftReceipt && (
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                  <button
+                    onClick={() => window.print()}
+                    style={{
+                      flex: 1,
+                      background: '#4F46E5',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.65rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    <Printer size={15} />
+                    <span>Print FASTag Slip (पावती प्रिंट करें)</span>
+                  </button>
+                  <button
+                    onClick={() => alert(`Downloading FASTag Receipt for ${ftReceipt.vehicleNumber} (Tag ID: ${ftReceipt.tagId})...`)}
                     style={{
                       background: '#F1F5F9',
                       color: '#334155',
