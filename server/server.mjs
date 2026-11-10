@@ -749,6 +749,148 @@ app.post('/api/admin/whitelabel', (req, res) => {
   res.json({ success: true, config: db.whiteLabel });
 });
 
+// 15. CSC Connect OAuth 2.0 & Digital Seva Engine
+const DEFAULT_VLE_PROFILE = {
+  cscId: '245089123456',
+  vleName: 'Rajesh Sharma',
+  email: 'vle.rajesh.sharma@csc.gov.in',
+  phone: '9876543210',
+  centerName: 'Akul Dravin Digital Seva Kendra',
+  district: 'Patna',
+  state: 'Bihar',
+  pincode: '800001',
+  walletBalance: 2450.00,
+  digiPayTerminalId: 'DP-PATNA-0912',
+  tecNumber: 'TEC-2024-889123',
+  subOperators: [
+    { id: 'OP-01', name: 'Manoj Kumar', phone: '9835112233', role: 'Operator', permissions: ['Banking', 'PanCard', 'Utility'] }
+  ],
+  passbook: [
+    { id: 'TXN-PB-101', date: new Date().toISOString().split('T')[0], type: 'CR', description: 'Commission: Form 49A PAN Application', amount: 50, balance: 2450.00 },
+    { id: 'TXN-PB-100', date: new Date().toISOString().split('T')[0], type: 'DR', description: 'Wallet Debit: Govt Fee for Birth Certificate', amount: 50, balance: 2400.00 }
+  ]
+};
+
+app.post('/api/csc/authorize', (req, res) => {
+  const { username, password, clientId, redirectUri, state } = req.body;
+  if (!username) {
+    return res.status(400).json({ success: false, message: 'CSC ID or Username is required' });
+  }
+
+  const authCode = 'csc_code_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+  const db = readDB();
+  if (!db.cscAuthCodes) db.cscAuthCodes = {};
+  db.cscAuthCodes[authCode] = {
+    username,
+    clientId: clientId || '0f8ca686-5a31-46b8-bb51-d9834ba9fa9d',
+    createdAt: Date.now()
+  };
+  writeDB(db);
+
+  res.json({
+    success: true,
+    code: authCode,
+    state: state || '89850',
+    redirectUri: redirectUri || 'https://digitalseva.csc.gov.in/auth/callback/'
+  });
+});
+
+app.post('/api/csc/token', (req, res) => {
+  const { code } = req.body;
+  const db = readDB();
+  const dbVle = db.vleProfile || DEFAULT_VLE_PROFILE;
+
+  const accessToken = 'csc_jwt_token_' + Math.random().toString(36).substring(2) + '_' + Date.now();
+  res.json({
+    success: true,
+    tokenType: 'Bearer',
+    accessToken,
+    expiresIn: 86400,
+    vle: dbVle
+  });
+});
+
+app.get('/api/csc/vle-profile', (req, res) => {
+  const db = readDB();
+  res.json({ success: true, vle: db.vleProfile || DEFAULT_VLE_PROFILE });
+});
+
+app.post('/api/csc/wallet/topup', (req, res) => {
+  const { amount, paymentMethod = 'UPI' } = req.body;
+  const numAmount = Number(amount);
+  if (!numAmount || numAmount <= 0) {
+    return res.status(400).json({ success: false, message: 'Valid amount is required' });
+  }
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  db.vleProfile.walletBalance = Number((db.vleProfile.walletBalance + numAmount).toFixed(2));
+  
+  const passbookEntry = {
+    id: 'TXN-PB-' + Math.floor(1000 + Math.random() * 9000),
+    date: new Date().toISOString().split('T')[0],
+    type: 'CR',
+    description: `Wallet Top-up via ${paymentMethod}`,
+    amount: numAmount,
+    balance: db.vleProfile.walletBalance
+  };
+  db.vleProfile.passbook.unshift(passbookEntry);
+  writeDB(db);
+
+  broadcastEvent('csc:wallet_updated', { walletBalance: db.vleProfile.walletBalance, entry: passbookEntry });
+  res.json({ success: true, walletBalance: db.vleProfile.walletBalance, entry: passbookEntry });
+});
+
+app.post('/api/csc/operators', (req, res) => {
+  const { name, phone, permissions = ['General'] } = req.body;
+  if (!name || !phone) {
+    return res.status(400).json({ success: false, message: 'Name and phone are required' });
+  }
+
+  const db = readDB();
+  if (!db.vleProfile) db.vleProfile = { ...DEFAULT_VLE_PROFILE };
+  const newOp = {
+    id: 'OP-0' + (db.vleProfile.subOperators.length + 1),
+    name,
+    phone,
+    role: 'Operator',
+    permissions
+  };
+  db.vleProfile.subOperators.push(newOp);
+  writeDB(db);
+
+  res.status(201).json({ success: true, operator: newOp, total: db.vleProfile.subOperators.length });
+});
+
+app.post('/api/csc/register-vle', (req, res) => {
+  const { tecNumber, name, mobile, email, state, district, centerAddress, latitude, longitude } = req.body;
+  if (!tecNumber || !mobile) {
+    return res.status(400).json({ success: false, message: 'TEC Certificate Number and Mobile are required' });
+  }
+
+  const db = readDB();
+  if (!db.vleRegistrations) db.vleRegistrations = [];
+  const refNumber = 'VLE-REG-' + new Date().getFullYear() + '-' + Math.floor(10000 + Math.random() * 90000);
+  const registration = {
+    refNumber,
+    tecNumber,
+    name: name || 'Applicant VLE',
+    mobile,
+    email,
+    state,
+    district,
+    centerAddress,
+    coordinates: { latitude: latitude || 25.5941, longitude: longitude || 85.1376 },
+    status: 'SUBMITTED',
+    stage: 'Under District Manager Verification',
+    submittedAt: new Date().toISOString()
+  };
+  db.vleRegistrations.unshift(registration);
+  writeDB(db);
+
+  res.status(201).json({ success: true, registration });
+});
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);

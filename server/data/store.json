@@ -2549,5 +2549,99 @@
     "invoiceHeader": "Shree Balaji Digital Hub • Authorized VLE Network",
     "supportEmail": "contact@shreebalaji.in",
     "supportPhone": "+91 9822334455"
-  }
+  },
+  "cscAuthCodes": {
+    "csc_code_amm69bdemwasxdzv": {
+      "username": "245089123456",
+      "clientId": "0f8ca686-5a31-46b8-bb51-d9834ba9fa9d",
+      "createdAt": 1794321893662
+    },
+    "csc_code_bz4fopjsmwat25lh": {
+      "username": "245089123456",
+      "clientId": "0f8ca686-5a31-46b8-bb51-d9834ba9fa9d",
+      "createdAt": 1794322116054
+    }
+  },
+  "vleProfile": {
+    "cscId": "245089123456",
+    "vleName": "Rajesh Sharma",
+    "email": "vle.rajesh.sharma@csc.gov.in",
+    "phone": "9876543210",
+    "centerName": "Akul Dravin Digital Seva Kendra",
+    "district": "Patna",
+    "state": "Bihar",
+    "pincode": "800001",
+    "walletBalance": 2950,
+    "digiPayTerminalId": "DP-PATNA-0912",
+    "tecNumber": "TEC-2024-889123",
+    "subOperators": [
+      {
+        "id": "OP-01",
+        "name": "Manoj Kumar",
+        "phone": "9835112233",
+        "role": "Operator",
+        "permissions": [
+          "Banking",
+          "PanCard",
+          "Utility"
+        ]
+      },
+      {
+        "id": "OP-02",
+        "name": "Vikash Aryan",
+        "phone": "9835001122",
+        "role": "Operator",
+        "permissions": [
+          "Banking",
+          "PAN Card",
+          "BBPS"
+        ]
+      }
+    ],
+    "passbook": [
+      {
+        "id": "TXN-PB-1482",
+        "date": "2026-11-10",
+        "type": "CR",
+        "description": "Wallet Top-up via UPI",
+        "amount": 500,
+        "balance": 2950
+      },
+      {
+        "id": "TXN-PB-101",
+        "date": "2026-11-10",
+        "type": "CR",
+        "description": "Commission: Form 49A PAN Application",
+        "amount": 50,
+        "balance": 2450
+      },
+      {
+        "id": "TXN-PB-100",
+        "date": "2026-11-10",
+        "type": "DR",
+        "description": "Wallet Debit: Govt Fee for Birth Certificate",
+        "amount": 50,
+        "balance": 2400
+      }
+    ]
+  },
+  "vleRegistrations": [
+    {
+      "refNumber": "VLE-REG-2026-43315",
+      "tecNumber": "TEC-2024-90218",
+      "name": "Dr. Akul Dravin",
+      "mobile": "9876543210",
+      "email": "akul.dravin@example.com",
+      "state": "Bihar",
+      "district": "Patna",
+      "centerAddress": "Shop No. 12, Main Market, Danapur",
+      "coordinates": {
+        "latitude": 25.5941,
+        "longitude": 85.1376
+      },
+      "status": "SUBMITTED",
+      "stage": "Under District Manager Verification",
+      "submittedAt": "2026-11-10T14:48:36.147Z"
+    }
+  ]
 }

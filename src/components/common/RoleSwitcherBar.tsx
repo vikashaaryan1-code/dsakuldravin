@@ -31,7 +31,7 @@ export const RoleSwitcherBar: React.FC = () => {
 
   const roles: { role: UserRole; label: string; icon: React.ReactNode; path: string }[] = [
     { role: 'customer', label: t.roleCustomer, icon: <User size={13} />, path: '/customer/dashboard' },
-    { role: 'vle', label: t.roleVle, icon: <Store size={13} />, path: '/center/dashboard' },
+    { role: 'vle', label: 'Digital Seva (CSC VLE)', icon: <Store size={13} />, path: '/digitalseva' },
     { role: 'cafe_operator', label: t.roleCafe, icon: <Monitor size={13} />, path: '/cyber-cafe/operator' },
     { role: 'franchise', label: t.roleFranchise, icon: <Building size={13} />, path: '/franchise/dashboard' },
     { role: 'distributor', label: 'Distributor Hub', icon: <Network size={13} />, path: '/distributor/dashboard' },
@@ -94,7 +94,47 @@ export const RoleSwitcherBar: React.FC = () => {
       </div>
 
       {/* Right: Wallet & Language Toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: 'auto' }}>
+        <button
+          onClick={() => navigate('/connect/csc')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.3rem',
+            background: 'linear-gradient(135deg, #15803D 0%, #16A34A 100%)',
+            color: '#FFFFFF',
+            padding: '0.2rem 0.55rem',
+            borderRadius: '6px',
+            fontWeight: 700,
+            fontSize: '0.72rem',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+          title="Open CSC Connect OAuth 2.0 Single Sign-On"
+        >
+          🔐 CSC Connect
+        </button>
+
+        <button
+          onClick={() => navigate('/csc')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.3rem',
+            background: 'rgba(255, 255, 255, 0.08)',
+            color: '#E2E8F0',
+            padding: '0.2rem 0.55rem',
+            borderRadius: '6px',
+            fontWeight: 600,
+            fontSize: '0.72rem',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            cursor: 'pointer'
+          }}
+          title="Open CSC Official National Portal"
+        >
+          🏛️ CSC.gov.in
+        </button>
+
         <div style={{
           display: 'flex',
           alignItems: 'center',

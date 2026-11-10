@@ -78,6 +78,12 @@ const EmployeePortal = lazyNamed(() => import('./pages/portals/EmployeePortal'),
 const PartnerPortal = lazyNamed(() => import('./pages/portals/PartnerPortal'), 'PartnerPortal');
 const SuperAdminPortal = lazyNamed(() => import('./pages/portals/SuperAdminPortal'), 'SuperAdminPortal');
 
+// Lazy Loaded CSC Connect & Digital Seva Sovereign Pages
+const CSCConnectLoginPage = lazyNamed(() => import('./pages/csc/CSCConnectLoginPage'), 'CSCConnectLoginPage');
+const CSCAuthCallbackPage = lazyNamed(() => import('./pages/csc/CSCAuthCallbackPage'), 'CSCAuthCallbackPage');
+const DigitalSevaPortal = lazyNamed(() => import('./pages/csc/DigitalSevaPortal'), 'DigitalSevaPortal');
+const CSCMainPortalPage = lazyNamed(() => import('./pages/csc/CSCMainPortalPage'), 'CSCMainPortalPage');
+
 // Lazy Loaded Vedic Astrology Suite Pages
 const AstrologyHubPage = lazyNamed(() => import('./pages/astrology/AstrologyHubPage'), 'AstrologyHubPage');
 const KundliPage = lazyNamed(() => import('./pages/astrology/KundliPage'), 'KundliPage');
@@ -161,6 +167,16 @@ export const App: React.FC = () => {
             <Route path="/erp" element={<ERPPage />} />
             <Route path="/marketing" element={<MarketingPage />} />
             <Route path="/marketing-automation" element={<MarketingPage />} />
+
+            {/* CSC National Ecosystem & Digital Seva Routes */}
+            <Route path="/csc" element={<CSCMainPortalPage />} />
+            <Route path="/register-vle" element={<CSCMainPortalPage />} />
+            <Route path="/connect/csc" element={<CSCConnectLoginPage />} />
+            <Route path="/account/authorize" element={<CSCConnectLoginPage />} />
+            <Route path="/auth/callback" element={<CSCAuthCallbackPage />} />
+            <Route path="/auth/callback/" element={<CSCAuthCallbackPage />} />
+            <Route path="/digitalseva" element={<DigitalSevaPortal />} />
+            <Route path="/digitalseva/*" element={<DigitalSevaPortal />} />
 
             {/* Multi-Tenant Protected Role Portals */}
             <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer', 'admin']} portalName="Customer Operations Dashboard"><CustomerPortal /></ProtectedRoute>} />
