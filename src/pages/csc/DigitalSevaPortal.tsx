@@ -244,6 +244,28 @@ export const DigitalSevaPortal: React.FC = () => {
     { id: 'TXN-PB-9938', date: '2026-11-09', type: 'CR', desc: 'DigiPay AEPS Cash Out Surcharge', amount: 35, balance: 450.00 },
   ]);
 
+  // Live VLE Profile & Balance Sync
+  React.useEffect(() => {
+    let isMounted = true;
+    fetch('/api/csc/vle-profile')
+      .then(r => r.json())
+      .then(data => {
+        if (!isMounted || !data?.success || !data?.vle) return;
+        const vle = data.vle;
+        if (typeof vle.walletBalance === 'number') {
+          setWalletBalance(vle.walletBalance);
+        }
+        if (Array.isArray(vle.subOperators) && vle.subOperators.length > 0) {
+          setOperators(vle.subOperators);
+        }
+        if (Array.isArray(vle.passbook) && vle.passbook.length > 0) {
+          setPassbook(vle.passbook);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
   // Handle Wallet Top-Up
   const handleTopup = async () => {
     if (topupAmount <= 0) return;
@@ -330,22 +352,38 @@ export const DigitalSevaPortal: React.FC = () => {
   };
 
   // Add new sub-operator
-  const handleAddOperator = (e: React.FormEvent) => {
+  const handleAddOperator = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newOpName || !newOpPhone) return;
 
-    const newOp = {
-      id: 'OP-0' + (operators.length + 1),
-      name: newOpName,
-      phone: newOpPhone,
-      role: 'Operator',
-      status: 'Active',
-      permissions: ['General Services', 'Print & Scan']
-    };
-    setOperators(prev => [...prev, newOp]);
-    showToast('Sub-Operator Added', `Operator ${newOpName} registered with center credentials.`, 'success');
-    setNewOpName('');
-    setNewOpPhone('');
+    try {
+      const res = await fetch('/api/csc/operators', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newOpName,
+          phone: newOpPhone,
+          role: 'Operator',
+          permissions: ['General Services', 'Print & Scan']
+        })
+      }).then(r => r.json()).catch(() => null);
+
+      const op = res?.operator || {
+        id: 'OP-0' + (operators.length + 1),
+        name: newOpName,
+        phone: newOpPhone,
+        role: 'Operator',
+        status: 'Active',
+        permissions: ['General Services', 'Print & Scan']
+      };
+      setOperators(prev => [...prev, op]);
+      showToast('Sub-Operator Added', `Operator ${newOpName} registered with center credentials.`, 'success');
+      logAudit('CSC Operator Provisioning', `Registered operator ${newOpName} with ID ${op.id}`);
+      setNewOpName('');
+      setNewOpPhone('');
+    } catch (err) {
+      showToast('Error', 'Could not provision operator.', 'error');
+    }
   };
 
   // Handle DigiPay AEPS Transaction
