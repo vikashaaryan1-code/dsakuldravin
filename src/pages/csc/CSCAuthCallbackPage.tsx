@@ -11,7 +11,7 @@ export const CSCAuthCallbackPage: React.FC = () => {
   const [statusText, setStatusText] = useState('Verifying OAuth 2.0 Authorization Code...');
   const [stepIndex, setStepIndex] = useState(1);
 
-  const code = searchParams.get('code') || 'demo_code_' + Date.now();
+  const [code] = useState(() => searchParams.get('code') || 'demo_code_' + Date.now());
   const state = searchParams.get('state') || '89850';
   const redirectTo = searchParams.get('redirect_to') || '/digitalseva';
 
@@ -146,6 +146,31 @@ export const CSCAuthCallbackPage: React.FC = () => {
         }}>
           Auth Code: {code.substring(0, 24)}... | State: {state}
         </div>
+
+        {stepIndex === 3 && (
+          <button
+            onClick={() => navigate(redirectTo)}
+            style={{
+              marginTop: '1.25rem',
+              width: '100%',
+              background: '#16A34A',
+              color: '#FFFFFF',
+              border: 'none',
+              padding: '0.75rem',
+              borderRadius: '8px',
+              fontWeight: 800,
+              fontSize: '0.9rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <span>Enter Digital Seva Portal Now (पोर्टल में प्रवेश करें)</span>
+            <span>→</span>
+          </button>
+        )}
       </div>
     </div>
   );
