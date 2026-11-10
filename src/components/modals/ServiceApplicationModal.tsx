@@ -13,7 +13,8 @@ import {
   CreditCard, 
   QrCode, 
   Sparkles,
-  AlertCircle
+  AlertCircle,
+  Printer
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -44,6 +45,7 @@ export const ServiceApplicationModal: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'wallet'>('upi');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedAppId, setGeneratedAppId] = useState<string | null>(null);
+  const [showPrintSlip, setShowPrintSlip] = useState(false);
 
   if (!isApplyModalOpen || !selectedServiceForApply) return null;
 
@@ -596,27 +598,167 @@ export const ServiceApplicationModal: React.FC = () => {
                 Assigned to regional verification queue with live SMS notification alerts.
               </p>
 
-              <div style={{
-                background: '#EFF6FF',
-                border: '1.5px dashed #93C5FD',
-                borderRadius: '16px',
-                padding: '1.25rem',
-                marginBottom: '1.75rem',
-                display: 'inline-block',
-                minWidth: '280px',
-              }}>
-                <div style={{ fontSize: '0.75rem', color: '#1D4ED8', fontWeight: 700, textTransform: 'uppercase' }}>
-                  YOUR UNIQUE APPLICATION TOKEN
-                </div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0A192F', letterSpacing: '0.05em' }}>
-                  {generatedAppId}
-                </div>
-                <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '0.25rem' }}>
-                  Use this token anytime to track progress live
-                </div>
-              </div>
+              {/* Official Acknowledgement Slip Preview Modal/Section */}
+              {showPrintSlip ? (
+                <div style={{
+                  background: '#FFFFFF',
+                  border: '2px solid #0B3B60',
+                  borderRadius: '12px',
+                  padding: '1.5rem',
+                  textAlign: 'left',
+                  marginBottom: '1.5rem',
+                  color: '#0F172A',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.08)'
+                }}>
+                  <div style={{ borderBottom: '2px solid #0B3B60', paddingBottom: '0.75rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0B3B60', letterSpacing: '0.04em' }}>
+                        COMMON SERVICES CENTER (CSC)
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>
+                        Ministry of Electronics & IT, Government of India • Digital Seva Portal
+                      </div>
+                    </div>
+                    <div style={{
+                      background: '#EFF6FF',
+                      border: '1px solid #BFDBFE',
+                      padding: '0.25rem 0.6rem',
+                      borderRadius: '6px',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      color: '#1D4ED8'
+                    }}>
+                      OFFICIAL RECEIPT
+                    </div>
+                  </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                  <div style={{ background: '#F8FAFC', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '1rem', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem', fontSize: '0.8rem' }}>
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>APPLICATION TOKEN / टोकन:</span>
+                      <strong style={{ color: '#0B3B60', fontSize: '0.92rem' }}>{generatedAppId}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>DATE & TIME / दिनांक:</span>
+                      <strong>{new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>SERVICE NAME / सेवा:</span>
+                      <strong>{service.title}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>APPLICANT NAME / आवेदक:</span>
+                      <strong>{applicantName}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>MOBILE / संपर्क:</span>
+                      <strong>{applicantPhone}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>DISTRICT & STATE / राज्य:</span>
+                      <strong>{city}, {state}</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>VLE KENDRA / वीएलई केंद्र:</span>
+                      <strong>Akul Dravin CSC Kendra (VLE: 245089123456)</strong>
+                    </div>
+                    <div>
+                      <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>FEE PAID / भुगतान राशि:</span>
+                      <strong style={{ color: '#16A34A' }}>₹{totalAmount.toLocaleString('en-IN')} ({paymentMethod.toUpperCase()})</strong>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px dashed #CBD5E1', paddingTop: '0.75rem', fontSize: '0.75rem', color: '#64748B' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <ShieldCheck size={16} color="#16A34A" />
+                      <span>Security Digitally Signed & Verified (CSC Connect OAuth 2.0 Gateway)</span>
+                    </div>
+                    <div style={{ fontWeight: 700, color: '#16A34A' }}>
+                      STATUS: SUBMITTED
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => window.print()}
+                      style={{
+                        background: '#0B3B60',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '0.55rem 1rem',
+                        borderRadius: '6px',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem'
+                      }}
+                    >
+                      <Printer size={15} />
+                      <span>Print Slip (प्रिंट करें)</span>
+                    </button>
+                    <button
+                      onClick={() => setShowPrintSlip(false)}
+                      style={{
+                        background: '#F1F5F9',
+                        color: '#475569',
+                        border: '1px solid #CBD5E1',
+                        padding: '0.55rem 1rem',
+                        borderRadius: '6px',
+                        fontSize: '0.82rem',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Back to Overview
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  background: '#EFF6FF',
+                  border: '1.5px dashed #93C5FD',
+                  borderRadius: '16px',
+                  padding: '1.25rem',
+                  marginBottom: '1.75rem',
+                  display: 'inline-block',
+                  minWidth: '280px',
+                }}>
+                  <div style={{ fontSize: '0.75rem', color: '#1D4ED8', fontWeight: 700, textTransform: 'uppercase' }}>
+                    YOUR UNIQUE APPLICATION TOKEN
+                  </div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0A192F', letterSpacing: '0.05em' }}>
+                    {generatedAppId}
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '0.25rem' }}>
+                    Use this token anytime to track progress live
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                {!showPrintSlip && (
+                  <button
+                    onClick={() => setShowPrintSlip(true)}
+                    style={{
+                      background: '#0B3B60',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.65rem 1.15rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      fontSize: '0.88rem'
+                    }}
+                  >
+                    <Printer size={16} />
+                    <span>Print CSC Acknowledgement Slip</span>
+                  </button>
+                )}
+
                 <button
                   onClick={() => {
                     closeModal();
