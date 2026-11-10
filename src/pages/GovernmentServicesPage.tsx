@@ -12,13 +12,19 @@ import {
   CreditCard,
   BookOpen,
   Users,
-  Award
+  Award,
+  Sparkles,
+  Calculator
 } from 'lucide-react';
 
 export const GovernmentServicesPage: React.FC = () => {
   const { services, language } = useApp();
   const [selectedSubCat, setSelectedSubCat] = useState<'all' | 'identity' | 'certificates' | 'employment' | 'welfare'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Interactive Scheme Matcher State
+  const [citizenProfile, setCitizenProfile] = useState<'farmer' | 'worker' | 'women' | 'student' | 'general'>('farmer');
+  const [incomeRange, setIncomeRange] = useState<'bpl' | 'middle' | 'higher'>('bpl');
 
   const govtServices = services.filter(s => s.category === 'government');
 
@@ -167,6 +173,140 @@ export const GovernmentServicesPage: React.FC = () => {
             placeholder="Search citizen services..."
             style={{ border: 'none', outline: 'none', fontSize: '0.85rem', width: '100%' }}
           />
+        </div>
+      </div>
+
+      {/* INTERACTIVE CITIZEN SCHEME & SUBSIDY RECOMMENDER */}
+      <div style={{
+        background: 'linear-gradient(135deg, #090E17 0%, #111C30 100%)',
+        borderRadius: '20px',
+        padding: '2rem',
+        marginBottom: '2.5rem',
+        border: '1px solid rgba(245, 158, 11, 0.3)',
+        color: '#FFFFFF',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+          <div style={{ background: '#F59E0B', padding: '0.5rem', borderRadius: '10px' }}>
+            <Sparkles size={22} color="#0A192F" />
+          </div>
+          <div>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#FFFFFF' }}>
+              {language === 'hi' ? 'स्मार्ट सरकारी योजना एवं सब्सिडी कैलकुलेटर' : 'Smart Citizen Welfare & Subsidy Matcher'}
+            </h3>
+            <p style={{ fontSize: '0.82rem', color: '#94A3B8', margin: 0 }}>
+              {language === 'hi' 
+                ? 'अपनी श्रेणी चुनें और देखें कि आप किन-किन सरकारी लाभों के पात्र हैं।' 
+                : 'Select your profile and income bracket to discover direct government financial assistance & welfare schemes.'}
+            </p>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: '#CBD5E1', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>
+              {language === 'hi' ? 'नागरिक श्रेणी' : 'Citizen Category'}
+            </label>
+            <select
+              value={citizenProfile}
+              onChange={(e) => setCitizenProfile(e.target.value as any)}
+              style={{
+                width: '100%',
+                background: '#1E293B',
+                color: '#FFFFFF',
+                border: '1px solid #334155',
+                padding: '0.6rem 0.8rem',
+                borderRadius: '8px',
+                fontSize: '0.85rem'
+              }}
+            >
+              <option value="farmer">किसान (Farmer / Landholder)</option>
+              <option value="worker">श्रमिक / असंगठित कामगार (Daily Wage / Unorganized)</option>
+              <option value="women">महिला / परिवार प्रमुख (Women / SHG Member)</option>
+              <option value="student">विद्यार्थी (Student / Youth)</option>
+              <option value="general">सामान्य नागरिक (General Citizen)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '0.78rem', color: '#CBD5E1', fontWeight: 600, display: 'block', marginBottom: '0.4rem' }}>
+              {language === 'hi' ? 'वार्षिक पारिवारिक आय' : 'Annual Household Income'}
+            </label>
+            <select
+              value={incomeRange}
+              onChange={(e) => setIncomeRange(e.target.value as any)}
+              style={{
+                width: '100%',
+                background: '#1E293B',
+                color: '#FFFFFF',
+                border: '1px solid #334155',
+                padding: '0.6rem 0.8rem',
+                borderRadius: '8px',
+                fontSize: '0.85rem'
+              }}
+            >
+              <option value="bpl">₹2.5 लाख से कम (BPL / EWS Eligibility)</option>
+              <option value="middle">₹2.5 लाख से ₹8 लाख (Middle Income Group)</option>
+              <option value="higher">₹8 लाख से अधिक (Standard Citizen)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Dynamic Matched Benefits Badge Grid */}
+        <div style={{
+          background: 'rgba(255, 255, 255, 0.05)',
+          borderRadius: '12px',
+          padding: '1rem 1.25rem',
+          border: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.6rem' }}>
+            {language === 'hi' ? 'पात्र सरकारी योजनाएं एवं आर्थिक लाभ:' : 'Eligible Central & State Welfare Benefits:'}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
+            {citizenProfile === 'farmer' && (
+              <>
+                <span style={{ background: '#064E3B', color: '#6EE7B7', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                  ✓ PM Kisan Samman Nidhi (₹6,000/वर्ष DBT)
+                </span>
+                <span style={{ background: '#064E3B', color: '#6EE7B7', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                  ✓ PM Fasal Bima Yojana (फसल नुकसान बीमा)
+                </span>
+              </>
+            )}
+            {citizenProfile === 'worker' && (
+              <>
+                <span style={{ background: '#1E3A8A', color: '#93C5FD', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                  ✓ E-Shram Accident Cover (₹2,00,000 बीमा)
+                </span>
+                <span style={{ background: '#1E3A8A', color: '#93C5FD', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                  ✓ PM Shram Yogi Maandhan (₹3,000/माह पेंशन)
+                </span>
+              </>
+            )}
+            {citizenProfile === 'women' && (
+              <>
+                <span style={{ background: '#701A75', color: '#F472B6', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                  ✓ Sukanya Samriddhi Yojana (8.2% ब्याज दर)
+                </span>
+                <span style={{ background: '#701A75', color: '#F472B6', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                  ✓ PM Ujjwala 2.0 (मुफ्त गैस कनेक्शन)
+                </span>
+              </>
+            )}
+            {incomeRange === 'bpl' && (
+              <>
+                <span style={{ background: '#14532D', color: '#86EFAC', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                  ✓ Ayushman Bharat ABHA (₹5,00,000 मुफ्त इलाज)
+                </span>
+                <span style={{ background: '#14532D', color: '#86EFAC', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+                  ✓ NFSA राशन कार्ड (मुफ्त खाद्यान्न योजना)
+                </span>
+              </>
+            )}
+            <span style={{ background: '#374151', color: '#E5E7EB', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
+              ✓ DigiLocker सुरक्षित डिजिटल दस्तावेज वॉल्ट
+            </span>
+          </div>
         </div>
       </div>
 

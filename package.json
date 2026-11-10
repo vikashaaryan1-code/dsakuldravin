@@ -9,6 +9,7 @@
     "test": "node scripts/run_tests.mjs",
     "simulate": "node scripts/simulate_full_workflow.mjs",
     "walkthrough": "node scripts/master_enterprise_walkthrough.mjs",
+    "execute-all": "node scripts/execute_all_suite.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
