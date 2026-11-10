@@ -11,6 +11,7 @@
     "walkthrough": "node scripts/master_enterprise_walkthrough.mjs",
     "execute-all": "node scripts/execute_all_suite.mjs",
     "test-csc": "node scripts/test_csc_workflow.mjs",
+    "audit:all": "node scripts/master_audit.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
