@@ -194,11 +194,12 @@ export const Footer: React.FC = () => {
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.82rem' }}>
               <Link to="/franchise" style={{ color: '#F59E0B', fontWeight: 700 }}>Franchise Partnership (Apply)</Link>
-              <Link to="/center/dashboard" style={{ color: '#94A3B8' }}>Digital Center (VLE) Portal</Link>
-              <Link to="/cyber-cafe/operator" style={{ color: '#94A3B8' }}>Cyber Café Operator Console</Link>
-              <Link to="/employee/dashboard" style={{ color: '#94A3B8' }}>Service Executive Queue</Link>
-              <Link to="/partner/dashboard" style={{ color: '#94A3B8' }}>Technician & Partner Desk</Link>
-              <Link to="/admin/dashboard" style={{ color: '#94A3B8' }}>Super Admin Portal</Link>
+              <Link to="/portal/student" style={{ color: '#38BDF8', fontWeight: 600 }}>ADCS Academy LMS (16 Modules)</Link>
+              <Link to="/verify-certificate" style={{ color: '#10B981', fontWeight: 600 }}>Verify Digital Certificate</Link>
+              <Link to="/portal/advocate" style={{ color: '#94A3B8' }}>Advocate Legal Consultation</Link>
+              <Link to="/portal/cyber-cafe" style={{ color: '#94A3B8' }}>Cyber Café Operator Console</Link>
+              <Link to="/portal/technician" style={{ color: '#94A3B8' }}>Field Technician Dispatch</Link>
+              <Link to="/portal/admin" style={{ color: '#94A3B8' }}>Super Admin Sovereign Console</Link>
               <Link to="/locations" style={{ color: '#94A3B8' }}>Pan-India Branch Locator</Link>
               <Link to="/track" style={{ color: '#94A3B8' }}>Live Application Tracker</Link>
             </div>

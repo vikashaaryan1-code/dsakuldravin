@@ -76,6 +76,8 @@ export const GlassNavbar: React.FC = () => {
     { name: 'Loans & Mortgages', path: '/finance', desc: 'Business, Personal, Home, Mudra loans' },
     { name: 'Insurance Desk', path: '/insurance', desc: 'Health mediclaim, Term life, Motor cover' },
     { name: 'IT, Cloud & SaaS', path: '/website-it', desc: 'Domain, Hosting, Custom Apps, CRM/ERP' },
+    { name: 'ADCS Academy LMS & Certifications', path: '/portal/student', desc: '16 A-to-Z Modules across AI, Computer Pro, CCTV & Digital Marketing' },
+    { name: 'QR Digital Certificate Verification', path: '/verify-certificate', desc: 'Public SHA-256 Cryptographic Verification for Issued Academy Credentials' },
     { name: 'Professional Consulting', path: '/consulting', desc: 'CA, CS, Legal and Startup advisors' },
     { name: 'Education & Jobs', path: '/education', desc: 'Govt exam forms, admissions, admit cards' },
   ];

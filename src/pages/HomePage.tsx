@@ -29,7 +29,10 @@ import {
   CheckCircle2,
   TrendingUp,
   MapPin,
-  Laptop
+  Laptop,
+  Award,
+  BookOpen,
+  QrCode
 } from 'lucide-react';
 
 export const HomePage: React.FC = () => {
@@ -730,6 +733,230 @@ export const HomePage: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5.8 ADCS ACADEMY & VOCATIONAL SKILLS LMS SHOWCASE */}
+      <section className="container-wide">
+        <div style={{
+          background: 'linear-gradient(135deg, #0B132B 0%, #1C2541 50%, #1E3A8A 100%)',
+          borderRadius: '24px',
+          padding: '3rem 2.5rem',
+          color: '#FFFFFF',
+          border: '1.5px solid rgba(59, 130, 246, 0.4)',
+          boxShadow: '0 20px 50px rgba(11, 19, 43, 0.4), 0 0 25px rgba(37, 99, 235, 0.15)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2.5rem' }}>
+            <div style={{ maxWidth: '680px' }}>
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                background: 'rgba(37, 99, 235, 0.25)',
+                border: '1px solid #60A5FA',
+                borderRadius: '9999px',
+                padding: '0.35rem 0.9rem',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                color: '#93C5FD',
+                marginBottom: '1rem',
+              }}>
+                <GraduationCap size={15} color="#60A5FA" />
+                <span>ADCS ACADEMY OF EXCELLENCE • 16-MODULE VOCATIONAL LMS</span>
+              </div>
+              <h2 style={{ fontSize: 'clamp(1.8rem, 3.2vw, 2.4rem)', fontWeight: 900, lineHeight: 1.2, margin: '0 0 0.75rem', color: '#FFFFFF' }}>
+                Job-Ready Vocational Skills &
+                <br />
+                <span style={{ color: '#F59E0B' }}>Tamper-Proof QR Certifications</span>
+              </h2>
+              <p style={{ fontSize: '0.95rem', color: '#CBD5E1', lineHeight: 1.6, margin: 0 }}>
+                16 comprehensive bilingual modules across AI Engineering, PC Essentials, CCTV Systems, and Digital Growth. Featuring interactive lab readers, instant code copy, proctored computer exams, and verifiable private skill credentials.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => navigate('/portal/student')}
+                className="btn-gold btn-lg"
+                style={{ fontWeight: 800 }}
+              >
+                <BookOpen size={18} />
+                <span>Launch Academy LMS</span>
+              </button>
+              <button
+                onClick={() => navigate('/verify-certificate')}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  color: '#FFFFFF',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  padding: '12px 22px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'}
+              >
+                <QrCode size={18} />
+                <span>Verify Certificate</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 4 Course Cards Grid */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '1.25rem',
+            marginBottom: '2rem'
+          }}>
+            {[
+              {
+                id: 'CRS-AI-101',
+                title: 'AI Mastery & Prompt Engineering',
+                titleHi: 'एआई मास्टरी एवं प्रॉम्प्ट इंजीनियरिंग',
+                tag: 'High Demand • 4 Modules',
+                desc: 'LLM token architecture, few-shot prompt crafting, multi-agent frameworks, and autonomous coding orchestration.',
+                badgeColor: '#10B981',
+                icon: <Sparkles size={20} color="#F59E0B" />
+              },
+              {
+                id: 'CRS-COMP-102',
+                title: 'Computer Pro & Windows Fundamentals',
+                titleHi: 'कंप्यूटर प्रो एवं विंडोज ऑपरेटिंग',
+                tag: 'Essential Core • 4 Modules',
+                desc: 'Windows 11 administration, keyboard shortcuts, advanced MS Office/Excel mastery, cloud backup, and cyber safety.',
+                badgeColor: '#3B82F6',
+                icon: <Monitor size={20} color="#60A5FA" />
+              },
+              {
+                id: 'CRS-CCTV-103',
+                title: 'CCTV & IP Surveillance Technician',
+                titleHi: 'सीसीटीवी एवं सर्विलांस इंस्टालेशन',
+                tag: 'Field Hardware • 4 Modules',
+                desc: 'Coaxial & Cat6 PoE topology, NVR/DVR storage calculations, RTSP mobile streaming, and troubleshooting field networks.',
+                badgeColor: '#F59E0B',
+                icon: <ShieldCheck size={20} color="#FBBF24" />
+              },
+              {
+                id: 'CRS-MKT-104',
+                title: 'Digital Marketing & WhatsApp Specialist',
+                titleHi: 'डिजिटल मार्केटिंग व व्हाट्सऐप ऑटोमेशन',
+                tag: 'Revenue & Growth • 4 Modules',
+                desc: 'Meta & Google ad funnels, WhatsApp Cloud API webhooks, local SEO business mapping, and conversion analytics.',
+                badgeColor: '#8B5CF6',
+                icon: <Zap size={20} color="#C084FC" />
+              }
+            ].map((course, idx) => (
+              <div
+                key={idx}
+                onClick={() => navigate('/portal/student')}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                  borderRadius: '16px',
+                  padding: '1.5rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.borderColor = '#60A5FA';
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                  e.currentTarget.style.transform = 'none';
+                }}
+              >
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                    <div style={{
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '10px',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      {course.icon}
+                    </div>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '999px',
+                      background: 'rgba(255, 255, 255, 0.12)',
+                      color: '#E2E8F0'
+                    }}>
+                      {course.tag}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#93C5FD', marginBottom: '0.25rem' }}>
+                    {course.id}
+                  </div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FFFFFF', marginBottom: '0.5rem', lineHeight: 1.3 }}>
+                    {language === 'hi' ? course.titleHi : course.title}
+                  </h3>
+                  <p style={{ fontSize: '0.82rem', color: '#CBD5E1', lineHeight: 1.5, marginBottom: '1rem' }}>
+                    {course.desc}
+                  </p>
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  color: '#F59E0B'
+                }}>
+                  <span>Open Interactive Lab & Quiz</span>
+                  <ArrowRight size={14} />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Footer Callout */}
+          <div style={{
+            background: 'rgba(0, 0, 0, 0.25)',
+            borderRadius: '12px',
+            padding: '1rem 1.5rem',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            fontSize: '0.85rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#E2E8F0' }}>
+              <Award size={18} color="#F59E0B" />
+              <span>
+                <strong>Statutory Standard:</strong> ADCS Academy certificates are certified private vocational credentials with unique cryptographic hashes (SHA-256) and live verification URLs.
+              </span>
+            </div>
+            <Link to="/portal/student" style={{ color: '#93C5FD', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+              <span>View All 16 Modules in Student Portal</span>
+              <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>
