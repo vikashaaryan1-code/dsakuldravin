@@ -957,6 +957,61 @@ app.patch('/api/erp/inventory/:id/stock', (req, res) => {
   res.json({ success: true, item });
 });
 
+// 14B. Dynamic Service Rate, Commission & Price Management API
+app.patch('/api/services/:id/rates', (req, res) => {
+  const { price, commissionRate, govtFee } = req.body;
+  const db = readDB();
+  const service = db.services.find(s => s.id === req.params.id);
+  if (!service) {
+    return res.status(404).json({ success: false, message: 'Service not found in registry' });
+  }
+
+  if (price !== undefined && Number(price) >= 0) {
+    service.price = Number(price);
+  }
+  if (commissionRate !== undefined && Number(commissionRate) >= 0) {
+    service.commissionRate = Number(commissionRate);
+  }
+  if (govtFee !== undefined && Number(govtFee) >= 0) {
+    service.govtFee = Number(govtFee);
+  }
+
+  writeDB(db);
+  broadcastEvent('service:rates_updated', service);
+  res.json({ success: true, service, message: `Rates updated for ${service.title}` });
+});
+
+// 14C. Full Employee HRMS Directory & Control Management API
+app.delete('/api/hrms/employees/:id', (req, res) => {
+  const db = readDB();
+  if (!db.employees) db.employees = [];
+  const idx = db.employees.findIndex(e => e.id === req.params.id);
+  if (idx === -1) {
+    return res.status(404).json({ success: false, message: 'Employee not found' });
+  }
+  const removed = db.employees.splice(idx, 1)[0];
+  writeDB(db);
+  broadcastEvent('hrms:employee_deleted', { id: req.params.id });
+  res.json({ success: true, message: `Employee ${removed.name} removed from registry.` });
+});
+
+app.patch('/api/hrms/employees/:id/role', (req, res) => {
+  const { role, department, salary } = req.body;
+  const db = readDB();
+  if (!db.employees) db.employees = [];
+  const emp = db.employees.find(e => e.id === req.params.id);
+  if (!emp) {
+    return res.status(404).json({ success: false, message: 'Employee not found' });
+  }
+  if (role) emp.role = role;
+  if (department) emp.department = department;
+  if (salary !== undefined) emp.salary = Number(salary);
+
+  writeDB(db);
+  broadcastEvent('hrms:employee_updated', emp);
+  res.json({ success: true, employee: emp, message: `Updated details for ${emp.name}` });
+});
+
 // 15. ADCS Connect OAuth 2.0 & Sovereign Services Engine
 const DEFAULT_VLE_PROFILE = {
   cscId: '245089123456',

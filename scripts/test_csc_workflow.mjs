@@ -92,10 +92,11 @@ async function run() {
   // 4. Wallet Top-Up
   total++;
   if (await step('4. Live Wallet Top-Up & Passbook Ledger Credit', async () => {
+    const randomUtr = '431902' + Math.floor(100000 + Math.random() * 900000);
     const res = await fetch(`${API_BASE}/csc/wallet/topup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amount: 5000, paymentMethod: 'UPI', utr: '431902847291' })
+      body: JSON.stringify({ amount: 5000, paymentMethod: 'UPI', utr: randomUtr })
     }).then(r => r.json());
 
     if (!res.success) throw new Error('Top-up failed: ' + (res.message || ''));

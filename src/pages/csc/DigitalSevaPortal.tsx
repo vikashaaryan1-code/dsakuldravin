@@ -63,15 +63,15 @@ export const DigitalSevaPortal: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'pmfby' | 'bbps' | 'ucl' | 'estore' | 'dsc' | 'orders' | 'operators' | 'support'>(() => {
-    const validTabs = ['dashboard', 'services', 'wallet', 'digipay', 'telelaw', 'pmgdisha', 'abha', 'pmkisan', 'fastag', 'irctc', 'pan', 'edistrict', 'eshram', 'pmfby', 'bbps', 'ucl', 'estore', 'dsc', 'orders', 'operators', 'support'];
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'services' | 'wallet' | 'digipay' | 'telelaw' | 'pmgdisha' | 'abha' | 'pmkisan' | 'fastag' | 'irctc' | 'pan' | 'edistrict' | 'eshram' | 'sarathi' | 'pmfby' | 'bbps' | 'ucl' | 'estore' | 'dsc' | 'rates' | 'hrms' | 'orders' | 'operators' | 'support'>(() => {
+    const validTabs = ['dashboard', 'services', 'wallet', 'digipay', 'telelaw', 'pmgdisha', 'abha', 'pmkisan', 'fastag', 'irctc', 'pan', 'edistrict', 'eshram', 'sarathi', 'pmfby', 'bbps', 'ucl', 'estore', 'dsc', 'rates', 'hrms', 'orders', 'operators', 'support'];
     return (validTabs.includes(tabParam || '') ? tabParam : 'dashboard') as any;
   });
 
   // Re-sync activeTab if search parameter changes
   React.useEffect(() => {
     if (tabParam) {
-      const validTabs = ['dashboard', 'services', 'wallet', 'digipay', 'telelaw', 'pmgdisha', 'abha', 'pmkisan', 'fastag', 'irctc', 'pan', 'edistrict', 'eshram', 'pmfby', 'bbps', 'ucl', 'estore', 'dsc', 'orders', 'operators', 'support'];
+      const validTabs = ['dashboard', 'services', 'wallet', 'digipay', 'telelaw', 'pmgdisha', 'abha', 'pmkisan', 'fastag', 'irctc', 'pan', 'edistrict', 'eshram', 'sarathi', 'pmfby', 'bbps', 'ucl', 'estore', 'dsc', 'rates', 'hrms', 'orders', 'operators', 'support'];
       if (validTabs.includes(tabParam)) {
         setActiveTab(tabParam as any);
       }
@@ -201,6 +201,53 @@ export const DigitalSevaPortal: React.FC = () => {
   const [abhaGender, setAbhaGender] = useState('Male');
   const [abhaCard, setAbhaCard] = useState<any | null>(null);
   const [abhaLoading, setAbhaLoading] = useState(false);
+
+  // Sarathi Driving License State
+  const [dlApplicant, setDlApplicant] = useState('Rahul Singh');
+  const [dlAadhaar, setDlAadhaar] = useState('999999990019');
+  const [dlMobile, setDlMobile] = useState('9835088776');
+  const [dlRto, setDlRto] = useState('BR-01 (Patna RTO Central)');
+  const [dlCov, setDlCov] = useState('LMV (Motor Car) + MCWG (Motorcycle with Gear)');
+  const [dlSlotDate, setDlSlotDate] = useState('2026-11-20');
+  const [dlSlotTime, setDlSlotTime] = useState('11:00 AM - 12:30 PM (Batch 2)');
+  const [dlReceipt, setDlReceipt] = useState<any | null>(null);
+  const [dlLoading, setDlLoading] = useState(false);
+
+  // Rate & Commission Management State
+  const [servicePriceCatalog, setServicePriceCatalog] = useState(services);
+  const [selectedServiceToEdit, setSelectedServiceToEdit] = useState<any | null>(null);
+  const [editPrice, setEditPrice] = useState<number>(0);
+  const [editComm, setEditComm] = useState<number>(0);
+  const [editGovtFee, setEditGovtFee] = useState<number>(0);
+  const [isUpdatingRates, setIsUpdatingRates] = useState(false);
+
+  // Employee HRMS Management State
+  const [employeesList, setEmployeesList] = useState<any[]>([]);
+  const [newEmpName, setNewEmpName] = useState('');
+  const [newEmpPhone, setNewEmpPhone] = useState('');
+  const [newEmpRole, setNewEmpRole] = useState('Portal Operator');
+  const [newEmpDept, setNewEmpDept] = useState('Operations & Citizen Services');
+  const [newEmpSalary, setNewEmpSalary] = useState<number>(18000);
+  const [isCreatingEmp, setIsCreatingEmp] = useState(false);
+
+  // Sync HRMS Employees on Mount
+  React.useEffect(() => {
+    fetch('/api/hrms/employees')
+      .then(r => r.json())
+      .then(d => {
+        if (d?.success && Array.isArray(d.employees)) {
+          setEmployeesList(d.employees);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Sync servicePriceCatalog with global services
+  React.useEffect(() => {
+    if (services && services.length > 0) {
+      setServicePriceCatalog(services);
+    }
+  }, [services]);
 
   // DigiPay AEPS State
   const [aepsAadhaar, setAepsAadhaar] = useState('999999990019');
@@ -524,6 +571,131 @@ export const DigitalSevaPortal: React.FC = () => {
       setApplicantAadhaar('');
       setServiceUtr('');
     }, 600);
+  };
+
+  // Handle Sarathi DL Application & Test Slot Booking
+  const handleSarathiBook = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dlApplicant || dlAadhaar.length !== 12) {
+      showToast('Validation Error', 'Valid applicant name and 12-digit Aadhaar UID required.', 'error');
+      return;
+    }
+    setDlLoading(true);
+    setTimeout(() => {
+      const appNo = 'DL-BR-' + Math.floor(10000000 + Math.random() * 90000000);
+      const trackingId = submitApplication({
+        serviceId: 'srv-sarathi-dl',
+        serviceName: `Sarathi Driving License (${dlCov})`,
+        category: 'travel',
+        applicantName: dlApplicant,
+        applicantPhone: dlMobile,
+        feePaid: 450,
+        city: 'Patna RTO Central',
+        state: 'Bihar',
+        notes: `Sarathi e-Transport Slot Booking. RTO: ${dlRto}. Slot: ${dlSlotDate} @ ${dlSlotTime}`
+      });
+
+      const receipt = {
+        appNo,
+        trackingId,
+        applicantName: dlApplicant,
+        maskedAadhaar: `XXXX-XXXX-${dlAadhaar.slice(-4)}`,
+        mobile: dlMobile,
+        rto: dlRto,
+        cov: dlCov,
+        slotDate: dlSlotDate,
+        slotTime: dlSlotTime,
+        feePaid: 450,
+        vleCommission: 75,
+        status: 'SLOT CONFIRMED & RTO ADMIT CARD ISSUED',
+        issuedAt: new Date().toLocaleString('en-IN')
+      };
+
+      setDlReceipt(receipt);
+      setWalletBalance(prev => prev + 75);
+      showToast('Sarathi DL Slot Booked', `Application No: ${appNo} booked for ${dlSlotDate}. Commission +₹75 credited.`, 'success');
+      logAudit('Sarathi DL Slot Booked', `Booked slot for ${dlApplicant} at ${dlRto} on ${dlSlotDate}`);
+      confetti({ particleCount: 85, spread: 65 });
+      setDlLoading(false);
+    }, 700);
+  };
+
+  // Handle Dynamic Price & Commission Update
+  const handleSaveRates = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedServiceToEdit) return;
+    setIsUpdatingRates(true);
+
+    try {
+      const res = await fetch(`/api/services/${selectedServiceToEdit.id}/rates`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          price: editPrice,
+          commissionRate: editComm,
+          govtFee: editGovtFee
+        })
+      }).then(r => r.json()).catch(() => null);
+
+      if (res?.success) {
+        setServicePriceCatalog(prev => prev.map(s => s.id === selectedServiceToEdit.id ? { ...s, price: editPrice, commissionRate: editComm, govtFee: editGovtFee } : s));
+        showToast('Rates Updated Successfully', `Updated price to ₹${editPrice} and commission to ₹${editComm} for ${selectedServiceToEdit.title}`, 'success');
+        logAudit('Service Rates Adjusted', `Set price: ₹${editPrice}, comm: ₹${editComm} for ${selectedServiceToEdit.id}`);
+        setSelectedServiceToEdit(null);
+      } else {
+        showToast('Update Failed', res?.message || 'Could not update rates on server.', 'error');
+      }
+    } finally {
+      setIsUpdatingRates(false);
+    }
+  };
+
+  // Handle Add New Employee
+  const handleCreateEmployee = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newEmpName || !newEmpPhone) return;
+    setIsCreatingEmp(true);
+
+    try {
+      const res = await fetch('/api/hrms/employees', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newEmpName,
+          phone: newEmpPhone,
+          role: newEmpRole,
+          department: newEmpDept,
+          salary: newEmpSalary
+        })
+      }).then(r => r.json()).catch(() => null);
+
+      if (res?.success && res.employee) {
+        setEmployeesList(prev => [res.employee, ...prev]);
+        showToast('Staff Employee Added', `${newEmpName} registered with ID ${res.employee.id}.`, 'success');
+        logAudit('HRMS Employee Created', `Added ${newEmpName} (${newEmpRole})`);
+        setNewEmpName('');
+        setNewEmpPhone('');
+      } else {
+        showToast('Creation Failed', res?.message || 'Could not create employee.', 'error');
+      }
+    } finally {
+      setIsCreatingEmp(false);
+    }
+  };
+
+  // Handle Delete Employee
+  const handleDeleteEmployee = async (id: string, name: string) => {
+    if (!window.confirm(`Are you sure you want to remove staff member ${name}?`)) return;
+    try {
+      const res = await fetch(`/api/hrms/employees/${id}`, { method: 'DELETE' }).then(r => r.json()).catch(() => null);
+      if (res?.success) {
+        setEmployeesList(prev => prev.filter(e => e.id !== id));
+        showToast('Staff Removed', `Removed ${name} from portal staff registry.`, 'info');
+        logAudit('HRMS Staff Removed', `Deleted employee ${id} (${name})`);
+      }
+    } catch {
+      showToast('Action Failed', 'Could not remove staff member.', 'error');
+    }
   };
 
   // Add new sub-operator
@@ -1266,6 +1438,8 @@ export const DigitalSevaPortal: React.FC = () => {
           {[
             { id: 'dashboard', label: 'Dashboard' },
             { id: 'services', label: 'Services Catalogue (64+)' },
+            { id: 'rates', label: 'Rate & Margin Manager (Rates/Comm)' },
+            { id: 'hrms', label: 'Employee & Staff Control' },
             { id: 'digipay', label: 'DigiPay (AEPS & Micro-ATM)' },
             { id: 'telelaw', label: 'Tele-Law (Legal Aid)' },
             { id: 'pmgdisha', label: 'PMGDISHA (Training & Cert)' },
@@ -1276,6 +1450,7 @@ export const DigitalSevaPortal: React.FC = () => {
             { id: 'pan', label: 'PAN Card (UTIITSL / NSDL)' },
             { id: 'edistrict', label: 'e-District (Certificates)' },
             { id: 'eshram', label: 'e-Shram (Worker UAN Card)' },
+            { id: 'sarathi', label: 'Sarathi Driving License (DL/Slots)' },
             { id: 'pmfby', label: 'PMFBY (Crop Insurance)' },
             { id: 'bbps', label: 'BBPS (Utility Bills)' },
             { id: 'ucl', label: 'Aadhaar UCL (Update Client Lite)' },
@@ -2470,9 +2645,37 @@ export const DigitalSevaPortal: React.FC = () => {
             <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
                 <Sprout size={22} color="#15803D" />
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                  PM-KISAN Samman Nidhi e-KYC Portal
-                </h3>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    PM-KISAN Samman Nidhi e-KYC Portal
+                  </h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
+                    <a 
+                      href="https://pmkisan.gov.in/aadharekyc.aspx" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.72rem', color: '#15803D', textDecoration: 'none', background: '#DCFCE7', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}
+                    >
+                      🔗 Official PM-KISAN eKYC Portal ↗
+                    </a>
+                    <a 
+                      href="https://pmkisan.gov.in/BeneficiaryStatus_New.aspx" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.72rem', color: '#0284C7', textDecoration: 'none', background: '#E0F2FE', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}
+                    >
+                      🔍 Check Beneficiary Status ↗
+                    </a>
+                    <a 
+                      href="https://pmkisan.gov.in/RegistrationFormNew.aspx" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.72rem', color: '#B45309', textDecoration: 'none', background: '#FEF3C7', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}
+                    >
+                      🌾 New Farmer Registration ↗
+                    </a>
+                  </div>
+                </div>
               </div>
               <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
                 Ministry of Agriculture & Farmers Welfare • Mandatory Biometric Aadhaar eKYC (+₹15 VLE commission)
@@ -3232,9 +3435,37 @@ export const DigitalSevaPortal: React.FC = () => {
             <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
                 <CreditCard size={22} color="#0D9488" />
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                  UTIITSL / NSDL PAN Card Services
-                </h3>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    UTIITSL / NSDL PAN Card Services
+                  </h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
+                    <a 
+                      href="https://www.onlineservices.nsdl.com/paam/endUserRegisterContact.html" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.72rem', color: '#0D9488', textDecoration: 'none', background: '#CCFBF1', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}
+                    >
+                      🔗 NSDL Direct Portal ↗
+                    </a>
+                    <a 
+                      href="https://www.pan.utiitsl.com/PAN/newAOAadhaar.do" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.72rem', color: '#0284C7', textDecoration: 'none', background: '#E0F2FE', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}
+                    >
+                      🔗 UTIITSL Direct Portal ↗
+                    </a>
+                    <a 
+                      href="https://eportal.incometax.gov.in/iec/foservices/#/pre-login/instant-e-pan" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.72rem', color: '#B45309', textDecoration: 'none', background: '#FEF3C7', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}
+                    >
+                      ⚡ Instant e-PAN (Free) ↗
+                    </a>
+                  </div>
+                </div>
               </div>
               <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
                 Income Tax Department (CBDT) • Form 49A Instant Filing (+₹50 VLE commission, Govt Fee: ₹107)
@@ -3787,9 +4018,29 @@ export const DigitalSevaPortal: React.FC = () => {
             <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
                 <BadgeCheck size={22} color="#0284C7" />
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                  e-Shram National Worker Registration
-                </h3>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    e-Shram National Worker Registration
+                  </h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
+                    <a 
+                      href="https://register.eshram.gov.in/#/user/self" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.72rem', color: '#0284C7', textDecoration: 'none', background: '#E0F2FE', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}
+                    >
+                      🔗 Official e-Shram Registration Portal ↗
+                    </a>
+                    <a 
+                      href="https://eshram.gov.in/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.72rem', color: '#166534', textDecoration: 'none', background: '#DCFCE7', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}
+                    >
+                      🌐 Ministry of Labour (eshram.gov.in) ↗
+                    </a>
+                  </div>
+                </div>
               </div>
               <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
                 Ministry of Labour & Employment • Universal Account Number (UAN) Issuance (+₹40 VLE commission, Free for Citizen)
@@ -4055,6 +4306,283 @@ export const DigitalSevaPortal: React.FC = () => {
                   </button>
                   <button
                     onClick={() => alert(`Downloading e-Shram Card for ${esReceipt.workerName} (UAN: ${esReceipt.uanNumber})...`)}
+                    style={{
+                      background: '#F1F5F9',
+                      color: '#334155',
+                      border: '1px solid #CBD5E1',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: SARATHI DRIVING LICENSE & RTO TEST SLOTS (parivahan.gov.in) */}
+        {activeTab === 'sarathi' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Booking Form */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                <Car size={22} color="#2563EB" />
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    Sarathi Driving License & RTO Test Slots
+                  </h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem', flexWrap: 'wrap' }}>
+                    <a 
+                      href="https://sarathi.parivahan.gov.in/sarathiservice/stateSelection.do" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.72rem', color: '#2563EB', textDecoration: 'none', background: '#DBEAFE', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}
+                    >
+                      🔗 Official Sarathi Parivahan Portal ↗
+                    </a>
+                    <a 
+                      href="https://parivahan.gov.in/parivahan//en/content/driving-licence-0" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      style={{ fontSize: '0.72rem', color: '#059669', textDecoration: 'none', background: '#D1FAE5', padding: '0.15rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}
+                    >
+                      🚗 Parivahan Sewa Dashboard ↗
+                    </a>
+                  </div>
+                </div>
+              </div>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                Ministry of Road Transport & Highways (MoRTH) • Slot Booking & DL Application (+₹75 VLE Comm, Govt Fee: ₹450)
+              </p>
+
+              <form onSubmit={handleSarathiBook} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    APPLICANT CITIZEN FULL NAME (आवेदक का नाम) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={dlApplicant}
+                    onChange={(e) => setDlApplicant(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.88rem', fontWeight: 600 }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      AADHAAR NUMBER *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      maxLength={12}
+                      value={dlAadhaar}
+                      onChange={(e) => setDlAadhaar(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.88rem', fontFamily: 'monospace' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      MOBILE NUMBER *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      value={dlMobile}
+                      onChange={(e) => setDlMobile(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.88rem' }}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    DESIGNATED RTO AUTHORITY (परिवहन कार्यालय) *
+                  </label>
+                  <select
+                    value={dlRto}
+                    onChange={(e) => setDlRto(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.88rem' }}
+                  >
+                    <option value="BR-01 (Patna RTO Central)">BR-01 (Patna RTO Central)</option>
+                    <option value="BR-02 (Gaya RTO Office)">BR-02 (Gaya RTO Office)</option>
+                    <option value="BR-06 (Muzaffarpur RTO)">BR-06 (Muzaffarpur RTO)</option>
+                    <option value="BR-07 (Darbhanga District Transport Office)">BR-07 (Darbhanga District Transport Office)</option>
+                    <option value="DL-01 (Delhi North Mall Road)">DL-01 (Delhi North Mall Road)</option>
+                    <option value="UP-32 (Lucknow Transport Nagar)">UP-32 (Lucknow Transport Nagar)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                    VEHICLE CLASS (COV - वाहन श्रेणी)
+                  </label>
+                  <select
+                    value={dlCov}
+                    onChange={(e) => setDlCov(e.target.value)}
+                    style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.88rem' }}
+                  >
+                    <option value="LMV (Motor Car) + MCWG (Motorcycle with Gear)">LMV (Motor Car) + MCWG (Motorcycle with Gear)</option>
+                    <option value="MCWG (Motorcycle with Gear Only)">MCWG (Motorcycle with Gear Only)</option>
+                    <option value="LMV (Light Motor Vehicle - Car Only)">LMV (Light Motor Vehicle - Car Only)</option>
+                    <option value="TRANS (Heavy Commercial Goods & Passenger)">TRANS (Heavy Commercial Goods & Passenger)</option>
+                  </select>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      DRIVING TEST DATE
+                    </label>
+                    <input
+                      type="date"
+                      value={dlSlotDate}
+                      onChange={(e) => setDlSlotDate(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.88rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      TEST TIME SLOT
+                    </label>
+                    <select
+                      value={dlSlotTime}
+                      onChange={(e) => setDlSlotTime(e.target.value)}
+                      style={{ width: '100%', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.88rem' }}
+                    >
+                      <option value="09:30 AM - 11:00 AM (Batch 1)">09:30 AM - 11:00 AM (Batch 1)</option>
+                      <option value="11:00 AM - 12:30 PM (Batch 2)">11:00 AM - 12:30 PM (Batch 2)</option>
+                      <option value="02:00 PM - 03:30 PM (Batch 3)">02:00 PM - 03:30 PM (Batch 3)</option>
+                      <option value="03:30 PM - 05:00 PM (Batch 4)">03:30 PM - 05:00 PM (Batch 4)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={dlLoading}
+                  style={{
+                    background: '#2563EB',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    padding: '0.8rem',
+                    borderRadius: '8px',
+                    fontWeight: 700,
+                    cursor: dlLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    fontSize: '0.9rem'
+                  }}
+                >
+                  <Car size={16} />
+                  <span>{dlLoading ? 'Reserving Test Slot at RTO...' : 'Book Driving Test Slot & Generate Slip (₹450)'}</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Test Slot Admit Card Preview */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                  Sarathi RTO Driving Test Appointment Slip
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                  MoRTH Parivahan Sewa • Automated Track Test Admit Card
+                </p>
+
+                {dlReceipt ? (
+                  <div style={{
+                    background: '#EFF6FF',
+                    borderRadius: '16px',
+                    border: '2px solid #2563EB',
+                    padding: '1.25rem',
+                    boxShadow: '0 10px 25px rgba(37, 99, 235, 0.12)'
+                  }}>
+                    <div style={{ borderBottom: '1.5px dashed #93C5FD', paddingBottom: '0.75rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <div style={{ fontSize: '0.7rem', color: '#1E40AF', fontWeight: 700, textTransform: 'uppercase' }}>APPLICATION NUMBER</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#1E3A8A', fontFamily: 'monospace' }}>{dlReceipt.appNo}</div>
+                      </div>
+                      <span style={{ background: '#DCFCE7', color: '#166534', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800 }}>
+                        ✓ {dlReceipt.status}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.65rem', fontSize: '0.8rem', marginBottom: '0.75rem' }}>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Citizen Name:</div>
+                        <div style={{ fontWeight: 800, color: '#0F172A' }}>{dlReceipt.applicantName}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Vehicle Class:</div>
+                        <div style={{ fontWeight: 700, color: '#2563EB' }}>{dlReceipt.cov}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>RTO Office:</div>
+                        <div style={{ fontWeight: 700, color: '#0F172A' }}>{dlReceipt.rto}</div>
+                      </div>
+                      <div>
+                        <div style={{ color: '#64748B' }}>Appointment Date:</div>
+                        <div style={{ fontWeight: 800, color: '#16A34A' }}>{dlReceipt.slotDate}</div>
+                      </div>
+                      <div style={{ gridColumn: 'span 2' }}>
+                        <div style={{ color: '#64748B' }}>Batch & Time Window:</div>
+                        <div style={{ fontWeight: 700, color: '#D97706' }}>{dlReceipt.slotTime}</div>
+                      </div>
+                    </div>
+
+                    <div style={{ borderTop: '1.5px dashed #93C5FD', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.72rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#16A34A', fontWeight: 700 }}>
+                        <CheckCircle2 size={15} />
+                        <span>Commission: +₹{dlReceipt.vleCommission}.00 credited</span>
+                      </div>
+                      <div style={{ color: '#64748B' }}>
+                        Token: {dlReceipt.trackingId}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#94A3B8' }}>
+                    <Car size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
+                    <p style={{ margin: 0, fontSize: '0.85rem' }}>
+                      Fill applicant details and pick preferred RTO date to lock driving test appointment.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {dlReceipt && (
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem' }}>
+                  <button
+                    onClick={() => window.print()}
+                    style={{
+                      flex: 1,
+                      background: '#2563EB',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.65rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.4rem'
+                    }}
+                  >
+                    <Printer size={15} />
+                    <span>Print RTO Admit Card</span>
+                  </button>
+                  <button
+                    onClick={() => alert(`Downloading Sarathi DL Admit Card for Application ${dlReceipt.appNo}...`)}
                     style={{
                       background: '#F1F5F9',
                       color: '#334155',
@@ -5919,6 +6447,309 @@ export const DigitalSevaPortal: React.FC = () => {
                   </p>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: RATE & MARGIN MANAGER (INCREASE / DECREASE SERVICE PRICES & COMMISSIONS) */}
+        {activeTab === 'rates' && (
+          <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <SlidersHorizontal size={22} color="#16A34A" />
+                  Service Rate & Margin Control Center
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0.25rem 0 0' }}>
+                  Dynamically adjust citizen selling prices, operator margins, and government statutory fee slabs across all services.
+                </p>
+              </div>
+              <div style={{ background: '#DCFCE7', color: '#166534', padding: '0.35rem 0.75rem', borderRadius: '8px', fontSize: '0.78rem', fontWeight: 700 }}>
+                Total Active Services: {servicePriceCatalog.length}
+              </div>
+            </div>
+
+            {selectedServiceToEdit && (
+              <div style={{ background: '#F8FAFC', border: '2px solid #16A34A', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    Editing Rates for: <span style={{ color: '#16A34A' }}>{selectedServiceToEdit.title}</span>
+                  </h4>
+                  <button
+                    onClick={() => setSelectedServiceToEdit(null)}
+                    style={{ background: 'none', border: 'none', color: '#64748B', cursor: 'pointer', fontWeight: 700 }}
+                  >
+                    ✕ Cancel
+                  </button>
+                </div>
+
+                <form onSubmit={handleSaveRates} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', alignItems: 'flex-end' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      Citizen Retail Price (₹)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={editPrice}
+                      onChange={(e) => setEditPrice(Number(e.target.value))}
+                      style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', fontWeight: 700 }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      Operator Margin / Comm (₹)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      min={0}
+                      value={editComm}
+                      onChange={(e) => setEditComm(Number(e.target.value))}
+                      style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', fontWeight: 700, color: '#16A34A' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '0.3rem' }}>
+                      Statutory Govt Fee (₹)
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={editGovtFee}
+                      onChange={(e) => setEditGovtFee(Number(e.target.value))}
+                      style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.9rem', fontWeight: 700 }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isUpdatingRates}
+                    style={{
+                      background: '#16A34A',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      padding: '0.65rem 1rem',
+                      borderRadius: '8px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    {isUpdatingRates ? 'Saving Rates...' : 'Save & Publish Rates ➔'}
+                  </button>
+                </form>
+              </div>
+            )}
+
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.82rem' }}>
+                <thead>
+                  <tr style={{ background: '#F8FAFC', color: '#475569', textAlign: 'left', borderBottom: '1px solid #E2E8F0' }}>
+                    <th style={{ padding: '0.65rem 0.8rem' }}>Service ID & Title</th>
+                    <th style={{ padding: '0.65rem 0.8rem' }}>Category</th>
+                    <th style={{ padding: '0.65rem 0.8rem' }}>Retail Price</th>
+                    <th style={{ padding: '0.65rem 0.8rem' }}>VLE Margin</th>
+                    <th style={{ padding: '0.65rem 0.8rem' }}>Govt Fee</th>
+                    <th style={{ padding: '0.65rem 0.8rem', textAlign: 'right' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {servicePriceCatalog.map((s: any, idx: number) => {
+                    const currentPrice = Number(s.price ?? s.basePrice ?? 150);
+                    const currentComm = Number(s.commissionRate ?? 50);
+                    const currentGovtFee = Number(s.govtFee ?? (currentPrice - currentComm));
+                    return (
+                      <tr key={s.id || idx} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                        <td style={{ padding: '0.65rem 0.8rem' }}>
+                          <div style={{ fontWeight: 700, color: '#0F172A' }}>{s.title}</div>
+                          <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{s.id}</div>
+                        </td>
+                        <td style={{ padding: '0.65rem 0.8rem' }}>
+                          <span style={{ background: '#EFF6FF', color: '#1D4ED8', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', textTransform: 'capitalize' }}>
+                            {s.category || 'General'}
+                          </span>
+                        </td>
+                        <td style={{ padding: '0.65rem 0.8rem', fontWeight: 800, color: '#0F172A' }}>
+                          ₹{currentPrice}
+                        </td>
+                        <td style={{ padding: '0.65rem 0.8rem', fontWeight: 800, color: '#16A34A' }}>
+                          +₹{currentComm}
+                        </td>
+                        <td style={{ padding: '0.65rem 0.8rem', color: '#64748B' }}>
+                          ₹{currentGovtFee}
+                        </td>
+                        <td style={{ padding: '0.65rem 0.8rem', textAlign: 'right' }}>
+                          <button
+                            onClick={() => {
+                              setSelectedServiceToEdit(s);
+                              setEditPrice(currentPrice);
+                              setEditComm(currentComm);
+                              setEditGovtFee(currentGovtFee);
+                            }}
+                            style={{
+                              background: '#F1F5F9',
+                              border: '1px solid #CBD5E1',
+                              padding: '0.35rem 0.75rem',
+                              borderRadius: '6px',
+                              fontWeight: 700,
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                              color: '#0F172A'
+                            }}
+                          >
+                            ⚙️ Adjust Slabs
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: HRMS EMPLOYEE & STAFF DIRECTORY CONTROL */}
+        {activeTab === 'hrms' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* Employee List */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Users size={20} color="#3B82F6" />
+                    Center Staff & Operators ({employeesList.length})
+                  </h3>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                    Manage salary, roles, biometric attendance, and staff access permissions.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {employeesList.map((emp) => (
+                  <div key={emp.id} style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                      <span style={{ fontWeight: 800, color: '#0F172A', fontSize: '0.9rem' }}>{emp.name} ({emp.id})</span>
+                      <span style={{
+                        background: emp.attendanceStatus === 'Present' ? '#DCFCE7' : '#FEE2E2',
+                        color: emp.attendanceStatus === 'Present' ? '#166534' : '#991B1B',
+                        padding: '0.15rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.68rem',
+                        fontWeight: 800
+                      }}>
+                        {emp.attendanceStatus || 'Active'}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '0.4rem' }}>
+                      Phone: {emp.phone} • Dept: {emp.department}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#16A34A' }}>
+                        Salary: ₹{emp.salary ? emp.salary.toLocaleString('en-IN') : '18,000'} / mo
+                      </span>
+                      <button
+                        onClick={() => handleDeleteEmployee(emp.id, emp.name)}
+                        style={{ background: '#FEE2E2', color: '#DC2626', border: 'none', padding: '0.2rem 0.55rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Register Employee Form */}
+            <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
+                Onboard New Center Employee
+              </h3>
+              <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0 0 1.25rem' }}>
+                Deploy front-desk operators, customer support agents, and verification specialists.
+              </p>
+
+              <form onSubmit={handleCreateEmployee} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                    Staff Full Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newEmpName}
+                    onChange={(e) => setNewEmpName(e.target.value)}
+                    placeholder="e.g. Shalini Mishra"
+                    style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                    Mobile Number *
+                  </label>
+                  <input
+                    type="tel"
+                    required
+                    value={newEmpPhone}
+                    onChange={(e) => setNewEmpPhone(e.target.value)}
+                    placeholder="+91 98765 43210"
+                    style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                  />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                      Designated Role
+                    </label>
+                    <select
+                      value={newEmpRole}
+                      onChange={(e) => setNewEmpRole(e.target.value)}
+                      style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                    >
+                      <option value="Portal Operator">Portal Operator</option>
+                      <option value="Senior Verification Officer">Senior Verification Officer</option>
+                      <option value="Banking & AEPS Specialist">Banking & AEPS Specialist</option>
+                      <option value="Customer Desk Lead">Customer Desk Lead</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#334155', marginBottom: '0.25rem' }}>
+                      Monthly Salary (₹)
+                    </label>
+                    <input
+                      type="number"
+                      value={newEmpSalary}
+                      onChange={(e) => setNewEmpSalary(Number(e.target.value))}
+                      style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isCreatingEmp}
+                  style={{
+                    marginTop: '0.5rem',
+                    background: '#0F172A',
+                    color: '#34D399',
+                    border: 'none',
+                    padding: '0.7rem',
+                    borderRadius: '8px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    fontSize: '0.88rem'
+                  }}
+                >
+                  {isCreatingEmp ? 'Registering Staff...' : 'Onboard & Issue Staff ID ➔'}
+                </button>
+              </form>
             </div>
           </div>
         )}
