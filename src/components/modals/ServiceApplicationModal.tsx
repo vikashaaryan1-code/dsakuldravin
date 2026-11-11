@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
@@ -41,11 +41,26 @@ export const ServiceApplicationModal: React.FC = () => {
   const [scrutinyResult, setScrutinyResult] = useState<{ isValid: boolean; reason: string } | null>(null);
   const [isScrutinizing, setIsScrutinizing] = useState(false);
   const [isOCRValidating, setIsOCRValidating] = useState(false);
+  const [isDigiLockerFetching, setIsDigiLockerFetching] = useState(false);
   const [ocrScore, setOcrScore] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'wallet'>('upi');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedAppId, setGeneratedAppId] = useState<string | null>(null);
   const [showPrintSlip, setShowPrintSlip] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsApplyModalOpen(false);
+        setStep(1);
+        setGeneratedAppId(null);
+      }
+    };
+    if (isApplyModalOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isApplyModalOpen, setIsApplyModalOpen]);
 
   if (!isApplyModalOpen || !selectedServiceForApply) return null;
 
@@ -77,6 +92,15 @@ export const ServiceApplicationModal: React.FC = () => {
       setOcrScore(Math.floor(95 + Math.random() * 5));
       setIsOCRValidating(false);
     }, 600);
+  };
+
+  const handleDigiLockerFetch = (docName: string) => {
+    setIsDigiLockerFetching(true);
+    setTimeout(() => {
+      setUploadedFiles(prev => [...prev, `${docName.replace(/\s+/g, '_')}_DigiLocker_Verified.xml`]);
+      setOcrScore(99);
+      setIsDigiLockerFetching(false);
+    }, 700);
   };
 
   const handleConfirmAndPay = () => {
@@ -115,19 +139,22 @@ export const ServiceApplicationModal: React.FC = () => {
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(10, 25, 47, 0.72)',
-      backdropFilter: 'blur(8px)',
-      WebkitBackdropFilter: 'blur(8px)',
-      zIndex: 9999,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1.5rem',
-      animation: 'fadeIn 0.2s ease-out',
-    }}>
+    <div 
+      onClick={closeModal}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(10, 25, 47, 0.72)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1.5rem',
+        animation: 'fadeIn 0.2s ease-out',
+      }}
+    >
       <div 
         style={{
           width: '100%',
@@ -162,8 +189,26 @@ export const ServiceApplicationModal: React.FC = () => {
             </h3>
           </div>
 
-          <button onClick={closeModal} style={{ padding: '0.4rem', color: '#64748B' }}>
-            <X size={20} />
+          <button 
+            type="button"
+            onClick={closeModal} 
+            className="btn-outline" 
+            style={{ 
+              padding: '0.4rem 0.75rem', 
+              color: '#475569', 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '6px',
+              fontSize: '0.82rem',
+              borderRadius: '8px',
+              border: '1px solid #CBD5E1',
+              background: '#FFFFFF',
+              cursor: 'pointer'
+            }}
+            title="Press Esc or click to close"
+          >
+            <X size={16} />
+            <span>बंद करें / Close</span>
           </button>
         </div>
 
@@ -290,14 +335,25 @@ export const ServiceApplicationModal: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => setStep(2)}
-                className="btn-primary btn-lg"
-                style={{ width: '100%', marginTop: '0.5rem' }}
-              >
-                <span>Continue to Document Checklist</span>
-                <ArrowRight size={16} />
-              </button>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="btn-secondary"
+                  style={{ flex: 1 }}
+                >
+                  रद्द करें / Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStep(2)}
+                  className="btn-primary btn-lg"
+                  style={{ flex: 2 }}
+                >
+                  <span>Continue to Document Checklist</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
             </div>
           )}
 
@@ -414,25 +470,55 @@ export const ServiceApplicationModal: React.FC = () => {
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => handleSimulatedUpload(doc)}
-                        disabled={isUploaded || isOCRValidating}
-                        style={{
-                          padding: '0.4rem 0.8rem',
-                          borderRadius: '8px',
-                          background: isUploaded ? '#10B981' : '#1D4ED8',
-                          color: '#FFFFFF',
-                          fontWeight: 600,
-                          fontSize: '0.78rem',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.35rem',
-                          opacity: isOCRValidating ? 0.6 : 1,
-                        }}
-                      >
-                        <UploadCloud size={14} />
-                        <span>{isUploaded ? 'Verified' : 'Upload & Scan'}</span>
-                      </button>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleSimulatedUpload(doc)}
+                          disabled={isUploaded || isOCRValidating || isDigiLockerFetching}
+                          style={{
+                            padding: '0.4rem 0.7rem',
+                            borderRadius: '8px',
+                            background: isUploaded ? '#10B981' : '#1D4ED8',
+                            color: '#FFFFFF',
+                            fontWeight: 600,
+                            fontSize: '0.76rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            opacity: (isOCRValidating || isDigiLockerFetching) ? 0.6 : 1,
+                            cursor: isUploaded ? 'default' : 'pointer',
+                            border: 'none',
+                          }}
+                          title="Option A: Direct upload with Quantum OCR"
+                        >
+                          <UploadCloud size={13} />
+                          <span>{isUploaded ? 'Verified' : 'Upload & Scan (Opt A)'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDigiLockerFetch(doc)}
+                          disabled={isUploaded || isOCRValidating || isDigiLockerFetching}
+                          style={{
+                            padding: '0.4rem 0.7rem',
+                            borderRadius: '8px',
+                            background: isUploaded ? '#F1F5F9' : '#047857',
+                            color: isUploaded ? '#64748B' : '#FFFFFF',
+                            fontWeight: 600,
+                            fontSize: '0.76rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            opacity: (isOCRValidating || isDigiLockerFetching) ? 0.6 : 1,
+                            cursor: isUploaded ? 'default' : 'pointer',
+                            border: isUploaded ? '1px solid #CBD5E1' : 'none',
+                          }}
+                          title="Option B: Consent-based DigiLocker retrieval"
+                        >
+                          <Sparkles size={13} />
+                          <span>DigiLocker (Opt B)</span>
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
@@ -452,6 +538,23 @@ export const ServiceApplicationModal: React.FC = () => {
                 }}>
                   <Sparkles size={16} className="animate-pulse-glow" />
                   <span>Quantum AI Scanning: Checking tamper signatures & OCR name consistency...</span>
+                </div>
+              )}
+
+              {isDigiLockerFetching && (
+                <div style={{
+                  padding: '0.75rem',
+                  borderRadius: '10px',
+                  background: '#ECFDF5',
+                  border: '1px solid #A7F3D0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '0.82rem',
+                  color: '#047857',
+                }}>
+                  <ShieldCheck size={16} className="animate-pulse-glow" />
+                  <span>DigiLocker Gateway: Fetching citizen consent-verified document payload with PKI signature...</span>
                 </div>
               )}
 
