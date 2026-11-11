@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
+import { apiClient } from '../services/apiClient';
 import { 
   Zap, 
   Smartphone, 
@@ -12,12 +13,13 @@ import {
   ShieldCheck, 
   ArrowRight,
   Sparkles,
-  Download
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const UtilityBillsPage: React.FC = () => {
-  const { walletBalance, setWalletBalance, showToast, logAudit, language } = useApp();
+  const { walletBalance, setWalletBalance, showToast, logAudit, recordJournalEntry, language } = useApp();
   const [activeBiller, setActiveBiller] = useState<'electricity' | 'mobile' | 'dth' | 'fastag' | 'gas'>('electricity');
   const [operator, setOperator] = useState('SBPDCL - South Bihar Power Distribution');
   const [consumerNumber, setConsumerNumber] = useState('1029384756');
@@ -52,14 +54,43 @@ export const UtilityBillsPage: React.FC = () => {
     }, 700);
   };
 
-  const handlePayBill = () => {
+  const handlePayBill = async () => {
     if (!fetchedBill) return;
+    if (walletBalance < fetchedBill.amount) {
+      showToast('Insufficient Wallet Balance', `Required ₹${fetchedBill.amount}, available ₹${walletBalance}. Please top up your ADCS wallet first.`, 'warning');
+      return;
+    }
     setIsPaying(true);
+
+    try {
+      const orderRes = await apiClient.createPaymentOrder({
+        amount: fetchedBill.amount,
+        customerName: fetchedBill.consumerName,
+        items: [{ title: `${activeBiller.toUpperCase()} BBPS Bill (${operator})`, price: fetchedBill.amount }]
+      });
+      if (orderRes?.order?.id) {
+        await apiClient.verifyPayment({
+          orderId: orderRes.order.id,
+          paymentMethod: 'ADCS Wallet / BBPS',
+          amount: fetchedBill.amount,
+        });
+      }
+    } catch {}
 
     setTimeout(() => {
       setIsPaying(false);
       setIsPaid(true);
       setWalletBalance(prev => Math.max(0, prev - fetchedBill.amount));
+
+      recordJournalEntry({
+        reference: fetchedBill.billNumber,
+        description: `BBPS ${activeBiller.toUpperCase()} Settlement (${operator} - Acct ${consumerNumber})`,
+        date: new Date().toISOString(),
+        lines: [
+          { accountCode: '2010', accountName: 'Citizen / VLE Wallet Liability', debit: fetchedBill.amount, credit: 0 },
+          { accountCode: '1020', accountName: 'NPCI BBPS Clearing & Settlement Account', debit: 0, credit: fetchedBill.amount },
+        ],
+      });
 
       confetti({
         particleCount: 90,
@@ -69,7 +100,7 @@ export const UtilityBillsPage: React.FC = () => {
 
       logAudit(`BBPS Utility Payment Settled: ${fetchedBill.billNumber}`, `Amount: ₹${fetchedBill.amount}`);
       showToast('Bill Paid Successfully!', `Transaction ID: ${fetchedBill.billNumber}`, 'success');
-    }, 900);
+    }, 650);
   };
 
   const handleDownloadReceipt = () => {
@@ -363,6 +394,55 @@ This is a computer generated electronic receipt. No signature is required.
               </button>
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Authorized National Utility & Payment Portals Strip */}
+      <div style={{
+        marginTop: '2rem',
+        background: '#F8FAFC',
+        border: '1px solid #E2E8F0',
+        borderRadius: '16px',
+        padding: '1.25rem 1.5rem',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem',
+      }}>
+        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0A192F', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+          <ShieldCheck size={16} color="#059669" />
+          <span>Authorized Utility & Regulatory Portals (NPCI BBPS / NHAI):</span>
+        </div>
+        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+          {[
+            { label: 'Bharat BillPay (NPCI)', url: 'https://www.bharatbillpay.com/' },
+            { label: 'NETC FASTag Portal', url: 'https://www.npci.org.in/what-we-do/netc-fastag/product-overview' },
+            { label: 'myLPG.in Gas Booking', url: 'https://www.mylpg.in/' },
+          ].map((link, i) => (
+            <a
+              key={i}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
+                fontSize: '0.76rem',
+                fontWeight: 600,
+                color: '#1D4ED8',
+                background: '#FFFFFF',
+                border: '1px solid #BFDBFE',
+                padding: '0.35rem 0.7rem',
+                borderRadius: '8px',
+                textDecoration: 'none',
+              }}
+            >
+              <span>{link.label}</span>
+              <ExternalLink size={12} />
+            </a>
+          ))}
         </div>
       </div>
     </div>

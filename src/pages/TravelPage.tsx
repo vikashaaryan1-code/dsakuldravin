@@ -13,12 +13,45 @@ import {
   CheckCircle2, 
   Clock, 
   ShieldCheck,
-  Ticket
+  Ticket,
+  Download
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
+const ITINERARIES_BY_MODE: Record<'flights' | 'trains' | 'buses' | 'hotels', Array<{
+  id: string;
+  carrier: string;
+  departure: string;
+  arrival: string;
+  duration: string;
+  stops: string;
+  price: number;
+  seatsLeft: number;
+}>> = {
+  flights: [
+    { id: 'FLT-101', carrier: 'IndiGo 6E-2412', departure: '08:45 AM', arrival: '10:30 AM', duration: '1h 45m', stops: 'Non-stop', price: 4850, seatsLeft: 4 },
+    { id: 'FLT-102', carrier: 'Air India AI-410', departure: '02:15 PM', arrival: '04:05 PM', duration: '1h 50m', stops: 'Non-stop', price: 5200, seatsLeft: 7 },
+    { id: 'FLT-103', carrier: 'Akasa Air QP-1421', departure: '06:30 PM', arrival: '08:20 PM', duration: '1h 50m', stops: 'Non-stop', price: 4590, seatsLeft: 3 },
+  ],
+  trains: [
+    { id: 'TRN-201', carrier: '12309 Tejas Rajdhani Express (3AC)', departure: '07:10 PM', arrival: '07:40 AM', duration: '12h 30m', stops: 'DDU • PRYJ • CNB', price: 2145, seatsLeft: 6 },
+    { id: 'TRN-202', carrier: '12393 Sampoorna Kranti SF (2AC)', departure: '07:25 PM', arrival: '07:55 AM', duration: '12h 30m', stops: 'DDU • CNB', price: 2680, seatsLeft: 3 },
+    { id: 'TRN-203', carrier: '22347 Vande Bharat Executive (EC)', departure: '06:00 AM', arrival: '01:50 PM', duration: '7h 50m', stops: 'Limited Halts', price: 1890, seatsLeft: 9 },
+  ],
+  buses: [
+    { id: 'BUS-301', carrier: 'Zingbus AC Sleeper (2+1 Volvo)', departure: '08:30 PM', arrival: '09:15 AM', duration: '12h 45m', stops: 'Lucknow Bypass', price: 1450, seatsLeft: 5 },
+    { id: 'BUS-302', carrier: 'IntrCity SmartBus Multi-Axle', departure: '09:45 PM', arrival: '10:30 AM', duration: '12h 45m', stops: 'Express Highway', price: 1320, seatsLeft: 8 },
+    { id: 'BUS-303', carrier: 'BSRTC Deluxe AC Seater', departure: '07:00 AM', arrival: '06:45 PM', duration: '11h 45m', stops: 'Direct Route', price: 980, seatsLeft: 12 },
+  ],
+  hotels: [
+    { id: 'HTL-401', carrier: 'Lemon Tree Premier • Deluxe Twin', departure: '12:00 PM', arrival: '11:00 AM', duration: '1 Night', stops: 'Breakfast Included • Free WiFi', price: 3650, seatsLeft: 4 },
+    { id: 'HTL-402', carrier: 'Ginger Business Hotel • Executive', departure: '01:00 PM', arrival: '11:00 AM', duration: '1 Night', stops: 'City Center • GST Invoice Ready', price: 2490, seatsLeft: 6 },
+    { id: 'HTL-403', carrier: 'Taj City Centre • Superior Room', departure: '02:00 PM', arrival: '12:00 PM', duration: '1 Night', stops: 'Airport Pickup Available', price: 7800, seatsLeft: 2 },
+  ],
+};
+
 export const TravelPage: React.FC = () => {
-  const { showToast, logAudit, language } = useApp();
+  const { showToast, logAudit, recordJournalEntry, language } = useApp();
   const [activeMode, setActiveMode] = useState<'flights' | 'trains' | 'buses' | 'hotels'>('flights');
   const [fromCity, setFromCity] = useState('Patna (PAT)');
   const [toCity, setToCity] = useState('New Delhi (DEL)');
@@ -27,55 +60,63 @@ export const TravelPage: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [bookingConfirmed, setBookingConfirmed] = useState<any | null>(null);
 
-  const mockItineraries = [
-    {
-      id: 'ITN-101',
-      carrier: 'IndiGo 6E-2412',
-      departure: '08:45 AM',
-      arrival: '10:30 AM',
-      duration: '1h 45m',
-      stops: 'Non-stop',
-      price: 4850,
-      seatsLeft: 4,
-    },
-    {
-      id: 'ITN-102',
-      carrier: 'Air India AI-410',
-      departure: '02:15 PM',
-      arrival: '04:05 PM',
-      duration: '1h 50m',
-      stops: 'Non-stop',
-      price: 5200,
-      seatsLeft: 7,
-    },
-    {
-      id: 'ITN-103',
-      carrier: 'Vistara UK-718',
-      departure: '06:30 PM',
-      arrival: '08:20 PM',
-      duration: '1h 50m',
-      stops: 'Non-stop',
-      price: 5650,
-      seatsLeft: 2,
-    }
-  ];
+  const activeItineraries = ITINERARIES_BY_MODE[activeMode];
 
-  const handleBook = (itinerary: typeof mockItineraries[0]) => {
+  const handleBook = (itinerary: typeof activeItineraries[0]) => {
     const pnr = 'AD' + Math.floor(100000 + Math.random() * 900000);
+    const totalPaid = itinerary.price * passengers;
     const booking = {
       pnr,
+      mode: activeMode.toUpperCase(),
       carrier: itinerary.carrier,
       from: fromCity,
       to: toCity,
       date: travelDate,
       passengers,
-      totalPaid: itinerary.price * passengers,
+      totalPaid,
     };
+
+    recordJournalEntry({
+      reference: pnr,
+      description: `Travel Booking (${activeMode.toUpperCase()}): ${itinerary.carrier} (${fromCity} -> ${toCity})`,
+      date: new Date().toISOString(),
+      lines: [
+        { accountCode: '1010', accountName: 'ADCS Settlement Clearing Account', debit: totalPaid, credit: 0 },
+        { accountCode: '4020', accountName: 'Travel & Ticketing Facilitation Revenue', debit: 0, credit: totalPaid },
+      ],
+    });
 
     setBookingConfirmed(booking);
     confetti({ particleCount: 80, spread: 60 });
     logAudit(`Travel Ticket Booked: PNR ${pnr}`, `${itinerary.carrier} (${fromCity} to ${toCity})`);
-    showToast('Travel Ticket Confirmed!', `PNR: ${pnr}. E-Ticket sent to your phone and email.`, 'success');
+    showToast('Travel Ticket Confirmed!', `PNR: ${pnr}. E-Ticket generated and logged.`, 'success');
+  };
+
+  const handleDownloadTicket = () => {
+    if (!bookingConfirmed) return;
+    const content = `================================================================================
+AKUL DRAVIN DIGITAL SERVICES (ADCS) - ELECTRONIC TRAVEL VOUCHER
+================================================================================
+PNR / Confirmation Ref : ${bookingConfirmed.pnr}
+Travel Mode            : ${bookingConfirmed.mode}
+Carrier / Property     : ${bookingConfirmed.carrier}
+Sector                 : ${bookingConfirmed.from} -> ${bookingConfirmed.to}
+Travel / Check-in Date : ${bookingConfirmed.date}
+Passengers / Guests    : ${bookingConfirmed.passengers}
+Total Amount Paid      : ₹${bookingConfirmed.totalPaid.toLocaleString('en-IN')}.00
+Issue Timestamp        : ${new Date().toLocaleString('en-IN')}
+================================================================================
+Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
+================================================================================`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_ETicket_${bookingConfirmed.pnr}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -343,16 +384,25 @@ export const TravelPage: React.FC = () => {
               </div>
             </div>
 
-            <button
-              onClick={() => setBookingConfirmed(null)}
-              className="btn-secondary"
-            >
-              Search More Itineraries
-            </button>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={handleDownloadTicket}
+                className="btn-primary"
+              >
+                <Download size={15} />
+                <span>Download E-Ticket Voucher</span>
+              </button>
+              <button
+                onClick={() => setBookingConfirmed(null)}
+                className="btn-secondary"
+              >
+                Search More Itineraries
+              </button>
+            </div>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {mockItineraries.map(itn => (
+            {activeItineraries.map(itn => (
               <div
                 key={itn.id}
                 style={{
