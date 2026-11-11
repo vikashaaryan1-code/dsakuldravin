@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { ServiceCard } from '../components/cards/ServiceCard';
 import { 
@@ -117,6 +118,96 @@ export const GovernmentServicesPage: React.FC = () => {
             <strong>Statutory Transparency:</strong> Akul Dravin Digital Services provides technical guidance and assisted application facilitation. We are not a government body. All statutory decisions and approvals belong solely to the respective competent government authorities.
           </span>
         </div>
+      </div>
+
+      {/* Direct Studio Quick Launch Toolbar */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.75rem',
+        flexWrap: 'wrap',
+        marginBottom: '1.5rem',
+        background: '#F8FAFC',
+        padding: '0.75rem 1rem',
+        borderRadius: '12px',
+        border: '1px solid #E2E8F0',
+        fontSize: '0.82rem'
+      }}>
+        <span style={{ fontWeight: 800, color: '#0A192F', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+          <Sparkles size={16} color="#F59E0B" />
+          <span>Direct Access Engines:</span>
+        </span>
+        <Link
+          to="/pan"
+          style={{
+            background: '#1D4ED8',
+            color: '#FFFFFF',
+            padding: '0.35rem 0.75rem',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem',
+            boxShadow: '0 2px 6px rgba(29, 78, 216, 0.2)'
+          }}
+        >
+          <CreditCard size={14} />
+          <span>PAN Card Form 49A Studio (UTIITSL / Protean)</span>
+        </Link>
+        <Link
+          to="/digitalseva"
+          style={{
+            background: '#047857',
+            color: '#FFFFFF',
+            padding: '0.35rem 0.75rem',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem'
+          }}
+        >
+          <Landmark size={14} />
+          <span>ADCS Operator Console (VLE)</span>
+        </Link>
+        <Link
+          to="/documents"
+          style={{
+            background: '#FFFFFF',
+            color: '#334155',
+            border: '1px solid #CBD5E1',
+            padding: '0.35rem 0.75rem',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem'
+          }}
+        >
+          <FileText size={14} />
+          <span>Customer DigiLocker Vault</span>
+        </Link>
+        <Link
+          to="/track"
+          style={{
+            background: '#FFFFFF',
+            color: '#334155',
+            border: '1px solid #CBD5E1',
+            padding: '0.35rem 0.75rem',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.35rem'
+          }}
+        >
+          <Search size={14} />
+          <span>Track Application Status</span>
+        </Link>
       </div>
 
       {/* Subcategory Filter Tabs & Search */}
