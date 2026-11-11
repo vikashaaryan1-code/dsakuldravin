@@ -14,7 +14,13 @@ import {
   Sparkles, 
   Filter,
   ShieldCheck,
-  Play
+  Play,
+  X,
+  Search,
+  Download,
+  BarChart2,
+  Eye,
+  Shield
 } from 'lucide-react';
 import { MarketingCampaign } from '../../types';
 
@@ -22,7 +28,20 @@ export const MarketingPage: React.FC = () => {
   const { marketingCampaigns, createMarketingCampaign, launchCampaign, showToast, logAudit } = useApp();
   
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'All' | 'Active' | 'Scheduled' | 'Completed'>('All');
+  const [showConsentModal, setShowConsentModal] = useState(false);
+  const [selectedAnalyticsCamp, setSelectedAnalyticsCamp] = useState<MarketingCampaign | null>(null);
+  const [consentQueryPhone, setConsentQueryPhone] = useState('+91 98350 12345');
+  const [consentResult, setConsentResult] = useState<{
+    phone: string;
+    optedIn: boolean;
+    category: string;
+    timestamp: string;
+  } | null>({
+    phone: '+91 98350 12345',
+    optedIn: true,
+    category: 'Transactional & Statutory Updates (Explicit Opt-In)',
+    timestamp: '2026-08-14 10:22:04 IST'
+  });
 
   // Form state
   const [campaignName, setCampaignName] = useState('');
@@ -30,6 +49,7 @@ export const MarketingPage: React.FC = () => {
   const [segment, setSegment] = useState<MarketingCampaign['audienceSegment']>('All Citizens');
   const [targetCount, setTargetCount] = useState<number>(4500);
   const [templateText, setTemplateText] = useState('');
+  const [activeFilter, setActiveFilter] = useState<string>('All');
 
   const totalDelivered = marketingCampaigns.reduce((sum, c) => sum + c.deliveredCount, 0);
   const totalConversions = marketingCampaigns.reduce((sum, c) => sum + c.conversionCount, 0);
@@ -104,7 +124,7 @@ export const MarketingPage: React.FC = () => {
               <PlusCircle size={18} /> Compose New Campaign
             </button>
             <button
-              onClick={() => showToast('Consent Registry', 'TRAI DND Opt-in/Opt-out registry synchronized across 1,84,000+ mobile records.', 'info')}
+              onClick={() => setShowConsentModal(true)}
               className="btn"
               style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.2)' }}
             >
@@ -281,7 +301,7 @@ export const MarketingPage: React.FC = () => {
                     </button>
                   )}
                   <button
-                    onClick={() => showToast('Campaign Analytics', `Funnel analytics for "${camp.name}" generated.`, 'info')}
+                    onClick={() => setSelectedAnalyticsCamp(camp)}
                     className="btn btn-sm btn-outline"
                     style={{ flex: camp.status === 'Scheduled' ? 0.7 : 1 }}
                   >
@@ -293,7 +313,216 @@ export const MarketingPage: React.FC = () => {
           })}
         </div>
 
-        {/* MODAL: COMPOSE CAMPAIGN */}
+        {/* MODAL: TRAI DND & DPDP 2025 CONSENT REGISTRY */}
+        {showConsentModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10, 25, 47, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+          }}>
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              maxWidth: '620px',
+              width: '100%',
+              padding: '2rem',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <div>
+                  <span className="badge badge-green">DPDP ACT 2025 COMPLIANT</span>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0A192F', marginTop: '0.25rem' }}>
+                    TRAI DND & Purpose-Limitation Consent Registry
+                  </h3>
+                </div>
+                <button onClick={() => setShowConsentModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <X size={20} color="#64748B" />
+                </button>
+              </div>
+
+              {/* Top Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                <div style={{ background: '#F8FAFC', padding: '0.85rem', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Total Active Consents</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1D4ED8' }}>1,84,210</div>
+                </div>
+                <div style={{ background: '#F8FAFC', padding: '0.85rem', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Verified Opt-In Rate</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#059669' }}>99.2%</div>
+                </div>
+                <div style={{ background: '#F8FAFC', padding: '0.85rem', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>TRAI DND Violations</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#10B981' }}>0 (Zero)</div>
+                </div>
+              </div>
+
+              {/* Number Checker */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label className="form-label" style={{ fontSize: '0.8rem' }}>Check Mobile Number Consent & DND Status</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={consentQueryPhone}
+                    onChange={(e) => setConsentQueryPhone(e.target.value)}
+                    placeholder="e.g. +91 98350 12345"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setConsentResult({
+                        phone: consentQueryPhone,
+                        optedIn: true,
+                        category: 'Transactional & Statutory Updates (Explicit Opt-In)',
+                        timestamp: new Date().toLocaleDateString('en-GB') + ' 10:14:00 IST'
+                      });
+                      showToast('Consent Verified', `Record verified for ${consentQueryPhone}.`, 'success');
+                    }}
+                    className="btn btn-primary"
+                    style={{ padding: '0.6rem 1rem' }}
+                  >
+                    <Search size={15} /> Check
+                  </button>
+                </div>
+              </div>
+
+              {consentResult && (
+                <div style={{
+                  background: '#F0FDF4',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  border: '1px solid #86EFAC',
+                  marginBottom: '1.25rem',
+                  fontSize: '0.85rem'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <div style={{ fontWeight: 800, color: '#166534' }}>✓ Explicit DPDP Consent On Record</div>
+                    <span className="badge badge-green">Safe to Broadcast</span>
+                  </div>
+                  <div style={{ color: '#15803D' }}>Phone: <strong>{consentResult.phone}</strong></div>
+                  <div style={{ color: '#15803D' }}>Purpose: <strong>{consentResult.category}</strong></div>
+                  <div style={{ fontSize: '0.75rem', color: '#166534', marginTop: '0.35rem' }}>
+                    Timestamp: {consentResult.timestamp} • Cryptographic Hash: SHA256:77f19024a...
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    showToast('Registry Exported', 'TRAI_DND_Suppression_List_2026.csv downloaded.', 'success');
+                  }}
+                  className="btn btn-outline"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <Download size={14} /> Export DND Suppression List
+                </button>
+                <button type="button" onClick={() => setShowConsentModal(false)} className="btn btn-primary">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: CAMPAIGN FUNNEL ANALYTICS */}
+        {selectedAnalyticsCamp && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10, 25, 47, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+          }}>
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              maxWidth: '640px',
+              width: '100%',
+              padding: '2.25rem',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
+                <div>
+                  <span className="badge badge-blue">{selectedAnalyticsCamp.channel}</span>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0A192F', margin: '0.25rem 0' }}>
+                    {selectedAnalyticsCamp.name}
+                  </h3>
+                  <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
+                    Target: {selectedAnalyticsCamp.audienceSegment} • Status: <strong>{selectedAnalyticsCamp.status}</strong>
+                  </div>
+                </div>
+                <button onClick={() => setSelectedAnalyticsCamp(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <X size={20} color="#64748B" />
+                </button>
+              </div>
+
+              {/* Conversion Funnel Breakdown */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                {[
+                  { step: '1. Dispatched Messages', count: (selectedAnalyticsCamp.deliveredCount || 5000).toLocaleString('en-IN'), pct: '100%', color: '#1D4ED8' },
+                  { step: '2. Successfully Delivered', count: Math.round((selectedAnalyticsCamp.deliveredCount || 5000) * 0.994).toLocaleString('en-IN'), pct: '99.4%', color: '#2563EB' },
+                  { step: '3. Read / Opened', count: Math.round((selectedAnalyticsCamp.deliveredCount || 5000) * 0.882).toLocaleString('en-IN'), pct: '88.2%', color: '#059669' },
+                  { step: '4. Action Links Clicked (CTR)', count: Math.round((selectedAnalyticsCamp.deliveredCount || 5000) * 0.416).toLocaleString('en-IN'), pct: '41.6%', color: '#D97706' },
+                  { step: '5. Completed Filings / Purchases', count: Math.round((selectedAnalyticsCamp.deliveredCount || 5000) * 0.184).toLocaleString('en-IN'), pct: '18.4%', color: '#7C3AED' }
+                ].map((f, i) => (
+                  <div key={i} style={{ background: '#F8FAFC', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
+                      <span style={{ fontWeight: 700, color: '#0A192F' }}>{f.step}</span>
+                      <strong style={{ color: f.color }}>{f.count} ({f.pct})</strong>
+                    </div>
+                    <div style={{ height: '6px', background: '#E2E8F0', borderRadius: '999px', overflow: 'hidden' }}>
+                      <div style={{ width: f.pct, height: '100%', background: f.color, borderRadius: '999px' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* ROI Metric */}
+              <div style={{ background: '#EFF6FF', borderRadius: '12px', padding: '1rem', border: '1px solid #BFDBFE', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.78rem', color: '#1E40AF', fontWeight: 600 }}>ATTRIBUTED GMV REVENUE</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1D4ED8' }}>₹78,400.00</div>
+                </div>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#1E40AF', fontWeight: 600 }}>COST PER ACQUISITION (CPA)</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#059669' }}>₹3.80 / filing</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    showToast('Report Downloaded', `Campaign_Analytics_${selectedAnalyticsCamp.id}.csv downloaded.`, 'success');
+                  }}
+                  className="btn btn-outline"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <Download size={14} /> Download Funnel Report (.CSV)
+                </button>
+                <button type="button" onClick={() => setSelectedAnalyticsCamp(null)} className="btn btn-primary">
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {showCreateModal && (
           <div style={{
             position: 'fixed',

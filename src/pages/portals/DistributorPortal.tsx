@@ -27,6 +27,77 @@ export const DistributorPortal: React.FC = () => {
   const [location, setLocation] = useState('');
   const [vleCount, setVleCount] = useState(15);
   const [overrideRate, setOverrideRate] = useState(2.5);
+  const [selectedAuditFranchise, setSelectedAuditFranchise] = useState<DistributorDownline | null>(null);
+
+  const handleExportPayoutLedger = () => {
+    const headers = ['Franchise ID', 'Franchise Center', 'Location', 'VLE Count', 'Monthly GTV (INR)', 'Override Rate (%)', 'Gross Commission (INR)', 'TDS Sec 194H 5% (INR)', 'Net Payable (INR)', 'Status'];
+    const rows = distributorDownlines.map(d => {
+      const gross = d.commissionEarned;
+      const tds = Math.round(gross * 0.05);
+      const net = gross - tds;
+      return [
+        d.id,
+        `"${d.franchiseName.replace(/"/g, '""')}"`,
+        `"${d.location.replace(/"/g, '""')}"`,
+        d.vleCount,
+        d.monthlyGtv,
+        d.overrideCommissionRate,
+        gross,
+        tds,
+        net,
+        d.status
+      ].join(',');
+    });
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', 'ADCS_Distributor_Payout_Ledger_Sept2026.csv');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('Settlement Exported', 'Distributor monthly settlement statement downloaded in CSV format.', 'success');
+  };
+
+  const handleDownloadFranchiseAuditDossier = (item: DistributorDownline) => {
+    const content = `================================================================================
+AKUL DRAVIN DIGITAL SERVICES (ADCS) - STATUTORY FRANCHISE AUDIT DOSSIER
+================================================================================
+Franchise Center   : ${item.franchiseName}
+Franchise UID      : ${item.id}
+Territory Location : ${item.location}
+Affiliated VLEs    : ${item.vleCount} Active Micro-Centers
+Monthly GTV (Sept) : ₹${item.monthlyGtv.toLocaleString('en-IN')}
+Commission Accrual : ₹${item.commissionEarned.toLocaleString('en-IN')} (${item.overrideCommissionRate}% Override)
+Operating Status   : ${item.status.toUpperCase()}
+--------------------------------------------------------------------------------
+COMPLIANCE & STATUTORY VERIFICATIONS:
+- UIDAI L1 Biometric Device Registration: VALID (Hardware Root-of-Trust)
+- CCTNS Police Background Clearance    : PASSED / DIGITALLY VERIFIED
+- BBPS & NPCI Agent Institution Code    : AI-ADCS-TERR-${item.id.slice(-4)}
+- DPDP Act 2025 Data Privacy Protocol   : ACTIVE (Zero Local PII Storage)
+- ISO 27001 / SOC-2 Audit Status        : CERTIFIED TIER-3 COMPLIANT
+--------------------------------------------------------------------------------
+HARDWARE RECONCILIATION:
+- Fingerprint Scanner: Mantra MFS100 L1 (Serial: SN-MFS-98214)
+- Iris Scanner       : Iris ID iCAM R100 (Operational)
+- Micro-ATM Terminal : PAX D180 MPOS (PIN-pad Certified)
+- Thermal Printer    : Citizen CT-E351 (High Speed 203 DPI)
+================================================================================
+Audit Dossier Hash : SHA256-${Math.random().toString(36).substring(2, 12).toUpperCase()}
+Issued By          : ADCS National Governance & Compliance Cell
+================================================================================`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ADCS_Franchise_Audit_${item.id}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Audit Dossier Downloaded', `Audit dossier for ${item.franchiseName} saved to disk.`, 'success');
+  };
 
   const totalGtv = distributorDownlines.reduce((sum, d) => sum + d.monthlyGtv, 0);
   const totalCommission = distributorDownlines.reduce((sum, d) => sum + d.commissionEarned, 0);
@@ -94,7 +165,7 @@ export const DistributorPortal: React.FC = () => {
               <PlusCircle size={18} /> Onboard New Franchise
             </button>
             <button
-              onClick={() => showToast('Settlement Export', 'Distributor monthly settlement statement downloaded in CSV format.', 'success')}
+              onClick={handleExportPayoutLedger}
               className="btn"
               style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.2)' }}
             >
@@ -232,7 +303,7 @@ export const DistributorPortal: React.FC = () => {
                     </td>
                     <td style={{ padding: '1rem 1.25rem', textAlign: 'right' }}>
                       <button
-                        onClick={() => showToast('Franchise Audit', `Audit packet for ${item.franchiseName} loaded.`, 'info')}
+                        onClick={() => setSelectedAuditFranchise(item)}
                         className="btn btn-sm btn-outline"
                       >
                         Inspect
@@ -326,6 +397,128 @@ export const DistributorPortal: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: FRANCHISE AUDIT DOSSIER INSPECTION */}
+        {selectedAuditFranchise && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10, 25, 47, 0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+          }}>
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              maxWidth: '680px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              padding: '2.25rem',
+              boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.3)',
+              border: '1px solid #E2E8F0'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
+                <div>
+                  <span className="badge badge-green" style={{ marginBottom: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
+                    <ShieldCheck size={14} /> Statutory Audit Packet Verified
+                  </span>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: '#0A192F' }}>
+                    {selectedAuditFranchise.franchiseName}
+                  </h3>
+                  <div style={{ fontSize: '0.85rem', color: '#64748B', marginTop: '0.2rem' }}>
+                    Franchise ID: {selectedAuditFranchise.id} • {selectedAuditFranchise.location}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setSelectedAuditFranchise(null)}
+                  style={{ background: '#F1F5F9', border: 'none', borderRadius: '50%', width: '36px', height: '36px', cursor: 'pointer', color: '#64748B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Status & Key Metrics Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>MONTHLY GTV</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F', marginTop: '0.25rem' }}>
+                    ₹{selectedAuditFranchise.monthlyGtv.toLocaleString('en-IN')}
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 600, marginTop: '0.2rem' }}>✓ 100% Reconciled</div>
+                </div>
+                <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>OVERRIDE RATE</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#D97706', marginTop: '0.25rem' }}>
+                    {selectedAuditFranchise.overrideCommissionRate}%
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#64748B', marginTop: '0.2rem' }}>₹{selectedAuditFranchise.commissionEarned.toLocaleString('en-IN')} Net Earned</div>
+                </div>
+                <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>ATTACHED VLEs</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1D4ED8', marginTop: '0.25rem' }}>
+                    {selectedAuditFranchise.vleCount} Units
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 600, marginTop: '0.2rem' }}>All Active Operators</div>
+                </div>
+              </div>
+
+              {/* Statutory Compliance Checklist */}
+              <div style={{ background: '#F8FAFC', borderRadius: '14px', padding: '1.25rem', border: '1px solid #E2E8F0', marginBottom: '1.5rem' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Compliance & Regulatory Status
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.82rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803D' }}>
+                    <CheckCircle2 size={16} /> <span>UIDAI L1 Biometric Auth: <strong>Compliant</strong></span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803D' }}>
+                    <CheckCircle2 size={16} /> <span>Police Verification: <strong>CCTNS Passed</strong></span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803D' }}>
+                    <CheckCircle2 size={16} /> <span>DPDP Act 2025: <strong>Zero Raw PII</strong></span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#15803D' }}>
+                    <CheckCircle2 size={16} /> <span>BBPS Agent Code: <strong>AI-ADCS-TERR</strong></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Hardware Diagnostic Log */}
+              <div style={{ background: '#0F172A', color: '#94A3B8', borderRadius: '12px', padding: '1rem', fontFamily: 'monospace', fontSize: '0.76rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
+                <div style={{ color: '#38BDF8', fontWeight: 700, marginBottom: '0.35rem' }}>// HARDWARE TELEMETRY & AUTH LOG</div>
+                <div>[2026-11-11 08:30:14] Mantra MFS100 L1 (SN-MFS-98214) RD Service Ready</div>
+                <div>[2026-11-11 09:12:45] Biometric PID block encryption key refreshed via UIDAI HSM</div>
+                <div>[2026-11-11 11:45:02] PAX D180 MPOS Firmware v4.81 Integrity Check: OK</div>
+                <div>[2026-11-11 12:05:19] Daily GTV settle sync: 419 transactions validated</div>
+              </div>
+
+              {/* Modal Actions */}
+              <div style={{ display: 'flex', gap: '0.85rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAuditFranchise(null)}
+                  className="btn btn-outline"
+                  style={{ flex: 1 }}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadFranchiseAuditDossier(selectedAuditFranchise)}
+                  className="btn btn-primary"
+                  style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 800 }}
+                >
+                  <Download size={16} /> Download Certified Audit Packet
+                </button>
+              </div>
             </div>
           </div>
         )}

@@ -7,7 +7,11 @@ import {
   DollarSign, 
   FileText, 
   Download, 
-  Printer
+  Printer,
+  X,
+  CheckCircle2,
+  FileCheck,
+  AlertCircle
 } from 'lucide-react';
 import { EmployeeRecord } from '../../types';
 
@@ -17,6 +21,15 @@ export const HRMSPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'employees' | 'attendance' | 'payroll'>('employees');
   const [selectedPayslipEmp, setSelectedPayslipEmp] = useState<EmployeeRecord | null>(null);
 
+  // Leave Modal State
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [leaveEmpId, setLeaveEmpId] = useState(employees[0]?.id || '');
+  const [leaveType, setLeaveType] = useState('Casual Leave (CL)');
+  const [startDate, setStartDate] = useState('2026-11-15');
+  const [endDate, setEndDate] = useState('2026-11-16');
+  const [leaveReason, setLeaveReason] = useState('');
+  const [leaveConfirmed, setLeaveConfirmed] = useState<string | null>(null);
+
   const presentCount = employees.filter(e => e.attendanceStatus === 'Present').length;
   const attendanceRate = Math.round((presentCount / employees.length) * 100) || 0;
   const totalPayroll = employees.reduce((sum, e) => sum + e.salary, 0);
@@ -25,6 +38,87 @@ export const HRMSPage: React.FC = () => {
     toggleEmployeeAttendance(emp.id);
     const newStatus = emp.attendanceStatus === 'Present' ? 'Absent' : 'Present';
     logAudit('HR_ATTENDANCE', `Marked attendance for ${emp.name} as ${newStatus}`, 'Success');
+  };
+
+  const handleExportNEFTBatch = () => {
+    const headers = 'Employee_ID,Beneficiary_Name,Account_Number,IFSC_Code,Gross_Salary,EPF_12,ESIC_075,PT_200,Net_Disbursement,Payment_Narration\n';
+    const rows = employees.map(e => {
+      const epf = Math.round(e.salary * 0.12);
+      const esic = Math.round(e.salary * 0.0075);
+      const deductions = epf + esic + 200;
+      const net = e.salary - deductions;
+      return `${e.id},"${e.name}",981002938102,ICIC0000102,${e.salary},${epf},${esic},200,${net},"ADCS_SALARY_NOV2026"`;
+    }).join('\n');
+    const blob = new Blob([headers + rows], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Bank_Batch_NEFT_Payroll_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    logAudit('HR_PAYROLL', `Exported NEFT salary batch for ${employees.length} employees`, 'Success');
+    showToast('NEFT Export Generated', `✓ Official bank bulk upload CSV for ${employees.length} employees downloaded.`, 'success');
+  };
+
+  const handleApplyLeaveSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const emp = employees.find(empItem => empItem.id === leaveEmpId) || employees[0];
+    const leaveId = 'LEV-' + Math.floor(1000 + Math.random() * 9000);
+    setLeaveConfirmed(leaveId);
+    logAudit('HR_LEAVE', `Leave ${leaveId} approved for ${emp.name} (${leaveType}) from ${startDate} to ${endDate}`, 'Success');
+    showToast('Leave Approved & Recorded', `Leave ${leaveId} recorded for ${emp.name}.`, 'success');
+  };
+
+  const handleDownloadPayslip = (emp: EmployeeRecord) => {
+    const epf = Math.round(emp.salary * 0.12);
+    const esic = Math.round(emp.salary * 0.0075);
+    const net = emp.salary - epf - esic - 200;
+    const payslipText = `===============================================================
+AKUL DRAVIN DIGITAL SERVICES PRIVATE LIMITED
+HEADQUARTERS: BAILEY ROAD COMMERCIAL ZONE, PATNA, BIHAR - 800001
+OFFICIAL MONTHLY SALARY PAYSLIP • STATUTORY FORM 16 ANNEXURE
+===============================================================
+PAYSLIP ID:        PSL-${emp.id}-${Date.now().toString().slice(-4)}
+DATE OF ISSUE:     ${new Date().toLocaleDateString('en-GB')}
+EMPLOYEE NAME:     ${emp.name}
+EMPLOYEE ID:       ${emp.id}
+DEPARTMENT:        ${emp.department}
+DESIGNATION:       ${emp.designation}
+BANK A/C NO:       XXXXXX9381 (ICICI BANK)
+IFSC CODE:         ICIC0000102
+---------------------------------------------------------------
+EARNINGS (GROSS)                            AMOUNT (INR)
+1. Basic Pay & Dearness Allowance (DA):     ₹${Math.round(emp.salary * 0.6).toLocaleString('en-IN')}
+2. House Rent Allowance (HRA):              ₹${Math.round(emp.salary * 0.25).toLocaleString('en-IN')}
+3. Special Operational Allowance:           ₹${Math.round(emp.salary * 0.15).toLocaleString('en-IN')}
+---------------------------------------------------------------
+TOTAL GROSS CTC:                            ₹${emp.salary.toLocaleString('en-IN')}
+---------------------------------------------------------------
+STATUTORY DEDUCTIONS                        AMOUNT (INR)
+1. Employee Provident Fund (EPF @ 12%):     ₹${epf.toLocaleString('en-IN')}
+2. Employee State Insurance (ESIC @ 0.75%): ₹${esic.toLocaleString('en-IN')}
+3. Professional Tax (PT):                   ₹200
+---------------------------------------------------------------
+TOTAL DEDUCTIONS:                           ₹${(epf + esic + 200).toLocaleString('en-IN')}
+===============================================================
+NET SALARY DISBURSED TO BANK:               ₹${net.toLocaleString('en-IN')}
+===============================================================
+Digital Signature: DIGITALLY SEALED BY DR. ALOK NATH VERMA (DIRECTOR - ADCS)
+Statutory Note: Generated under Section 192 of the Income Tax Act, 1961.
+===============================================================`;
+
+    const blob = new Blob([payslipText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Payslip_${emp.name.replace(/\s+/g, '_')}_Nov2026.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Payslip Downloaded', `Official digitally-signed Payslip for ${emp.name} downloaded successfully.`, 'success');
   };
 
   return (
@@ -55,7 +149,7 @@ export const HRMSPage: React.FC = () => {
 
           <div style={{ display: 'flex', gap: '0.75rem' }}>
             <button 
-              onClick={() => showToast('Leave Portal', 'Staff leave request workflow opened for employee record.', 'info')}
+              onClick={() => { setShowLeaveModal(true); setLeaveConfirmed(null); }}
               className="btn btn-outline"
             >
               <Calendar size={16} /> Apply Staff Leave
@@ -263,7 +357,7 @@ export const HRMSPage: React.FC = () => {
                 </p>
               </div>
               <button 
-                onClick={() => showToast('NEFT Export Generated', 'Full bank NEFT salary disbursement batch file generated successfully.', 'success')}
+                onClick={handleExportNEFTBatch}
                 className="btn btn-primary"
               >
                 <Download size={15} /> Export Bank Batch NEFT
@@ -311,6 +405,150 @@ export const HRMSPage: React.FC = () => {
               </table>
             </div>
 
+          </div>
+        )}
+
+        {/* STAFF LEAVE REQUEST MODAL */}
+        {showLeaveModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10, 25, 47, 0.7)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem'
+          }}>
+            <div className="glass-card" style={{
+              background: '#FFFFFF',
+              maxWidth: '520px',
+              width: '100%',
+              padding: '2rem',
+              borderRadius: 'var(--radius-lg)',
+              boxShadow: 'var(--shadow-xl)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              {!leaveConfirmed ? (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                    <div>
+                      <span className="badge badge-navy">STAFF LEAVE SYSTEM</span>
+                      <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-navy)', margin: '0.25rem 0' }}>
+                        Apply Staff Leave & Roster Absence
+                      </h3>
+                    </div>
+                    <button onClick={() => setShowLeaveModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                      <X size={20} color="#64748B" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleApplyLeaveSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>Select Employee *</label>
+                      <select
+                        className="form-input"
+                        value={leaveEmpId}
+                        onChange={(e) => setLeaveEmpId(e.target.value)}
+                      >
+                        {employees.map(e => (
+                          <option key={e.id} value={e.id}>
+                            {e.name} ({e.designation} - {e.department})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>Leave Category *</label>
+                      <select
+                        className="form-input"
+                        value={leaveType}
+                        onChange={(e) => setLeaveType(e.target.value)}
+                      >
+                        <option value="Casual Leave (CL)">Casual Leave (CL) • 2 Days Balance</option>
+                        <option value="Medical / Sick Leave (SL)">Medical / Sick Leave (SL) • 5 Days Balance</option>
+                        <option value="Earned Privilege Leave (PL)">Earned Privilege Leave (PL) • 12 Days Balance</option>
+                        <option value="Emergency Personal Leave">Emergency Personal Leave</option>
+                      </select>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>Start Date *</label>
+                        <input
+                          type="date"
+                          required
+                          className="form-input"
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.8rem' }}>End Date *</label>
+                        <input
+                          type="date"
+                          required
+                          className="form-input"
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.8rem' }}>Reason for Absence *</label>
+                      <textarea
+                        required
+                        rows={2}
+                        className="form-textarea"
+                        value={leaveReason}
+                        onChange={(e) => setLeaveReason(e.target.value)}
+                        placeholder="State purpose of leave (e.g. Family function, medical emergency)..."
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                      <button type="button" onClick={() => setShowLeaveModal(false)} className="btn btn-outline" style={{ flex: 1 }}>
+                        Cancel
+                      </button>
+                      <button type="submit" className="btn btn-primary" style={{ flex: 1.5 }}>
+                        Approve & Record Leave
+                      </button>
+                    </div>
+                  </form>
+                </>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                  <div style={{
+                    width: '54px',
+                    height: '54px',
+                    borderRadius: '50%',
+                    background: '#DCFCE7',
+                    color: '#16A34A',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 1rem'
+                  }}>
+                    <CheckCircle2 size={30} />
+                  </div>
+                  <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-navy)', marginBottom: '0.35rem' }}>
+                    Staff Leave Formally Approved
+                  </h3>
+                  <div style={{ background: 'var(--bg-light)', padding: '1rem', borderRadius: 'var(--radius-sm)', margin: '1rem 0', textAlign: 'left', fontSize: '0.85rem' }}>
+                    <div>Ref Token: <strong style={{ color: '#1D4ED8' }}>{leaveConfirmed}</strong></div>
+                    <div>Leave Type: <strong>{leaveType}</strong></div>
+                    <div>Duration: <strong>{startDate} to {endDate}</strong></div>
+                  </div>
+                  <button onClick={() => setShowLeaveModal(false)} className="btn btn-primary" style={{ width: '100%' }}>
+                    Done
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -379,7 +617,7 @@ export const HRMSPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
                 <button onClick={() => setSelectedPayslipEmp(null)} className="btn btn-outline">Close</button>
                 <button 
-                  onClick={() => showToast('Payslip Downloaded', `Official digitally-signed Payslip for ${selectedPayslipEmp.name} downloaded successfully.`, 'success')} 
+                  onClick={() => handleDownloadPayslip(selectedPayslipEmp)} 
                   className="btn btn-primary"
                 >
                   <Download size={16} /> Download Signed PDF

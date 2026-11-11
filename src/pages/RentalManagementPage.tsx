@@ -66,6 +66,47 @@ export const RentalManagementPage: React.FC = () => {
     }, 800);
   };
 
+  const handleDownloadAgreement = (agr: any) => {
+    const content = `================================================================================
+AKUL DRAVIN DIGITAL SERVICES (ADCS) - E-STAMPED RENTAL LEASE AGREEMENT
+================================================================================
+Agreement ID       : ${agr.id}
+Registration State : Valid Legal Lease under Transfer of Property Act, 1882
+Stamp Certificate  : IN-DL${Date.now()}88102
+Property Details   : ${agr.propertyTitle}
+Monthly Rent       : ₹${agr.monthlyRent.toLocaleString('en-IN')}/- (Payable by 5th of each month)
+Tenancy Period     : ${agr.startDate} to ${agr.endDate}
+--------------------------------------------------------------------------------
+PARTIES TO THE AGREEMENT:
+FIRST PARTY (LESSOR / LANDLORD):
+  Name             : ${agr.ownerName}
+  Verification     : UIDAI Aadhaar e-KYC Verified
+SECOND PARTY (LESSEE / TENANT):
+  Name             : ${agr.tenantName}
+  Contact Mobile   : ${agr.tenantPhone}
+  Verification     : CCTNS Police Background Verification Clear
+--------------------------------------------------------------------------------
+STANDARD COVENANTS:
+1. The Tenant agrees to pay the stipulated rent of ₹${agr.monthlyRent.toLocaleString('en-IN')} on or before the due date.
+2. The premises shall be used exclusively for lawful residential / authorized purpose.
+3. ADCS Digital Escrow & BBPS provides verified automated rent receipt generation.
+4. Either party may terminate this agreement with 30 days prior written notice.
+================================================================================
+Digital e-Sign Hash: SHA256-${Math.random().toString(36).substring(2, 12).toUpperCase()}-LEGAL-VALID
+ADCS Legal Tech Division • BCI Compliant Automated Document Automation
+================================================================================`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ADCS_Lease_Agreement_${agr.id}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Agreement Downloaded', `PDF/Text for ${agr.id} downloaded with digital seal.`, 'success');
+  };
+
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
@@ -190,7 +231,7 @@ export const RentalManagementPage: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => showToast('Agreement Downloaded', `PDF for ${agr.id} downloaded with digital seal.`, 'success')}
+                    onClick={() => handleDownloadAgreement(agr)}
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',

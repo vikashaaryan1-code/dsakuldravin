@@ -12,7 +12,11 @@ import {
   ShieldAlert,
   ArrowRight,
   UserCheck,
-  BookOpen
+  BookOpen,
+  X,
+  Copy,
+  FileText,
+  Check
 } from 'lucide-react';
 import { SupportTicket } from '../../types';
 
@@ -23,6 +27,9 @@ export const SupportPortal: React.FC = () => {
   const [replyText, setReplyText] = useState('');
   const [filterStatus, setFilterStatus] = useState<'All' | 'Open' | 'In Progress' | 'Critical SLA' | 'Resolved'>('All');
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
+  const [showSopModal, setShowSopModal] = useState(false);
+  const [sopFilter, setSopFilter] = useState('');
+  const [copiedSopIndex, setCopiedSopIndex] = useState<number | null>(null);
 
   // New ticket state
   const [newCustName, setNewCustName] = useState('');
@@ -110,7 +117,7 @@ export const SupportPortal: React.FC = () => {
               + Create Incident Ticket
             </button>
             <button
-              onClick={() => showToast('Knowledge Base', 'Accessing 240+ verified government and legal filing SOP guidelines.', 'info')}
+              onClick={() => setShowSopModal(true)}
               className="btn"
               style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.2)' }}
             >
@@ -448,6 +455,155 @@ export const SupportPortal: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* GOVERNMENT & LEGAL SOPS KNOWLEDGE BASE MODAL */}
+        {showSopModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10, 25, 47, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+          }}>
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              maxWidth: '680px',
+              width: '100%',
+              padding: '2.25rem',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <div>
+                  <span className="badge badge-navy">GOVERNANCE & VLE FILING COMPLIANCE</span>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0A192F', marginTop: '0.25rem' }}>
+                    Standard Operating Procedures (SOPs) Repository
+                  </h3>
+                </div>
+                <button onClick={() => setShowSopModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                  <X size={20} color="#64748B" />
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={sopFilter}
+                  onChange={(e) => setSopFilter(e.target.value)}
+                  placeholder="Search SOPs by keyword (e.g. PAN, AEPS, Passport, Domicile, GST)..."
+                />
+              </div>
+
+              {/* SOP List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                {[
+                  {
+                    title: 'SOP-01: PAN Form 49A Scrutiny & Demographics Match',
+                    circular: 'CBDT Instruction No. 12/2024 • NSDL/UTIITSL Spec',
+                    steps: [
+                      'Verify full name on Aadhaar matches Form 49A character-by-character.',
+                      'Execute Verhoeff dihedral algorithm validation on applicant UID.',
+                      'Ensure photo size is 3.5cm x 2.5cm at 300 DPI, signature file < 60KB.',
+                      'Collect ₹107 statutory fee and provide acknowledgement coupon immediately.'
+                    ]
+                  },
+                  {
+                    title: 'SOP-02: Passport Seva Kendra Biometric Appointment Protocol',
+                    circular: 'Ministry of External Affairs (MEA) Passport Rules 1980',
+                    steps: [
+                      'Check Annexure-E non-ECR proof (Class 10 marksheet or IT return).',
+                      'Upload PDF file < 1MB under designated category in Document Vault.',
+                      'Select nearest PSK (Patna / Ranchi / Varanasi) and verify ARN receipt.',
+                      'Advise applicant to carry 2 original address proofs to the biometric counter.'
+                    ]
+                  },
+                  {
+                    title: 'SOP-03: e-District Domicile / Income / Caste Verification',
+                    circular: 'Revenue & Land Reforms Department Statutory Standard',
+                    steps: [
+                      'Verify Khatiyan / Land tax receipt (LPC) or urban holding tax receipt.',
+                      'Obtain self-declaration affidavit with Ward Councilor / Mukhiya endorsement.',
+                      'File on RTPS portal switch and monitor Circle Officer (CO) SLA (10 days).',
+                      'Print digitally signed certificate with QR hash on 100 GSM bond paper.'
+                    ]
+                  },
+                  {
+                    title: 'SOP-04: DigiPay AEPS Biometric Device (Mantra MFS100) Diagnostics',
+                    circular: 'UIDAI Registered Device Specification v2.0 (L1 Compliant)',
+                    steps: [
+                      'Ensure RD Service is bound to localhost port 11100 in READY state.',
+                      'Confirm zero-storage policy: raw biometric images must never touch disk/memory.',
+                      'Capture encrypted PID token (<PidData>) with session key before NPCI dispatch.',
+                      'If Error 300 occurs, instruct citizen to clean finger sensor and retry on thumb.'
+                    ]
+                  },
+                  {
+                    title: 'SOP-05: SPICe+ Part B MCA Company Name Reservation & Run Check',
+                    circular: 'Ministry of Corporate Affairs (MCA) Companies Act 2013',
+                    steps: [
+                      'Perform TM Class check under trademark registry (IPIndia portal).',
+                      'Ensure proposed name reflects principal business objects in Object Clause.',
+                      'Attach DSC of at least 1 Director and submit SPICe+ Part A for approval.',
+                      'Proceed to Part B (DIN, PAN, TAN, EPFO, ESIC & Professional Tax combo).'
+                    ]
+                  },
+                  {
+                    title: 'SOP-06: GST Revocation & Amnesty Scheme 2026 Late Fee Waiver',
+                    circular: 'CBIC Notification No. 18/2026-Central Tax',
+                    steps: [
+                      'File all pending GSTR-3B and GSTR-1 returns with capped late fees (₹500/nil).',
+                      'Submit Form GST REG-21 application for revocation of cancelled GSTIN.',
+                      'Reconcile purchase invoices with GSTR-2B to prevent Section 73 ITC notices.',
+                      'Provide compliance docket to applicant with jurisdictional tax officer reference.'
+                    ]
+                  }
+                ].filter(s => s.title.toLowerCase().includes(sopFilter.toLowerCase()) || s.circular.toLowerCase().includes(sopFilter.toLowerCase())).map((sop, idx) => (
+                  <div key={idx} style={{ background: '#F8FAFC', borderRadius: '14px', padding: '1.25rem', border: '1px solid #E2E8F0' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
+                      <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
+                        {sop.title}
+                      </h4>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(sop.title + '\n' + sop.circular + '\n' + sop.steps.join('\n'));
+                          setCopiedSopIndex(idx);
+                          showToast('SOP Copied', 'SOP checklist copied to clipboard.', 'success');
+                          setTimeout(() => setCopiedSopIndex(null), 2000);
+                        }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1D4ED8', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 700 }}
+                      >
+                        {copiedSopIndex === idx ? <Check size={14} /> : <Copy size={14} />}
+                        <span>{copiedSopIndex === idx ? 'Copied' : 'Copy SOP'}</span>
+                      </button>
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#D97706', fontWeight: 600, marginBottom: '0.75rem' }}>
+                      {sop.circular}
+                    </div>
+                    <ol style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '0.82rem', color: '#475569', lineHeight: 1.5 }}>
+                      {sop.steps.map((st, i) => (
+                        <li key={i} style={{ marginBottom: '0.25rem' }}>{st}</li>
+                      ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button type="button" onClick={() => setShowSopModal(false)} className="btn btn-primary">
+                  Done
+                </button>
+              </div>
             </div>
           </div>
         )}

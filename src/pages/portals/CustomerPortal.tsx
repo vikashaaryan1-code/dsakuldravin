@@ -43,6 +43,72 @@ export const CustomerPortal: React.FC = () => {
     }).catch(() => {});
   }, []);
 
+  const handleDownloadDoc = (doc: any) => {
+    const content = `================================================================================
+AKUL DRAVIN DIGITAL SERVICES (ADCS)
+SECURE CITIZEN DOCUMENT VAULT - VERIFIED RECORD
+================================================================================
+Document Name   : ${doc.name}
+Category        : ${doc.category || 'General'}
+File Size       : ${doc.size || 'N/A'}
+Uploaded On     : ${doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString('en-IN') : 'Verified Active'}
+OCR Confidence  : ${doc.ocrConfidence}% Match
+Verification    : UIDAI / MCA / Income Tax Compliant Digital Signature
+Audit Hash      : SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-ADCS-VALID
+DPDP Act 2025   : Fully Encrypted (AES-256-GCM) under Purpose Limitation
+Issuing Authority: Akul Dravin Digital Services Private Trust Network
+================================================================================
+This certified digital archive has been authenticated against institutional records.
+================================================================================`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${doc.name.replace(/\s+/g, '_')}_Verified_Copy.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Download Complete', `${doc.name} verified copy saved to your device.`, 'success');
+  };
+
+  const handleDownloadInvoice = (inv: any) => {
+    const content = `================================================================================
+AKUL DRAVIN DIGITAL SERVICES (ADCS) - OFFICIAL GST TAX INVOICE
+================================================================================
+Invoice Number  : ${inv.inv}
+Invoice Date    : ${inv.date}
+Payment Status  : ${inv.status || 'Verified Paid'}
+Payment Method  : Realtime UPI / NetBanking / BBPS
+Customer Name   : Citizen / Enterprise Account Holder
+Service Details : ${inv.desc}
+--------------------------------------------------------------------------------
+TAXABLE BREAKDOWN:
+Base Amount     : ₹${(inv.amount / 1.18).toFixed(2)}
+CGST (9%)       : ₹${((inv.amount / 1.18) * 0.09).toFixed(2)}
+SGST (9%)       : ₹${((inv.amount / 1.18) * 0.09).toFixed(2)}
+TOTAL PAID      : ₹${Number(inv.amount).toLocaleString('en-IN')}.00
+--------------------------------------------------------------------------------
+GSTIN           : 07AABCA1234F1Z5
+SAC / HSN Code  : 998313 (Information Technology & Digital E-Governance Services)
+IRN Number      : 4f8b9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f
+Verification QR : https://adcs.gov.in/verify-invoice?irn=${inv.inv}
+================================================================================
+This is a computer-generated tax invoice requiring no physical signature.
+Issued in accordance with Section 31 of CGST Act, 2017.
+================================================================================`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ADCS_Tax_Invoice_${inv.inv}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Invoice Downloaded', `${inv.inv} saved as tax invoice receipt.`, 'success');
+  };
+
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Customer Profile Strip */}
@@ -326,7 +392,7 @@ export const CustomerPortal: React.FC = () => {
                 </div>
 
                 <button
-                  onClick={() => showToast('Download Initialized', `Downloading ${doc.name}`, 'info')}
+                  onClick={() => handleDownloadDoc(doc)}
                   className="btn-secondary btn-sm"
                   style={{ width: '100%', justifyContent: 'center' }}
                 >
@@ -387,11 +453,11 @@ export const CustomerPortal: React.FC = () => {
                     <span className="badge badge-green">{inv.status}</span>
                   </div>
                   <button
-                    onClick={() => showToast('Invoice Downloaded', `${inv.inv} saved as PDF.`, 'success')}
+                    onClick={() => handleDownloadInvoice(inv)}
                     className="btn-secondary btn-sm"
                   >
                     <Download size={13} />
-                    <span>PDF</span>
+                    <span>Tax Invoice</span>
                   </button>
                 </div>
               </div>

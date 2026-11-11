@@ -17,6 +17,42 @@ import {
 export const FranchisePortal: React.FC = () => {
   const { applications, inventory, employees, showToast, language } = useApp();
 
+  const handleDownloadStatement = () => {
+    const content = `================================================================================
+AKUL DRAVIN DIGITAL SERVICES (ADCS)
+FRANCHISE COMMISSION SETTLEMENT STATEMENT - WEEKLY CLEARING SUMMARY
+================================================================================
+Franchise Name  : Regional CSC & Digital Seva Enterprise Hub
+Franchise ID    : FRN-DELHI-NORTH-048
+Settlement Cycle: Weekly Bank Direct Credit (NEFT/RTGS)
+Nodal Bank      : State Bank of India (A/C: *******8821)
+--------------------------------------------------------------------------------
+BATCH DISPATCHES:
+Settlement ID | Period              | Tx Count | Gross GTV   | Commission | Status
+--------------------------------------------------------------------------------
+SETTL-W38     | 08 Sep - 14 Sep 2026| 94       | ₹48,500.00  | ₹36,200.00 | Settled to Bank
+SETTL-W37     | 01 Sep - 07 Sep 2026| 88       | ₹42,100.00  | ₹32,400.00 | Settled to Bank
+SETTL-W36     | 25 Aug - 31 Aug 2026| 102      | ₹56,000.00  | ₹41,800.00 | Settled to Bank
+--------------------------------------------------------------------------------
+TOTAL SETTLED (PAST 3 WEEKS): ₹1,10,400.00
+TDS DEDUCTION (Sec 194H 5%)  : ₹5,520.00
+NET DISBURSED TO BANK       : ₹1,04,880.00
+================================================================================
+Digitally Verified by: ADCS Automated Clearing Switch
+Authentication Hash  : SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-SETTL-OK
+================================================================================`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'ADCS_Franchise_Commission_Statement_Sept2026.txt';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Statement Downloaded', 'Commission settlement statement saved to your device.', 'success');
+  };
+
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
@@ -124,7 +160,7 @@ export const FranchisePortal: React.FC = () => {
             Recent Weekly Commission Settlement Dispatches
           </h3>
           <button
-            onClick={() => showToast('Statement Downloaded', 'Commission settlement statement saved as PDF.', 'success')}
+            onClick={handleDownloadStatement}
             className="btn-secondary btn-sm"
           >
             <Download size={14} />

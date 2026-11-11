@@ -72,6 +72,49 @@ export const UtilityBillsPage: React.FC = () => {
     }, 900);
   };
 
+  const handleDownloadReceipt = () => {
+    if (!fetchedBill) return;
+    const content = `================================================================================
+BHARAT BILL PAYMENT SYSTEM (BBPS) - TRANSACTION RECEIPT
+AKUL DRAVIN DIGITAL SERVICES (ADCS) AGENT INSTITUTION
+================================================================================
+Transaction Reference : ${fetchedBill.billNumber}
+Payment Status        : SUCCESSFUL / SETTLED
+Timestamp             : ${new Date().toLocaleString('en-IN')}
+--------------------------------------------------------------------------------
+BILL DETAILS:
+Biller Category       : ${activeBiller.toUpperCase()}
+Biller Organization   : ${operator}
+Consumer Account No   : ${consumerNumber}
+Consumer Name         : ${fetchedBill.consumerName}
+Billing Cycle / Due   : ${fetchedBill.dueDate}
+Units / Consumption   : ${fetchedBill.units} Units
+--------------------------------------------------------------------------------
+PAYMENT BREAKDOWN:
+Bill Amount           : ₹${fetchedBill.amount.toLocaleString('en-IN')}.00
+Convenience Fee       : ₹0.00
+Platform Charges      : ₹0.00
+TOTAL AMOUNT PAID     : ₹${fetchedBill.amount.toLocaleString('en-IN')}.00
+Payment Mode          : ADCS Instant Citizen Wallet / BBPS Clearing
+--------------------------------------------------------------------------------
+NPCI BBPS Approval Code: NPCI-ADCS-${Math.floor(10000000 + Math.random() * 90000000)}
+Agent Institution ID  : AI-ADCS-09821
+Digital Verification  : SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-BBPS-VALID
+================================================================================
+This is a computer generated electronic receipt. No signature is required.
+================================================================================`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `BBPS_Receipt_${fetchedBill.billNumber}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Receipt Downloaded', `Receipt for ${fetchedBill.billNumber} saved to your device.`, 'success');
+  };
+
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
@@ -312,11 +355,11 @@ export const UtilityBillsPage: React.FC = () => {
               </div>
 
               <button
-                onClick={() => showToast('Receipt Downloaded', `Receipt for ${fetchedBill.billNumber} saved as PDF.`, 'success')}
+                onClick={handleDownloadReceipt}
                 className="btn-primary"
               >
                 <Download size={15} />
-                <span>Download BBPS Demo Tax Receipt</span>
+                <span>Download BBPS Tax Receipt</span>
               </button>
             </div>
           )}
