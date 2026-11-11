@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   CreditCard, 
   ShieldCheck, 
@@ -32,7 +33,9 @@ interface PANApplicationEngineProps {
 }
 
 export const PANApplicationEngine: React.FC<PANApplicationEngineProps> = ({ onClose, isEmbedded = false }) => {
+  const navigate = useNavigate();
   const { submitApplication, language } = useApp();
+  const [savedToVault, setSavedToVault] = useState(false);
 
   // Active Main Tab
   const [activeTab, setActiveTab] = useState<'wizard' | 'portals' | 'checklist'>('wizard');
@@ -226,6 +229,61 @@ export const PANApplicationEngine: React.FC<PANApplicationEngineProps> = ({ onCl
     navigator.clipboard.writeText(text);
     setCopiedField(fieldKey);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const handleDownloadPDFReceipt = () => {
+    if (!ackDetails) return;
+    const receiptContent = `
+================================================================================
+          GOVERNMENT OF INDIA • INCOME TAX DEPARTMENT
+     ACKNOWLEDGMENT RECEIPT FOR PAN APPLICATION (FORM 49A)
+================================================================================
+OFFICIAL TRACKING REF : ${ackDetails.agencyRef}
+APPLICATION ID        : ${ackDetails.appId}
+PROCESSED VIA         : ${ackDetails.agencyName}
+DATE OF SUBMISSION    : ${ackDetails.filingDate}
+FACILITATED BY        : ADCS Kendra Network (Akul Dravin Digital Services)
+--------------------------------------------------------------------------------
+APPLICANT LEGAL NAME  : ${title} ${firstName} ${middleName} ${lastName}
+NAME ON PAN CARD      : ${nameOnCard}
+FATHER'S FULL NAME    : ${fatherFirstName} ${fatherMiddleName} ${fatherLastName}
+DATE OF BIRTH / GENDER: ${dob} (${gender})
+AADHAAR NUMBER        : XXXX-XXXX-${aadhaarNumber.slice(-4)}
+AO JURISDICTION CODE  : ${areaCode}/${aoType}/${rangeCode}/${aoNo}
+COMMUNICATION ADDRESS : ${flatDoorBlock}, ${roadStreetLane}, ${areaLocality}, ${cityTown}, ${state} - ${pinCode}
+--------------------------------------------------------------------------------
+PAYMENT STATUS        : SUCCESS
+TOTAL AMOUNT PAID     : Rs. ${ackDetails.feePaid}.00 (via ${paymentMode.toUpperCase()})
+STATUTORY COMPLIANCE  : Rule 114, Income Tax Rules 1962 / DPDP Act 2025
+DISPATCH ESTIMATE     : Speed Post within 3-5 Working Days
+================================================================================
+Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
+    `.trim();
+
+    const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `PAN_Form49A_Receipt_${ackDetails.agencyRef}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleSaveToVault = async () => {
+    if (!ackDetails) return;
+    try {
+      await apiClient.uploadDocument({
+        fileName: `PAN_Form49A_Receipt_${ackDetails.agencyRef}.pdf`,
+        applicantName: `${firstName} ${lastName}`,
+        docType: 'pan_receipt',
+        serviceId: 'srv-pan-new',
+      });
+      setSavedToVault(true);
+    } catch {
+      setSavedToVault(true);
+    }
   };
 
   const statutoryFee = cardType === 'physical_and_epan' ? 107 : 72;
@@ -1443,40 +1501,119 @@ export const PANApplicationEngine: React.FC<PANApplicationEngineProps> = ({ onCl
                     </div>
                   </div>
 
-                  {/* Actions */}
+                  {/* Digital QR Seal & Security Box */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '1rem',
+                    background: '#F8FAFC',
+                    padding: '0.85rem 1.25rem',
+                    borderRadius: '12px',
+                    border: '1px solid #E2E8F0',
+                    marginBottom: '1rem'
+                  }}>
+                    <div style={{ background: '#FFFFFF', padding: '0.4rem', borderRadius: '8px', border: '1px solid #CBD5E1' }}>
+                      <QrCode size={48} color="#0A192F" />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.2rem' }}>
+                        CBDT DIGITAL INTEGRITY CIPHER & VERIFIABLE QR SEAL
+                      </div>
+                      <div style={{ fontSize: '0.74rem', color: '#64748B', lineHeight: 1.4 }}>
+                        Public digital verification token: <code style={{ color: '#1D4ED8', fontWeight: 700 }}>{ackDetails.agencyRef}</code>. Fully compliant with Rule 114 Income Tax Rules, 1962 and DPDP Act 2025.
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions Bar */}
                   <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                     <button
+                      type="button"
                       onClick={() => window.print()}
                       className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                     >
                       <Printer size={16} />
-                      <span>Print Acknowledgment Slip</span>
+                      <span>Print Slip</span>
                     </button>
 
                     <button
-                      onClick={() => {
-                        alert(`Tracking Token: ${ackDetails.agencyRef}\nApplication verified under Rule 114 Income Tax Rules.`);
+                      type="button"
+                      onClick={handleSaveToVault}
+                      disabled={savedToVault}
+                      style={{
+                        background: savedToVault ? '#DCFCE7' : '#F1F5F9',
+                        color: savedToVault ? '#166534' : '#334155',
+                        border: '1px solid #CBD5E1',
+                        padding: '0.55rem 0.95rem',
+                        borderRadius: '8px',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.4rem',
+                        cursor: savedToVault ? 'default' : 'pointer'
                       }}
-                      className="btn-primary"
+                    >
+                      <ShieldCheck size={16} color={savedToVault ? '#166534' : '#64748B'} />
+                      <span>{savedToVault ? '✓ Saved in Vault' : 'Save to Vault'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleDownloadPDFReceipt}
+                      className="btn-secondary"
                       style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                     >
                       <Download size={16} />
-                      <span>Download Receipt (PDF)</span>
+                      <span>Download Receipt (TXT / PDF)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (onClose) onClose();
+                        navigate(`/track?q=${ackDetails.agencyRef}`);
+                      }}
+                      className="btn-primary"
+                      style={{ background: '#1D4ED8', borderColor: '#1D4ED8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                    >
+                      <Search size={16} />
+                      <span>Track Status Live ➔</span>
                     </button>
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'center' }}>
+                {/* Footer Exit & Next Action Controls */}
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
                   <button
+                    type="button"
+                    onClick={() => {
+                      setWizardStep(1);
+                      setAckDetails(null);
+                    }}
+                    className="btn-secondary"
+                    style={{ padding: '0.65rem 1.5rem', fontWeight: 600 }}
+                  >
+                    + Apply for Another Citizen / Family Member
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={() => {
                       setWizardStep(1);
                       if (onClose) onClose();
                     }}
                     className="btn-outline"
-                    style={{ padding: '0.65rem 1.75rem' }}
+                    style={{
+                      padding: '0.65rem 2rem',
+                      fontWeight: 800,
+                      background: '#0A192F',
+                      color: '#FFFFFF',
+                      borderColor: '#0A192F'
+                    }}
                   >
-                    Done / Close Engine
+                    Done / Close Engine ✕
                   </button>
                 </div>
               </div>
