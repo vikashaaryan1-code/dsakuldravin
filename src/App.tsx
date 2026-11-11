@@ -183,34 +183,97 @@ export const App: React.FC = () => {
             <Route path="/digitalseva" element={<DigitalSevaPortal />} />
             <Route path="/digitalseva/*" element={<DigitalSevaPortal />} />
 
-            {/* Multi-Tenant Protected Role Portals */}
+            {/* Multi-Tenant Protected Role Portals & Universal Aliases */}
+            <Route path="/customer" element={<ProtectedRoute allowedRoles={['customer', 'admin']} portalName="Customer Operations Dashboard"><CustomerPortal /></ProtectedRoute>} />
             <Route path="/customer/*" element={<ProtectedRoute allowedRoles={['customer', 'admin']} portalName="Customer Operations Dashboard"><CustomerPortal /></ProtectedRoute>} />
+            <Route path="/customer/dashboard" element={<ProtectedRoute allowedRoles={['customer', 'admin']} portalName="Customer Operations Dashboard"><CustomerPortal /></ProtectedRoute>} />
+            <Route path="/portal/customer" element={<ProtectedRoute allowedRoles={['customer', 'admin']} portalName="Customer Operations Dashboard"><CustomerPortal /></ProtectedRoute>} />
+            <Route path="/portal/customer/*" element={<ProtectedRoute allowedRoles={['customer', 'admin']} portalName="Customer Operations Dashboard"><CustomerPortal /></ProtectedRoute>} />
+
+            <Route path="/vle" element={<ProtectedRoute allowedRoles={['vle', 'admin']} portalName="Digital Center VLE Portal"><DigitalCenterPortal /></ProtectedRoute>} />
             <Route path="/vle/*" element={<ProtectedRoute allowedRoles={['vle', 'admin']} portalName="Digital Center VLE Portal"><DigitalCenterPortal /></ProtectedRoute>} />
+            <Route path="/center" element={<ProtectedRoute allowedRoles={['vle', 'admin']} portalName="Digital Center VLE Portal"><DigitalCenterPortal /></ProtectedRoute>} />
             <Route path="/center/*" element={<ProtectedRoute allowedRoles={['vle', 'admin']} portalName="Digital Center VLE Portal"><DigitalCenterPortal /></ProtectedRoute>} />
+            <Route path="/center/dashboard" element={<ProtectedRoute allowedRoles={['vle', 'admin']} portalName="Digital Center VLE Portal"><DigitalCenterPortal /></ProtectedRoute>} />
             <Route path="/digital-center" element={<ProtectedRoute allowedRoles={['vle', 'admin']} portalName="Digital Center VLE Portal"><DigitalCenterPortal /></ProtectedRoute>} />
+            <Route path="/digital-center/*" element={<ProtectedRoute allowedRoles={['vle', 'admin']} portalName="Digital Center VLE Portal"><DigitalCenterPortal /></ProtectedRoute>} />
+            <Route path="/portal/kendra" element={<ProtectedRoute allowedRoles={['vle', 'admin']} portalName="Digital Center VLE Portal"><DigitalCenterPortal /></ProtectedRoute>} />
+            <Route path="/portal/kendra/*" element={<ProtectedRoute allowedRoles={['vle', 'admin']} portalName="Digital Center VLE Portal"><DigitalCenterPortal /></ProtectedRoute>} />
+
+            <Route path="/cyber-cafe-operator" element={<ProtectedRoute allowedRoles={['cafe_operator', 'admin']} portalName="Cyber Cafe Workstation Command"><CyberCafeOperatorPortal /></ProtectedRoute>} />
             <Route path="/cyber-cafe-operator/*" element={<ProtectedRoute allowedRoles={['cafe_operator', 'admin']} portalName="Cyber Cafe Workstation Command"><CyberCafeOperatorPortal /></ProtectedRoute>} />
-            <Route path="/cyber-cafe/operator/*" element={<ProtectedRoute allowedRoles={['cafe_operator', 'admin']} portalName="Cyber Cafe Workstation Command"><CyberCafeOperatorPortal /></ProtectedRoute>} />
             <Route path="/cyber-cafe/operator" element={<ProtectedRoute allowedRoles={['cafe_operator', 'admin']} portalName="Cyber Cafe Workstation Command"><CyberCafeOperatorPortal /></ProtectedRoute>} />
+            <Route path="/cyber-cafe/operator/*" element={<ProtectedRoute allowedRoles={['cafe_operator', 'admin']} portalName="Cyber Cafe Workstation Command"><CyberCafeOperatorPortal /></ProtectedRoute>} />
+            <Route path="/portal/cyber-cafe" element={<ProtectedRoute allowedRoles={['cafe_operator', 'admin']} portalName="Cyber Cafe Workstation Command"><CyberCafeOperatorPortal /></ProtectedRoute>} />
+            <Route path="/portal/cyber-cafe/*" element={<ProtectedRoute allowedRoles={['cafe_operator', 'admin']} portalName="Cyber Cafe Workstation Command"><CyberCafeOperatorPortal /></ProtectedRoute>} />
+
+            <Route path="/franchise" element={<ProtectedRoute allowedRoles={['franchise', 'admin']} portalName="Master Franchise Regional Operations"><FranchisePortal /></ProtectedRoute>} />
             <Route path="/franchise/*" element={<ProtectedRoute allowedRoles={['franchise', 'admin']} portalName="Master Franchise Regional Operations"><FranchisePortal /></ProtectedRoute>} />
+            <Route path="/portal/franchise" element={<ProtectedRoute allowedRoles={['franchise', 'admin']} portalName="Master Franchise Regional Operations"><FranchisePortal /></ProtectedRoute>} />
+            <Route path="/portal/franchise/*" element={<ProtectedRoute allowedRoles={['franchise', 'admin']} portalName="Master Franchise Regional Operations"><FranchisePortal /></ProtectedRoute>} />
+
+            <Route path="/distributor" element={<ProtectedRoute allowedRoles={['distributor', 'admin']} portalName="Territory Distributor Command Hub"><DistributorPortal /></ProtectedRoute>} />
             <Route path="/distributor/*" element={<ProtectedRoute allowedRoles={['distributor', 'admin']} portalName="Territory Distributor Command Hub"><DistributorPortal /></ProtectedRoute>} />
+            <Route path="/portal/distributor" element={<ProtectedRoute allowedRoles={['distributor', 'admin']} portalName="Territory Distributor Command Hub"><DistributorPortal /></ProtectedRoute>} />
+            <Route path="/portal/distributor/*" element={<ProtectedRoute allowedRoles={['distributor', 'admin']} portalName="Territory Distributor Command Hub"><DistributorPortal /></ProtectedRoute>} />
+
+            <Route path="/affiliate" element={<ProtectedRoute allowedRoles={['affiliate', 'admin']} portalName="Affiliate Growth & Referral Portal"><AffiliatePortal /></ProtectedRoute>} />
             <Route path="/affiliate/*" element={<ProtectedRoute allowedRoles={['affiliate', 'admin']} portalName="Affiliate Growth & Referral Portal"><AffiliatePortal /></ProtectedRoute>} />
+            <Route path="/portal/affiliate" element={<ProtectedRoute allowedRoles={['affiliate', 'admin']} portalName="Affiliate Growth & Referral Portal"><AffiliatePortal /></ProtectedRoute>} />
+            <Route path="/portal/affiliate/*" element={<ProtectedRoute allowedRoles={['affiliate', 'admin']} portalName="Affiliate Growth & Referral Portal"><AffiliatePortal /></ProtectedRoute>} />
+
+            <Route path="/finance-portal" element={<ProtectedRoute allowedRoles={['admin']} portalName="FinTech General Ledger & Compliance"><FinancePortal /></ProtectedRoute>} />
             <Route path="/finance-portal/*" element={<ProtectedRoute allowedRoles={['admin']} portalName="FinTech General Ledger & Compliance"><FinancePortal /></ProtectedRoute>} />
+            <Route path="/portal/finance" element={<ProtectedRoute allowedRoles={['admin']} portalName="FinTech General Ledger & Compliance"><FinancePortal /></ProtectedRoute>} />
+            <Route path="/portal/finance/*" element={<ProtectedRoute allowedRoles={['admin']} portalName="FinTech General Ledger & Compliance"><FinancePortal /></ProtectedRoute>} />
+
+            <Route path="/support-portal" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="SLA Escalation & Citizen Support"><SupportPortal /></ProtectedRoute>} />
             <Route path="/support-portal/*" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="SLA Escalation & Citizen Support"><SupportPortal /></ProtectedRoute>} />
+            <Route path="/portal/support" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="SLA Escalation & Citizen Support"><SupportPortal /></ProtectedRoute>} />
+            <Route path="/portal/support/*" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="SLA Escalation & Citizen Support"><SupportPortal /></ProtectedRoute>} />
+
+            <Route path="/employee" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="Employee Corporate Workspace"><EmployeePortal /></ProtectedRoute>} />
             <Route path="/employee/*" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="Employee Corporate Workspace"><EmployeePortal /></ProtectedRoute>} />
+            <Route path="/portal/employee" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="Employee Corporate Workspace"><EmployeePortal /></ProtectedRoute>} />
+            <Route path="/portal/employee/*" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="Employee Corporate Workspace"><EmployeePortal /></ProtectedRoute>} />
+
+            <Route path="/portal/executive" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="Executive Dashboard"><EmployeePortal /></ProtectedRoute>} />
+            <Route path="/portal/executive/*" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="Executive Dashboard"><EmployeePortal /></ProtectedRoute>} />
+
+            <Route path="/partner" element={<ProtectedRoute allowedRoles={['partner', 'admin']} portalName="B2B Channel Partner Hub"><PartnerPortal /></ProtectedRoute>} />
             <Route path="/partner/*" element={<ProtectedRoute allowedRoles={['partner', 'admin']} portalName="B2B Channel Partner Hub"><PartnerPortal /></ProtectedRoute>} />
+            <Route path="/portal/partner" element={<ProtectedRoute allowedRoles={['partner', 'admin']} portalName="B2B Channel Partner Hub"><PartnerPortal /></ProtectedRoute>} />
+            <Route path="/portal/partner/*" element={<ProtectedRoute allowedRoles={['partner', 'admin']} portalName="B2B Channel Partner Hub"><PartnerPortal /></ProtectedRoute>} />
+
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['admin']} portalName="Super Admin Sovereign Console"><SuperAdminPortal /></ProtectedRoute>} />
             <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['admin']} portalName="Super Admin Sovereign Console"><SuperAdminPortal /></ProtectedRoute>} />
+            <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']} portalName="Super Admin Sovereign Console"><SuperAdminPortal /></ProtectedRoute>} />
+            <Route path="/portal/admin" element={<ProtectedRoute allowedRoles={['admin']} portalName="Super Admin Sovereign Console"><SuperAdminPortal /></ProtectedRoute>} />
+            <Route path="/portal/admin/*" element={<ProtectedRoute allowedRoles={['admin']} portalName="Super Admin Sovereign Console"><SuperAdminPortal /></ProtectedRoute>} />
 
             {/* 15 Role Portals & Academy Routes */}
-            <Route path="/portal/advocate/*" element={<ProtectedRoute allowedRoles={['advocate', 'admin']} portalName="Advocate Practice & Consultation Desk"><AdvocatePortal /></ProtectedRoute>} />
+            <Route path="/advocate" element={<ProtectedRoute allowedRoles={['advocate', 'admin']} portalName="Advocate Practice & Consultation Desk"><AdvocatePortal /></ProtectedRoute>} />
             <Route path="/advocate/*" element={<ProtectedRoute allowedRoles={['advocate', 'admin']} portalName="Advocate Practice & Consultation Desk"><AdvocatePortal /></ProtectedRoute>} />
-            <Route path="/portal/instructor/*" element={<ProtectedRoute allowedRoles={['instructor', 'admin']} portalName="ADCS Academy Instructor Desk"><InstructorPortal /></ProtectedRoute>} />
+            <Route path="/portal/advocate" element={<ProtectedRoute allowedRoles={['advocate', 'admin']} portalName="Advocate Practice & Consultation Desk"><AdvocatePortal /></ProtectedRoute>} />
+            <Route path="/portal/advocate/*" element={<ProtectedRoute allowedRoles={['advocate', 'admin']} portalName="Advocate Practice & Consultation Desk"><AdvocatePortal /></ProtectedRoute>} />
+
+            <Route path="/instructor" element={<ProtectedRoute allowedRoles={['instructor', 'admin']} portalName="ADCS Academy Instructor Desk"><InstructorPortal /></ProtectedRoute>} />
             <Route path="/instructor/*" element={<ProtectedRoute allowedRoles={['instructor', 'admin']} portalName="ADCS Academy Instructor Desk"><InstructorPortal /></ProtectedRoute>} />
-            <Route path="/portal/student/*" element={<ProtectedRoute allowedRoles={['student', 'admin', 'customer']} portalName="ADCS Academy Student Console"><StudentPortal /></ProtectedRoute>} />
+            <Route path="/portal/instructor" element={<ProtectedRoute allowedRoles={['instructor', 'admin']} portalName="ADCS Academy Instructor Desk"><InstructorPortal /></ProtectedRoute>} />
+            <Route path="/portal/instructor/*" element={<ProtectedRoute allowedRoles={['instructor', 'admin']} portalName="ADCS Academy Instructor Desk"><InstructorPortal /></ProtectedRoute>} />
+
+            <Route path="/student" element={<ProtectedRoute allowedRoles={['student', 'admin', 'customer']} portalName="ADCS Academy Student Console"><StudentPortal /></ProtectedRoute>} />
             <Route path="/student/*" element={<ProtectedRoute allowedRoles={['student', 'admin', 'customer']} portalName="ADCS Academy Student Console"><StudentPortal /></ProtectedRoute>} />
+            <Route path="/portal/student" element={<ProtectedRoute allowedRoles={['student', 'admin', 'customer']} portalName="ADCS Academy Student Console"><StudentPortal /></ProtectedRoute>} />
+            <Route path="/portal/student/*" element={<ProtectedRoute allowedRoles={['student', 'admin', 'customer']} portalName="ADCS Academy Student Console"><StudentPortal /></ProtectedRoute>} />
             <Route path="/academy" element={<StudentPortal />} />
             <Route path="/academy/*" element={<StudentPortal />} />
-            <Route path="/portal/technician/*" element={<ProtectedRoute allowedRoles={['technician', 'admin']} portalName="Field Technician Dispatch Console"><TechnicianPortal /></ProtectedRoute>} />
+
+            <Route path="/technician" element={<ProtectedRoute allowedRoles={['technician', 'admin']} portalName="Field Technician Dispatch Console"><TechnicianPortal /></ProtectedRoute>} />
             <Route path="/technician/*" element={<ProtectedRoute allowedRoles={['technician', 'admin']} portalName="Field Technician Dispatch Console"><TechnicianPortal /></ProtectedRoute>} />
+            <Route path="/portal/technician" element={<ProtectedRoute allowedRoles={['technician', 'admin']} portalName="Field Technician Dispatch Console"><TechnicianPortal /></ProtectedRoute>} />
+            <Route path="/portal/technician/*" element={<ProtectedRoute allowedRoles={['technician', 'admin']} portalName="Field Technician Dispatch Console"><TechnicianPortal /></ProtectedRoute>} />
+
             <Route path="/verify-certificate/:certId" element={<AcademyCertificateVerificationPage />} />
             <Route path="/verify-certificate" element={<AcademyCertificateVerificationPage />} />
 

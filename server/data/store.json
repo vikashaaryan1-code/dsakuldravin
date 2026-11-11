@@ -62,6 +62,19 @@
   ],
   "applications": [
     {
+      "id": "APP-79531",
+      "trackingNumber": "AD-APP-14100",
+      "serviceId": "srv-pan-new",
+      "serviceName": "PAN Card Verification",
+      "customerName": "Test Suite Automation Runner",
+      "phone": "+91 99999 88888",
+      "status": "SUBMITTED",
+      "appliedDate": "2026-11-11T07:23:09.448Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "Application received via Cloud AI portal.",
+      "formData": {}
+    },
+    {
       "id": "APP-21114",
       "trackingNumber": "AD-APP-58033",
       "serviceId": "srv-pan-new",
@@ -2965,6 +2978,134 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "LOG-2591",
+      "timestamp": "2026-11-11T07:23:18.219Z",
+      "action": "ACADEMY_CERTIFICATE_ISSUED",
+      "details": {
+        "certId": "ADCS-ACAD-2026-143801",
+        "studentName": "Ravi Teja",
+        "courseTitle": "ADCS CCTV & IP Surveillance Installation Technician"
+      }
+    },
+    {
+      "id": "LOG-9620",
+      "timestamp": "2026-11-11T07:23:18.157Z",
+      "action": "ACADEMY_CERTIFICATE_ISSUED",
+      "details": {
+        "certId": "ADCS-ACAD-2026-281064",
+        "studentName": "Suman Saurabh",
+        "courseTitle": "ADCS AI Mastery & Prompt Engineering"
+      }
+    },
+    {
+      "id": "LOG-2902",
+      "timestamp": "2026-11-11T07:23:18.088Z",
+      "action": "LEGAL_CASE_INTAKE_CREATED",
+      "details": {
+        "caseToken": "CAS-2026-7426",
+        "category": "Property",
+        "type": "ADCS Private Consultation"
+      }
+    },
+    {
+      "id": "LOG-8499",
+      "timestamp": "2026-11-11T07:23:17.983Z",
+      "action": "BIOMETRIC_RD_CAPTURE_SUCCESS",
+      "details": {
+        "vendor": "Mantra",
+        "port": 11100,
+        "l1Certified": true,
+        "encryptedPidHash": "d17dd9757c96270d..."
+      }
+    },
+    {
+      "id": "AUD-1794381797866",
+      "action": "Payment Verified (₹undefined) via UPI",
+      "actor": "Unified Payment Gateway",
+      "role": "FINANCE_SYSTEM",
+      "target": "INV-AD-2026-85923",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-11T07:23:17.866Z"
+    },
+    {
+      "id": "LOG-7972",
+      "timestamp": "2026-11-11T07:23:17.827Z",
+      "action": "CYBER_CAFE_POS_SALE",
+      "details": {
+        "invoiceNo": "POS-PRINT-10502",
+        "serviceType": "color_print",
+        "totalAmount": 60
+      }
+    },
+    {
+      "id": "AUD-1794381797730",
+      "action": "ADCS Wallet Top-Up Verified (₹1500) [UTR: ]",
+      "actor": "ADCS National Payment Switch",
+      "role": "VLE_OPERATOR",
+      "target": "TXN-PB-9176",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-11T07:23:17.730Z"
+    },
+    {
+      "id": "LOG-9486",
+      "timestamp": "2026-11-11T07:23:10.212Z",
+      "action": "CYBER_CAFE_POS_SALE",
+      "details": {
+        "invoiceNo": "POS-PRINT-80915",
+        "serviceType": "color_print",
+        "totalAmount": 300
+      }
+    },
+    {
+      "id": "LOG-9190",
+      "timestamp": "2026-11-11T07:23:10.159Z",
+      "action": "ACADEMY_CERTIFICATE_ISSUED",
+      "details": {
+        "certId": "ADCS-ACAD-2026-402827",
+        "studentName": "Suman Saurabh",
+        "courseTitle": "ADCS AI Mastery & Prompt Engineering"
+      }
+    },
+    {
+      "id": "LOG-7175",
+      "timestamp": "2026-11-11T07:23:10.091Z",
+      "action": "LEGAL_CASE_INTAKE_CREATED",
+      "details": {
+        "caseToken": "CAS-2026-5573",
+        "category": "Property",
+        "type": "ADCS Private Consultation"
+      }
+    },
+    {
+      "id": "LOG-5393",
+      "timestamp": "2026-11-11T07:23:10.030Z",
+      "action": "BIOMETRIC_RD_CAPTURE_SUCCESS",
+      "details": {
+        "vendor": "Mantra",
+        "port": 11100,
+        "l1Certified": true,
+        "encryptedPidHash": "b0bb4ef7e720ed7c..."
+      }
+    },
+    {
+      "id": "AUD-1794381789555",
+      "action": "Payment Verified (₹1499) via UPI",
+      "actor": "Unified Payment Gateway",
+      "role": "FINANCE_SYSTEM",
+      "target": "INV-AD-2026-12088",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-11T07:23:09.555Z"
+    },
+    {
+      "id": "AUD-1794381789448",
+      "action": "New Application Submitted",
+      "actor": "Test Suite Automation Runner",
+      "role": "CUSTOMER",
+      "target": "AD-APP-14100",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-11T07:23:09.448Z"
+    },
     {
       "id": "LOG-9830",
       "timestamp": "2026-11-11T07:10:49.816Z",
@@ -9469,6 +9610,32 @@
   "transactions": [
     {
       "verified": true,
+      "orderId": "order_ad_1794381797852_504",
+      "paymentId": "pay_ad_live_1794381797855",
+      "signature": "096e7ef53e99bb0fe02d331a05cfe3807dd3ce9d1a22e600bf70155c6d329ddd",
+      "invoiceNumber": "INV-AD-2026-85923",
+      "paymentMethod": "upi",
+      "paidAt": "2026-11-11T07:23:17.866Z",
+      "status": "PAID",
+      "amount": 0,
+      "items": [],
+      "id": "pay_ad_live_1794381797855"
+    },
+    {
+      "verified": true,
+      "orderId": "order_ad_1794381789512_881",
+      "paymentId": "pay_ad_1794381789554_1049",
+      "signature": "99754537f5449e7524ee715cf5dacd1de28a57a7f0f117c55e6106fd3b173c3e",
+      "invoiceNumber": "INV-AD-2026-12088",
+      "paymentMethod": "upi",
+      "paidAt": "2026-11-11T07:23:09.555Z",
+      "status": "PAID",
+      "amount": 1499,
+      "items": [],
+      "id": "pay_ad_1794381789554_1049"
+    },
+    {
+      "verified": true,
       "orderId": "order_ad_1794381049224_391",
       "paymentId": "pay_ad_live_1794381049241",
       "signature": "bbf9f3c77976346aa6e5781c608a08ac19c9803adcb0d44dab910375ea007787",
@@ -12413,6 +12580,30 @@
   ],
   "crmLeads": [
     {
+      "id": "LEAD-8893",
+      "name": "Sunil Agrawal",
+      "company": "Agrawal Mills Pvt Ltd",
+      "phone": "+91 99887 76655",
+      "email": "sunilagrawal@example.com",
+      "serviceInterested": "CCTV Turnkey & Access Control",
+      "estimatedValue": 48000,
+      "stage": "Proposal",
+      "assignedExecutive": "Senior Account Manager",
+      "createdAt": "2026-11-11T07:23:18.269Z"
+    },
+    {
+      "id": "LEAD-1374",
+      "name": "Sunita Mehra",
+      "company": "Mehra Logistics Pvt Ltd",
+      "phone": "+91 98111 22334",
+      "email": "sunitamehra@example.com",
+      "serviceInterested": "GST & Corporate Tax Audit",
+      "estimatedValue": 25000,
+      "stage": "New",
+      "assignedExecutive": "Senior Account Manager",
+      "createdAt": "2026-11-11T07:23:09.604Z"
+    },
+    {
       "id": "LEAD-1501",
       "name": "Sunil Agrawal",
       "company": "Agrawal Mills Pvt Ltd",
@@ -14056,6 +14247,54 @@
     }
   ],
   "journals": [
+    {
+      "id": "JRN-2026-1131",
+      "date": "2026-11-11",
+      "reference": "INV-AD-2026-GATE4",
+      "description": "Audit Test Double-Entry Posting",
+      "lines": [
+        {
+          "accountCode": "1010",
+          "accountName": "Gateway Clearing",
+          "debit": 2500,
+          "credit": 0
+        },
+        {
+          "accountCode": "4010",
+          "accountName": "Professional Fee",
+          "debit": 0,
+          "credit": 2500
+        }
+      ],
+      "totalDebit": 2500,
+      "totalCredit": 2500,
+      "balanced": true,
+      "cryptographicHash": "hash_fbvs8wzwsm"
+    },
+    {
+      "id": "JRN-2026-9526",
+      "date": "2026-11-11",
+      "reference": "INV-AD-2026-TEST",
+      "description": "Audit Test Double-Entry Posting",
+      "lines": [
+        {
+          "accountCode": "1010",
+          "accountName": "Gateway Clearing",
+          "debit": 5000,
+          "credit": 0
+        },
+        {
+          "accountCode": "4010",
+          "accountName": "Professional Fee",
+          "debit": 0,
+          "credit": 5000
+        }
+      ],
+      "totalDebit": 5000,
+      "totalCredit": 5000,
+      "balanced": true,
+      "cryptographicHash": "hash_ocv47cdkzr"
+    },
     {
       "id": "JRN-2026-8824",
       "date": "2026-11-11",
@@ -19396,6 +19635,26 @@
   ],
   "tickets": [
     {
+      "id": "TKT-7762",
+      "customerName": "Anil Deshmukh",
+      "customerPhone": "+91 98222 33445",
+      "serviceCategory": "Government Services",
+      "subject": "Passport appointment rescheduled request",
+      "priority": "Critical SLA",
+      "status": "Open",
+      "assignedAgent": "Priority Desk Agent",
+      "slaRemainingHours": 4,
+      "createdAt": "11/11/2026 12:53 PM",
+      "messages": [
+        {
+          "sender": "Anil Deshmukh",
+          "role": "Citizen",
+          "text": "Need urgent slot rebooking for PSK Patna.",
+          "timestamp": "12:53 PM"
+        }
+      ]
+    },
+    {
       "id": "TKT-3892",
       "customerName": "Anil Deshmukh",
       "customerPhone": "+91 98222 33445",
@@ -21738,6 +21997,32 @@
   ],
   "campaigns": [
     {
+      "id": "CMP-2026-27",
+      "name": "Diwali MSME Udyam Broadcast",
+      "channel": "WhatsApp Business",
+      "audienceSegment": "All Citizens",
+      "status": "Scheduled",
+      "scheduledDate": "2026-11-11",
+      "targetCount": 5000,
+      "sentCount": 0,
+      "deliveredCount": 0,
+      "conversionCount": 0,
+      "templateText": "Get your official Udyam MSME registration done at nearest ADCS Kendra."
+    },
+    {
+      "id": "CMP-2026-42",
+      "name": "VLE Regional Monsoon Growth Drive",
+      "channel": "WhatsApp Business",
+      "audienceSegment": "VLE Franchisees",
+      "status": "Scheduled",
+      "scheduledDate": "2026-11-11",
+      "targetCount": 2500,
+      "sentCount": 0,
+      "deliveredCount": 0,
+      "conversionCount": 0,
+      "templateText": "Boost your digital center daily footfall with 150+ citizen services."
+    },
+    {
       "id": "CMP-2026-23",
       "name": "Diwali MSME Udyam Broadcast",
       "channel": "WhatsApp Business",
@@ -23865,6 +24150,11 @@
       "username": "245089123456",
       "clientId": "0f8ca686-5a31-46b8-bb51-d9834ba9fa9d",
       "createdAt": 1794381048778
+    },
+    "csc_code_m9rwb2gfmwbslc6u": {
+      "username": "245089123456",
+      "clientId": "0f8ca686-5a31-46b8-bb51-d9834ba9fa9d",
+      "createdAt": 1794381797630
     }
   },
   "vleProfile": {
@@ -23876,7 +24166,7 @@
     "district": "Patna",
     "state": "Bihar",
     "pincode": "800001",
-    "walletBalance": 42272,
+    "walletBalance": 43907,
     "digiPayTerminalId": "DP-PATNA-0912",
     "tecNumber": "TEC-2024-889123",
     "subOperators": [
@@ -24674,6 +24964,50 @@
       }
     ],
     "passbook": [
+      {
+        "id": "TXN-ABHA-4838",
+        "date": "2026-11-11",
+        "type": "CR",
+        "desc": "Ayushman ABHA Card Creation: Suresh Kumar (sureshkuma59@abdm)",
+        "amount": 50,
+        "balance": 43907
+      },
+      {
+        "id": "TXN-FT-5415",
+        "date": "2026-11-11",
+        "type": "CR",
+        "desc": "FASTag ISSUE: BR-01-AB-1234 (Amit Vikram)",
+        "amount": 40,
+        "balance": 43857
+      },
+      {
+        "id": "TXN-ED-1003",
+        "date": "2026-11-11",
+        "type": "CR",
+        "desc": "e-District Service Comm: Residential / Domicile Certificate (Pooja Kumari)",
+        "amount": 30,
+        "balance": 43817
+      },
+      {
+        "id": "TXN-DP-7879",
+        "date": "2026-11-11",
+        "type": "CR",
+        "desc": "DigiPay AEPS WITHDRAWAL Commission (State Bank of India)",
+        "amount": 15,
+        "balance": 43787
+      },
+      {
+        "id": "TXN-PB-9176",
+        "date": "2026-11-11",
+        "type": "CR",
+        "description": "Wallet Top-up via UPI_QR (UTR: INSTANT)",
+        "amount": 1500,
+        "balance": 43772,
+        "utr": "INSTANT",
+        "senderUpi": "user@upi",
+        "bankAccount": "N/A",
+        "status": "VERIFIED & SETTLED"
+      },
       {
         "id": "TXN-ABHA-5106",
         "date": "2026-11-11",
@@ -34767,7 +35101,7 @@
       "id": "INV-01",
       "itemName": "PVC Smart Cards for Aadhaar/PAN",
       "category": "Stationery",
-      "stockQuantity": 2550,
+      "stockQuantity": 2600,
       "unit": "Pieces",
       "reorderLevel": 100,
       "unitPrice": 15
@@ -34810,6 +35144,30 @@
     }
   ],
   "documents": [
+    {
+      "id": "DOC-1794381798543",
+      "applicantName": "Suresh Raina",
+      "docType": "identity_proof",
+      "fileName": "Aadhaar_Front_Back_Verified.pdf",
+      "fileSize": 16,
+      "mimeType": "application/pdf",
+      "uploadedAt": "2026-11-11T07:23:18.545Z",
+      "checksum": "SHA256:416164686161725f",
+      "status": "VERIFIED",
+      "serviceId": "srv-pan-new"
+    },
+    {
+      "id": "DOC-1794381789899",
+      "applicantName": "Suresh Raina",
+      "docType": "identity_proof",
+      "fileName": "Aadhaar_Front_Back_Verified.pdf",
+      "fileSize": 16,
+      "mimeType": "application/pdf",
+      "uploadedAt": "2026-11-11T07:23:09.900Z",
+      "checksum": "SHA256:416164686161725f",
+      "status": "VERIFIED",
+      "serviceId": "srv-pan-new"
+    },
     {
       "id": "DOC-1794381050334",
       "applicantName": "Suresh Raina",
@@ -35474,6 +35832,32 @@
     "431902655981"
   ],
   "legalCases": [
+    {
+      "id": "CAS-2026-7426",
+      "citizenName": "Dr. Akhilesh Prasad",
+      "citizenPhone": "+91 94310 88776",
+      "category": "Property",
+      "type": "ADCS Private Consultation",
+      "description": "Sale deed validation & demarcation verification",
+      "assignedAdvocate": "Adv. Rakesh C. Mishra",
+      "barCouncilNumber": "BR/2491/2014",
+      "meetingRoomId": "room-legal-0833995ce4c4",
+      "status": "SCHEDULED",
+      "createdDate": "2026-11-11T07:23:18.052Z"
+    },
+    {
+      "id": "CAS-2026-5573",
+      "citizenName": "Devendra Nath Pandey",
+      "citizenPhone": "+91 94310 99887",
+      "category": "Property",
+      "type": "ADCS Private Consultation",
+      "description": "Title dispute scrutiny for ancestral land",
+      "assignedAdvocate": "Adv. Rakesh C. Mishra",
+      "barCouncilNumber": "BR/2491/2014",
+      "meetingRoomId": "room-legal-87db97bd835c",
+      "status": "SCHEDULED",
+      "createdDate": "2026-11-11T07:23:10.057Z"
+    },
     {
       "id": "CAS-2026-5561",
       "citizenName": "Dr. Akhilesh Prasad",
@@ -36751,6 +37135,51 @@
       "status": "VALID",
       "verificationUrl": "https://akuldravin.com/verify-certificate/ADCS-ACAD-2026-424142",
       "sha256Proof": "7c8b047b0f7c0ceaa0adc4142d65b2e98642bef362cd4f82923c824da47c98c6"
+    },
+    "ADCS-ACAD-2026-402827": {
+      "certificateId": "ADCS-ACAD-2026-402827",
+      "studentName": "Suman Saurabh",
+      "studentAadhaarMasked": "XXXXXXXX3465",
+      "courseTitle": "ADCS AI Mastery & Prompt Engineering",
+      "courseCode": "CRS-AI-101",
+      "issuedDate": "2026-11-11",
+      "grade": "Grade A (Distinction)",
+      "issuerName": "Dr. Alok Nath Verma",
+      "issuerDesignation": "Dean, ADCS Academy of Excellence",
+      "organization": "Akul Dravin Digital Services Private Limited",
+      "status": "VALID",
+      "verificationUrl": "https://akuldravin.com/verify-certificate/ADCS-ACAD-2026-402827",
+      "sha256Proof": "29c8cb0d92a929ca8eff5e890441ccd05bec359d101f702444bdf0ff5a33d33e"
+    },
+    "ADCS-ACAD-2026-281064": {
+      "certificateId": "ADCS-ACAD-2026-281064",
+      "studentName": "Suman Saurabh",
+      "studentAadhaarMasked": "XXXXXXXX8052",
+      "courseTitle": "ADCS AI Mastery & Prompt Engineering",
+      "courseCode": "CRS-AI-101",
+      "issuedDate": "2026-11-11",
+      "grade": "Grade A (Distinction)",
+      "issuerName": "Dr. Alok Nath Verma",
+      "issuerDesignation": "Dean, ADCS Academy of Excellence",
+      "organization": "Akul Dravin Digital Services Private Limited",
+      "status": "VALID",
+      "verificationUrl": "https://akuldravin.com/verify-certificate/ADCS-ACAD-2026-281064",
+      "sha256Proof": "8475242bebcd0a3310e5d22c8dc423b07f8d89ab882cef126cd6523484c97dc6"
+    },
+    "ADCS-ACAD-2026-143801": {
+      "certificateId": "ADCS-ACAD-2026-143801",
+      "studentName": "Ravi Teja",
+      "studentAadhaarMasked": "XXXXXXXX2556",
+      "courseTitle": "ADCS CCTV & IP Surveillance Installation Technician",
+      "courseCode": "CRS-CCTV-103",
+      "issuedDate": "2026-11-11",
+      "grade": "Grade A (Distinction)",
+      "issuerName": "Dr. Alok Nath Verma",
+      "issuerDesignation": "Dean, ADCS Academy of Excellence",
+      "organization": "Akul Dravin Digital Services Private Limited",
+      "status": "VALID",
+      "verificationUrl": "https://akuldravin.com/verify-certificate/ADCS-ACAD-2026-143801",
+      "sha256Proof": "864f775048a5aa3baf5527eb90ab8cf7d4d756068d671a8634e1ccfdb4129d63"
     }
   },
   "apiConnectors": {
