@@ -243,7 +243,7 @@ app.get('/api/events', (req, res) => {
 
 // 1. Healthcheck
 app.get('/api/health', (req, res) => {
-  res.json({
+  const payload = {
     status: 'ONLINE',
     version: '1.0.0',
     platform: 'AKUL DRAVIN CLOUD AI',
@@ -251,7 +251,102 @@ app.get('/api/health', (req, res) => {
     uptimeSeconds: process.uptime(),
     realtimeClients: sseClients.size,
     modules: ['Marketplace', 'Vedic Astrology', 'Quantum Multi-Agent AI', 'Document Scrutiny', 'Audit Ledger', 'Unified Payment Gateway', 'Real-Time SSE Sync']
-  });
+  };
+
+  // If visited directly in a web browser (accepts text/html), render a user-friendly UI with auto-redirect
+  if (req.headers.accept && req.headers.accept.includes('text/html') && !req.query.json) {
+    return res.send(`<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AKUL DRAVIN CLOUD AI • सर्वर स्वास्थ्य स्थिति</title>
+  <style>
+    body {
+      margin: 0; padding: 0; background: #0A192F; color: #FFFFFF;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      display: flex; align-items: center; justify-content: center; min-height: 100vh;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px; padding: 2.5rem; max-width: 600px; width: 90%; text-align: center;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(16, 185, 129, 0.2); border: 1px solid #10B981;
+      color: #10B981; font-weight: 800; font-size: 0.85rem; padding: 0.4rem 1rem; border-radius: 9999px;
+      margin-bottom: 1.5rem;
+    }
+    .pulse {
+      width: 10px; height: 10px; background: #10B981; border-radius: 50%;
+      box-shadow: 0 0 10px #10B981; animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+    h1 { font-size: 1.8rem; margin: 0 0 0.5rem; }
+    p { color: #94A3B8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem; }
+    .grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 2rem;
+    }
+    .chip {
+      background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 0.6rem; border-radius: 10px; font-size: 0.78rem; color: #CBD5E1; font-weight: 600;
+    }
+    .btn {
+      display: inline-block; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+      color: #0A192F; font-weight: 800; text-decoration: none; padding: 0.9rem 2rem;
+      border-radius: 12px; font-size: 1rem; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35);
+      transition: all 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(245, 158, 11, 0.5); }
+    .raw {
+      margin-top: 1.5rem; font-family: monospace; font-size: 0.78rem; color: #64748B;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">
+      <div class="pulse"></div>
+      ALL SYSTEMS ONLINE • सभी सेवाएँ सक्रिय
+    </div>
+    <h1>AKUL DRAVIN CLOUD AI</h1>
+    <p>
+      यह प्लेटफ़ॉर्म का बैकएंड एपीआई गेटवे (Port 5000) है। मुख्य यूज़र इंटरफ़ेस और संपूर्ण डिजिटल सुपर प्लेटफ़ॉर्म का उपयोग करने के लिए नीचे दिए गए बटन पर क्लिक करें।
+    </p>
+    <div class="grid">
+      <div class="chip">Marketplace</div>
+      <div class="chip">Vedic Astrology</div>
+      <div class="chip">Quantum AI</div>
+      <div class="chip">Document Scrutiny</div>
+      <div class="chip">Audit Ledger</div>
+      <div class="chip">Payment Gateway</div>
+      <div class="chip">Real-Time SSE</div>
+    </div>
+    <a href="http://localhost:3000" class="btn">
+      🌐 मुख्य वेबसाइट खोलें (Open Website) ➔
+    </a>
+    <div class="raw">
+      Auto-redirecting to website in <span id="sec">3</span>s... (या ऊपर क्लिक करें)
+    </div>
+  </div>
+  <script>
+    let c = 3;
+    const interval = setInterval(() => {
+      c--;
+      const el = document.getElementById('sec');
+      if (el) el.innerText = c;
+      if (c <= 0) {
+        clearInterval(interval);
+        window.location.href = 'http://localhost:3000';
+      }
+    }, 1000);
+  </script>
+</body>
+</html>`);
+  }
+
+  res.json(payload);
 });
 
 // 2. Services Catalog
