@@ -168,7 +168,86 @@ interface AppContextType {
   updateWhiteLabelConfig: (config: Partial<WhiteLabelConfig>) => void;
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined);
+export const defaultAppContextValue: AppContextType = {
+  language: 'en',
+  setLanguage: () => {},
+  t: translations.en,
+  currentRole: 'customer',
+  setCurrentRole: () => {},
+  walletBalance: 2450,
+  setWalletBalance: () => {},
+  services: initialServicesCatalog,
+  addCustomService: () => {},
+  applications: initialApplications,
+  submitApplication: () => 'AD-APP-' + Math.floor(10000 + Math.random() * 90000),
+  updateApplicationStatus: () => {},
+  cart: [],
+  addToCart: () => {},
+  removeFromCart: () => {},
+  clearCart: () => {},
+  cartTotal: 0,
+  workstations: initialWorkstations,
+  startWorkstationSession: () => {},
+  stopWorkstationSession: () => 0,
+  printJobs: initialPrintJobs,
+  addPrintJob: () => {},
+  properties: initialProperties,
+  shipments: initialShipments,
+  bookShipment: () => 'AWB' + Math.floor(100000 + Math.random() * 900000),
+  crmLeads: initialCRMLeads,
+  addLead: () => {},
+  updateLeadStage: () => {},
+  employees: initialEmployees,
+  toggleEmployeeAttendance: () => {},
+  inventory: initialInventory,
+  updateInventoryStock: () => {},
+  documents: initialCustomerDocuments,
+  uploadDocument: () => {},
+  deleteDocument: () => {},
+  auditLogs: initialAuditLogs,
+  logAudit: () => {},
+  isSearchOpen: false,
+  setIsSearchOpen: () => {},
+  isCartOpen: false,
+  setIsCartOpen: () => {},
+  isQuantumAIOpen: false,
+  setIsQuantumAIOpen: () => {},
+  quantumAIPendingPrompt: '',
+  setQuantumAIPendingPrompt: () => {},
+  openQuantumAI: () => {},
+  isTrackerOpen: false,
+  setIsTrackerOpen: () => {},
+  activeTrackerQuery: '',
+  setActiveTrackerQuery: () => {},
+  isAuthModalOpen: false,
+  setIsAuthModalOpen: () => {},
+  isApplyModalOpen: false,
+  setIsApplyModalOpen: () => {},
+  selectedServiceForApply: null,
+  openApplyModal: () => {},
+  toasts: [],
+  showToast: () => {},
+  doubleEntryJournals: initialDoubleEntryJournals,
+  recordJournalEntry: () => {},
+  supportTickets: initialSupportTickets,
+  createSupportTicket: () => {},
+  replySupportTicket: () => {},
+  resolveSupportTicket: () => {},
+  marketingCampaigns: initialMarketingCampaigns,
+  createMarketingCampaign: () => {},
+  launchCampaign: () => {},
+  distributorDownlines: initialDistributorDownlines,
+  addDownlineFranchise: () => {},
+  affiliateReferrals: initialAffiliateReferrals,
+  requestAffiliatePayout: () => {},
+  apiProviders: initialApiProviders,
+  toggleApiProviderMode: () => {},
+  updateApiProviderStatus: () => {},
+  whiteLabelConfig: initialWhiteLabelConfig,
+  updateWhiteLabelConfig: () => {},
+};
+
+const AppContext = createContext<AppContextType>(defaultAppContextValue);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Persistent Settings
@@ -954,8 +1033,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 };
 
-export const useApp = () => {
+export const useApp = (): AppContextType => {
   const context = useContext(AppContext);
-  if (!context) throw new Error('useApp must be used within an AppProvider');
-  return context;
+  return context || defaultAppContextValue;
 };
