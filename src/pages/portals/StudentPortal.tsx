@@ -46,6 +46,14 @@ export const StudentPortal: React.FC = () => {
     'CRS-COMP-102-M2': true,
     'CRS-COMP-102-M3': false,
     'CRS-COMP-102-M4': false,
+    'CRS-CCTV-103-M1': true,
+    'CRS-CCTV-103-M2': true,
+    'CRS-CCTV-103-M3': true,
+    'CRS-CCTV-103-M4': false,
+    'CRS-MKT-104-M1': true,
+    'CRS-MKT-104-M2': false,
+    'CRS-MKT-104-M3': false,
+    'CRS-MKT-104-M4': false,
   });
 
   const [courses, setCourses] = useState([
@@ -71,6 +79,30 @@ export const StudentPortal: React.FC = () => {
         'Module 2: Windows 11 Navigation & File Management',
         'Module 3: Internet & Safe Digital Banking',
         'Module 4: MS Office Suite Fundamentals'
+      ]
+    },
+    {
+      id: 'CRS-CCTV-103' as const,
+      title: 'ADCS CCTV & IP Surveillance Installation Technician',
+      titleHi: 'सीसीटीवी एवं आईपी सर्विलांस इंस्टालेशन टेक्नीशियन',
+      certId: null,
+      syllabus: [
+        'Module 1: Optical Sensors, Focal Lengths & Camera Form Factors',
+        'Module 2: Coaxial RG-59 vs Cat6 UTP & Connector Termination',
+        'Module 3: NVR/DVR Setup, Storage Calculation & H.265+ Compression',
+        'Module 4: Static IP, Cloud P2P App & AI Intrusion Detection'
+      ]
+    },
+    {
+      id: 'CRS-MKT-104' as const,
+      title: 'ADCS Digital Marketing & WhatsApp Automation Specialist',
+      titleHi: 'डिजिटल मार्केटिंग एवं व्हाट्सएप ऑटोमेशन स्पेशलिस्ट',
+      certId: null,
+      syllabus: [
+        'Module 1: Digital Marketing Funnels & Customer Acquisition Economics',
+        'Module 2: Google Business Profile & Hyperlocal SEO Optimization',
+        'Module 3: Meta Ads Manager & Custom Audience Targeting',
+        'Module 4: Official WhatsApp Business API & Webhook Automation'
       ]
     }
   ]);
@@ -174,6 +206,90 @@ export const StudentPortal: React.FC = () => {
           { key: 'A', text: 'https:// prefix with a valid closed padlock icon matching the bank domain' },
           { key: 'B', text: 'Any page that loads in dark mode' },
           { key: 'C', text: 'A popup requesting your ATM PIN via WhatsApp' }
+        ],
+        correct: 'A'
+      }
+    ],
+    'CRS-CCTV-103': [
+      {
+        id: 1,
+        question: 'Which standard Cat6 color code sequence connects to Pin 1 and Pin 2 under TIA/EIA-568-B?',
+        options: [
+          { key: 'A', text: 'Pin 1: White-Orange, Pin 2: Orange' },
+          { key: 'B', text: 'Pin 1: White-Green, Pin 2: Green' },
+          { key: 'C', text: 'Pin 1: Blue, Pin 2: White-Blue' }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 2,
+        question: 'How does H.265+ video encoding reduce required hard drive storage by up to 80% compared to legacy H.264?',
+        options: [
+          { key: 'A', text: 'By dynamically modeling static background pixels and only recording active moving blocks' },
+          { key: 'B', text: 'By deleting every second frame permanently' },
+          { key: 'C', text: 'By converting high-resolution video into black and white' }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 3,
+        question: 'Under international standard EN 62676-4 DORI criteria, what pixel density is mandatory for positive legal face identification?',
+        options: [
+          { key: 'A', text: '250 Pixels per Meter (PPM)' },
+          { key: 'B', text: '25 Pixels per Meter (PPM)' },
+          { key: 'C', text: '5 Pixels per Meter (PPM)' }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 4,
+        question: 'What is the primary operational advantage of Cloud P2P remote access over legacy router port forwarding?',
+        options: [
+          { key: 'A', text: 'Zero router ports opened and seamless traversal through Carrier-Grade NAT (CGNAT)' },
+          { key: 'B', text: 'Requires physical cable between phone and camera' },
+          { key: 'C', text: 'Works only when broadband internet is turned off' }
+        ],
+        correct: 'A'
+      }
+    ],
+    'CRS-MKT-104': [
+      {
+        id: 1,
+        question: 'If an advertising campaign spends ₹3,000 on Meta Ads and generates 30 paying Kendra customers, what is the CAC?',
+        options: [
+          { key: 'A', text: '₹100 per customer (₹3,000 / 30)' },
+          { key: 'B', text: '₹10 per customer' },
+          { key: 'C', text: '₹300 per customer' }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 2,
+        question: 'What does the NAP consistency rule require for dominant ranking in the Google Local 3-Pack?',
+        options: [
+          { key: 'A', text: 'Business Name, Address, and Phone must be 100% identical across all online directories' },
+          { key: 'B', text: 'Changing your phone number every Monday' },
+          { key: 'C', text: 'Listing different addresses on Facebook and Google' }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 3,
+        question: 'Which Meta Campaign Objective must be selected for high-intent customer inquiries to WhatsApp Business?',
+        options: [
+          { key: 'A', text: 'Leads / Messages' },
+          { key: 'B', text: 'Traffic' },
+          { key: 'C', text: 'Brand Awareness' }
+        ],
+        correct: 'A'
+      },
+      {
+        id: 4,
+        question: 'What is the fundamental difference between the official WhatsApp Cloud API and unauthorized web scrapers?',
+        options: [
+          { key: 'A', text: 'Official Cloud API is hosted on Meta infrastructure with zero risk of phone number blocking' },
+          { key: 'B', text: 'Cloud API can only send text without emojis' },
+          { key: 'C', text: 'Web scrapers are officially endorsed by the Indian government' }
         ],
         correct: 'A'
       }
@@ -301,7 +417,7 @@ export const StudentPortal: React.FC = () => {
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <div style={{ background: 'rgba(255, 255, 255, 0.08)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Enrolled Courses</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#38BDF8' }}>2 Tracks</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#38BDF8' }}>4 Tracks</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.08)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Certificates Earned</div>
