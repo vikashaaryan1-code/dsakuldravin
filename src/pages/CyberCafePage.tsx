@@ -14,7 +14,9 @@ import {
   Wifi,
   Sparkles,
   ArrowRight,
-  Sliders
+  Sliders,
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -25,6 +27,8 @@ export const CyberCafePage: React.FC = () => {
     stopWorkstationSession, 
     printJobs, 
     addPrintJob,
+    recordJournalEntry,
+    showToast,
     language 
   } = useApp();
 
@@ -39,6 +43,12 @@ export const CyberCafePage: React.FC = () => {
   const [pageCount, setPageCount] = useState(5);
   const [copyCount, setCopyCount] = useState(1);
   const [orderCustomerName, setOrderCustomerName] = useState('');
+  const [lastCafeReceipt, setLastCafeReceipt] = useState<{
+    ref: string;
+    customerName: string;
+    particulars: string;
+    amount: number;
+  } | null>(null);
 
   const rateMap: Record<string, number> = {
     'B/W Print': 3,
@@ -51,24 +61,90 @@ export const CyberCafePage: React.FC = () => {
   const calculatedPrintCost = (rateMap[printType] || 5) * pageCount * copyCount;
 
   const handleStartSession = () => {
-    if (!selectedPc || !customerName) return;
-    startWorkstationSession(selectedPc, customerName, customerPhone || '+91 98000 00000', activeTask);
+    if (!selectedPc || !customerName.trim()) {
+      showToast('Customer Name Required', 'Please enter customer name before starting a workstation session.', 'error');
+      return;
+    }
+    startWorkstationSession(selectedPc, customerName.trim(), customerPhone || '+91 98000 00000', activeTask);
     setSelectedPc(null);
     setCustomerName('');
   };
 
+  const handleStopAndBill = (pcId: string, occName?: string) => {
+    const bill = stopWorkstationSession(pcId);
+    const ref = `WS-${pcId}-${Math.floor(1000 + Math.random() * 9000)}`;
+    const baseAmt = Math.round(bill / 1.18);
+    const gstAmt = bill - baseAmt;
+    recordJournalEntry({
+      date: new Date().toISOString().split('T')[0],
+      reference: ref,
+      description: `Cyber Cafe Workstation ${pcId} Session (${occName || 'Walk-in'})`,
+      lines: [
+        { accountCode: '1010', accountName: 'ADCS Cash Counter / UPI POS', debit: bill, credit: 0 },
+        { accountCode: '4061', accountName: 'Workstation Terminal Hourly Revenue', debit: 0, credit: baseAmt },
+        { accountCode: '2010', accountName: 'GST Output Tax Payable (18%)', debit: 0, credit: gstAmt },
+      ],
+    });
+    setLastCafeReceipt({
+      ref,
+      customerName: occName || 'Walk-in Customer',
+      particulars: `Workstation Terminal ${pcId} Usage`,
+      amount: bill,
+    });
+  };
+
   const handleQueuePrint = () => {
-    if (!orderCustomerName) return;
+    if (!orderCustomerName.trim()) return;
     addPrintJob({
       type: printType,
-      customerName: orderCustomerName,
+      customerName: orderCustomerName.trim(),
       pages: pageCount,
       copies: copyCount,
       ratePerPage: rateMap[printType] || 5,
       totalCost: calculatedPrintCost,
       status: 'Printing',
     });
+    const ref = `PRT-${Math.floor(10000 + Math.random() * 90000)}`;
+    const baseAmt = Math.round(calculatedPrintCost / 1.18);
+    const gstAmt = calculatedPrintCost - baseAmt;
+    recordJournalEntry({
+      date: new Date().toISOString().split('T')[0],
+      reference: ref,
+      description: `Cyber Cafe ${printType}: ${pageCount}p x ${copyCount}cp (${orderCustomerName.trim()})`,
+      lines: [
+        { accountCode: '1010', accountName: 'ADCS Cash Counter / UPI POS', debit: calculatedPrintCost, credit: 0 },
+        { accountCode: '4060', accountName: 'Cyber Cafe Print, Scan & Binding Revenue', debit: 0, credit: baseAmt },
+        { accountCode: '2010', accountName: 'GST Output Tax Payable (18%)', debit: 0, credit: gstAmt },
+      ],
+    });
+    setLastCafeReceipt({
+      ref,
+      customerName: orderCustomerName.trim(),
+      particulars: `${printType} (${pageCount} pgs x ${copyCount} copies)`,
+      amount: calculatedPrintCost,
+    });
     setOrderCustomerName('');
+  };
+
+  const handleDownloadCafeBill = (receipt: { ref: string; customerName: string; particulars: string; amount: number }) => {
+    const content = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — CYBER CAFE POS TAX BILL',
+      '==============================================================',
+      `Bill Reference : ${receipt.ref}`,
+      `Date & Time    : ${new Date().toLocaleString('en-IN')}`,
+      `Customer Name  : ${receipt.customerName}`,
+      `Service Item   : ${receipt.particulars}`,
+      `Total Charged  : ₹${receipt.amount} (Incl. 18% GST)`,
+      'Ledger Sync    : Posted to Double-Entry General Ledger',
+      '==============================================================',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Cafe_Bill_${receipt.ref}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -255,7 +331,7 @@ export const CyberCafePage: React.FC = () => {
                   </button>
                 ) : isInUse ? (
                   <button
-                    onClick={() => stopWorkstationSession(pc.id)}
+                    onClick={() => handleStopAndBill(pc.id, pc.currentSession?.customerName)}
                     style={{
                       width: '100%',
                       padding: '0.45rem',
@@ -395,6 +471,37 @@ export const CyberCafePage: React.FC = () => {
             Active Print & Scan Queue
           </h3>
 
+          {lastCafeReceipt && (
+            <div style={{
+              background: '#F0FDF4',
+              border: '1px solid #86EFAC',
+              borderRadius: '12px',
+              padding: '0.85rem 1rem',
+              marginBottom: '1rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '0.75rem',
+            }}>
+              <div style={{ fontSize: '0.78rem' }}>
+                <div style={{ fontWeight: 800, color: '#059669' }}>
+                  POS BILL GENERATED • {lastCafeReceipt.ref}
+                </div>
+                <div style={{ color: '#0A192F' }}>
+                  {lastCafeReceipt.customerName} — ₹{lastCafeReceipt.amount} (Ledger Synced)
+                </div>
+              </div>
+              <button
+                onClick={() => handleDownloadCafeBill(lastCafeReceipt)}
+                className="btn-gold btn-sm"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 700 }}
+              >
+                <Download size={13} />
+                <span>Bill</span>
+              </button>
+            </div>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {printJobs.slice(0, 5).map(job => (
               <div
@@ -424,6 +531,49 @@ export const CyberCafePage: React.FC = () => {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Authorized Exam & Competitive Recruitment Official Portals */}
+      <div style={{
+        marginTop: '2.5rem',
+        background: '#F8FAFC',
+        borderRadius: '18px',
+        padding: '1.5rem 2rem',
+        border: '1px solid #E2E8F0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem',
+      }}>
+        <div>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+            AUTHORIZED EXAMINATION & SCHOLARSHIP PORTALS (ZERO-BYPASS HANDOFF)
+          </div>
+          <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>
+            Direct compliant links for candidate exam form filing, admit cards, and central scholarship verification.
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+          {[
+            { label: 'SSC Official Portal', url: 'https://ssc.gov.in/' },
+            { label: 'UPSC Online', url: 'https://upsconline.nic.in/' },
+            { label: 'NTA Exams Desk', url: 'https://exams.nta.ac.in/' },
+            { label: 'National Scholarship (NSP)', url: 'https://scholarships.gov.in/' },
+          ].map(p => (
+            <a
+              key={p.label}
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', textDecoration: 'none' }}
+            >
+              <span>{p.label}</span>
+              <ExternalLink size={13} />
+            </a>
+          ))}
         </div>
       </div>
 

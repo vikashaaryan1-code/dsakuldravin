@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { 
   Coins, 
@@ -10,18 +11,32 @@ import {
   Percent, 
   Building, 
   Clock,
-  Sparkles
+  Sparkles,
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const FinanceLoansPage: React.FC = () => {
-  const { showToast, logAudit, language } = useApp();
+  const { showToast, logAudit, submitApplication, addLead, language } = useApp();
 
-  // EMI Calculator State
+  // EMI Calculator & Applicant Profile State
   const [loanAmount, setLoanAmount] = useState<number>(1000000); // 10 Lakhs
   const [tenureYears, setTenureYears] = useState<number>(5); // 5 Years
   const [interestRate, setInterestRate] = useState<number>(10.5); // 10.5% p.a.
   const [selectedLoanType, setSelectedLoanType] = useState('Business MSME Loan');
+  const [applicantName, setApplicantName] = useState('Saurabh Verma');
+  const [applicantPhone, setApplicantPhone] = useState('9835045678');
+  const [applicantPan, setApplicantPan] = useState('ABCDE1234F');
+  const [monthlyIncome, setMonthlyIncome] = useState<number>(65000);
+  const [submittedLoanApp, setSubmittedLoanApp] = useState<{
+    appId: string;
+    bankName: string;
+    loanType: string;
+    amount: number;
+    emi: number;
+    tenureYears: number;
+  } | null>(null);
 
   // Monthly EMI Formula: [P x R x (1+R)^N]/[(1+R)^N-1]
   const monthlyRate = interestRate / 12 / 100;
@@ -32,6 +47,8 @@ export const FinanceLoansPage: React.FC = () => {
   );
   const totalPayable = monthlyEMI * totalMonths;
   const totalInterest = totalPayable - loanAmount;
+  const maxSafeEmi = Math.round(monthlyIncome * 0.5);
+  const isEmiAffordable = monthlyEMI <= maxSafeEmi;
 
   const partnerLenders = [
     { bank: 'State Bank of India (SBI)', minRate: '9.85%', procFee: '0.35%', maxAmount: '₹50 Lakhs', tag: 'Lowest Interest' },
@@ -41,9 +58,77 @@ export const FinanceLoansPage: React.FC = () => {
   ];
 
   const handleApplyLoan = (bankName: string) => {
-    showToast('Loan Application Submitted', `Your eligibility profile for ${selectedLoanType} forwarded to ${bankName}. An authorized banking executive will contact you.`, 'success');
-    logAudit(`Loan Application Submitted to ${bankName}`, `Amount: ₹${loanAmount}, Tenure: ${tenureYears} yrs`);
+    const cleanPhone = applicantPhone.replace(/\D/g, '').slice(-10);
+    const cleanPan = applicantPan.trim().toUpperCase();
+    if (!applicantName.trim() || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      showToast('Missing Applicant Info', 'Please enter applicant name and a valid 10-digit Indian mobile number.', 'error');
+      return;
+    }
+    if (!/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleanPan)) {
+      showToast('Invalid PAN Format', 'PAN must match 10-character format (e.g. ABCDE1234F).', 'error');
+      return;
+    }
+
+    const appId = submitApplication({
+      serviceId: 'srv-loan-assist',
+      serviceName: `${selectedLoanType} — ${bankName}`,
+      category: 'finance',
+      applicantName: applicantName.trim(),
+      applicantPhone: `+91 ${cleanPhone}`,
+      feePaid: 0,
+      documentsUploaded: [`PAN_${cleanPan}_KYC.pdf`, 'Bank_Statement_6M.pdf'],
+      notes: `Amount: ₹${loanAmount.toLocaleString('en-IN')}, Tenure: ${tenureYears}y @ ${interestRate}%, Est EMI: ₹${monthlyEMI.toLocaleString('en-IN')}, Income: ₹${monthlyIncome.toLocaleString('en-IN')}/mo`,
+    });
+
+    addLead({
+      name: applicantName.trim(),
+      company: `${selectedLoanType} (${bankName})`,
+      email: 'finance.desk@akuldravindigital.com',
+      phone: `+91 ${cleanPhone}`,
+      serviceInterested: `${selectedLoanType} (₹${loanAmount.toLocaleString('en-IN')})`,
+      estimatedValue: loanAmount,
+      stage: 'Proposal',
+      assignedExecutive: 'ADCS Credit Facilitation Desk',
+    });
+
+    setSubmittedLoanApp({
+      appId,
+      bankName,
+      loanType: selectedLoanType,
+      amount: loanAmount,
+      emi: monthlyEMI,
+      tenureYears,
+    });
+
+    showToast('Loan Dossier Registered', `Application ${appId} logged & CRM lead routed for ${bankName}.`, 'success');
+    logAudit(`Loan Application Submitted (${appId}) to ${bankName}`, `PAN: ${cleanPan}, Amount: ₹${loanAmount}`);
     confetti({ particleCount: 75, spread: 60 });
+  };
+
+  const handleDownloadLoanSheet = () => {
+    if (!submittedLoanApp) return;
+    const content = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — ASSISTED LOAN ELIGIBILITY DOSSIER',
+      '========================================================================',
+      `Tracking Reference   : ${submittedLoanApp.appId}`,
+      `Date & Time          : ${new Date().toLocaleString('en-IN')}`,
+      `Applicant Name       : ${applicantName}`,
+      `Mobile / PAN         : ${applicantPhone} / ${applicantPan.toUpperCase()}`,
+      `Product / Lender     : ${submittedLoanApp.loanType} (${submittedLoanApp.bankName})`,
+      `Requested Principal  : ₹${submittedLoanApp.amount.toLocaleString('en-IN')}`,
+      `Tenure & Indicative  : ${submittedLoanApp.tenureYears} Years @ ${interestRate}% p.a.`,
+      `Computed Monthly EMI : ₹${submittedLoanApp.emi.toLocaleString('en-IN')}`,
+      `Affordability Check  : ${isEmiAffordable ? 'WITHIN 50% FOIR LIMIT' : 'HIGH FOIR - CO-APPLICANT ADVISED'}`,
+      `Track Application    : https://akuldravindigital.com/track?id=${encodeURIComponent(submittedLoanApp.appId)}`,
+      '========================================================================',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Loan_Dossier_${submittedLoanApp.appId}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -110,10 +195,79 @@ export const FinanceLoansPage: React.FC = () => {
         marginBottom: '3.5rem',
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-          <span className="badge badge-gold">PRECISION EMI ENGINE</span>
+          <span className="badge badge-gold">PRECISION EMI & FOIR ENGINE</span>
           <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0A192F', marginTop: '0.4rem' }}>
             Interactive Loan & EMI Calculator
           </h2>
+        </div>
+
+        {/* Applicant Eligibility Profile Bar */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(175px, 1fr))',
+          gap: '1rem',
+          padding: '1.15rem',
+          background: '#F8FAFC',
+          borderRadius: '14px',
+          border: '1px solid #E2E8F0',
+          marginBottom: '2rem',
+        }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Loan Product Type</label>
+            <select
+              className="form-select"
+              value={selectedLoanType}
+              onChange={(e) => setSelectedLoanType(e.target.value)}
+            >
+              <option value="Business MSME Loan">Business MSME Loan</option>
+              <option value="PM Mudra Shishu / Kishore Loan">PM Mudra Scheme Loan</option>
+              <option value="Home & Property Loan">Home & Property Loan</option>
+              <option value="Education / Skill Loan">Education / Skill Loan</option>
+              <option value="Commercial Vehicle Finance">Commercial Vehicle Finance</option>
+            </select>
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Applicant Full Name *</label>
+            <input
+              type="text"
+              className="form-input"
+              value={applicantName}
+              onChange={(e) => setApplicantName(e.target.value)}
+              placeholder="Applicant Name"
+            />
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Mobile Number *</label>
+            <input
+              type="text"
+              className="form-input"
+              value={applicantPhone}
+              onChange={(e) => setApplicantPhone(e.target.value)}
+              placeholder="10-digit Mobile"
+            />
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">PAN Number *</label>
+            <input
+              type="text"
+              className="form-input"
+              value={applicantPan}
+              onChange={(e) => setApplicantPan(e.target.value.toUpperCase())}
+              placeholder="ABCDE1234F"
+              maxLength={10}
+            />
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label className="form-label">Net Monthly Income (₹)</label>
+            <input
+              type="number"
+              min="10000"
+              step="5000"
+              className="form-input"
+              value={monthlyIncome}
+              onChange={(e) => setMonthlyIncome(Math.max(10000, Number(e.target.value)))}
+            />
+          </div>
         </div>
 
         <div style={{
@@ -235,6 +389,12 @@ export const FinanceLoansPage: React.FC = () => {
                 <span style={{ color: '#94A3B8' }}>Total Repayment (P + I):</span>
                 <span style={{ fontWeight: 700 }}>₹{totalPayable.toLocaleString('en-IN')}</span>
               </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: '#94A3B8' }}>FOIR Check (50% Income):</span>
+                <span style={{ fontWeight: 700, color: isEmiAffordable ? '#10B981' : '#F87171' }}>
+                  {isEmiAffordable ? `ELIGIBLE (Max ₹${maxSafeEmi.toLocaleString('en-IN')}/mo)` : `HIGH EMI (> ₹${maxSafeEmi.toLocaleString('en-IN')}/mo)`}
+                </span>
+              </div>
             </div>
 
             <button
@@ -248,6 +408,66 @@ export const FinanceLoansPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Submitted Loan Dossier Banner */}
+      {submittedLoanApp && (
+        <div style={{
+          background: '#F0FDF4',
+          border: '2px solid #86EFAC',
+          borderRadius: '18px',
+          padding: '1.75rem 2rem',
+          marginBottom: '2.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1.5rem',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              borderRadius: '12px',
+              background: '#DCFCE7',
+              color: '#059669',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+              <CheckCircle2 size={28} />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase' }}>
+                ASSISTED LOAN DOSSIER REGISTERED • {submittedLoanApp.appId}
+              </div>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: '0.15rem 0' }}>
+                {submittedLoanApp.loanType} via {submittedLoanApp.bankName}
+              </h3>
+              <div style={{ fontSize: '0.84rem', color: '#475569' }}>
+                Principal: <strong>₹{submittedLoanApp.amount.toLocaleString('en-IN')}</strong> • Tenure: <strong>{submittedLoanApp.tenureYears} yrs</strong> • Est. EMI: <strong>₹{submittedLoanApp.emi.toLocaleString('en-IN')}/mo</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={handleDownloadLoanSheet}
+              className="btn-gold btn-sm"
+              style={{ fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              <Download size={14} />
+              <span>Download Dossier</span>
+            </button>
+            <Link
+              to={`/track?id=${encodeURIComponent(submittedLoanApp.appId)}`}
+              className="btn-primary btn-sm"
+              style={{ textDecoration: 'none' }}
+            >
+              Track Application
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* MULTI-BANK COMPARISON TABLE */}
       <div>
@@ -297,6 +517,49 @@ export const FinanceLoansPage: React.FC = () => {
                 </button>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Official Credit & Govt Subsidy Portals */}
+      <div style={{
+        marginTop: '3rem',
+        background: '#F8FAFC',
+        borderRadius: '18px',
+        padding: '1.5rem 2rem',
+        border: '1px solid #E2E8F0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem',
+      }}>
+        <div>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+            OFFICIAL GOVERNMENT CREDIT & RBI REGULATORY PORTALS
+          </div>
+          <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>
+            Apply directly for central subsidy-linked loans (PM Mudra, PMEGP, Education) on JanSamarth or verify lenders on RBI Sachet.
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+          {[
+            { label: 'JanSamarth Portal', url: 'https://www.jansamarth.in/' },
+            { label: 'MSME Udyam Portal', url: 'https://udyamregistration.gov.in/' },
+            { label: 'RBI Sachet Check', url: 'https://sachet.rbi.org.in/' },
+            { label: 'RBI CMS Ombudsman', url: 'https://cms.rbi.org.in/' },
+          ].map(p => (
+            <a
+              key={p.label}
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', textDecoration: 'none' }}
+            >
+              <span>{p.label}</span>
+              <ExternalLink size={13} />
+            </a>
           ))}
         </div>
       </div>

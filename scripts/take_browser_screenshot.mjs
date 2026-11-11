@@ -49,8 +49,11 @@ async function connectWithRetry(retries = 10, delay = 1000) {
 
       setTimeout(() => {
         clearInterval(checkReady);
-        ws.send(JSON.stringify({ id: 3, method: 'Page.captureScreenshot', params: { format: 'png' } }));
-      }, 7000);
+        if (!screenshotSent) {
+          screenshotSent = true;
+          ws.send(JSON.stringify({ id: 3, method: 'Page.captureScreenshot', params: { format: 'png' } }));
+        }
+      }, 15000);
     };
 
     let screenshotSent = false;
