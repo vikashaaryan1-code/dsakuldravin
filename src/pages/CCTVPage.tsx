@@ -290,6 +290,32 @@ export const CCTVPage: React.FC = () => {
               <ShoppingCart size={18} />
               <span>Add Package to Unified Cart</span>
             </button>
+
+            <button
+              onClick={() => {
+                showToast('Site Survey Scheduled!', 'Technician Prakash Kumar Singh dispatched. Track under Technician Portal (/portal/technician).', 'success');
+                logAudit('CCTV Site Survey Booked', `Package ${cameraCount}x ${cameraType}`);
+                confetti({ particleCount: 50, spread: 60 });
+              }}
+              style={{
+                width: '100%',
+                marginTop: '0.75rem',
+                padding: '0.75rem',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.1)',
+                color: '#38BDF8',
+                border: '1px solid #38BDF8',
+                fontWeight: 700,
+                fontSize: '0.85rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem'
+              }}
+            >
+              <Wrench size={16} /> Schedule Site Survey & Dispatch Technician
+            </button>
           </div>
         </div>
       </div>

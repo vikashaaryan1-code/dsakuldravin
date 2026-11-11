@@ -54,7 +54,7 @@ export const EducationPage: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid-2" style={{ gap: '1.5rem' }}>
+      <div className="grid-2" style={{ gap: '1.5rem', marginBottom: '2.5rem' }}>
         {eduItems.map((item, idx) => (
           <div
             key={idx}
@@ -94,6 +94,74 @@ export const EducationPage: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* ADCS Academy & LMS Hub Section */}
+      <div style={{
+        background: 'linear-gradient(135deg, #0F172A 0%, #1E1B4B 60%, #312E81 100%)',
+        borderRadius: '24px',
+        padding: '2.5rem',
+        color: '#FFFFFF',
+        border: '1px solid rgba(255, 255, 255, 0.15)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '2rem'
+      }}>
+        <div style={{ maxWidth: '600px' }}>
+          <span style={{ background: '#F59E0B', color: '#000', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800 }}>
+            ADCS ACADEMY LMS
+          </span>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#FFFFFF', margin: '0.5rem 0 0.5rem' }}>
+            Vocational Skill Tracks & Verifiable Certifications
+          </h2>
+          <p style={{ color: '#CBD5E1', fontSize: '0.92rem', lineHeight: 1.6, margin: 0 }}>
+            Master Generative AI, Computer Fundamentals, CCTV Installation, and Digital Marketing. Pass timed online proctored exams and receive verifiable private professional credentials with QR security.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <a
+            href="/portal/student"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '10px',
+              background: '#2563EB',
+              color: '#FFFFFF',
+              fontWeight: 800,
+              fontSize: '0.9rem',
+              textDecoration: 'none'
+            }}
+          >
+            <BookOpen size={16} /> Enter Student Portal & LMS
+          </a>
+
+          <a
+            href="/verify-certificate"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '10px',
+              background: 'rgba(255, 255, 255, 0.1)',
+              color: '#38BDF8',
+              border: '1px solid #38BDF8',
+              fontWeight: 800,
+              fontSize: '0.9rem',
+              textDecoration: 'none'
+            }}
+          >
+            <Award size={16} /> Verify Certificate Online
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
     </div>
   );
 };
