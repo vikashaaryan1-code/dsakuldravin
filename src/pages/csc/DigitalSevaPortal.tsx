@@ -1895,18 +1895,38 @@ export const DigitalSevaPortal: React.FC = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
             {/* Terminal Form */}
             <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
-                <div style={{ background: '#0F172A', color: '#34D399', padding: '0.5rem', borderRadius: '8px' }}>
-                  <Fingerprint size={24} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                    DigiPay AEPS & Micro-ATM
-                  </h3>
-                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                    Terminal: <strong>DP-PATNA-0912</strong> • Bank Switch: NPCI Host 2.1
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '0.85rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ background: '#0F172A', color: '#34D399', padding: '0.5rem', borderRadius: '8px' }}>
+                    <Fingerprint size={24} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                      DigiPay AEPS & Micro-ATM
+                    </h3>
+                    <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                      Terminal: <strong>DP-PATNA-0912</strong> • Bank Switch: NPCI Host 2.1
+                    </div>
                   </div>
                 </div>
+                <a 
+                  href="https://digipay.csccloud.in/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '0.72rem', color: '#059669', background: '#DCFCE7', padding: '0.2rem 0.5rem', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}
+                >
+                  🔗 DigiPay Official Portal ↗
+                </a>
+              </div>
+
+              {/* Inbuilt Operator Tutorial & SOP Guide */}
+              <div style={{ background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.75rem', marginBottom: '1.25rem', fontSize: '0.75rem', color: '#334155' }}>
+                <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
+                  📘 ADCS Inbuilt Micro-ATM Operating SOP:
+                </div>
+                1. Select citizen bank & input 12-digit Aadhaar UID.<br />
+                2. Connect USB/Bluetooth Biometric Scanner (Morpho/Mantra RD Service).<br />
+                3. Customer places finger on scanner ➔ Real-time Verhoeff check & instant NPCI cash settlement.
               </div>
 
               <form onSubmit={handleDigiPayTransact}>
@@ -2241,18 +2261,38 @@ export const DigitalSevaPortal: React.FC = () => {
         {activeTab === 'pmgdisha' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
             <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
-                <div style={{ background: '#7C3AED', color: '#DDD6FE', padding: '0.5rem', borderRadius: '8px' }}>
-                  <GraduationCap size={24} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                    PMGDISHA Candidate Exam & Certificate
-                  </h3>
-                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                    Pradhan Mantri Gramin Digital Saksharta Abhiyan • ₹300 VLE Incentive
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '0.85rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ background: '#7C3AED', color: '#DDD6FE', padding: '0.5rem', borderRadius: '8px' }}>
+                    <GraduationCap size={24} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                      PMGDISHA Candidate Exam & Certificate
+                    </h3>
+                    <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                      Pradhan Mantri Gramin Digital Saksharta Abhiyan • ₹300 VLE Incentive
+                    </div>
                   </div>
                 </div>
+                <a 
+                  href="https://www.pmgdisha.in/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ fontSize: '0.72rem', color: '#7C3AED', background: '#F3E8FF', padding: '0.2rem 0.5rem', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}
+                >
+                  🔗 PMGDISHA Official Portal ↗
+                </a>
+              </div>
+
+              {/* Inbuilt Curriculum & Examination Material */}
+              <div style={{ background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.75rem', marginBottom: '1.25rem', fontSize: '0.75rem', color: '#334155' }}>
+                <div style={{ fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>
+                  📚 ADCS Inbuilt 20-Hour Digital Literacy Modules:
+                </div>
+                1. Computer & Smartphone Basics (हार्डवेयर व ऑपरेटिंग सिस्टम).<br />
+                2. Digital Payments & UPI (भीम यूपीआई, डिजिटल वॉलेट्स).<br />
+                3. Citizen e-Services (आधार, डिजीलॉकर, पैन, ई-श्रम, आयुष्मान भारत).
               </div>
 
               <form onSubmit={handlePmgdishaCertify}>
