@@ -162,6 +162,3 @@ export const EducationPage: React.FC = () => {
     </div>
   );
 };
-    </div>
-  );
-};

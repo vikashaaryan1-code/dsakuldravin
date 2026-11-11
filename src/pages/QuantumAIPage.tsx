@@ -21,7 +21,9 @@ import {
   Clock,
   Compass,
   FileText,
-  Sliders
+  Sliders,
+  Scale,
+  GraduationCap
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -51,7 +53,7 @@ export const QuantumAIPage: React.FC = () => {
     language 
   } = useApp();
 
-  const [activeAgent, setActiveAgent] = useState<'Universal' | 'Document AI' | 'Quote AI' | 'Admin Copilot'>('Universal');
+  const [activeAgent, setActiveAgent] = useState<'Universal' | 'Document AI' | 'Quote AI' | 'Legal Advisor' | 'Academy Guide' | 'Admin Copilot'>('Universal');
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -337,6 +339,8 @@ export const QuantumAIPage: React.FC = () => {
                 { name: 'Universal', icon: <Bot size={14} /> },
                 { name: 'Document AI', icon: <FileSearch size={14} /> },
                 { name: 'Quote AI', icon: <Calculator size={14} /> },
+                { name: 'Legal Advisor', icon: <Scale size={14} /> },
+                { name: 'Academy Guide', icon: <GraduationCap size={14} /> },
                 { name: 'Admin Copilot', icon: <Terminal size={14} /> },
               ].map((agent) => (
                 <button

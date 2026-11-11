@@ -46,7 +46,7 @@ export const QuantumAIPanel: React.FC = () => {
     language
   } = useApp();
 
-  const [activeAgent, setActiveAgent] = useState<'Universal' | 'Document AI' | 'Quote AI' | 'Admin Copilot'>('Universal');
+  const [activeAgent, setActiveAgent] = useState<'Universal' | 'Document AI' | 'Quote AI' | 'Legal Advisor' | 'Academy Guide' | 'Admin Copilot'>('Universal');
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -162,6 +162,34 @@ export const QuantumAIPanel: React.FC = () => {
             agentName: 'Document Intelligence AI',
             text: `📑 Document Scrutiny Rule: Aadhaar requires active mobile OTP link for e-sign with Verhoeff mathematical checksum verification. PAN applications require matching name and father's name. Your digital vault is encrypted with AES-256.`,
             governanceLevel: 'READ',
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+        } else if (q.includes('legal') || q.includes('lawyer') || q.includes('advocate') || q.includes('dispute') || activeAgent === 'Legal Advisor') {
+          reply = {
+            id: 'ai-' + Date.now(),
+            sender: 'quantum_ai',
+            agentName: 'ADCS Legal Desk AI',
+            text: `⚖️ Legal Consultation Scrutiny (BCI Rule 36 Compliant): I can help classify your matter (Property, Matrimonial, Consumer, Civil), verify title deeds, and schedule a private WebRTC video session with an enrolled advocate.`,
+            governanceLevel: 'RECOMMEND',
+            suggestedAction: {
+              label: 'Open Advocate Desk',
+              actionType: 'navigate',
+              targetPayload: '/portal/advocate',
+            },
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+        } else if (q.includes('course') || q.includes('exam') || q.includes('certificate') || q.includes('learn') || activeAgent === 'Academy Guide') {
+          reply = {
+            id: 'ai-' + Date.now(),
+            sender: 'quantum_ai',
+            agentName: 'ADCS Academy Learning Guide',
+            text: `🎓 ADCS Academy Curriculum: 8 vocational tracks available (AI Mastery, Computer Pro, CCTV Technician, Digital Marketing). Complete modules, take the timed proctored exam, and get an independently verifiable QR credential.`,
+            governanceLevel: 'RECOMMEND',
+            suggestedAction: {
+              label: 'Enter Student Portal & LMS',
+              actionType: 'navigate',
+              targetPayload: '/portal/student',
+            },
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           };
         } else if (q.includes('courier') || q.includes('shipment') || q.includes('track')) {
@@ -300,7 +328,7 @@ export const QuantumAIPanel: React.FC = () => {
         gap: '0.35rem',
         overflowX: 'auto',
       }}>
-        {(['Universal', 'Document AI', 'Quote AI', 'Admin Copilot'] as const).map(agent => (
+        {(['Universal', 'Document AI', 'Quote AI', 'Legal Advisor', 'Academy Guide', 'Admin Copilot'] as const).map(agent => (
           <button
             key={agent}
             onClick={() => setActiveAgent(agent)}
