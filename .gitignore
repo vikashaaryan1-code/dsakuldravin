@@ -36,3 +36,7 @@ Thumbs.db
 # Test & Vault Uploads
 server/data/vault/*.pdf
 
+# Releases
+releases/
+
+
