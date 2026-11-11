@@ -13,7 +13,8 @@ import {
   Scale, 
   TrendingUp, 
   Sparkles,
-  FileCheck2
+  FileCheck2,
+  ExternalLink
 } from 'lucide-react';
 
 export const BusinessServicesPage: React.FC = () => {
@@ -184,6 +185,49 @@ export const BusinessServicesPage: React.FC = () => {
         <div className="grid-3" style={{ gap: '1.5rem' }}>
           {businessServices.map(service => (
             <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+      </div>
+
+      {/* Authorized Statutory Corporate & Tax Registration Portals */}
+      <div style={{
+        marginTop: '3rem',
+        background: '#F8FAFC',
+        borderRadius: '18px',
+        padding: '1.5rem 2rem',
+        border: '1px solid #E2E8F0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem',
+      }}>
+        <div>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+            AUTHORIZED CORPORATE, TAX & FOOD LICENSE PORTALS (MCA V3 / GSTN / FSSAI / UDYAM)
+          </div>
+          <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>
+            Direct official portal links for company name reservation (SPICe+), GSTIN search, FoSCoS food licensing, and Udyam certificate verification.
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+          {[
+            { label: 'MCA V3 Portal', url: 'https://www.mca.gov.in/' },
+            { label: 'GST Portal (GSTN)', url: 'https://www.gst.gov.in/' },
+            { label: 'FSSAI FoSCoS', url: 'https://foscos.fssai.gov.in/' },
+            { label: 'Udyam MSME Registration', url: 'https://udyamregistration.gov.in/' },
+          ].map(p => (
+            <a
+              key={p.label}
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', textDecoration: 'none' }}
+            >
+              <span>{p.label}</span>
+              <ExternalLink size={13} />
+            </a>
           ))}
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { 
   Hammer, 
@@ -11,19 +12,29 @@ import {
   Compass, 
   Sparkles,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const ConstructionPage: React.FC = () => {
-  const { showToast, logAudit, openApplyModal, services, language } = useApp();
+  const { showToast, logAudit, submitApplication, addLead, language } = useApp();
 
   // Calculator State
   const [builtUpArea, setBuiltUpArea] = useState(1500); // in sq.ft
   const [grade, setGrade] = useState<'Standard' | 'Premium' | 'Luxury'>('Premium');
   const [floors, setFloors] = useState<number>(2); // G+1
   const [clientName, setClientName] = useState('Anand Kumar');
-  const [clientPhone, setClientPhone] = useState('+91 94310 XXXXX');
+  const [clientPhone, setClientPhone] = useState('9431012345');
+  const [projectCity, setProjectCity] = useState('Patna');
+  const [submittedQuote, setSubmittedQuote] = useState<{
+    appId: string;
+    totalCost: number;
+    totalSqFt: number;
+    grade: string;
+    floors: number;
+  } | null>(null);
 
   const ratePerSqFt = grade === 'Standard' ? 1650 : grade === 'Premium' ? 1950 : 2450;
   const totalSqFt = builtUpArea * floors;
@@ -33,9 +44,73 @@ export const ConstructionPage: React.FC = () => {
   const cementBags = Math.round(totalSqFt * 0.45);
 
   const handleRequestQuote = () => {
-    showToast('Turnkey Estimate Generated!', `BOQ Estimate of ₹${(totalCost / 100000).toFixed(2)} Lakhs recorded. Architect site survey scheduled.`, 'success');
-    logAudit(`Construction BOQ Estimated: ₹${totalCost}`, `Area: ${totalSqFt} sq.ft, Grade: ${grade}`);
+    const cleanPhone = clientPhone.replace(/\D/g, '').slice(-10);
+    if (!clientName.trim() || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      showToast('Invalid Contact Details', 'Please enter client name and a valid 10-digit Indian mobile number.', 'error');
+      return;
+    }
+
+    const appId = submitApplication({
+      serviceId: 'srv-construction-boq',
+      serviceName: `Turnkey Construction BOQ (${grade} • ${totalSqFt} sq.ft)`,
+      category: 'construction',
+      applicantName: clientName.trim(),
+      applicantPhone: `+91 ${cleanPhone}`,
+      city: projectCity.trim() || 'Patna',
+      feePaid: 0,
+      documentsUploaded: ['BOQ_Specification_Estimate.pdf'],
+      notes: `Grade: ${grade} @ ₹${ratePerSqFt}/sq.ft, Floors: G+${floors - 1}, Est Budget: ₹${totalCost.toLocaleString('en-IN')}`,
+    });
+
+    addLead({
+      name: clientName.trim(),
+      company: `${grade} Turnkey Build (${projectCity})`,
+      email: 'civil.desk@akuldravindigital.com',
+      phone: `+91 ${cleanPhone}`,
+      serviceInterested: `${totalSqFt} sq.ft ${grade} Construction`,
+      estimatedValue: totalCost,
+      stage: 'Proposal',
+      assignedExecutive: 'ADCS Structural & Architect Desk',
+    });
+
+    setSubmittedQuote({
+      appId,
+      totalCost,
+      totalSqFt,
+      grade,
+      floors,
+    });
+
+    showToast('Turnkey Estimate Generated!', `BOQ ${appId} (₹${(totalCost / 100000).toFixed(2)} Lakhs) logged for Architect Survey.`, 'success');
+    logAudit(`Construction BOQ Estimated (${appId}): ₹${totalCost}`, `Area: ${totalSqFt} sq.ft, Grade: ${grade}`);
     confetti({ particleCount: 80, spread: 60 });
+  };
+
+  const handleDownloadBoq = () => {
+    if (!submittedQuote) return;
+    const content = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — TURNKEY CONSTRUCTION BOQ ESTIMATE',
+      '========================================================================',
+      `BOQ Reference     : ${submittedQuote.appId}`,
+      `Date & Time       : ${new Date().toLocaleString('en-IN')}`,
+      `Client Name       : ${clientName} (${clientPhone})`,
+      `Site Location     : ${projectCity}`,
+      `Specification     : ${submittedQuote.grade} Finish (@ ₹${ratePerSqFt}/sq.ft)`,
+      `Total Built-Up    : ${submittedQuote.totalSqFt.toLocaleString('en-IN')} sq.ft (${submittedQuote.floors} Floors)`,
+      `Estimated Cost    : ₹${submittedQuote.totalCost.toLocaleString('en-IN')} (₹${(submittedQuote.totalCost / 100000).toFixed(2)} Lakhs)`,
+      `Estimated Steel   : ${steelTons} TMT Metric Tons`,
+      `Estimated Cement  : ${cementBags} Bags (50kg OPC/PPC)`,
+      `Target Duration   : ~${estimatedMonths} Months`,
+      `Track Progress    : https://akuldravindigital.com/track?id=${encodeURIComponent(submittedQuote.appId)}`,
+      '========================================================================',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_BOQ_${submittedQuote.appId}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -100,6 +175,39 @@ export const ConstructionPage: React.FC = () => {
         }} className="hero-grid">
           {/* Inputs */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Client Full Name *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={clientName}
+                  onChange={(e) => setClientName(e.target.value)}
+                  placeholder="Client Name"
+                />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Mobile Number *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={clientPhone}
+                  onChange={(e) => setClientPhone(e.target.value)}
+                  placeholder="10-digit Mobile"
+                />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Project City</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={projectCity}
+                  onChange={(e) => setProjectCity(e.target.value)}
+                  placeholder="City"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="form-label">
                 Plot Ground Floor Built-up Area: <strong>{builtUpArea} sq.ft</strong>
@@ -231,6 +339,35 @@ export const ConstructionPage: React.FC = () => {
               <span>Book Architect Site Survey</span>
               <ArrowRight size={16} />
             </button>
+
+            {submittedQuote && (
+              <div style={{
+                marginTop: '1rem',
+                padding: '0.9rem 1rem',
+                borderRadius: '12px',
+                background: 'rgba(16, 185, 129, 0.15)',
+                border: '1px solid #10B981',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '0.75rem',
+                flexWrap: 'wrap',
+              }}>
+                <div style={{ fontSize: '0.78rem' }}>
+                  <div style={{ fontWeight: 800, color: '#34D399' }}>BOQ SAVED • {submittedQuote.appId}</div>
+                  <div style={{ color: '#E2E8F0' }}>Survey scheduled & CRM lead synced</div>
+                </div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={handleDownloadBoq} className="btn-primary btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                    <Download size={13} />
+                    <span>BOQ</span>
+                  </button>
+                  <Link to={`/track?id=${encodeURIComponent(submittedQuote.appId)}`} className="btn-gold btn-sm" style={{ textDecoration: 'none', fontWeight: 700 }}>
+                    Track
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -260,6 +397,48 @@ export const ConstructionPage: React.FC = () => {
               <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0A192F' }}>{m.title}</div>
               <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700, marginTop: '0.2rem' }}>Milestone Payout: {m.pct}</div>
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Authorized Municipal Plan Approval & Building Code Portals */}
+      <div style={{
+        marginTop: '2.5rem',
+        background: '#F8FAFC',
+        borderRadius: '18px',
+        padding: '1.5rem 2rem',
+        border: '1px solid #E2E8F0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem',
+      }}>
+        <div>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+            AUTHORIZED MUNICIPAL SANCTION, BIS BUILDING CODE & RERA PORTALS
+          </div>
+          <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>
+            Verify National Building Code standards, RERA developer compliance, and MoHUA urban housing guidelines.
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+          {[
+            { label: 'MoHUA Urban Portal', url: 'https://mohua.gov.in/' },
+            { label: 'BIS Standards Portal', url: 'https://www.bis.gov.in/' },
+            { label: 'Bihar RERA Desk', url: 'https://rera.bihar.gov.in/' },
+          ].map(p => (
+            <a
+              key={p.label}
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', textDecoration: 'none' }}
+            >
+              <span>{p.label}</span>
+              <ExternalLink size={13} />
+            </a>
           ))}
         </div>
       </div>
