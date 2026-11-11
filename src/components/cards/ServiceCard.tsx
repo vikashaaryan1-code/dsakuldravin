@@ -97,7 +97,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <FileText size={13} color="#1D4ED8" />
-            <span><strong>Docs:</strong> {service.requiredDocs.slice(0, 2).join(', ')}...</span>
+            <span><strong>Docs:</strong> {service.requiredDocs && Array.isArray(service.requiredDocs) && service.requiredDocs.length > 0 ? `${service.requiredDocs.slice(0, 2).join(', ')}...` : (language === 'hi' ? 'पहचान एवं पता प्रमाण' : 'Identity & Address Proof')}</span>
           </div>
         </div>
       </div>
@@ -115,7 +115,10 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
           <div>
             <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block' }}>Fee Breakdown:</span>
             <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F' }}>
-              {service.basePrice === 0 ? 'Free Consultation' : `₹${service.basePrice.toLocaleString('en-IN')}`}
+              {(() => {
+                const priceVal = Number(service.basePrice ?? (service as any).price ?? 0);
+                return priceVal === 0 ? 'Free Consultation' : `₹${priceVal.toLocaleString('en-IN')}`;
+              })()}
             </span>
           </div>
           {service.govtFee && service.govtFee > 0 ? (

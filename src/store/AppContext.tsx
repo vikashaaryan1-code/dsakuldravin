@@ -290,7 +290,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         if (servicesRes.status === 'fulfilled' && servicesRes.value?.services?.length) {
           setServices(prev => {
-            const serverServices = servicesRes.value!.services;
+            const serverServices = servicesRes.value!.services.map((s: any) => ({
+              ...s,
+              basePrice: Number(s.basePrice ?? s.price ?? 0),
+              requiredDocs: Array.isArray(s.requiredDocs) && s.requiredDocs.length > 0 ? s.requiredDocs : ['Aadhaar Card', 'Passport Photo'],
+              requiredDocsHi: Array.isArray(s.requiredDocsHi) && s.requiredDocsHi.length > 0 ? s.requiredDocsHi : ['आधार कार्ड', 'पासपोर्ट फोटो'],
+              timeline: s.timeline || '2-4 Working Days',
+              timelineHi: s.timelineHi || '2-4 कार्य दिवस'
+            }));
             const existingIds = new Set(serverServices.map((s: any) => s.id));
             const uniqueLocal = prev.filter(s => !existingIds.has(s.id));
             return [...serverServices, ...uniqueLocal];
