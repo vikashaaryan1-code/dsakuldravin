@@ -8,7 +8,9 @@ import {
   ShieldCheck, 
   Clock, 
   ArrowRight,
-  Sparkles
+  Sparkles,
+  Download,
+  ExternalLink
 } from 'lucide-react';
 
 export const PricingPage: React.FC = () => {
@@ -21,6 +23,31 @@ export const PricingPage: React.FC = () => {
     const matchCat = selectedCategory === 'all' || s.category === selectedCategory;
     return matchSearch && matchCat;
   });
+
+  const handleDownloadTariffSchedule = () => {
+    const lines = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — TRANSPARENT SERVICE TARIFF SCHEDULE',
+      `Generated: ${new Date().toLocaleString('en-IN')} | Sector Filter: ${selectedCategory}`,
+      '==================================================================================',
+      ...filtered.map((s, idx) => {
+        const govt = s.govtFee && s.govtFee > 0 ? `INR ${s.govtFee}` : 'INR 0';
+        const prof = `INR ${s.professionalFee || s.basePrice}`;
+        const total = s.basePrice === 0 ? 'Free Consultation' : `INR ${s.basePrice}`;
+        return `${String(idx + 1).padStart(2, '0')}. ${s.title} [${s.category}] | Govt: ${govt} | Platform: ${prof} | Total: ${total} | SLA: ${s.timeline}`;
+      }),
+      '==================================================================================',
+      'Formula: Base Fee + Statutory Govt Fee + Professional Fee + Tax (GST) - Discount',
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Tariff_Schedule_${selectedCategory}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
@@ -65,7 +92,39 @@ export const PricingPage: React.FC = () => {
             </div>
           </div>
         </div>
-        <span className="badge badge-blue">ITC Input Tax Credit Applicable</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <span className="badge badge-blue">ITC Input Tax Credit Applicable</span>
+          <a
+            href="https://www.gst.gov.in/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              padding: '0.35rem 0.7rem',
+              borderRadius: '8px',
+              border: '1px solid #93C5FD',
+              background: '#FFFFFF',
+              color: '#1D4ED8',
+              fontSize: '0.75rem',
+              fontWeight: 700,
+              textDecoration: 'none',
+            }}
+          >
+            <span>GSTN Portal</span>
+            <ExternalLink size={12} />
+          </a>
+          <button
+            type="button"
+            onClick={handleDownloadTariffSchedule}
+            className="btn-primary btn-sm"
+            style={{ gap: '0.35rem' }}
+          >
+            <Download size={13} />
+            <span>Export Tariff (.txt)</span>
+          </button>
+        </div>
       </div>
 
       {/* Search and Category Filter */}
@@ -103,14 +162,22 @@ export const PricingPage: React.FC = () => {
           onChange={(e) => setSelectedCategory(e.target.value)}
           style={{ width: 'auto', padding: '0.55rem 1rem' }}
         >
-          <option value="all">All Sectors</option>
+          <option value="all">All Sectors ({services.length})</option>
           <option value="government">Government Services</option>
-          <option value="business">Business & Incorporation</option>
-          <option value="cyber-cafe">Cyber Café & Xerox</option>
-          <option value="cctv">CCTV & Hardware</option>
-          <option value="construction">Construction & BOQ</option>
-          <option value="courier">Courier & Logistics</option>
-          <option value="website-it">IT & Software</option>
+          <option value="business">Business &amp; Incorporation</option>
+          <option value="documents">Document &amp; Drafting Studio</option>
+          <option value="bills">BBPS Utility Bills</option>
+          <option value="travel">Travel &amp; Rail Desk</option>
+          <option value="cyber-cafe">Cyber Café &amp; Xerox</option>
+          <option value="property">Property Marketplace</option>
+          <option value="rental">Rental &amp; HRA Agreements</option>
+          <option value="construction">Construction &amp; BOQ</option>
+          <option value="cctv">CCTV &amp; Hardware</option>
+          <option value="courier">Courier &amp; Logistics</option>
+          <option value="finance">Loans &amp; Credit Desk</option>
+          <option value="insurance">Insurance POSP</option>
+          <option value="website-it">IT &amp; Software</option>
+          <option value="consulting">Consulting &amp; Advisory</option>
         </select>
       </div>
 

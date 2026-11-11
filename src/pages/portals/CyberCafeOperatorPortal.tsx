@@ -10,7 +10,9 @@ import {
   CheckCircle2, 
   Layers, 
   AlertCircle,
-  FileText
+  FileText,
+  Download,
+  PlusCircle
 } from 'lucide-react';
 
 export const CyberCafeOperatorPortal: React.FC = () => {
@@ -19,7 +21,8 @@ export const CyberCafeOperatorPortal: React.FC = () => {
     startWorkstationSession, 
     stopWorkstationSession, 
     printJobs, 
-    addPrintJob, 
+    addPrintJob,
+    recordJournalEntry,
     showToast,
     language 
   } = useApp();
@@ -28,13 +31,126 @@ export const CyberCafeOperatorPortal: React.FC = () => {
   const [sessionCustomer, setSessionCustomer] = useState('');
   const [sessionTask, setSessionTask] = useState('Online Job Application');
 
+  // Quick print counter form state
+  const [printCustomer, setPrintCustomer] = useState('');
+  const [printType, setPrintType] = useState<'B/W Print' | 'Color Print' | 'Scan' | 'Lamination' | 'Spiral Binding'>('B/W Print');
+  const [printPages, setPrintPages] = useState(5);
+  const [printCopies, setPrintCopies] = useState(1);
+
+  const [lastCashReceipt, setLastCashReceipt] = useState<{
+    ref: string;
+    stationOrJob: string;
+    customerName: string;
+    detail: string;
+    amount: number;
+    timestamp: string;
+  } | null>(null);
+
   const inUseCount = workstations.filter(w => w.status === 'in-use').length;
   const availCount = workstations.filter(w => w.status === 'available').length;
 
+  const PRINT_RATES: Record<'B/W Print' | 'Color Print' | 'Scan' | 'Lamination' | 'Spiral Binding', number> = {
+    'B/W Print': 5,
+    'Color Print': 20,
+    'Scan': 15,
+    'Lamination': 30,
+    'Spiral Binding': 50,
+  };
+
+  const postCafeRevenueLedger = (ref: string, description: string, grossAmount: number) => {
+    const roundedGross = Number(grossAmount.toFixed(2));
+    if (roundedGross <= 0) return;
+    const gst = Number((roundedGross - roundedGross / 1.18).toFixed(2));
+    const base = Number((roundedGross - gst).toFixed(2));
+    recordJournalEntry({
+      date: new Date().toISOString().split('T')[0],
+      reference: ref,
+      description,
+      lines: [
+        { accountCode: '1001', accountName: 'Cash Counter & Counter Drawer', debit: roundedGross, credit: 0 },
+        { accountCode: '4061', accountName: 'Cyber Cafe Terminal & Print Revenue', debit: 0, credit: base },
+        { accountCode: '2010', accountName: 'GST Output Tax Payable (18%)', debit: 0, credit: gst },
+      ],
+    });
+  };
+
+  const downloadReceiptTxt = (receipt: NonNullable<typeof lastCashReceipt>) => {
+    const content = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — CYBER CAFE POS CASH BILL',
+      '================================================================',
+      `Receipt Ref  : ${receipt.ref}`,
+      `Date & Time  : ${receipt.timestamp}`,
+      `Customer     : ${receipt.customerName}`,
+      `Terminal/Job : ${receipt.stationOrJob}`,
+      `Particulars  : ${receipt.detail}`,
+      `Total Cash   : INR ${receipt.amount.toFixed(2)} (Incl. 18% GST)`,
+      'Ledger Sync  : Balanced Double-Entry Posted (1001 Dr / 4061 + 2010 Cr)',
+      '================================================================',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Cafe_Cash_Bill_${receipt.ref}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleLaunchSession = () => {
-    if (!sessionCustomer) return;
-    startWorkstationSession(selectedStationId, sessionCustomer, '+91 98000 00000', sessionTask);
+    if (!sessionCustomer.trim()) {
+      showToast('Customer Name Required', 'Enter walk-in customer name before starting terminal.', 'warning');
+      return;
+    }
+    startWorkstationSession(selectedStationId, sessionCustomer.trim(), '+91 98000 00000', sessionTask);
     setSessionCustomer('');
+  };
+
+  const handleEndSessionAndCollect = (pcId: string, customerName: string, activeTask: string) => {
+    const bill = stopWorkstationSession(pcId);
+    const ref = `CAFE-PC-${Date.now().toString().slice(-6)}`;
+    postCafeRevenueLedger(ref, `Cyber Cafe Workstation Settlement (${pcId} — ${customerName})`, bill);
+    setLastCashReceipt({
+      ref,
+      stationOrJob: pcId,
+      customerName,
+      detail: activeTask || 'Workstation Browsing Session',
+      amount: bill,
+      timestamp: new Date().toLocaleString('en-IN'),
+    });
+  };
+
+  const handleQueuePrintJob = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!printCustomer.trim()) {
+      showToast('Customer Name Required', 'Enter customer name for print counter slip.', 'warning');
+      return;
+    }
+    const pages = Math.max(1, Number(printPages) || 1);
+    const copies = Math.max(1, Number(printCopies) || 1);
+    const rate = PRINT_RATES[printType];
+    const totalCost = printType === 'Lamination' || printType === 'Spiral Binding' ? copies * rate : pages * copies * rate;
+    addPrintJob({
+      type: printType,
+      customerName: printCustomer.trim(),
+      pages,
+      copies,
+      ratePerPage: rate,
+      totalCost,
+      status: 'Completed',
+    });
+    const ref = `CAFE-PRT-${Date.now().toString().slice(-6)}`;
+    postCafeRevenueLedger(ref, `Print/Xerox Counter (${printType} x ${copies} — ${printCustomer.trim()})`, totalCost);
+    setLastCashReceipt({
+      ref,
+      stationOrJob: `Print Counter (${printType})`,
+      customerName: printCustomer.trim(),
+      detail: `${pages} pages x ${copies} copies @ INR ${rate}`,
+      amount: totalCost,
+      timestamp: new Date().toLocaleString('en-IN'),
+    });
+    setPrintCustomer('');
   };
 
   return (
@@ -71,6 +187,117 @@ export const CyberCafeOperatorPortal: React.FC = () => {
             <div style={{ fontSize: '0.72rem', color: '#CBD5E1' }}>Seats In-Use</div>
           </div>
         </div>
+      </div>
+
+      {/* Live Cash Receipt Confirmation Banner */}
+      {lastCashReceipt && (
+        <div style={{
+          background: '#ECFDF5',
+          border: '1.5px solid #10B981',
+          borderRadius: '18px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: '0.98rem', color: '#065F46' }}>
+              Cash Settled & Double-Entry Posted • {lastCashReceipt.ref}
+            </div>
+            <div style={{ fontSize: '0.82rem', color: '#047857', marginTop: '0.2rem' }}>
+              {lastCashReceipt.stationOrJob} — {lastCashReceipt.customerName} ({lastCashReceipt.detail}) • Total: ₹{lastCashReceipt.amount.toFixed(2)}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <button
+              onClick={() => downloadReceiptTxt(lastCashReceipt)}
+              className="btn-primary btn-sm"
+              style={{ gap: '0.35rem' }}
+            >
+              <Download size={14} />
+              <span>Download POS Bill (.txt)</span>
+            </button>
+            <button
+              onClick={() => setLastCashReceipt(null)}
+              style={{
+                padding: '0.45rem 0.75rem',
+                borderRadius: '8px',
+                border: '1px solid #A7F3D0',
+                background: '#FFFFFF',
+                color: '#065F46',
+                fontWeight: 700,
+                fontSize: '0.78rem',
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Session Launcher Bar */}
+      <div style={{
+        background: '#F8FAFC',
+        borderRadius: '20px',
+        padding: '1.25rem 1.5rem',
+        border: '1px solid #E2E8F0',
+        marginBottom: '2rem',
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+        gap: '0.85rem',
+        alignItems: 'end',
+      }}>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.3rem' }}>
+            Target Station
+          </label>
+          <select
+            className="form-select"
+            value={selectedStationId}
+            onChange={(e) => setSelectedStationId(e.target.value)}
+          >
+            {workstations.map(w => (
+              <option key={w.id} value={w.id} disabled={w.status !== 'available'}>
+                {w.id} ({w.status})
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.3rem' }}>
+            Walk-In Customer Name
+          </label>
+          <input
+            type="text"
+            className="form-input"
+            value={sessionCustomer}
+            onChange={(e) => setSessionCustomer(e.target.value)}
+            placeholder="e.g. Rohit Kumar"
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.3rem' }}>
+            Workstation Purpose
+          </label>
+          <input
+            type="text"
+            className="form-input"
+            value={sessionTask}
+            onChange={(e) => setSessionTask(e.target.value)}
+            placeholder="Exam Form / Aadhaar Print"
+          />
+        </div>
+        <button
+          onClick={handleLaunchSession}
+          className="btn-primary"
+          style={{ justifyContent: 'center', gap: '0.4rem' }}
+        >
+          <Play size={15} />
+          <span>Assign & Start Timer</span>
+        </button>
       </div>
 
       {/* Operator Terminal Grid */}
@@ -158,7 +385,11 @@ export const CyberCafeOperatorPortal: React.FC = () => {
                   </button>
                 ) : isInUse ? (
                   <button
-                    onClick={() => stopWorkstationSession(pc.id)}
+                    onClick={() => handleEndSessionAndCollect(
+                      pc.id,
+                      pc.currentSession?.customerName || 'Walk-In Customer',
+                      pc.currentSession?.activeTask || 'Workstation Browsing'
+                    )}
                     style={{
                       width: '100%',
                       padding: '0.5rem',
@@ -194,12 +425,84 @@ export const CyberCafeOperatorPortal: React.FC = () => {
         padding: '2rem',
         border: '1px solid #E2E8F0',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
           <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F' }}>
             Daily Print & Xerox Production Queue
           </h3>
           <span className="badge badge-blue">Toner Remaining: 84%</span>
         </div>
+
+        <form
+          onSubmit={handleQueuePrintJob}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: '0.75rem',
+            padding: '1rem',
+            borderRadius: '14px',
+            background: '#F8FAFC',
+            border: '1px solid #CBD5E1',
+            marginBottom: '1.25rem',
+            alignItems: 'end',
+          }}
+        >
+          <div>
+            <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+              Customer Name
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              value={printCustomer}
+              onChange={(e) => setPrintCustomer(e.target.value)}
+              placeholder="Walk-in customer"
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+              Job Type
+            </label>
+            <select
+              className="form-select"
+              value={printType}
+              onChange={(e) => setPrintType(e.target.value as typeof printType)}
+            >
+              <option value="B/W Print">B/W Print (₹5/pg)</option>
+              <option value="Color Print">Color Print (₹20/pg)</option>
+              <option value="Scan">Document Scan (₹15/pg)</option>
+              <option value="Lamination">Lamination (₹30/sheet)</option>
+              <option value="Spiral Binding">Spiral Binding (₹50/book)</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+              Pages
+            </label>
+            <input
+              type="number"
+              min={1}
+              className="form-input"
+              value={printPages}
+              onChange={(e) => setPrintPages(Math.max(1, Number(e.target.value)))}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+              Copies
+            </label>
+            <input
+              type="number"
+              min={1}
+              className="form-input"
+              value={printCopies}
+              onChange={(e) => setPrintCopies(Math.max(1, Number(e.target.value)))}
+            />
+          </div>
+          <button type="submit" className="btn-primary" style={{ justifyContent: 'center', gap: '0.35rem' }}>
+            <PlusCircle size={15} />
+            <span>Add &amp; Bill Print</span>
+          </button>
+        </form>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {printJobs.map(job => (

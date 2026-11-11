@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { 
   GraduationCap, 
@@ -7,7 +8,9 @@ import {
   BookOpen, 
   ArrowRight, 
   Clock, 
-  Users 
+  Users,
+  ExternalLink,
+  ShieldCheck
 } from 'lucide-react';
 
 export const EducationPage: React.FC = () => {
@@ -82,8 +85,19 @@ export const EducationPage: React.FC = () => {
 
             <button
               onClick={() => {
-                const srv = services.find(s => s.slug === 'exam-form-filling') || services[0];
-                openApplyModal(srv);
+                const matched = services.find(s => s.slug === item.slug);
+                if (matched) {
+                  openApplyModal(matched);
+                } else {
+                  const fallback = services.find(s => s.slug === 'exam-form-filling') || services[0];
+                  const parsedRate = parseInt(item.rate.replace(/[^\d]/g, ''), 10);
+                  openApplyModal({
+                    ...fallback,
+                    title: item.title,
+                    basePrice: Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : fallback.basePrice,
+                    professionalFee: Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : fallback.professionalFee,
+                  });
+                }
               }}
               className="btn-primary"
               style={{ width: '100%', justifyContent: 'center' }}
@@ -106,7 +120,8 @@ export const EducationPage: React.FC = () => {
         justifyContent: 'space-between',
         alignItems: 'center',
         flexWrap: 'wrap',
-        gap: '2rem'
+        gap: '2rem',
+        marginBottom: '2.5rem',
       }}>
         <div style={{ maxWidth: '600px' }}>
           <span style={{ background: '#F59E0B', color: '#000', padding: '0.2rem 0.6rem', borderRadius: '4px', fontSize: '0.75rem', fontWeight: 800 }}>
@@ -121,8 +136,8 @@ export const EducationPage: React.FC = () => {
         </div>
 
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <a
-            href="/portal/student"
+          <Link
+            to="/portal/student"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -137,10 +152,10 @@ export const EducationPage: React.FC = () => {
             }}
           >
             <BookOpen size={16} /> Enter Student Portal & LMS
-          </a>
+          </Link>
 
-          <a
-            href="/verify-certificate"
+          <Link
+            to="/verify-certificate"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -156,7 +171,63 @@ export const EducationPage: React.FC = () => {
             }}
           >
             <Award size={16} /> Verify Certificate Online
-          </a>
+          </Link>
+        </div>
+      </div>
+
+      {/* Official Examination, Admissions & Scholarship Portals Directory */}
+      <div style={{
+        background: '#F8FAFC',
+        borderRadius: '20px',
+        padding: '1.75rem',
+        border: '1px solid #E2E8F0',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#0A192F', fontWeight: 800, fontSize: '1.05rem' }}>
+              <ShieldCheck size={18} color="#1D4ED8" />
+              <span>Authorized Examination, Admissions & Scholarship Portals</span>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0.25rem 0 0' }}>
+              Direct official government portals for applicant-authenticated OTP login and statutory submission. ADCS provides document compression & assisted filing only.
+            </p>
+          </div>
+          <Link to="/documents" className="badge badge-blue" style={{ textDecoration: 'none' }}>
+            Open Photo/Marksheet Vault
+          </Link>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+          {[
+            { name: 'SSC Official Portal (ssc.gov.in)', url: 'https://ssc.gov.in/' },
+            { name: 'UPSC Online (upsconline.nic.in)', url: 'https://upsconline.nic.in/' },
+            { name: 'NTA Exams — CUET / JEE / NEET', url: 'https://exams.nta.ac.in/' },
+            { name: 'National Scholarship Portal (NSP)', url: 'https://scholarships.gov.in/' },
+            { name: 'Academic Bank of Credits (DigiLocker)', url: 'https://www.abc.gov.in/' },
+          ].map((portal) => (
+            <a
+              key={portal.url}
+              href={portal.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                padding: '0.5rem 0.9rem',
+                borderRadius: '10px',
+                background: '#FFFFFF',
+                border: '1px solid #CBD5E1',
+                color: '#1E293B',
+                fontSize: '0.8rem',
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              <span>{portal.name}</span>
+              <ExternalLink size={13} color="#2563EB" />
+            </a>
+          ))}
         </div>
       </div>
     </div>
