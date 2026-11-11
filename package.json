@@ -11,6 +11,7 @@
     "test-e2e": "node scripts/test_live_e2e_workflow.mjs",
     "simulate-walkin": "node scripts/simulate_walkin_citizen_service.mjs",
     "simulate-cafe-legal": "node scripts/simulate_cafe_and_legal_workflows.mjs",
+    "walkthrough-admin": "node scripts/walkthrough_super_admin_portal.mjs",
     "simulate": "node scripts/simulate_full_workflow.mjs",
     "walkthrough": "node scripts/master_enterprise_walkthrough.mjs",
     "execute-all": "node scripts/execute_all_suite.mjs",

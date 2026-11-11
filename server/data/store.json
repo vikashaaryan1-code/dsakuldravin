@@ -62,6 +62,25 @@
   ],
   "applications": [
     {
+      "id": "APP-81022",
+      "trackingNumber": "AD-APP-77799",
+      "serviceId": "srv-pm-surya-ghar",
+      "serviceName": "PM Surya Ghar Muft Bijli Yojana (Solar Subsidy Application)",
+      "customerName": "Super Admin Automation",
+      "phone": "+91 98765 43210",
+      "status": "APPROVED_CERTIFICATE_ISSUED",
+      "appliedDate": "2026-11-11T05:34:37.599Z",
+      "assignedRole": "Central Operations Desk",
+      "notes": "National Portal for Rooftop Solar Sanction Order Released.",
+      "formData": {
+        "category": "government",
+        "consumerNumber": "104859302194",
+        "sanctionedLoadKW": 3.5,
+        "projectedSubsidy": "₹78,000 Direct Benefit Transfer (DBT)",
+        "slaDays": 3
+      }
+    },
+    {
       "id": "APP-71991",
       "trackingNumber": "AD-APP-32339",
       "serviceId": "srv-pan-new",
@@ -2821,6 +2840,33 @@
     }
   ],
   "auditLogs": [
+    {
+      "id": "AUD-1794375277728",
+      "action": "Application Status Changed to APPROVED_CERTIFICATE_ISSUED",
+      "actor": "OPERATOR",
+      "role": "OPERATOR",
+      "target": "AD-APP-77799",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-11T05:34:37.728Z"
+    },
+    {
+      "id": "AUD-1794375277686",
+      "action": "Application Status Changed to UNDER_VERIFICATION",
+      "actor": "OPERATOR",
+      "role": "OPERATOR",
+      "target": "AD-APP-77799",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-11T05:34:37.686Z"
+    },
+    {
+      "id": "AUD-1794375277599",
+      "action": "New Application Submitted",
+      "actor": "Super Admin Automation",
+      "role": "CUSTOMER",
+      "target": "AD-APP-77799",
+      "status": "SUCCESS",
+      "timestamp": "2026-11-11T05:34:37.599Z"
+    },
     {
       "id": "LOG-8816",
       "timestamp": "2026-11-11T05:27:11.861Z",
