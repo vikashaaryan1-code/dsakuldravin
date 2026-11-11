@@ -53,6 +53,7 @@ export const ServiceApplicationModal: React.FC = () => {
   const [showPrintSlip, setShowPrintSlip] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [copiedSummary, setCopiedSummary] = useState(false);
+  const [customFieldValues, setCustomFieldValues] = useState<Record<string, string>>({});
 
   const closeModal = () => {
     setIsApplyModalOpen(false);
@@ -60,6 +61,7 @@ export const ServiceApplicationModal: React.FC = () => {
     setGeneratedAppId(null);
     setFormError(null);
     setCopiedSummary(false);
+    setCustomFieldValues({});
   };
 
   useEffect(() => {
@@ -120,7 +122,18 @@ export const ServiceApplicationModal: React.FC = () => {
   const professionalFee = service.professionalFee || 0;
   const gst = Math.round((basePrice * 18) / 100);
   const totalAmount = basePrice + govtFee + gst;
-  const officialPortal = resolveOfficialPortal(`${service.slug} ${service.title} ${service.category}`, state);
+  const officialPortal = resolveOfficialPortal(`${service.slug} ${service.title} ${service.category}`, state) || (
+    service.officialPortalUrl
+      ? {
+          portalName: `${service.title} Official Portal`,
+          authority: 'Configured Authorized Portal',
+          url: service.officialPortalUrl,
+          purpose: service.title,
+          complianceNotice: 'Applicant/Operator authorizes final submission directly on the official configured portal (zero OTP/CAPTCHA bypass).',
+          complianceNoticeHi: 'अंतिम सबमिशन व OTP सत्यापन सीधे आधिकारिक पोर्टल पर आवेदक द्वारा ही किया जाएगा।',
+        }
+      : null
+  );
 
   const handleStep1Next = () => {
     if (applicantName.trim().length < 2) {
@@ -131,11 +144,21 @@ export const ServiceApplicationModal: React.FC = () => {
       setFormError('Please enter a valid 10-digit WhatsApp/mobile number.');
       return;
     }
+    if (service.customFields && service.customFields.length > 0) {
+      for (const f of service.customFields) {
+        if (f.required && f.type !== 'file' && !(customFieldValues[f.id] || '').trim()) {
+          setFormError(`Please complete required field: ${f.label}`);
+          return;
+        }
+      }
+    }
     setFormError(null);
     setStep(2);
   };
 
   const handleCopyPrefillSummary = () => {
+    const customLines = (service.customFields || [])
+      .map(f => `${f.label}: ${customFieldValues[f.id] || 'N/A'}`);
     const summary = [
       `Service: ${service.title}`,
       `ADCS Token: ${generatedAppId || 'DRAFT'}`,
@@ -143,6 +166,7 @@ export const ServiceApplicationModal: React.FC = () => {
       `Phone: ${applicantPhone}`,
       `Email: ${applicantEmail}`,
       `Location: ${city}, ${state}`,
+      ...customLines,
       `Verified Docs: ${uploadedFiles.join(', ') || 'Pending'}`
     ].join('\n');
     navigator.clipboard.writeText(summary);
@@ -185,6 +209,9 @@ export const ServiceApplicationModal: React.FC = () => {
   const handleConfirmAndPay = () => {
     setIsSubmitting(true);
     setTimeout(() => {
+      const customSummary = (service.customFields || [])
+        .map(f => `${f.label}=${customFieldValues[f.id] || 'N/A'}`)
+        .join('; ');
       const newId = submitApplication({
         serviceId: service.id,
         serviceName: service.title,
@@ -196,7 +223,7 @@ export const ServiceApplicationModal: React.FC = () => {
         state,
         feePaid: totalAmount,
         documentsUploaded: uploadedFiles.length > 0 ? uploadedFiles : ['Aadhaar_Document_Verified.pdf'],
-        notes: `Application initiated online. Payment mode: ${paymentMethod.toUpperCase()}. Simulated OCR score: 98.2% (Demo Scrutiny).`,
+        notes: `Application initiated online. Payment mode: ${paymentMethod.toUpperCase()}. OCR score: ${ocrScore || 98}%.${customSummary ? ` Intake Data: [${customSummary}]` : ''}`,
       });
 
       setGeneratedAppId(newId);
@@ -404,6 +431,48 @@ export const ServiceApplicationModal: React.FC = () => {
                   />
                 </div>
               </div>
+
+              {service.customFields && service.customFields.length > 0 && (
+                <div style={{
+                  background: '#F8FAFC',
+                  border: '1px solid #E2E8F0',
+                  borderRadius: '12px',
+                  padding: '0.9rem 1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem',
+                }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0A192F' }}>
+                    SERVICE-SPECIFIC INTAKE FIELDS ({service.customFields.length})
+                  </div>
+                  {service.customFields.map(field => (
+                    <div key={field.id} className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">
+                        {field.label} {field.required ? '*' : ''}
+                      </label>
+                      {field.type === 'file' ? (
+                        <input
+                          type="file"
+                          className="form-input"
+                          onChange={(e) => {
+                            const fileName = e.target.files?.[0]?.name || 'Attached_File.pdf';
+                            setCustomFieldValues(prev => ({ ...prev, [field.id]: fileName }));
+                            setUploadedFiles(prev => prev.includes(fileName) ? prev : [...prev, fileName]);
+                          }}
+                        />
+                      ) : (
+                        <input
+                          type={field.type}
+                          className="form-input"
+                          value={customFieldValues[field.id] || ''}
+                          onChange={(e) => setCustomFieldValues(prev => ({ ...prev, [field.id]: e.target.value }))}
+                          placeholder={`Enter ${field.label}`}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               {officialPortal && (
                 <div style={{

@@ -65,7 +65,7 @@ export const CertificateStudio: React.FC = () => {
 CERTIFICATE SERIAL NUMBER : ${serialNo}
 CRYPTOGRAPHIC SEAL HASH   : SHA256-${securityHash}
 ISSUE DATE                : ${issueDate}
-VERIFICATION URL          : https://adcs.gov.in/verify-certificate/${serialNo}
+VERIFICATION URL          : https://akuldravindigital.com/verify-certificate/${serialNo}
 --------------------------------------------------------------------------------
 THIS IS TO CERTIFY THAT:
 RECIPIENT NAME            : ${recipientName.toUpperCase()}

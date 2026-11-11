@@ -98,6 +98,7 @@ export const SuperAdminPortal: React.FC = () => {
   const [govtFee, setGovtFee] = useState<number>(0);
   const [slaDays, setSlaDays] = useState<number>(3);
   const [isGovtAssisted, setIsGovtAssisted] = useState(false);
+  const [officialPortalUrl, setOfficialPortalUrl] = useState('');
   const [documentsRequired, setDocumentsRequired] = useState<string>('Aadhaar Card, PAN Card, Passport Photo');
   const [formFields, setFormFields] = useState<{ id: string; label: string; type: 'text' | 'number' | 'file' | 'date'; required: boolean }[]>([
     { id: 'f1', label: 'Applicant Full Name', type: 'text', required: true },
@@ -149,9 +150,11 @@ export const SuperAdminPortal: React.FC = () => {
       timelineHi: `${slaDays} कार्य दिवस`,
       requiredDocs: documentsRequired.split(',').map(d => d.trim()).filter(Boolean),
       requiredDocsHi: documentsRequired.split(',').map(d => d.trim()).filter(Boolean),
-      badge: 'Verified',
+      badge: isGovtAssisted ? 'Assisted Service' : 'Verified',
       slug: serviceName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
-      isCustomCreated: true
+      isCustomCreated: true,
+      customFields: formFields,
+      officialPortalUrl: officialPortalUrl.trim() || undefined,
     };
 
     addCustomService(newService);
@@ -164,6 +167,7 @@ export const SuperAdminPortal: React.FC = () => {
     setDescription('');
     setBaseFee(999);
     setGovtFee(0);
+    setOfficialPortalUrl('');
   };
 
   const filteredApps = applications.filter(app => {
@@ -482,9 +486,9 @@ export const SuperAdminPortal: React.FC = () => {
                   >
                     <option value="business">Business & Corporate Services</option>
                     <option value="government">Government & Citizen Assistance</option>
-                    <option value="cybercafe">Cyber Café & Computer Utility</option>
+                    <option value="cyber-cafe">Cyber Café & Computer Utility</option>
                     <option value="documents">Documentation, Typing & Affidavits</option>
-                    <option value="it">Website, Cloud & IT Infrastructure</option>
+                    <option value="website-it">Website, Cloud & IT Infrastructure</option>
                     <option value="cctv">CCTV & Surveillance Installation</option>
                     <option value="courier">Courier & Express Cargo</option>
                     <option value="property">Property & Rental Services</option>
@@ -551,17 +555,31 @@ export const SuperAdminPortal: React.FC = () => {
                 />
               </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
-                  Mandatory Document Checklist (comma separated)
-                </label>
-                <input
-                  type="text"
-                  placeholder="Aadhaar Card, Electricity Bill, Bank Passbook, GST Certificate"
-                  value={documentsRequired}
-                  onChange={e => setDocumentsRequired(e.target.value)}
-                  style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+                    Mandatory Document Checklist (comma separated)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Aadhaar Card, Electricity Bill, Bank Passbook, GST Certificate"
+                    value={documentsRequired}
+                    onChange={e => setDocumentsRequired(e.target.value)}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.4rem' }}>
+                    Official Govt / Provider Portal URL (Optional Safe Redirect)
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://foscos.fssai.gov.in/ (for verified portal handoff)"
+                    value={officialPortalUrl}
+                    onChange={e => setOfficialPortalUrl(e.target.value)}
+                    style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}
+                  />
+                </div>
               </div>
 
               {/* Dynamic Intake Form Builder */}

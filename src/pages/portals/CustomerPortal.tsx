@@ -92,7 +92,7 @@ TOTAL PAID      : ₹${Number(inv.amount).toLocaleString('en-IN')}.00
 GSTIN           : 07AABCA1234F1Z5
 SAC / HSN Code  : 998313 (Information Technology & Digital E-Governance Services)
 IRN Number      : 4f8b9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f
-Verification QR : https://adcs.gov.in/verify-invoice?irn=${inv.inv}
+Verification QR : https://akuldravindigital.com/verify-invoice?irn=${inv.inv}
 ================================================================================
 This is a computer-generated tax invoice requiring no physical signature.
 Issued in accordance with Section 31 of CGST Act, 2017.

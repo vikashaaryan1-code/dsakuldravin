@@ -47,6 +47,13 @@ export interface ServiceCategory {
   count: number;
 }
 
+export interface CustomFormField {
+  id: string;
+  label: string;
+  type: 'text' | 'number' | 'file' | 'date';
+  required: boolean;
+}
+
 export interface ServiceItem {
   id: string;
   title: string;
@@ -65,6 +72,8 @@ export interface ServiceItem {
   badge?: 'Assisted Service' | 'Official Partner' | 'Instant' | 'Most Popular' | 'Verified';
   slug: string;
   isCustomCreated?: boolean;
+  customFields?: CustomFormField[];
+  officialPortalUrl?: string;
 }
 
 export type ApplicationStatus = 

@@ -55,7 +55,7 @@ Upload Date     : ${doc.uploadDate}
 OCR Match Score : ${doc.ocrConfidence}%
 DPDP Act 2025   : Encrypted at rest (AES-256) under Purpose Limitation
 Cryptographic ID: SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-ADCS-RECORD
-Verification URL: https://adcs.gov.in/verify-doc/${doc.id}
+Verification URL: https://akuldravindigital.com/verify-doc/${doc.id}
 ================================================================================
 This certified digital copy is authenticated against institutional registries.
 ================================================================================`;
@@ -72,7 +72,7 @@ This certified digital copy is authenticated against institutional registries.
   };
 
   const handleShareDoc = (doc: any) => {
-    const url = `https://adcs.gov.in/verify-doc/${doc.id}`;
+    const url = `https://akuldravindigital.com/verify-doc/${doc.id}`;
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(url);
     }

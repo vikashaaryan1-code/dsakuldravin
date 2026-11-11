@@ -106,7 +106,7 @@ ${signatoryName}
 ${signatoryRole}
 Corporate Seal & Authorized Signatory
 ================================================================================
-Generated via ADCS Document Studio • Verify: https://adcs.gov.in/verify-doc
+Generated via ADCS Document Studio • Verify: https://akuldravindigital.com/verify-doc
     `.trim();
 
     const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });

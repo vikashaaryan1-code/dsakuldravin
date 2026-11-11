@@ -113,7 +113,7 @@ TOTAL INVOICE AMOUNT     : ₹${total.toLocaleString('en-IN')}.00
 Amount in Words          : Indian Rupees ${total.toLocaleString('en-IN')} Only
 --------------------------------------------------------------------------------
 Cryptographic IRN Hash   : SHA256-${Math.random().toString(36).substring(2, 12).toUpperCase()}-GST-VALID
-QR Code Portal Link      : https://adcs.gov.in/verify-invoice?irn=${invNumber}
+QR Code Portal Link      : https://akuldravindigital.com/verify-invoice?irn=${invNumber}
 ================================================================================
 This is a digitally signed computer-generated document requiring no physical signature.
 ================================================================================`;

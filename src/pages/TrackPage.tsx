@@ -109,7 +109,7 @@ Estimated Delivery : ${entity?.estimatedDelivery || 'Standard SLA'}`}
 STATUTORY & SECURITY COMPLIANCE:
 - DPDP Act 2025    : End-to-End Cryptographic Audit Logging
 - Digital Seal     : ADCS-TRACKING-VERIFIED-SEAL
-- Verification URL : https://adcs.gov.in/track?q=${encodeURIComponent(trackingId)}
+- Verification URL : https://akuldravindigital.com/track?q=${encodeURIComponent(trackingId)}
 - Audit Hash       : SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-ACK-VALID
 ================================================================================
 This is an authentic computer-generated acknowledgement receipt.
