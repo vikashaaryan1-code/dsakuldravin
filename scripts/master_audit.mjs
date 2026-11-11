@@ -15,7 +15,8 @@ const suites = [
   { name: '2. CSC Connect & Digital Seva Ecosystem Suite', cmd: 'npm run test-csc' },
   { name: '3. Master Enterprise 12-Module Walkthrough', cmd: 'npm run walkthrough' },
   { name: '4. 8-Stage Citizen Lifecycle Simulation', cmd: 'npm run simulate' },
-  { name: '5. Complete 5-Track Master Execution Suite', cmd: 'npm run execute-all' }
+  { name: '5. Complete 5-Track Master Execution Suite', cmd: 'npm run execute-all' },
+  { name: '6. ADCS 2.0 15-Gate Production Readiness Suite', cmd: 'npm run test-launch-gates' }
 ];
 
 console.log('========================================================================');
