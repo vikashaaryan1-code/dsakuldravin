@@ -82,6 +82,7 @@ const InstructorPortal = lazyNamed(() => import('./pages/portals/InstructorPorta
 const StudentPortal = lazyNamed(() => import('./pages/portals/StudentPortal'), 'StudentPortal');
 const TechnicianPortal = lazyNamed(() => import('./pages/portals/TechnicianPortal'), 'TechnicianPortal');
 const AcademyCertificateVerificationPage = lazyNamed(() => import('./pages/AcademyCertificateVerificationPage'), 'AcademyCertificateVerificationPage');
+const PANApplicationPage = lazyNamed(() => import('./pages/PANApplicationPage'), 'PANApplicationPage');
 
 // Lazy Loaded CSC Connect & Digital Seva Sovereign Pages
 const CSCConnectLoginPage = lazyNamed(() => import('./pages/csc/CSCConnectLoginPage'), 'CSCConnectLoginPage');
@@ -133,6 +134,10 @@ export const App: React.FC = () => {
             <Route path="/digital-services" element={<ServicesMarketplacePage />} />
             <Route path="/government" element={<GovernmentServicesPage />} />
             <Route path="/passport" element={<GovernmentServicesPage />} />
+            <Route path="/pan" element={<PANApplicationPage />} />
+            <Route path="/form49a" element={<PANApplicationPage />} />
+            <Route path="/uti-pan" element={<PANApplicationPage />} />
+            <Route path="/nsdl-pan" element={<PANApplicationPage />} />
             <Route path="/cyber-cafe" element={<CyberCafePage />} />
             <Route path="/business" element={<BusinessServicesPage />} />
             <Route path="/documents" element={<DocumentCenterPage />} />

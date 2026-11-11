@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
+import { PANApplicationEngine } from '../pan/PANApplicationEngine';
 import { 
   X, 
   CheckCircle2, 
@@ -48,12 +49,16 @@ export const ServiceApplicationModal: React.FC = () => {
   const [generatedAppId, setGeneratedAppId] = useState<string | null>(null);
   const [showPrintSlip, setShowPrintSlip] = useState(false);
 
+  const closeModal = () => {
+    setIsApplyModalOpen(false);
+    setStep(1);
+    setGeneratedAppId(null);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setIsApplyModalOpen(false);
-        setStep(1);
-        setGeneratedAppId(null);
+        closeModal();
       }
     };
     if (isApplyModalOpen) {
@@ -65,6 +70,44 @@ export const ServiceApplicationModal: React.FC = () => {
   if (!isApplyModalOpen || !selectedServiceForApply) return null;
 
   const service = selectedServiceForApply;
+
+  const isPanService = service.id === 'srv-pan-new' || 
+                       service.title.toLowerCase().includes('pan card') || 
+                       service.title.toLowerCase().includes('form 49a');
+
+  if (isPanService) {
+    return (
+      <div 
+        onClick={closeModal}
+        style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(10, 25, 47, 0.78)',
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem',
+          animation: 'fadeIn 0.2s ease-out',
+        }}
+      >
+        <div 
+          style={{
+            width: '100%',
+            maxWidth: '920px',
+            maxHeight: '94vh',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <PANApplicationEngine onClose={closeModal} />
+        </div>
+      </div>
+    );
+  }
   const basePrice = service.basePrice;
   const govtFee = service.govtFee || 0;
   const professionalFee = service.professionalFee || 0;
@@ -130,12 +173,6 @@ export const ServiceApplicationModal: React.FC = () => {
         origin: { y: 0.6 }
       });
     }, 1000);
-  };
-
-  const closeModal = () => {
-    setIsApplyModalOpen(false);
-    setStep(1);
-    setGeneratedAppId(null);
   };
 
   return (

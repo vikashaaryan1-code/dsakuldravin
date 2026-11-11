@@ -142,7 +142,7 @@ export const Footer: React.FC = () => {
               <Link to="/digitalseva" style={{ color: '#38BDF8', fontWeight: 600 }}>ADCS Operator Console (VLE)</Link>
               <Link to="/connect/csc" style={{ color: '#4ADE80', fontWeight: 600 }}>ADCS Connect (OAuth SSO)</Link>
               <Link to="/csc" style={{ color: '#FCD34D', fontWeight: 600 }}>ADCS Sovereign Portal</Link>
-              <Link to="/government" style={{ color: '#94A3B8', transition: 'color 0.15s' }}>Aadhaar & PAN Assistance</Link>
+              <Link to="/pan" style={{ color: '#94A3B8', transition: 'color 0.15s' }}>PAN Card (UTIITSL / Protean Form 49A)</Link>
               <Link to="/government" style={{ color: '#94A3B8' }}>Passport Appointments</Link>
               <Link to="/government" style={{ color: '#94A3B8' }}>Birth, Caste & Domicile</Link>
               <Link to="/government" style={{ color: '#94A3B8' }}>E-Shram & Labour Schemes</Link>
