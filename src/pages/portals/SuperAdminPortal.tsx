@@ -862,13 +862,15 @@ export const SuperAdminPortal: React.FC = () => {
                   >
                     {isLoadingGateway ? 'Syncing...' : '↻ Refresh Telemetry'}
                   </button>
-                  <button
-                    onClick={() => showToast('Audit Export', 'AD_DIGITAL_Website_Audit_Deployment_Report.pdf verified on disk', 'success')}
+                  <a
+                    href="/AD_DIGITAL_Website_Audit_Deployment_Report.pdf"
+                    download="AD_DIGITAL_Website_Audit_Deployment_Report.pdf"
+                    onClick={() => showToast('Audit Export', 'AD_DIGITAL_Website_Audit_Deployment_Report.pdf downloaded.', 'success')}
                     className="btn btn-sm btn-primary"
-                    style={{ fontSize: '0.8rem' }}
+                    style={{ fontSize: '0.8rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                   >
                     Audit Dossier PDF
-                  </button>
+                  </a>
                 </div>
               </div>
 

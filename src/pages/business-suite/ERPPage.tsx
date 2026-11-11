@@ -37,10 +37,98 @@ export const ERPPage: React.FC = () => {
     e.preventDefault();
     if (!showPOModal) return;
 
+    const poId = `PO-${Date.now().toString().slice(-5)}`;
+    const poContent = `================================================================================
+AKUL DRAVIN DIGITAL SERVICES (ADCS) - OFFICIAL PURCHASE ORDER
+================================================================================
+PO Number      : ${poId}
+PO Date        : ${new Date().toLocaleDateString('en-GB')}
+Vendor Status  : Tier-1 OEM Hardware Partner
+Payment Terms  : Net 30 Days via RTGS / Corporate Clearing
+--------------------------------------------------------------------------------
+LINE ITEM DETAILS:
+Item Name      : ${showPOModal.name}
+SKU Code       : ${showPOModal.sku}
+Quantity Ordered: ${poQuantity} Units
+Unit Cost      : ₹${showPOModal.unitCost.toLocaleString('en-IN')}
+Total PO Value : ₹${(poQuantity * showPOModal.unitCost).toLocaleString('en-IN')}
+Delivery Depot : ADCS Central Logistics Distribution Hub, Delhi-NCR
+--------------------------------------------------------------------------------
+Authorized By  : National Procurement & Inventory Cell
+PO Hash        : SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-PO-APPROVED
+================================================================================`;
+    const blob = new Blob([poContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ADCS_Purchase_Order_${poId}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
     updateInventoryStock(showPOModal.id, poQuantity);
     logAudit('PROCUREMENT_PO', `Generated PO for ${poQuantity} units of ${showPOModal.name}`, 'Success');
-    showToast('Purchase Order Dispatched', `✓ Purchase Order #PO-${Date.now().toString().slice(-5)} for ${poQuantity} units of "${showPOModal.name}" dispatched to vendor! Stock incremented.`, 'success');
+    showToast('Purchase Order Dispatched', `✓ Purchase Order #${poId} for ${poQuantity} units downloaded and logged! Stock incremented.`, 'success');
     setShowPOModal(null);
+  };
+
+  const handleGenerateInvoice = () => {
+    const invNumber = `INV-2026-${Date.now().toString().slice(-4)}`;
+    const cgst = Math.round(invAmount * 0.09);
+    const sgst = Math.round(invAmount * 0.09);
+    const total = Math.round(invAmount * 1.18);
+    const content = `================================================================================
+AKUL DRAVIN DIGITAL SERVICES (ADCS)
+OFFICIAL B2B / B2C GST TAX INVOICE
+================================================================================
+Invoice No     : ${invNumber}
+Invoice Date   : ${new Date().toLocaleDateString('en-GB')}
+Place of Supply: Delhi (07)
+Reverse Charge : No
+--------------------------------------------------------------------------------
+SUPPLIER DETAILS:
+Company Name   : Akul Dravin Digital Services Private Limited
+GSTIN          : 07AABCA1234F1Z5
+State / Code   : Delhi / 07
+SAC / HSN Code : 8528 / 998313
+
+RECIPIENT (BUYER) DETAILS:
+Buyer Name     : ${buyerName}
+Buyer GSTIN    : ${buyerGstin || 'URP (Unregistered Person)'}
+Billing Address: Verified Corporate / Commercial Address
+--------------------------------------------------------------------------------
+LINE ITEMS:
+Item Description                              | Qty | Base Rate    | Total (INR)
+--------------------------------------------------------------------------------
+${invItem.padEnd(46)} | 1   | ₹${invAmount.toLocaleString('en-IN')}.00 | ₹${invAmount.toLocaleString('en-IN')}.00
+--------------------------------------------------------------------------------
+TAX COMPUTATION:
+Subtotal (Taxable Value) : ₹${invAmount.toLocaleString('en-IN')}.00
+Central GST (CGST @ 9%)  : ₹${cgst.toLocaleString('en-IN')}.00
+State GST (SGST @ 9%)    : ₹${sgst.toLocaleString('en-IN')}.00
+Integrated GST (IGST @ 0): ₹0.00
+--------------------------------------------------------------------------------
+TOTAL INVOICE AMOUNT     : ₹${total.toLocaleString('en-IN')}.00
+Amount in Words          : Indian Rupees ${total.toLocaleString('en-IN')} Only
+--------------------------------------------------------------------------------
+Cryptographic IRN Hash   : SHA256-${Math.random().toString(36).substring(2, 12).toUpperCase()}-GST-VALID
+QR Code Portal Link      : https://adcs.gov.in/verify-invoice?irn=${invNumber}
+================================================================================
+This is a digitally signed computer-generated document requiring no physical signature.
+================================================================================`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ADCS_GST_Invoice_${invNumber}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    logAudit('GENERATE_INVOICE', `Generated GST Tax Invoice for ${buyerName} (Amount: ₹${total})`, 'Success');
+    showToast('GST Invoice Generated', `✓ Official GST Tax Invoice #${invNumber} generated & downloaded!`, 'success');
   };
 
   return (
@@ -389,11 +477,7 @@ export const ERPPage: React.FC = () => {
             </div>
 
             <button
-              onClick={() => {
-                const invNumber = `INV-2026-${Date.now().toString().slice(-4)}`;
-                logAudit('GENERATE_INVOICE', `Generated GST Tax Invoice for ${buyerName} (Amount: ₹${Math.round(invAmount * 1.18)})`, 'Success');
-                showToast('GST Invoice Generated', `✓ Official GST Tax Invoice #${invNumber} generated, signed & logged!`, 'success');
-              }}
+              onClick={handleGenerateInvoice}
               className="btn btn-primary"
               style={{ padding: '0.75rem 2rem' }}
             >

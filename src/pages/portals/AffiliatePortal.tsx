@@ -50,6 +50,117 @@ export const AffiliatePortal: React.FC = () => {
     setShowPayoutModal(false);
   };
 
+  const handleDownloadFlyer = () => {
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0A192F"/>
+      <stop offset="50%" stop-color="#0D2137"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1920" fill="url(#bg)"/>
+  <circle cx="540" cy="400" r="180" fill="#F59E0B" opacity="0.15"/>
+  <text x="540" y="320" font-family="Arial, sans-serif" font-size="42" font-weight="900" fill="#F59E0B" text-anchor="middle">AKUL DRAVIN DIGITAL SERVICES</text>
+  <text x="540" y="420" font-family="Arial, sans-serif" font-size="72" font-weight="900" fill="#FFFFFF" text-anchor="middle">DIGITAL SEVA PORTAL</text>
+  <text x="540" y="520" font-family="Arial, sans-serif" font-size="36" fill="#94A3B8" text-anchor="middle">Pan-India E-Governance &amp; Citizen Services</text>
+  
+  <rect x="120" y="650" width="840" height="700" rx="30" fill="#FFFFFF" opacity="0.08"/>
+  <text x="180" y="750" font-family="Arial, sans-serif" font-size="44" font-weight="bold" fill="#38BDF8">✓ Instant PAN Card 49A &amp; Correction</text>
+  <text x="180" y="850" font-family="Arial, sans-serif" font-size="44" font-weight="bold" fill="#38BDF8">✓ e-District Income / Caste Certificate</text>
+  <text x="180" y="950" font-family="Arial, sans-serif" font-size="44" font-weight="bold" fill="#38BDF8">✓ Private Limited &amp; GST Registration</text>
+  <text x="180" y="1050" font-family="Arial, sans-serif" font-size="44" font-weight="bold" fill="#38BDF8">✓ Smart CCTV Security &amp; Turnkey IT</text>
+  <text x="180" y="1150" font-family="Arial, sans-serif" font-size="44" font-weight="bold" fill="#38BDF8">✓ Vedic Kundli &amp; Astrological Advisory</text>
+  <text x="180" y="1250" font-family="Arial, sans-serif" font-size="44" font-weight="bold" fill="#38BDF8">✓ Bharat BillPay &amp; Fast Cash AEPS</text>
+
+  <rect x="180" y="1450" width="720" height="140" rx="70" fill="#F59E0B"/>
+  <text x="540" y="1535" font-family="Arial, sans-serif" font-size="48" font-weight="900" fill="#0A192F" text-anchor="middle">APPLY ONLINE TODAY</text>
+  <text x="540" y="1700" font-family="Arial, sans-serif" font-size="34" fill="#FFFFFF" text-anchor="middle">Referral Link: ${referralUrl}</text>
+  <text x="540" y="1760" font-family="Arial, sans-serif" font-size="28" fill="#64748B" text-anchor="middle">Authorized ADCS Partner Network • Govt Compliant</text>
+</svg>`;
+    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'WhatsApp_Story_Flyer_ADCS.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Asset Downloaded', 'WhatsApp_Story_Flyer_ADCS.svg saved in HD.', 'success');
+  };
+
+  const handleDownloadSquare = () => {
+    const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
+  <defs>
+    <linearGradient id="sqbg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E3A8A"/>
+    </linearGradient>
+  </defs>
+  <rect width="1080" height="1080" fill="url(#sqbg)"/>
+  <rect x="80" y="80" width="920" height="920" rx="40" fill="none" stroke="#F59E0B" stroke-width="4" stroke-opacity="0.3"/>
+  <text x="540" y="220" font-family="Arial, sans-serif" font-size="38" font-weight="bold" fill="#F59E0B" text-anchor="middle">COMPANY INCORPORATION PACKAGE</text>
+  <text x="540" y="320" font-family="Arial, sans-serif" font-size="70" font-weight="900" fill="#FFFFFF" text-anchor="middle">START YOUR PVT LTD</text>
+  <text x="540" y="430" font-family="Arial, sans-serif" font-size="90" font-weight="900" fill="#10B981" text-anchor="middle">JUST ₹6,999/-</text>
+  <text x="540" y="520" font-family="Arial, sans-serif" font-size="34" fill="#CBD5E1" text-anchor="middle">Includes MCA SPICe+, 2 DINs, Name Approval, PAN &amp; TAN</text>
+  <text x="540" y="600" font-family="Arial, sans-serif" font-size="34" fill="#CBD5E1" text-anchor="middle">Free MSME Udyam + GST Registration Included</text>
+  
+  <rect x="240" y="700" width="600" height="110" rx="55" fill="#3B82F6"/>
+  <text x="540" y="768" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#FFFFFF" text-anchor="middle">BOOK CONSULTATION</text>
+  <text x="540" y="900" font-family="Arial, sans-serif" font-size="28" fill="#94A3B8" text-anchor="middle">Exclusive Referral: ${referralCode} • Akul Dravin Digital Services</text>
+</svg>`;
+    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Company_Incorporation_Square.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Asset Downloaded', 'Company_Incorporation_Square.svg saved in HD.', 'success');
+  };
+
+  const handleDownloadKitBundle = () => {
+    const bundleSummary = `================================================================================
+AKUL DRAVIN DIGITAL SERVICES (ADCS)
+AFFILIATE GROWTH & MARKETING MASTER KIT
+================================================================================
+Affiliate Partner : Authorized Growth Partner
+Referral Code     : ${referralCode}
+Referral URL      : ${referralUrl}
+Commission Slabs  : 15% E-Governance | 20% IT & Turnkey | 25% Vedic Advisory
+Payout Cycle      : Real-time Wallet Credit with Weekly Bank Auto-Sweep
+--------------------------------------------------------------------------------
+MARKETING ASSETS INCLUDED:
+1. WhatsApp Story Flyer (1080x1920) - WhatsApp_Story_Flyer_ADCS.svg
+2. Social Feed Square (1080x1080)   - Company_Incorporation_Square.svg
+3. 30-Second High-Conversion Script:
+   "अब सरकारी दफ्तरों के चक्कर लगाना बंद! Akul Dravin Digital Services से अपने घर
+   बैठे या नजदीकी VLE सेंटर से पैन कार्ड, आय प्रमाण पत्र, कंपनी रजिस्ट्रेशन
+   करवाएं। लिंक बायो में है: ${referralUrl}"
+--------------------------------------------------------------------------------
+COMPLIANCE & BRAND GUIDELINES:
+- Use only official brand name "Akul Dravin Digital Services" or "ADCS"
+- Ensure transparent disclosures in accordance with ASCI Guidelines
+- Zero spam policy: Share exclusively with opt-in contacts and social audiences
+================================================================================
+Authorized by: ADCS National Partner Growth Cell
+================================================================================`;
+    const blob = new Blob([bundleSummary], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ADCS_Affiliate_Marketing_Kit_${referralCode}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Bundle Downloaded', 'Complete Affiliate Marketing Kit saved to your device.', 'success');
+    setShowCreativeKitModal(false);
+  };
+
   return (
     <div style={{ minHeight: '100vh', background: '#F8FAFC', padding: '2rem 1rem' }}>
       <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
@@ -353,10 +464,10 @@ export const AffiliatePortal: React.FC = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => showToast('Asset Downloaded', 'Downloaded WhatsApp_Story_Flyer_ADCS.png', 'success')}
+                    onClick={handleDownloadFlyer}
                     className="btn btn-sm btn-outline"
                   >
-                    Download
+                    Download SVG
                   </button>
                 </div>
 
@@ -372,10 +483,10 @@ export const AffiliatePortal: React.FC = () => {
                     </div>
                   </div>
                   <button
-                    onClick={() => showToast('Asset Downloaded', 'Downloaded Company_Incorporation_Square.png', 'success')}
+                    onClick={handleDownloadSquare}
                     className="btn btn-sm btn-outline"
                   >
-                    Download
+                    Download SVG
                   </button>
                 </div>
 
@@ -405,15 +516,12 @@ export const AffiliatePortal: React.FC = () => {
 
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
                 <button
-                  onClick={() => {
-                    showToast('Bundle Downloaded', 'adcs-affiliate-marketing-kit-hd.zip (18.4 MB) downloaded.', 'success');
-                    setShowCreativeKitModal(false);
-                  }}
+                  onClick={handleDownloadKitBundle}
                   className="btn btn-primary"
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                 >
                   <Download size={15} />
-                  <span>Download Full Kit (.ZIP)</span>
+                  <span>Download Master Kit</span>
                 </button>
                 <button onClick={() => setShowCreativeKitModal(false)} className="btn btn-outline">
                   Close

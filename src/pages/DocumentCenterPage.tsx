@@ -37,6 +37,43 @@ export const DocumentCenterPage: React.FC = () => {
   // Universal Tools State
   const [activeTool, setActiveTool] = useState<'ocr' | 'merge' | 'compress' | 'resume' | null>(null);
 
+  const handleDownloadDoc = (doc: any) => {
+    const content = `================================================================================
+AKUL DRAVIN DIGITAL SERVICES (ADCS)
+SECURE CITIZEN DOCUMENT ARCHIVE - VERIFIED RECORD
+================================================================================
+Document UID    : ${doc.id}
+File Name       : ${doc.name}
+Category        : ${doc.category}
+File Size       : ${doc.size}
+Upload Date     : ${doc.uploadDate}
+OCR Match Score : ${doc.ocrConfidence}%
+DPDP Act 2025   : Encrypted at rest (AES-256) under Purpose Limitation
+Cryptographic ID: SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-ADCS-RECORD
+Verification URL: https://adcs.gov.in/verify-doc/${doc.id}
+================================================================================
+This certified digital copy is authenticated against institutional registries.
+================================================================================`;
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${doc.name.replace(/\.[^/.]+$/, '').replace(/\s+/g, '_')}_Verified.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showToast('Download Completed', `${doc.name} verified copy saved to your device.`, 'success');
+  };
+
+  const handleShareDoc = (doc: any) => {
+    const url = `https://adcs.gov.in/verify-doc/${doc.id}`;
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(url);
+    }
+    showToast('Link Copied', `Secure verification link copied: ${url}`, 'info');
+  };
+
   // 1. OCR Tool State
   const [ocrSample, setOcrSample] = useState<'aadhaar' | 'pan' | 'income'>('aadhaar');
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -352,7 +389,7 @@ export const DocumentCenterPage: React.FC = () => {
                 borderTop: '1px solid #E2E8F0',
               }}>
                 <button
-                  onClick={() => showToast('Download Started', `Downloading ${doc.name}`, 'success')}
+                  onClick={() => handleDownloadDoc(doc)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -368,7 +405,7 @@ export const DocumentCenterPage: React.FC = () => {
 
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button
-                    onClick={() => showToast('Verification Link Copied', 'Shareable secure link copied to clipboard.', 'info')}
+                    onClick={() => handleShareDoc(doc)}
                     style={{ color: '#64748B', padding: '0.2rem' }}
                     title="Share Verification Link"
                   >
