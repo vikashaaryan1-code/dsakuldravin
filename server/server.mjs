@@ -2465,6 +2465,18 @@ app.post('/api/cyber-cafe/pos/print', (req, res) => {
   });
 });
 
+// Serve Production Static Frontend Bundle if dist/ exists
+const DIST_DIR = path.join(__dirname, '../dist');
+if (fs.existsSync(DIST_DIR)) {
+  app.use(express.static(DIST_DIR));
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+      return res.sendFile(path.join(DIST_DIR, 'index.html'));
+    }
+    next();
+  });
+}
+
 // Start Server
 app.listen(PORT, () => {
   console.log(`====================================================`);
