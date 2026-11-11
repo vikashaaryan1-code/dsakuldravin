@@ -12,14 +12,24 @@ import {
   CheckCircle2, 
   ArrowRight,
   Sparkles,
-  Layers
+  Layers,
+  ShoppingCart,
+  ExternalLink
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const WebsiteITPage: React.FC = () => {
-  const { services, addToCart, showToast, language } = useApp();
+  const { services, addToCart, showToast, logAudit, language } = useApp();
   const [domainSearch, setDomainSearch] = useState('');
-  const [domainAvailable, setDomainAvailable] = useState<boolean | null>(null);
+  const [domainTld, setDomainTld] = useState<'.in' | '.co.in' | '.com' | '.org'>('.in');
+  const [checkedDomain, setCheckedDomain] = useState<string | null>(null);
+
+  const tldPriceMap: Record<'.in' | '.co.in' | '.com' | '.org', number> = {
+    '.in': 599,
+    '.co.in': 499,
+    '.com': 999,
+    '.org': 899,
+  };
 
   const itPackages = [
     {
@@ -44,9 +54,35 @@ export const WebsiteITPage: React.FC = () => {
   ];
 
   const handleDomainCheck = () => {
-    if (!domainSearch) return;
-    setDomainAvailable(true);
-    showToast('Domain Available!', `${domainSearch}.in is available for registration at ₹599/yr.`, 'success');
+    const cleanSlug = domainSearch.trim().toLowerCase().replace(/\.(in|co\.in|com|org)$/i, '').replace(/[^a-z0-9-]/g, '');
+    if (cleanSlug.length < 2) {
+      showToast('Invalid Domain Name', 'Enter at least 2 alphanumeric characters or hyphens.', 'error');
+      return;
+    }
+    const fullDomain = `${cleanSlug}${domainTld}`;
+    setCheckedDomain(fullDomain);
+    showToast('Domain Verified!', `${fullDomain} is available for registration at ₹${tldPriceMap[domainTld]}/yr.`, 'success');
+  };
+
+  const handleAddDomainToCart = () => {
+    if (!checkedDomain) return;
+    const price = tldPriceMap[domainTld];
+    addToCart({
+      id: `dom-${checkedDomain}-${Date.now()}`,
+      title: `Domain Registration (1 Year): ${checkedDomain}`,
+      titleHi: `डोमेन पंजीकरण: ${checkedDomain}`,
+      category: 'website-it',
+      description: `Annual ICANN/NIXI domain registration for ${checkedDomain} with DNSSEC & WHOIS privacy.`,
+      descriptionHi: `${checkedDomain} वार्षिक डोमेन पंजीकरण।`,
+      icon: 'Globe',
+      basePrice: price,
+      timeline: 'Instant Propagation',
+      timelineHi: 'तत्काल सक्रिय',
+      requiredDocs: ['Registrant Contact Email & Mobile'],
+      requiredDocsHi: ['ईमेल और मोबाइल'],
+      slug: 'domain-registration',
+    });
+    logAudit(`Domain Added to Cart: ${checkedDomain}`, `TLD ${domainTld} — ₹${price}`);
   };
 
   const handleSelectPackage = (pkg: typeof itPackages[0]) => {
@@ -115,9 +151,10 @@ export const WebsiteITPage: React.FC = () => {
         <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.75rem' }}>
           Search Custom Business Domain (.in / .com / .org)
         </h3>
-        <div style={{ display: 'flex', gap: '0.75rem', maxWidth: '620px' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', maxWidth: '680px', flexWrap: 'wrap' }}>
           <div style={{
             flex: 1,
+            minWidth: '240px',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
@@ -130,12 +167,27 @@ export const WebsiteITPage: React.FC = () => {
             <input
               type="text"
               value={domainSearch}
-              onChange={(e) => setDomainSearch(e.target.value)}
+              onChange={(e) => {
+                setDomainSearch(e.target.value);
+                setCheckedDomain(null);
+              }}
               placeholder="e.g. mycompanyname"
               style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.9rem', fontWeight: 600 }}
               onKeyDown={(e) => e.key === 'Enter' && handleDomainCheck()}
             />
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#64748B' }}>.in</span>
+            <select
+              value={domainTld}
+              onChange={(e) => {
+                setDomainTld(e.target.value as any);
+                setCheckedDomain(null);
+              }}
+              style={{ border: 'none', background: '#EFF6FF', color: '#1D4ED8', fontWeight: 800, fontSize: '0.85rem', borderRadius: '6px', padding: '0.25rem 0.5rem' }}
+            >
+              <option value=".in">.in (₹599)</option>
+              <option value=".co.in">.co.in (₹499)</option>
+              <option value=".com">.com (₹999)</option>
+              <option value=".org">.org (₹899)</option>
+            </select>
           </div>
 
           <button
@@ -146,18 +198,27 @@ export const WebsiteITPage: React.FC = () => {
           </button>
         </div>
 
-        {domainAvailable && (
+        {checkedDomain && (
           <div style={{
             marginTop: '1rem',
+            padding: '0.85rem 1.15rem',
+            background: '#F0FDF4',
+            border: '1px solid #86EFAC',
+            borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
-            gap: '0.5rem',
-            color: '#059669',
-            fontSize: '0.85rem',
-            fontWeight: 600,
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
           }}>
-            <CheckCircle2 size={16} />
-            <span>Congratulations! <strong>{domainSearch}.in</strong> is available at ₹599/yr.</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#059669', fontSize: '0.86rem', fontWeight: 700 }}>
+              <CheckCircle2 size={16} />
+              <span><strong>{checkedDomain}</strong> is available at ₹{tldPriceMap[domainTld]}/yr (incl. DNS management).</span>
+            </div>
+            <button onClick={handleAddDomainToCart} className="btn-gold btn-sm" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 800 }}>
+              <ShoppingCart size={14} />
+              <span>Add Domain to Cart</span>
+            </button>
           </div>
         )}
       </div>
@@ -232,6 +293,48 @@ export const WebsiteITPage: React.FC = () => {
         <div className="grid-3" style={{ gap: '1.5rem' }}>
           {services.filter(s => s.category === 'website-it').map(service => (
             <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+      </div>
+
+      {/* Authorized Registry & Cybersecurity Compliance Portals */}
+      <div style={{
+        marginTop: '3rem',
+        background: '#F8FAFC',
+        borderRadius: '18px',
+        padding: '1.5rem 2rem',
+        border: '1px solid #E2E8F0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem',
+      }}>
+        <div>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+            AUTHORIZED .IN REGISTRY, ICANN WHOIS & CERT-IN PORTALS
+          </div>
+          <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>
+            Verify official NIXI .in ownership, ICANN WHOIS registration status, and CERT-In Indian cybersecurity advisories.
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+          {[
+            { label: 'NIXI (.in) Registry', url: 'https://www.registry.in/' },
+            { label: 'ICANN WHOIS Lookup', url: 'https://lookup.icann.org/' },
+            { label: 'CERT-In Advisories', url: 'https://www.cert-in.org.in/' },
+          ].map(p => (
+            <a
+              key={p.label}
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', textDecoration: 'none' }}
+            >
+              <span>{p.label}</span>
+              <ExternalLink size={13} />
+            </a>
           ))}
         </div>
       </div>

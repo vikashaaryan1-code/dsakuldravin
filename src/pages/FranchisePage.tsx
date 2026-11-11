@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { 
   Building, 
@@ -10,12 +11,14 @@ import {
   ArrowRight, 
   DollarSign,
   Sparkles,
-  Users
+  Users,
+  Download,
+  ExternalLink
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const FranchisePage: React.FC = () => {
-  const { showToast, logAudit, language } = useApp();
+  const { showToast, logAudit, submitApplication, addLead, language } = useApp();
 
   // Calculator State
   const [dailyFootfall, setDailyFootfall] = useState<number>(50); // 50 customers/day
@@ -24,24 +27,27 @@ export const FranchisePage: React.FC = () => {
   const estimatedNetProfit = Math.round(monthlyRevenue * 0.72); // ~72% margin after basic internet/power
 
   // Application Form State
+  const [selectedTier, setSelectedTier] = useState('Gold Business Hub');
   const [applicantName, setApplicantName] = useState('');
   const [phone, setPhone] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('Bihar');
   const [pincode, setPincode] = useState('');
   const [shopArea, setShopArea] = useState('150 - 300 sq.ft');
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [submittedRef, setSubmittedRef] = useState<string | null>(null);
 
   const franchiseTiers = [
     {
       tier: 'Silver Digital Center',
       investment: '₹49,000',
+      invNum: 49000,
       bestFor: 'Existing Cyber Cafes & Photostat Shops',
       features: ['150+ Citizen & Seva Services', 'Akul Dravin Authorized Center Glow-Sign Board', 'VLE POS Portal with Instant Wallet', 'Basic Biometric Device & Scanner Training'],
     },
     {
       tier: 'Gold Business Hub',
       investment: '₹1,25,000',
+      invNum: 125000,
       bestFor: 'Town Market Commercial Shops (200+ sq.ft)',
       isPopular: true,
       features: ['All Citizen + Business + GST + Loans Services', 'Full Store Branding & Acrylic Interior Kit', 'Courier Booking Hub & Scale Integration', 'Dedicated Regional Relationship Officer'],
@@ -49,6 +55,7 @@ export const FranchisePage: React.FC = () => {
     {
       tier: 'Platinum Master Territory',
       investment: '₹3,50,000',
+      invNum: 350000,
       bestFor: 'District Headquarter Operators / Mini Franchisors',
       features: ['Exclusive Pincode / Tehsil Rights', 'Override Royalty on Sub-VLE Transactions', 'CCTV & Turnkey Construction Master Franchise', 'Co-branded Field Marketing Vehicle Campaigns'],
     }
@@ -56,12 +63,70 @@ export const FranchisePage: React.FC = () => {
 
   const handleApply = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!applicantName || !phone) return;
+    const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+    if (!applicantName.trim() || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      showToast('Invalid Contact Details', 'Please enter full applicant name and a valid 10-digit mobile number.', 'error');
+      return;
+    }
+    if (!/^[1-9][0-9]{5}$/.test(pincode.trim())) {
+      showToast('Invalid PIN Code', 'Please enter a valid 6-digit Indian PIN code for territory clearance.', 'error');
+      return;
+    }
 
-    setIsSubmitted(true);
+    const tierObj = franchiseTiers.find(t => t.tier === selectedTier) || franchiseTiers[1];
+    const appId = submitApplication({
+      serviceId: 'srv-franchise-license',
+      serviceName: `Franchise License: ${selectedTier}`,
+      category: 'business',
+      applicantName: applicantName.trim(),
+      applicantPhone: `+91 ${cleanPhone}`,
+      city: city.trim() || 'Patna',
+      state,
+      feePaid: 0,
+      documentsUploaded: ['Shop_Agreement_Premises.pdf'],
+      notes: `Tier: ${selectedTier}, PIN: ${pincode.trim()}, Area: ${shopArea}, Est Profit: ₹${estimatedNetProfit.toLocaleString('en-IN')}/mo`,
+    });
+
+    addLead({
+      name: applicantName.trim(),
+      company: `${selectedTier} — ${city} (${pincode.trim()})`,
+      email: 'franchise.desk@akuldravindigital.com',
+      phone: `+91 ${cleanPhone}`,
+      serviceInterested: `${selectedTier} Territory License`,
+      estimatedValue: tierObj.invNum,
+      stage: 'Proposal',
+      assignedExecutive: 'ADCS Franchise Expansion Desk',
+    });
+
+    setSubmittedRef(appId);
     confetti({ particleCount: 90, spread: 60 });
-    logAudit(`Franchise Application Submitted: ${applicantName}`, `City: ${city}, PIN: ${pincode}`);
-    showToast('Franchise Application Received!', 'Our Franchise Evaluation Officer will call you within 24 hours.', 'success');
+    logAudit(`Franchise Application Submitted (${appId}): ${applicantName}`, `Tier: ${selectedTier}, City: ${city}, PIN: ${pincode}`);
+    showToast('Franchise Application Received!', `Tracking ID ${appId} logged for PIN ${pincode} territory clearance.`, 'success');
+  };
+
+  const handleDownloadProposal = () => {
+    if (!submittedRef) return;
+    const content = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — FRANCHISE TERRITORY APPLICATION SLIP',
+      '========================================================================',
+      `Tracking Reference : ${submittedRef}`,
+      `Date & Time        : ${new Date().toLocaleString('en-IN')}`,
+      `Applicant Name     : ${applicantName}`,
+      `Mobile (WhatsApp)  : ${phone}`,
+      `Selected Package   : ${selectedTier}`,
+      `Proposed Territory : ${city}, ${state} — PIN ${pincode}`,
+      `Carpet Area        : ${shopArea}`,
+      `Est. Net Profit    : ₹${estimatedNetProfit.toLocaleString('en-IN')}/month (${dailyFootfall} walk-ins/day)`,
+      `Track Approval     : https://akuldravindigital.com/track?id=${encodeURIComponent(submittedRef)}`,
+      '========================================================================',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Franchise_${submittedRef}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -259,7 +324,12 @@ export const FranchisePage: React.FC = () => {
                 </div>
               </div>
 
-              <a href="#apply-form" className={t.isPopular ? 'btn-gold' : 'btn-primary'} style={{ textAlign: 'center', fontWeight: 800 }}>
+              <a
+                href="#apply-form"
+                onClick={() => setSelectedTier(t.tier)}
+                className={t.isPopular ? 'btn-gold' : 'btn-primary'}
+                style={{ textAlign: 'center', fontWeight: 800 }}
+              >
                 Select {t.tier.split(' ')[0]}
               </a>
             </div>
@@ -284,7 +354,7 @@ export const FranchisePage: React.FC = () => {
           Fill in your location details for preliminary territory pin-code clearance.
         </p>
 
-        {isSubmitted ? (
+        {submittedRef ? (
           <div style={{ textAlign: 'center', padding: '2rem 1rem' }}>
             <div style={{
               width: '60px',
@@ -302,12 +372,32 @@ export const FranchisePage: React.FC = () => {
             <h4 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0A192F' }}>
               Application Successfully Submitted!
             </h4>
-            <p style={{ fontSize: '0.85rem', color: '#64748B', marginTop: '0.4rem' }}>
-              Reference ID: <strong>AD-FRN-{Math.floor(1000 + Math.random() * 9000)}</strong>. Our regional development team will contact you.
+            <p style={{ fontSize: '0.88rem', color: '#475569', marginTop: '0.4rem', marginBottom: '1.25rem' }}>
+              Tracking Reference: <strong style={{ color: '#1D4ED8' }}>{submittedRef}</strong> ({selectedTier} • PIN {pincode}).
             </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button onClick={handleDownloadProposal} className="btn-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 800 }}>
+                <Download size={15} />
+                <span>Download Dossier</span>
+              </button>
+              <Link to={`/track?id=${encodeURIComponent(submittedRef)}`} className="btn-primary" style={{ textDecoration: 'none' }}>
+                Track Approval Status
+              </Link>
+              <button onClick={() => setSubmittedRef(null)} className="btn-secondary">
+                New Inquiry
+              </button>
+            </div>
           </div>
         ) : (
           <form onSubmit={handleApply} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div className="form-group">
+              <label className="form-label">Selected Franchise Package</label>
+              <select className="form-select" value={selectedTier} onChange={(e) => setSelectedTier(e.target.value)}>
+                {franchiseTiers.map(t => (
+                  <option key={t.tier} value={t.tier}>{t.tier} ({t.investment})</option>
+                ))}
+              </select>
+            </div>
             <div className="form-group">
               <label className="form-label">Full Name of Branch Applicant *</label>
               <input
@@ -385,6 +475,48 @@ export const FranchisePage: React.FC = () => {
             </button>
           </form>
         )}
+      </div>
+
+      {/* Authorized CSC / MSME / Startup India Partner Ecosystem Portals */}
+      <div style={{
+        marginTop: '3rem',
+        background: '#F8FAFC',
+        borderRadius: '18px',
+        padding: '1.5rem 2rem',
+        border: '1px solid #E2E8F0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem',
+      }}>
+        <div>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+            AUTHORIZED DIGITAL KENDRA, MSME & STARTUP ECOSYSTEM PORTALS
+          </div>
+          <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>
+            Official portals for CSC Digital Seva registration, MSME Udyam licensing, and Startup India recognition.
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+          {[
+            { label: 'Digital Seva CSC', url: 'https://digitalseva.csc.gov.in/' },
+            { label: 'Udyam MSME Registration', url: 'https://udyamregistration.gov.in/' },
+            { label: 'Startup India Portal', url: 'https://www.startupindia.gov.in/' },
+          ].map(p => (
+            <a
+              key={p.label}
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', textDecoration: 'none' }}
+            >
+              <span>{p.label}</span>
+              <ExternalLink size={13} />
+            </a>
+          ))}
+        </div>
       </div>
     </div>
   );

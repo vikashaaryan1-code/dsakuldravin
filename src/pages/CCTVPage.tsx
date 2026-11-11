@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
+import { apiClient } from '../services/apiClient';
 import { 
   ShieldCheck, 
   Video, 
@@ -11,18 +13,23 @@ import {
   ArrowRight, 
   Sparkles,
   ShoppingCart,
-  Eye
+  Eye,
+  Download
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export const CCTVPage: React.FC = () => {
-  const { addToCart, showToast, logAudit, language } = useApp();
+  const { addToCart, showToast, logAudit, submitApplication, addLead, language } = useApp();
 
   // Configurator State
   const [cameraCount, setCameraCount] = useState<number>(4);
   const [cameraType, setCameraType] = useState<'2MP HD' | '4MP IP POE' | '4K AI Smart'>('4MP IP POE');
   const [storageDays, setStorageDays] = useState<number>(30); // in days
   const [includeAMC, setIncludeAMC] = useState<boolean>(true);
+  const [siteContactName, setSiteContactName] = useState('Prakash Enterprises');
+  const [siteContactPhone, setSiteContactPhone] = useState('9835012345');
+  const [siteCity, setSiteCity] = useState('Patna');
+  const [surveyPass, setSurveyPass] = useState<{ appId: string; totalEstimate: number } | null>(null);
 
   // Dynamic Pricing Calculation
   const cameraUnitPrice = cameraType === '2MP HD' ? 1200 : cameraType === '4MP IP POE' ? 2100 : 3800;
@@ -53,6 +60,77 @@ export const CCTVPage: React.FC = () => {
 
     logAudit(`CCTV System Configured: ${cameraCount}x ${cameraType}`, `Estimate: ₹${totalEstimate}`);
     confetti({ particleCount: 70, spread: 60 });
+  };
+
+  const handleScheduleSiteSurvey = async () => {
+    const cleanPhone = siteContactPhone.replace(/\D/g, '').slice(-10);
+    if (!siteContactName.trim() || !/^[6-9]\d{9}$/.test(cleanPhone)) {
+      showToast('Contact Details Required', 'Please enter site contact name and a valid 10-digit Indian mobile number.', 'error');
+      return;
+    }
+
+    const appId = submitApplication({
+      serviceId: 'srv-cctv-survey',
+      serviceName: `CCTV Site Survey (${cameraCount}x ${cameraType}, ${storageDays}d HDD)`,
+      category: 'cctv',
+      applicantName: siteContactName.trim(),
+      applicantPhone: `+91 ${cleanPhone}`,
+      city: siteCity.trim() || 'Patna',
+      feePaid: 0,
+      documentsUploaded: ['CCTV_BOQ_Site_Survey.pdf'],
+      notes: `Quote: ₹${totalEstimate.toLocaleString('en-IN')}, AMC Included: ${includeAMC ? 'Yes' : 'No'}`,
+    });
+
+    addLead({
+      name: siteContactName.trim(),
+      company: `CCTV Setup (${siteCity})`,
+      email: 'security.desk@akuldravindigital.com',
+      phone: `+91 ${cleanPhone}`,
+      serviceInterested: `${cameraCount}x ${cameraType} Surveillance Package`,
+      estimatedValue: totalEstimate,
+      stage: 'Proposal',
+      assignedExecutive: 'Prakash Kumar Singh (CCTV Field Engineer)',
+    });
+
+    await apiClient.createSupportTicket({
+      customerName: siteContactName.trim(),
+      customerPhone: `+91 ${cleanPhone}`,
+      serviceCategory: 'CCTV Installation',
+      subject: `Site Survey ${appId}: ${cameraCount}x ${cameraType}`,
+      priority: 'High',
+      initialMessage: `City: ${siteCity}, Quote: ₹${totalEstimate}`,
+    }).catch(() => ({}));
+
+    setSurveyPass({ appId, totalEstimate });
+    showToast('Site Survey Scheduled!', `Application ${appId} assigned to Field Engineer. Track in Technician Portal or /track.`, 'success');
+    logAudit(`CCTV Site Survey Booked (${appId})`, `Package ${cameraCount}x ${cameraType} — ₹${totalEstimate}`);
+    confetti({ particleCount: 50, spread: 60 });
+  };
+
+  const handleDownloadQuote = () => {
+    const ref = surveyPass?.appId || `QT-${Date.now().toString().slice(-6)}`;
+    const content = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — ITEMIZED CCTV & SECURITY QUOTATION',
+      '========================================================================',
+      `Quotation Ref     : ${ref}`,
+      `Date              : ${new Date().toLocaleString('en-IN')}`,
+      `Client / Site     : ${siteContactName} (${siteContactPhone}) • ${siteCity}`,
+      `Camera Package    : ${cameraCount}x ${cameraType} @ ₹${cameraUnitPrice} each = ₹${(cameraCount * cameraUnitPrice).toLocaleString('en-IN')}`,
+      `NVR / DVR Recorder: ₹${nvrPrice.toLocaleString('en-IN')}`,
+      `Surveillance HDD  : ₹${hddPrice.toLocaleString('en-IN')} (${storageDays} Days Retention)`,
+      `Cabling & SMPS    : ₹${cablingAndPsu.toLocaleString('en-IN')}`,
+      `Installation Fee  : ₹${installationLabour.toLocaleString('en-IN')}`,
+      `1-Year AMC Plan   : ₹${amcCost.toLocaleString('en-IN')}`,
+      `TOTAL ESTIMATE    : ₹${totalEstimate.toLocaleString('en-IN')}`,
+      '========================================================================',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_CCTV_Quote_${ref}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -226,6 +304,40 @@ export const CCTVPage: React.FC = () => {
                 style={{ width: '18px', height: '18px', accentColor: '#1D4ED8' }}
               />
             </div>
+
+            {/* Site Survey Contact Inputs */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Client / Shop Name *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={siteContactName}
+                  onChange={(e) => setSiteContactName(e.target.value)}
+                  placeholder="Business or Owner Name"
+                />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Mobile Number *</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={siteContactPhone}
+                  onChange={(e) => setSiteContactPhone(e.target.value)}
+                  placeholder="10-digit Mobile"
+                />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">City</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={siteCity}
+                  onChange={(e) => setSiteCity(e.target.value)}
+                  placeholder="City"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Quotation Summary Card */}
@@ -292,11 +404,7 @@ export const CCTVPage: React.FC = () => {
             </button>
 
             <button
-              onClick={() => {
-                showToast('Site Survey Scheduled!', 'Technician Prakash Kumar Singh dispatched. Track under Technician Portal (/portal/technician).', 'success');
-                logAudit('CCTV Site Survey Booked', `Package ${cameraCount}x ${cameraType}`);
-                confetti({ particleCount: 50, spread: 60 });
-              }}
+              onClick={handleScheduleSiteSurvey}
               style={{
                 width: '100%',
                 marginTop: '0.75rem',
@@ -316,6 +424,50 @@ export const CCTVPage: React.FC = () => {
             >
               <Wrench size={16} /> Schedule Site Survey & Dispatch Technician
             </button>
+
+            <button
+              onClick={handleDownloadQuote}
+              style={{
+                width: '100%',
+                marginTop: '0.6rem',
+                padding: '0.6rem',
+                borderRadius: '10px',
+                background: 'rgba(255, 255, 255, 0.06)',
+                color: '#E2E8F0',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+                fontWeight: 600,
+                fontSize: '0.8rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.4rem'
+              }}
+            >
+              <Download size={14} /> Download Itemized Quote (.TXT)
+            </button>
+
+            {surveyPass && (
+              <div style={{
+                marginTop: '0.85rem',
+                padding: '0.75rem 0.9rem',
+                borderRadius: '10px',
+                background: 'rgba(16, 185, 129, 0.18)',
+                border: '1px solid #10B981',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                fontSize: '0.78rem',
+              }}>
+                <div>
+                  <div style={{ fontWeight: 800, color: '#34D399' }}>SURVEY LOGGED • {surveyPass.appId}</div>
+                  <div style={{ color: '#CBD5E1' }}>Technician ticket queued</div>
+                </div>
+                <Link to={`/track?id=${encodeURIComponent(surveyPass.appId)}`} className="btn-gold btn-sm" style={{ textDecoration: 'none', fontWeight: 700 }}>
+                  Track
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       </div>

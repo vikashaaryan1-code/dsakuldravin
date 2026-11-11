@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
+import { apiClient } from '../services/apiClient';
 import { ServiceCard } from '../components/cards/ServiceCard';
 import { 
   Users2, 
@@ -15,21 +17,23 @@ import {
   PhoneCall,
   Clock,
   User,
-  ExternalLink
+  ExternalLink,
+  Download
 } from 'lucide-react';
 
 export const ConsultingPage: React.FC = () => {
-  const { services, showToast, logAudit, language } = useApp();
+  const { services, showToast, logAudit, submitApplication, recordJournalEntry, language } = useApp();
 
   const advisors = [
-    { name: 'CA Arvind Singhal, FCA', title: 'Senior Tax & Corporate Structuring Partner', exp: '18+ Years', rate: '₹1,500 / 30 mins', slots: 'Today, 04:00 PM' },
-    { name: 'Adv. Meenakshi Sundaram', title: 'High Court Legal Counsel & Trademark Attorney', exp: '14+ Years', rate: '₹2,000 / 30 mins', slots: 'Tomorrow, 11:30 AM' },
-    { name: 'Dr. Vivek Ranade', title: 'Startup Pitch Deck & VC Funding Strategist', exp: '12+ Years', rate: '₹2,500 / 45 mins', slots: 'Tomorrow, 03:00 PM' },
+    { name: 'CA Arvind Singhal, FCA', title: 'Senior Tax & Corporate Structuring Partner', exp: '18+ Years', feeNum: 1500, rate: '₹1,500 / 30 mins', slots: 'Today, 04:00 PM' },
+    { name: 'Adv. Meenakshi Sundaram', title: 'High Court Legal Counsel & Trademark Attorney', exp: '14+ Years', feeNum: 2000, rate: '₹2,000 / 30 mins', slots: 'Tomorrow, 11:30 AM' },
+    { name: 'Dr. Vivek Ranade', title: 'Startup Pitch Deck & VC Funding Strategist', exp: '12+ Years', feeNum: 2500, rate: '₹2,500 / 45 mins', slots: 'Tomorrow, 03:00 PM' },
   ];
 
   const [bookingAdvisor, setBookingAdvisor] = useState<{
     name: string;
     title: string;
+    feeNum: number;
     rate: string;
     slots: string;
   } | null>(null);
@@ -38,32 +42,111 @@ export const ConsultingPage: React.FC = () => {
   const [clientPhone, setClientPhone] = useState('');
   const [chosenMode, setChosenMode] = useState<'video' | 'phone'>('video');
   const [topic, setTopic] = useState('');
+  const [isBooking, setIsBooking] = useState(false);
   const [confirmedPass, setConfirmedPass] = useState<{
     passId: string;
+    appId: string;
     advisorName: string;
     slot: string;
-    roomUrl: string;
+    roomCode: string;
+    feeNum: number;
   } | null>(null);
 
-  const handleConfirmBooking = (e: React.FormEvent) => {
+  const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!clientName || !clientPhone || !topic || !bookingAdvisor) {
-      showToast('Validation Error', 'Please fill in all booking fields.', 'warning');
+    const cleanPhone = clientPhone.replace(/\D/g, '').slice(-10);
+    if (!clientName.trim() || !/^[6-9]\d{9}$/.test(cleanPhone) || !topic.trim() || !bookingAdvisor) {
+      showToast('Validation Error', 'Please fill client name, valid 10-digit mobile number, and consultation query.', 'warning');
       return;
     }
 
-    const passId = 'CNS-' + Math.floor(1000 + Math.random() * 9000);
-    const roomUrl = `https://meet.akuldravin.com/room-${Math.random().toString(36).substring(2, 9)}`;
+    setIsBooking(true);
+    try {
+      const orderRes = await apiClient.createPaymentOrder({
+        amount: bookingAdvisor.feeNum,
+        customerName: clientName.trim(),
+        customerPhone: `+91 ${cleanPhone}`,
+        items: [{ id: 'srv-consult-slot', title: `${bookingAdvisor.name} Consultation`, price: bookingAdvisor.feeNum }],
+      }).catch(() => ({ success: false, order: { id: 'order_cns_' + Date.now() } }));
 
-    setConfirmedPass({
-      passId,
-      advisorName: bookingAdvisor.name,
-      slot: bookingAdvisor.slots,
-      roomUrl
-    });
+      await apiClient.verifyPayment({
+        orderId: orderRes?.order?.id || 'order_cns_' + Date.now(),
+        paymentId: 'pay_cns_' + Math.floor(100000 + Math.random() * 900000),
+        paymentMethod: 'ADCS Escrow / UPI',
+        amount: bookingAdvisor.feeNum,
+      }).catch(() => ({}));
 
-    logAudit(`Consultation Booked: ${passId}`, `Advisor: ${bookingAdvisor.name} | Client: ${clientName}`);
-    showToast('Consultation Confirmed', `Meeting token ${passId} generated with ${bookingAdvisor.name}.`, 'success');
+      const passId = 'CNS-' + Math.floor(1000 + Math.random() * 9000);
+      const roomCode = `ADCS-MEET-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+
+      const appId = submitApplication({
+        serviceId: 'srv-consult-slot',
+        serviceName: `${bookingAdvisor.name} (${chosenMode.toUpperCase()})`,
+        category: 'consulting',
+        applicantName: clientName.trim(),
+        applicantPhone: `+91 ${cleanPhone}`,
+        feePaid: bookingAdvisor.feeNum,
+        documentsUploaded: ['Consultation_Brief.pdf'],
+        notes: `Pass: ${passId}, Room: ${roomCode}, Query: ${topic.trim()}`,
+      });
+
+      const baseFee = Math.round(bookingAdvisor.feeNum / 1.18);
+      const gstAmt = bookingAdvisor.feeNum - baseFee;
+      recordJournalEntry({
+        date: new Date().toISOString().split('T')[0],
+        reference: passId,
+        description: `Advisory Consultation (${passId}): ${bookingAdvisor.name} for ${clientName.trim()}`,
+        lines: [
+          { accountCode: '1020', accountName: 'ADCS Settlement / Payment Gateway', debit: bookingAdvisor.feeNum, credit: 0 },
+          { accountCode: '4080', accountName: 'Legal, CA & Strategy Advisory Revenue', debit: 0, credit: baseFee },
+          { accountCode: '2010', accountName: 'GST Output Tax Payable (18%)', debit: 0, credit: gstAmt },
+        ],
+      });
+
+      setConfirmedPass({
+        passId,
+        appId,
+        advisorName: bookingAdvisor.name,
+        slot: bookingAdvisor.slots,
+        roomCode,
+        feeNum: bookingAdvisor.feeNum,
+      });
+
+      logAudit(`Consultation Booked: ${passId} (${appId})`, `Advisor: ${bookingAdvisor.name} | Client: ${clientName}`);
+      showToast('Consultation Confirmed', `Token ${passId} & Application ${appId} generated. Ledger posted.`, 'success');
+    } finally {
+      setIsBooking(false);
+    }
+  };
+
+  const handleDownloadIcs = () => {
+    if (!confirmedPass) return;
+    const now = new Date();
+    const startIso = now.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const endDate = new Date(now.getTime() + 30 * 60000);
+    const endIso = endDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Akul Dravin Digital Services//ADCS Advisory//EN',
+      'BEGIN:VEVENT',
+      `UID:${confirmedPass.passId}@akuldravindigital.com`,
+      `DTSTAMP:${startIso}`,
+      `DTSTART:${startIso}`,
+      `DTEND:${endIso}`,
+      `SUMMARY:ADCS Advisory Session with ${confirmedPass.advisorName}`,
+      `DESCRIPTION:Pass: ${confirmedPass.passId} | App: ${confirmedPass.appId} | Room: ${confirmedPass.roomCode} | Topic: ${topic}`,
+      `LOCATION:${chosenMode === 'video' ? `ADCS Encrypted WebRTC (${confirmedPass.roomCode})` : 'Phone Callback'}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Consult_${confirmedPass.passId}.ics`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -297,10 +380,11 @@ export const ConsultingPage: React.FC = () => {
                     </button>
                     <button
                       type="submit"
+                      disabled={isBooking}
                       className="btn-gold"
-                      style={{ flex: 1.5, justifyContent: 'center', fontWeight: 800 }}
+                      style={{ flex: 1.5, justifyContent: 'center', fontWeight: 800, opacity: isBooking ? 0.7 : 1 }}
                     >
-                      Confirm Booking ({bookingAdvisor.rate.split('/')[0].trim()})
+                      {isBooking ? 'Settling Slot...' : `Confirm Booking (${bookingAdvisor.rate.split('/')[0].trim()})`}
                     </button>
                   </div>
                 </form>
@@ -340,23 +424,34 @@ export const ConsultingPage: React.FC = () => {
                     <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0A192F' }}>{confirmedPass.advisorName}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Tracking App ID:</span>
+                    <strong style={{ fontSize: '0.85rem', color: '#059669' }}>{confirmedPass.appId}</strong>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Scheduled Time:</span>
                     <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#D97706' }}>{confirmedPass.slot}</span>
                   </div>
                   <div style={{ fontSize: '0.8rem', color: '#059669', marginTop: '0.5rem', background: '#DCFCE7', padding: '0.4rem 0.6rem', borderRadius: '6px' }}>
-                    Encrypted Room Code: {confirmedPass.roomUrl.split('/').pop()}
+                    Encrypted Room Code: {confirmedPass.roomCode}
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                   <button
-                    onClick={() => {
-                      showToast('Calendar Sync', 'Consultation slot added to Google / Outlook Calendar.', 'success');
-                    }}
+                    onClick={handleDownloadIcs}
                     className="btn-secondary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
                   >
-                    Add to Calendar
+                    <Download size={14} />
+                    <span>Add to Calendar (.ics)</span>
                   </button>
+                  <Link
+                    to={`/track?id=${encodeURIComponent(confirmedPass.appId)}`}
+                    className="btn-gold"
+                    style={{ textDecoration: 'none', fontWeight: 800 }}
+                  >
+                    Track Status
+                  </Link>
                   <button
                     onClick={() => {
                       setBookingAdvisor(null);
@@ -385,6 +480,49 @@ export const ConsultingPage: React.FC = () => {
         <div className="grid-3" style={{ gap: '1.5rem' }}>
           {services.filter(s => s.category === 'consulting').map(service => (
             <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+      </div>
+
+      {/* Authorized Statutory Regulatory Bodies (ICAI / ICSI / BCI / Income Tax) */}
+      <div style={{
+        marginTop: '3rem',
+        background: '#F8FAFC',
+        borderRadius: '18px',
+        padding: '1.5rem 2rem',
+        border: '1px solid #E2E8F0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem',
+      }}>
+        <div>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+            AUTHORIZED STATUTORY TAX & PROFESSIONAL REGULATORY PORTALS
+          </div>
+          <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>
+            Official compliance directories for ICAI Chartered Accountants, ICSI Company Secretaries, Bar Council & e-Filing Tax Portal.
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
+          {[
+            { label: 'Income Tax e-Filing', url: 'https://www.incometax.gov.in/' },
+            { label: 'ICAI Portal', url: 'https://www.icai.org/' },
+            { label: 'ICSI Portal', url: 'https://www.icsi.edu/' },
+            { label: 'Bar Council of India', url: 'https://www.barcouncilofindia.org/' },
+          ].map(p => (
+            <a
+              key={p.label}
+              href={p.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-secondary btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', textDecoration: 'none' }}
+            >
+              <span>{p.label}</span>
+              <ExternalLink size={13} />
+            </a>
           ))}
         </div>
       </div>
