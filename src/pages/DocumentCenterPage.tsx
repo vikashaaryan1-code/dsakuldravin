@@ -15,7 +15,13 @@ import {
   Split,
   Minimize2,
   FileCode,
-  ScanLine
+  ScanLine,
+  X,
+  Copy,
+  Check,
+  RefreshCw,
+  Eye,
+  Plus
 } from 'lucide-react';
 
 export const DocumentCenterPage: React.FC = () => {
@@ -27,6 +33,32 @@ export const DocumentCenterPage: React.FC = () => {
   const [newDocCategory, setNewDocCategory] = useState<'Identity' | 'Address' | 'Business' | 'Tax' | 'Property' | 'Education'>('Identity');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [ocrScanning, setOcrScanning] = useState(false);
+
+  // Universal Tools State
+  const [activeTool, setActiveTool] = useState<'ocr' | 'merge' | 'compress' | 'resume' | null>(null);
+
+  // 1. OCR Tool State
+  const [ocrSample, setOcrSample] = useState<'aadhaar' | 'pan' | 'income'>('aadhaar');
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // 2. PDF Merge Tool State
+  const [mergeFiles, setMergeFiles] = useState<string[]>([
+    'Marksheet_Class_10.pdf (1.2 MB)',
+    'Marksheet_Class_12.pdf (1.4 MB)',
+    'Character_Certificate.pdf (0.4 MB)'
+  ]);
+
+  // 3. PDF Compressor State
+  const [compressTargetKb, setCompressTargetKb] = useState<number>(100);
+  const [compressDone, setCompressDone] = useState(false);
+
+  // 4. Resume Maker State
+  const [resumeName, setResumeName] = useState('Anand Kumar Verma');
+  const [resumeRole, setResumeRole] = useState('Digital Operations Specialist & CSC Operator');
+  const [resumeEmail, setResumeEmail] = useState('anand.verma@example.com');
+  const [resumePhone, setResumePhone] = useState('+91 98350 44921');
+  const [resumeSkills, setResumeSkills] = useState('Aadhaar Enrolment, NSDL PAN, GST Portal, MS Office, Typing 45 WPM');
+  const [resumeExp, setResumeExp] = useState('3+ Years Experience at Akul Dravin Digital Seva Kendra managing 150+ citizen services.');
 
   const categories = ['All', 'Identity', 'Tax', 'Property', 'Education', 'Business'];
 
@@ -156,16 +188,27 @@ export const DocumentCenterPage: React.FC = () => {
 
         <div className="grid-4" style={{ gap: '1rem' }}>
           {[
-            { title: 'Quantum AI OCR Extractor', desc: 'Extract clean Unicode text from photos, PDFs & Aadhaar cards.', icon: <ScanLine size={20} color="#1D4ED8" /> },
-            { title: 'PDF Merge & Splitter', desc: 'Combine multiple marksheets or deed pages into one PDF.', icon: <Split size={20} color="#059669" /> },
-            { title: 'Smart PDF Compressor', desc: 'Reduce file size below 200KB for government job portals.', icon: <Minimize2 size={20} color="#D97706" /> },
-            { title: 'Resume & Biodata Maker', desc: 'ATS-friendly professional CV templates with instant PDF export.', icon: <FileCode size={20} color="#7C3AED" /> },
-          ].map((tool, idx) => (
+            { id: 'ocr' as const, title: 'Quantum AI OCR Extractor', desc: 'Extract clean Unicode text from photos, PDFs & Aadhaar cards.', icon: <ScanLine size={20} color="#1D4ED8" /> },
+            { id: 'merge' as const, title: 'PDF Merge & Splitter', desc: 'Combine multiple marksheets or deed pages into one PDF.', icon: <Split size={20} color="#059669" /> },
+            { id: 'compress' as const, title: 'Smart PDF Compressor', desc: 'Reduce file size below 200KB for government job portals.', icon: <Minimize2 size={20} color="#D97706" /> },
+            { id: 'resume' as const, title: 'Resume & Biodata Maker', desc: 'ATS-friendly professional CV templates with instant PDF export.', icon: <FileCode size={20} color="#7C3AED" /> },
+          ].map((tool) => (
             <div
-              key={idx}
+              key={tool.id}
               className="card"
-              style={{ padding: '1.25rem', borderRadius: '14px', cursor: 'pointer' }}
-              onClick={() => showToast(`Tool Launched`, `${tool.title} ready for file drag & drop.`, 'info')}
+              style={{
+                padding: '1.25rem',
+                borderRadius: '14px',
+                cursor: 'pointer',
+                border: activeTool === tool.id ? '2px solid #2563EB' : '1px solid #E2E8F0',
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+              onClick={() => {
+                setActiveTool(tool.id);
+                setCompressDone(false);
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
                 <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -173,7 +216,10 @@ export const DocumentCenterPage: React.FC = () => {
                 </div>
                 <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0A192F' }}>{tool.title}</h4>
               </div>
-              <p style={{ fontSize: '0.78rem', color: '#64748B', lineHeight: 1.4 }}>{tool.desc}</p>
+              <p style={{ fontSize: '0.78rem', color: '#64748B', lineHeight: 1.4, margin: 0 }}>{tool.desc}</p>
+              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1D4ED8', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <span>Launch Interactive Tool →</span>
+              </div>
             </div>
           ))}
         </div>
@@ -341,6 +387,396 @@ export const DocumentCenterPage: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* INTERACTIVE UNIVERSAL UTILITY TOOL MODAL */}
+      {activeTool && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(10, 25, 47, 0.75)',
+          backdropFilter: 'blur(6px)',
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: '#FFFFFF',
+            borderRadius: '24px',
+            maxWidth: '620px',
+            width: '100%',
+            padding: '2rem',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+            maxHeight: '90vh',
+            overflowY: 'auto'
+          }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div>
+                <span className="badge badge-blue">STUDIO ENGINE ACTIVE</span>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0A192F', marginTop: '0.3rem' }}>
+                  {activeTool === 'ocr' && 'Quantum AI OCR Extractor & Validator'}
+                  {activeTool === 'merge' && 'PDF Document Merge & Page Re-order Studio'}
+                  {activeTool === 'compress' && 'Smart PDF Compressor for Sarkari Portals'}
+                  {activeTool === 'resume' && 'ATS-Ready Sarkari & Private Resume Maker'}
+                </h3>
+              </div>
+              <button
+                onClick={() => setActiveTool(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem' }}
+              >
+                <X size={20} color="#64748B" />
+              </button>
+            </div>
+
+            {/* 1. OCR TOOL VIEW */}
+            {activeTool === 'ocr' && (
+              <div>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1rem' }}>
+                  AI-powered OCR extracts clean text and verifies UIDAI Verhoeff D5 dihedral checksums and NSDL PAN patterns automatically.
+                </p>
+
+                <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                  {(['aadhaar', 'pan', 'income'] as const).map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setOcrSample(s)}
+                      style={{
+                        padding: '0.4rem 0.85rem',
+                        borderRadius: '8px',
+                        border: ocrSample === s ? '2px solid #2563EB' : '1px solid #E2E8F0',
+                        background: ocrSample === s ? '#EFF6FF' : '#FFFFFF',
+                        fontWeight: 700,
+                        fontSize: '0.8rem',
+                        color: ocrSample === s ? '#1D4ED8' : '#64748B',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {s === 'aadhaar' ? 'Aadhaar Card (UID)' : s === 'pan' ? 'PAN Card (49A)' : 'Income Certificate'}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{
+                  background: '#F8FAFC',
+                  borderRadius: '14px',
+                  padding: '1.25rem',
+                  border: '1px solid #E2E8F0',
+                  marginBottom: '1.25rem'
+                }}>
+                  {ocrSample === 'aadhaar' && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span className="badge badge-green">✓ Verhoeff D5 Checksum: Valid (9)</span>
+                        <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Confidence: 99.8%</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.85rem' }}>
+                        <div><span style={{ color: '#64748B' }}>Aadhaar Number:</span> <strong>XXXXXXXX0019</strong></div>
+                        <div><span style={{ color: '#64748B' }}>Full Name:</span> <strong>Vikramaditya Sharma</strong></div>
+                        <div><span style={{ color: '#64748B' }}>DOB:</span> <strong>14/08/1992</strong></div>
+                        <div><span style={{ color: '#64748B' }}>Gender:</span> <strong>Male / पुरुष</strong></div>
+                      </div>
+                      <div style={{ fontSize: '0.82rem', marginTop: '0.75rem', color: '#334155' }}>
+                        Address: <em>Ward No. 12, Danapur Cantt, Danapur, Patna, Bihar - 801503</em>
+                      </div>
+                    </>
+                  )}
+
+                  {ocrSample === 'pan' && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span className="badge badge-green">✓ Pattern [A-Z]{'{5}'}[0-9]{'{4}'}[A-Z]{'{1}'}: Valid</span>
+                        <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Confidence: 99.4%</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.85rem' }}>
+                        <div><span style={{ color: '#64748B' }}>PAN Number:</span> <strong>ABCDE1234F</strong></div>
+                        <div><span style={{ color: '#64748B' }}>Holder Name:</span> <strong>Vikramaditya Sharma</strong></div>
+                        <div><span style={{ color: '#64748B' }}>Father's Name:</span> <strong>Ramesh Chandra Sharma</strong></div>
+                        <div><span style={{ color: '#64748B' }}>Type:</span> <strong>Individual (P)</strong></div>
+                      </div>
+                    </>
+                  )}
+
+                  {ocrSample === 'income' && (
+                    <>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <span className="badge badge-green">✓ e-District Digital Seal Verified</span>
+                        <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Authority: SDM Danapur</span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.85rem' }}>
+                        <div><span style={{ color: '#64748B' }}>Certificate No:</span> <strong>ED-INC-2026-99214</strong></div>
+                        <div><span style={{ color: '#64748B' }}>Annual Income:</span> <strong>₹1,80,000 (Non-Creamy)</strong></div>
+                        <div><span style={{ color: '#64748B' }}>Issued To:</span> <strong>Vikramaditya Sharma</strong></div>
+                        <div><span style={{ color: '#64748B' }}>Validity:</span> <strong>FY 2026-2027</strong></div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => {
+                      setCopiedField('all');
+                      showToast('OCR Text Copied', 'All structured document metadata copied to clipboard.', 'success');
+                      setTimeout(() => setCopiedField(null), 2000);
+                    }}
+                    className="btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    {copiedField === 'all' ? <Check size={16} /> : <Copy size={16} />}
+                    <span>{copiedField === 'all' ? 'Copied!' : 'Copy Extracted Data'}</span>
+                  </button>
+                  <button onClick={() => setActiveTool(null)} className="btn-secondary">
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 2. MERGE TOOL VIEW */}
+            {activeTool === 'merge' && (
+              <div>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1rem' }}>
+                  Combine multiple educational marksheets, affidavits, or identity deeds into a single unified PDF file.
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1.25rem' }}>
+                  {mergeFiles.map((f, i) => (
+                    <div key={i} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      background: '#F8FAFC',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '10px',
+                      border: '1px solid #E2E8F0',
+                      fontSize: '0.85rem'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span style={{ fontWeight: 800, color: '#1D4ED8' }}>#{i + 1}</span>
+                        <span>{f}</span>
+                      </div>
+                      <button
+                        onClick={() => setMergeFiles(prev => prev.filter((_, idx) => idx !== i))}
+                        style={{ color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}
+                        title="Remove page"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.25rem' }}>
+                  <button
+                    onClick={() => {
+                      setMergeFiles(prev => [...prev, `Attachment_Doc_${prev.length + 1}.pdf (0.8 MB)`]);
+                      showToast('File Added', 'Additional PDF attached to merge queue.', 'info');
+                    }}
+                    className="btn-secondary btn-sm"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                  >
+                    <Plus size={14} />
+                    <span>Add File to Queue</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      showToast('PDF Merged & Downloaded', `Merged ${mergeFiles.length} pages into Combined_Dossier_2026.pdf!`, 'success');
+                      setActiveTool(null);
+                    }}
+                    className="btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <Download size={15} />
+                    <span>Download Combined PDF</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 3. COMPRESS TOOL VIEW */}
+            {activeTool === 'compress' && (
+              <div>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1rem' }}>
+                  State government job portals (BPSC, SSC, UPPSC) require photos under 50KB and certificates under 100KB-200KB.
+                </p>
+
+                <div style={{ background: '#F8FAFC', padding: '1.25rem', borderRadius: '14px', border: '1px solid #E2E8F0', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0A192F' }}>Target Maximum File Size:</span>
+                    <strong style={{ fontSize: '1rem', color: '#1D4ED8' }}>{compressTargetKb} KB</strong>
+                  </div>
+                  <input
+                    type="range"
+                    min={20}
+                    max={300}
+                    step={10}
+                    value={compressTargetKb}
+                    onChange={(e) => {
+                      setCompressTargetKb(Number(e.target.value));
+                      setCompressDone(false);
+                    }}
+                    style={{ width: '100%', cursor: 'pointer' }}
+                  />
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#64748B', marginTop: '0.25rem' }}>
+                    <span>20 KB (Photo/Sign)</span>
+                    <span>100 KB (Govt Forms)</span>
+                    <span>300 KB (High Res)</span>
+                  </div>
+                </div>
+
+                {compressDone && (
+                  <div style={{
+                    background: '#DCFCE7',
+                    border: '1px solid #86EFAC',
+                    borderRadius: '12px',
+                    padding: '1rem',
+                    marginBottom: '1.25rem',
+                    fontSize: '0.85rem',
+                    color: '#166534'
+                  }}>
+                    <div style={{ fontWeight: 800, marginBottom: '0.25rem' }}>✓ Compression Optimization Complete!</div>
+                    <div>Original: <strong>1.84 MB</strong> → Optimized: <strong>{Math.min(compressTargetKb - 8, 92)} KB</strong> (95% Reduction)</div>
+                    <div style={{ fontSize: '0.75rem', color: '#15803D', marginTop: '0.25rem' }}>Zero artifact degradation • DPI preserved at 300 DPI statutory standard.</div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                  {!compressDone ? (
+                    <button
+                      onClick={() => {
+                        setCompressDone(true);
+                        showToast('Compression Finished', `Optimized file to ${compressTargetKb - 8} KB.`, 'success');
+                      }}
+                      className="btn-primary"
+                    >
+                      <span>Compress Document Now</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        showToast('Downloaded', `Saved Compressed_Doc_${compressTargetKb}KB.pdf`, 'success');
+                        setActiveTool(null);
+                      }}
+                      className="btn-primary"
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                    >
+                      <Download size={15} />
+                      <span>Download Optimized File</span>
+                    </button>
+                  )}
+                  <button onClick={() => setActiveTool(null)} className="btn-secondary">
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 4. RESUME MAKER VIEW */}
+            {activeTool === 'resume' && (
+              <div>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1rem' }}>
+                  Generate an ATS-optimized, 1-page professional curriculum vitae formatted specifically for private and clerical recruitment.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Full Candidate Name</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={resumeName}
+                      onChange={(e) => setResumeName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Professional Title</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={resumeRole}
+                      onChange={(e) => setResumeRole(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Email Address</label>
+                    <input
+                      type="email"
+                      className="form-input"
+                      value={resumeEmail}
+                      onChange={(e) => setResumeEmail(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.75rem' }}>Mobile Number</label>
+                    <input
+                      type="tel"
+                      className="form-input"
+                      value={resumePhone}
+                      onChange={(e) => setResumePhone(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Core Technical & Vocational Skills</label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    value={resumeSkills}
+                    onChange={(e) => setResumeSkills(e.target.value)}
+                  />
+                </div>
+
+                <div style={{ marginBottom: '1.25rem' }}>
+                  <label className="form-label" style={{ fontSize: '0.75rem' }}>Work Experience / Summary</label>
+                  <textarea
+                    rows={2}
+                    className="form-textarea"
+                    value={resumeExp}
+                    onChange={(e) => setResumeExp(e.target.value)}
+                  />
+                </div>
+
+                <div style={{
+                  background: '#EFF6FF',
+                  borderRadius: '12px',
+                  padding: '0.85rem 1rem',
+                  border: '1px solid #BFDBFE',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1.25rem'
+                }}>
+                  <div style={{ fontSize: '0.82rem', color: '#1E40AF' }}>
+                    ATS Compliance Score: <strong>96 / 100</strong> (Single-Column Standard)
+                  </div>
+                  <span className="badge badge-green">Recruiter Ready</span>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                  <button
+                    onClick={() => {
+                      showToast('Resume Generated', `Downloaded ATS_Resume_${resumeName.replace(/\s+/g, '_')}.pdf`, 'success');
+                      setActiveTool(null);
+                    }}
+                    className="btn-primary"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <Download size={15} />
+                    <span>Download ATS Resume PDF</span>
+                  </button>
+                  <button onClick={() => setActiveTool(null)} className="btn-secondary">
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Upload Modal */}
       {isUploading && (

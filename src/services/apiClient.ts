@@ -300,6 +300,27 @@ export const apiClient = {
   },
 
   /**
+   * Support Tickets API
+   */
+  async createSupportTicket(ticketData: {
+    customerName: string;
+    customerPhone: string;
+    serviceCategory: string;
+    subject: string;
+    priority: string;
+    initialMessage: string;
+  }) {
+    return fetchJSON<{ success: boolean; ticket: any }>(`${API_BASE}/support/tickets`, {
+      method: 'POST',
+      body: JSON.stringify(ticketData)
+    });
+  },
+
+  async getSupportTickets() {
+    return fetchJSON<{ success: boolean; count: number; tickets: any[] }>(`${API_BASE}/support/tickets`);
+  },
+
+  /**
    * Real-Time Server-Sent Events (SSE) Listener
    */
   subscribeToEvents(onEvent: (event: { type: string; payload: any; timestamp: string }) => void) {

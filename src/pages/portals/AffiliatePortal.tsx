@@ -13,13 +13,19 @@ import {
   Share2, 
   Download, 
   ExternalLink,
-  Gift
+  Gift,
+  X,
+  Image,
+  Video,
+  FileText,
+  CheckCircle2
 } from 'lucide-react';
 
 export const AffiliatePortal: React.FC = () => {
   const { affiliateReferrals, requestAffiliatePayout, showToast } = useApp();
   const [copiedLink, setCopiedLink] = useState(false);
   const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [showCreativeKitModal, setShowCreativeKitModal] = useState(false);
   const [payoutAmount, setPayoutAmount] = useState(2100);
   const [payoutUpi, setPayoutUpi] = useState('rahul.affiliate@okaxis');
 
@@ -84,7 +90,7 @@ export const AffiliatePortal: React.FC = () => {
               <Wallet size={18} /> Request Payout
             </button>
             <button
-              onClick={() => showToast('Marketing Kit', 'Official high-resolution banners, brochures, and promo videos downloaded.', 'success')}
+              onClick={() => setShowCreativeKitModal(true)}
               className="btn"
               style={{ background: 'rgba(255,255,255,0.12)', color: '#FFFFFF', border: '1px solid rgba(255,255,255,0.2)' }}
             >
@@ -288,6 +294,131 @@ export const AffiliatePortal: React.FC = () => {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {/* CREATIVE MARKETING ASSETS KIT MODAL */}
+        {showCreativeKitModal && (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(10, 25, 47, 0.75)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+          }}>
+            <div style={{
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              maxWidth: '640px',
+              width: '100%',
+              padding: '2.25rem',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.3)',
+              maxHeight: '90vh',
+              overflowY: 'auto'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <div>
+                  <span className="badge badge-gold">GROWTH & AFFILIATE TOOLKIT</span>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0A192F', marginTop: '0.25rem' }}>
+                    Official Promotional Creative Kit
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowCreativeKitModal(false)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.4rem' }}
+                >
+                  <X size={20} color="#64748B" />
+                </button>
+              </div>
+
+              <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.5rem' }}>
+                Use these verified marketing creatives and copy templates to promote services across WhatsApp status, Instagram stories, YouTube descriptions, and Telegram groups.
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
+                {/* Asset 1: WhatsApp Flyer */}
+                <div style={{ background: '#F8FAFC', borderRadius: '14px', padding: '1rem 1.25rem', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A' }}>
+                      <Image size={22} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0A192F' }}>WhatsApp Story Flyer (1080x1920)</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>PAN, Aadhaar, e-District & Government schemes with referral stamp</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => showToast('Asset Downloaded', 'Downloaded WhatsApp_Story_Flyer_ADCS.png', 'success')}
+                    className="btn btn-sm btn-outline"
+                  >
+                    Download
+                  </button>
+                </div>
+
+                {/* Asset 2: Social Square */}
+                <div style={{ background: '#F8FAFC', borderRadius: '14px', padding: '1rem 1.25rem', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1D4ED8' }}>
+                      <Image size={22} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0A192F' }}>Company Incorporation Square (1080x1080)</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Pvt Ltd ₹6,999 + GST registration promotion banner</div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => showToast('Asset Downloaded', 'Downloaded Company_Incorporation_Square.png', 'success')}
+                    className="btn btn-sm btn-outline"
+                  >
+                    Download
+                  </button>
+                </div>
+
+                {/* Asset 3: Video Reel Script */}
+                <div style={{ background: '#F8FAFC', borderRadius: '14px', padding: '1rem 1.25rem', border: '1px solid #E2E8F0' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <Video size={18} color="#7C3AED" />
+                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0A192F' }}>Reels / Shorts Script (30 Seconds)</span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText('अब सरकारी दफ्तरों के चक्कर लगाना बंद! Akul Dravin Digital Services से अपने घर बैठे या नजदीकी VLE सेंटर से पैन कार्ड, आय प्रमाण पत्र, कंपनी रजिस्ट्रेशन और सीलिंग करवाएं। लिंक बायो में है: ' + referralUrl);
+                        showToast('Script Copied', '30-second reel script copied to clipboard.', 'success');
+                      }}
+                      className="btn btn-sm btn-secondary"
+                      style={{ fontSize: '0.75rem' }}
+                    >
+                      Copy Script
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: '#475569', fontStyle: 'italic', background: '#FFFFFF', padding: '0.65rem', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                    "अब सरकारी दफ्तरों के चक्कर लगाना बंद! Akul Dravin Digital Services से अपने घर बैठे या नजदीकी VLE सेंटर से पैन कार्ड, आय प्रमाण पत्र, कंपनी रजिस्ट्रेशन करवाएं। लिंक बायो में है..."
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => {
+                    showToast('Bundle Downloaded', 'adcs-affiliate-marketing-kit-hd.zip (18.4 MB) downloaded.', 'success');
+                    setShowCreativeKitModal(false);
+                  }}
+                  className="btn btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <Download size={15} />
+                  <span>Download Full Kit (.ZIP)</span>
+                </button>
+                <button onClick={() => setShowCreativeKitModal(false)} className="btn btn-outline">
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )}
