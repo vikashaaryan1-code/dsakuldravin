@@ -10,19 +10,35 @@ import {
   Camera, 
   CheckSquare, 
   DollarSign, 
-  Navigation
+  Navigation,
+  Download,
+  PlusCircle
 } from 'lucide-react';
 
 export const TechnicianPortal: React.FC = () => {
-  const { showToast, logAudit } = useApp();
+  const { recordJournalEntry, showToast, logAudit } = useApp();
 
-  const [technician] = useState({
+  const [technician, setTechnician] = useState({
     name: 'Prakash Kumar Singh',
     techId: 'TECH-PAT-4402',
     zone: 'Patna Central & Danapur Division',
     rating: 4.9,
     jobsCompleted: 142
   });
+
+  const [newCustomer, setNewCustomer] = useState('');
+  const [newPhone, setNewPhone] = useState('');
+  const [newAddress, setNewAddress] = useState('');
+  const [newServiceType, setNewServiceType] = useState('Biometric L1 RD Service Calibration');
+  const [newAmount, setNewAmount] = useState(1200);
+  const [lastWarrantyCert, setLastWarrantyCert] = useState<{
+    certId: string;
+    jobId: string;
+    customerName: string;
+    serviceType: string;
+    amount: number;
+    completedAt: string;
+  } | null>(null);
 
   const [assignedJobs, setAssignedJobs] = useState([
     {
@@ -59,19 +75,110 @@ export const TechnicianPortal: React.FC = () => {
     }
   ]);
 
+  const remainingJobsCount = assignedJobs.filter(j => j.status !== 'COMPLETED').length;
+
   const handleToggleChecklist = (jobId: string, itemIdx: number) => {
     setAssignedJobs(prev => prev.map(job => {
       if (job.id !== jobId) return job;
-      const updated = [...job.checklist];
-      updated[itemIdx].done = !updated[itemIdx].done;
-      return { ...job, checklist: updated };
+      return {
+        ...job,
+        checklist: job.checklist.map((chk, i) => i === itemIdx ? { ...chk, done: !chk.done } : chk),
+      };
     }));
   };
 
   const handleCompleteJob = (jobId: string) => {
+    const target = assignedJobs.find(j => j.id === jobId);
+    if (!target || target.status === 'COMPLETED') return;
+
+    const remainingChecklist = target.checklist.filter(c => !c.done).length;
+    if (remainingChecklist > 0) {
+      showToast('SOP Checklist Incomplete', `Complete remaining ${remainingChecklist} verification step(s) before customer sign-off.`, 'warning');
+      return;
+    }
+
+    const gross = Number(target.amount.toFixed(2));
+    const gst = Number((gross - gross / 1.18).toFixed(2));
+    const base = Number((gross - gst).toFixed(2));
+
+    recordJournalEntry({
+      date: new Date().toISOString().split('T')[0],
+      reference: jobId,
+      description: `Field Installation Completed: ${target.serviceType} (${target.customerName})`,
+      lines: [
+        { accountCode: '1010', accountName: 'Operating Bank & Field Collection', debit: gross, credit: 0 },
+        { accountCode: '4071', accountName: 'Field Hardware & Installation Revenue', debit: 0, credit: base },
+        { accountCode: '2010', accountName: 'GST Output Tax Payable (18%)', debit: 0, credit: gst },
+      ],
+    });
+
     setAssignedJobs(prev => prev.map(job => job.id === jobId ? { ...job, status: 'COMPLETED' } : job));
-    showToast('Work Order Completed', `Job ${jobId} marked as completed. Payout logged to wallet.`, 'success');
+    setTechnician(prev => ({ ...prev, jobsCompleted: prev.jobsCompleted + 1 }));
+    setLastWarrantyCert({
+      certId: `WCERT-${jobId}`,
+      jobId,
+      customerName: target.customerName,
+      serviceType: target.serviceType,
+      amount: gross,
+      completedAt: new Date().toLocaleString('en-IN'),
+    });
+    showToast('Work Order Completed', `Job ${jobId} verified, ledger posted & warranty certificate issued.`, 'success');
     logAudit(`Technician completed work order ${jobId}`, 'CCTV & Hardware Operations');
+  };
+
+  const handleAddFieldJob = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCustomer.trim() || !newAddress.trim()) {
+      showToast('Missing Site Details', 'Enter client name and site address to log a field dispatch.', 'warning');
+      return;
+    }
+    const jobId = `JOB-FLD-${Math.floor(100 + Math.random() * 900)}`;
+    setAssignedJobs(prev => [{
+      id: jobId,
+      customerName: newCustomer.trim(),
+      customerPhone: newPhone.trim() || '+91 98000 00000',
+      address: newAddress.trim(),
+      serviceType: newServiceType,
+      scheduledSlot: 'On-Site Urgent Dispatch',
+      amount: Math.max(250, Number(newAmount) || 500),
+      status: 'DISPATCHED',
+      checklist: [
+        { item: 'Site Inspection & Hardware Health Diagnostic', done: false },
+        { item: 'Primary Installation / Repair Execution', done: false },
+        { item: 'Customer Acceptance Sign-off & Serial Capture', done: false },
+      ],
+    }, ...prev]);
+    setNewCustomer('');
+    setNewPhone('');
+    setNewAddress('');
+    logAudit(`Technician logged ad-hoc field ticket ${jobId}`, 'Field Operations');
+    showToast('Field Job Queued', `${jobId} added to active dispatch queue.`, 'success');
+  };
+
+  const handleDownloadWarrantyCertificate = (cert: NonNullable<typeof lastWarrantyCert>) => {
+    const text = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — FIELD INSTALLATION & WARRANTY CERTIFICATE',
+      '================================================================================',
+      `Certificate ID : ${cert.certId}`,
+      `Work Order     : ${cert.jobId}`,
+      `Technician     : ${technician.name} (${technician.techId})`,
+      `Client         : ${cert.customerName}`,
+      `Service        : ${cert.serviceType}`,
+      `Total Billed   : INR ${cert.amount.toFixed(2)} (Incl. 18% GST)`,
+      `Completed At   : ${cert.completedAt}`,
+      'Warranty       : 12-Month ADCS On-Site Hardware & Calibration Warranty',
+      'Ledger Sync    : Posted to Double-Entry Ledger (1010 Dr / 4071 + 2010 Cr)',
+      '================================================================================',
+    ].join('\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Warranty_Certificate_${cert.jobId}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -109,8 +216,8 @@ export const TechnicianPortal: React.FC = () => {
 
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <div style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-            <div style={{ fontSize: '0.75rem', color: '#99F6E4' }}>Assigned Jobs Today</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFFFFF' }}>2 Scheduled</div>
+            <div style={{ fontSize: '0.75rem', color: '#99F6E4' }}>Active Field Queue</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#FFFFFF' }}>{remainingJobsCount} Pending</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.1)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <div style={{ fontSize: '0.75rem', color: '#99F6E4' }}>Lifetime Jobs</div>
@@ -118,6 +225,123 @@ export const TechnicianPortal: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Warranty Certificate Banner */}
+      {lastWarrantyCert && (
+        <div style={{
+          background: '#ECFDF5',
+          border: '1.5px solid #10B981',
+          borderRadius: '18px',
+          padding: '1.25rem 1.5rem',
+          marginBottom: '2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}>
+          <div>
+            <div style={{ fontWeight: 800, color: '#065F46', fontSize: '0.98rem' }}>
+              Field Installation Signed Off • Certificate {lastWarrantyCert.certId}
+            </div>
+            <div style={{ fontSize: '0.82rem', color: '#047857' }}>
+              {lastWarrantyCert.serviceType} — {lastWarrantyCert.customerName} • ₹{lastWarrantyCert.amount.toFixed(2)} Ledger Posted
+            </div>
+          </div>
+          <button
+            onClick={() => handleDownloadWarrantyCertificate(lastWarrantyCert)}
+            className="btn-primary btn-sm"
+            style={{ gap: '0.35rem' }}
+          >
+            <Download size={14} />
+            <span>Download Warranty Cert (.txt)</span>
+          </button>
+        </div>
+      )}
+
+      {/* Log Urgent On-Site Work Order */}
+      <form
+        onSubmit={handleAddFieldJob}
+        style={{
+          background: '#F8FAFC',
+          borderRadius: '18px',
+          padding: '1.25rem 1.5rem',
+          border: '1px solid #CBD5E1',
+          marginBottom: '2rem',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+          gap: '0.75rem',
+          alignItems: 'end',
+        }}
+      >
+        <div>
+          <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+            Site Client / Kendra
+          </label>
+          <input
+            type="text"
+            className="form-input"
+            value={newCustomer}
+            onChange={(e) => setNewCustomer(e.target.value)}
+            placeholder="Client / Shop Name"
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            className="form-input"
+            value={newPhone}
+            onChange={(e) => setNewPhone(e.target.value)}
+            placeholder="+91 98..."
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+            Site Address
+          </label>
+          <input
+            type="text"
+            className="form-input"
+            value={newAddress}
+            onChange={(e) => setNewAddress(e.target.value)}
+            placeholder="Area / Landmark, City"
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+            Hardware / Field Task
+          </label>
+          <select
+            className="form-select"
+            value={newServiceType}
+            onChange={(e) => setNewServiceType(e.target.value)}
+          >
+            <option value="Biometric L1 RD Service Calibration">Biometric L1 Calibration (₹1,200)</option>
+            <option value="CCTV 4-Camera Maintenance & NVR Reset">CCTV NVR Maintenance (₹1,800)</option>
+            <option value="Thermal Printer & POS Terminal Setup">POS Terminal Setup (₹950)</option>
+            <option value="Fiber Router & Static IP Configuration">Networking & Static IP (₹1,500)</option>
+          </select>
+        </div>
+        <div>
+          <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+            Fee (₹)
+          </label>
+          <input
+            type="number"
+            min={250}
+            className="form-input"
+            value={newAmount}
+            onChange={(e) => setNewAmount(Math.max(250, Number(e.target.value)))}
+          />
+        </div>
+        <button type="submit" className="btn-primary" style={{ justifyContent: 'center', gap: '0.35rem' }}>
+          <PlusCircle size={15} />
+          <span>Log Field Ticket</span>
+        </button>
+      </form>
 
       {/* Assigned Field Jobs */}
       <div style={{ background: '#FFFFFF', borderRadius: '20px', border: '1px solid #E2E8F0', padding: '2rem' }}>

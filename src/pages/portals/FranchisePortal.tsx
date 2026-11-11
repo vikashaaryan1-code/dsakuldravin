@@ -11,21 +11,31 @@ import {
   CheckCircle2, 
   Download,
   Sparkles,
-  BarChart3
+  BarChart3,
+  FileCheck2
 } from 'lucide-react';
 
 export const FranchisePortal: React.FC = () => {
-  const { applications, inventory, employees, showToast, language } = useApp();
+  const { applications, inventory, employees, recordJournalEntry, logAudit, showToast } = useApp();
+  const [ledgerSynced, setLedgerSynced] = useState(false);
+
+  const liveOrderFees = applications.reduce((sum, app) => sum + (app.feePaid || 0), 0);
+  const liveCommissionAdd = Math.round(liveOrderFees * 0.25);
+  const netCommission = 148250 + liveCommissionAdd;
+  const totalOrders = 384 + applications.length;
+  const targetAmount = 200000;
+  const achievementPct = Math.min(100, Number(((netCommission / targetAmount) * 100).toFixed(1)));
 
   const handleDownloadStatement = () => {
     const content = `================================================================================
 AKUL DRAVIN DIGITAL SERVICES (ADCS)
 FRANCHISE COMMISSION SETTLEMENT STATEMENT - WEEKLY CLEARING SUMMARY
 ================================================================================
-Franchise Name  : Regional CSC & Digital Seva Enterprise Hub
-Franchise ID    : FRN-DELHI-NORTH-048
+Franchise Name  : Patna Central Franchise Branch #04
+Franchise ID    : FRN-PATNA-CENTRAL-004
 Settlement Cycle: Weekly Bank Direct Credit (NEFT/RTGS)
 Nodal Bank      : State Bank of India (A/C: *******8821)
+Live Portal Orders Included: ${applications.length} orders (₹${liveOrderFees.toLocaleString('en-IN')} GTV)
 --------------------------------------------------------------------------------
 BATCH DISPATCHES:
 Settlement ID | Period              | Tx Count | Gross GTV   | Commission | Status
@@ -39,18 +49,36 @@ TDS DEDUCTION (Sec 194H 5%)  : ₹5,520.00
 NET DISBURSED TO BANK       : ₹1,04,880.00
 ================================================================================
 Digitally Verified by: ADCS Automated Clearing Switch
-Authentication Hash  : SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-SETTL-OK
+Authentication Hash  : SHA256-FRN004-SETTL-OK
 ================================================================================`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'ADCS_Franchise_Commission_Statement_Sept2026.txt';
+    link.download = 'ADCS_Franchise_Commission_Statement.txt';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
     showToast('Statement Downloaded', 'Commission settlement statement saved to your device.', 'success');
+  };
+
+  const handleSyncBranchCommissionLedger = () => {
+    const tds = Math.round(netCommission * 0.05);
+    const netPayable = netCommission - tds;
+    recordJournalEntry({
+      date: new Date().toISOString().split('T')[0],
+      reference: 'FRN-004-SETTL',
+      description: 'Branch #04 Monthly Franchise Commission Accrual & TDS 194H Deduction',
+      lines: [
+        { accountCode: '5030', accountName: 'Franchise Commission Expense', debit: netCommission, credit: 0 },
+        { accountCode: '2040', accountName: 'TDS Payable (Sec 194H - 5%)', debit: 0, credit: tds },
+        { accountCode: '2035', accountName: 'Franchise Settlement Payable (Bank)', debit: 0, credit: netPayable },
+      ],
+    });
+    logAudit('FRANCHISE_LEDGER_SYNC', `Branch #04 net commission ₹${netPayable} reconciled (TDS ₹${tds})`, 'Success');
+    setLedgerSynced(true);
+    showToast('Ledger Synchronized', `Balanced settlement (₹${netPayable.toLocaleString('en-IN')} net after 5% TDS) posted.`, 'success');
   };
 
   return (
@@ -87,7 +115,7 @@ Authentication Hash  : SHA256-${Math.random().toString(36).substring(2, 10).toUp
         }}>
           <div style={{ fontSize: '0.78rem', color: '#93C5FD' }}>THIS MONTH NET COMMISSION</div>
           <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#F59E0B' }}>
-            ₹1,48,250
+            ₹{netCommission.toLocaleString('en-IN')}
           </div>
           <div style={{ fontSize: '0.72rem', color: '#10B981' }}>+18.4% growth vs last month</div>
         </div>
@@ -97,14 +125,14 @@ Authentication Hash  : SHA256-${Math.random().toString(36).substring(2, 10).toUp
       <div className="grid-4" style={{ gap: '1.25rem', marginBottom: '2.5rem' }}>
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '18px', border: '1px solid #E2E8F0' }}>
           <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>Active Customers Served</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0A192F', marginTop: '0.2rem' }}>1,240</div>
+          <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0A192F', marginTop: '0.2rem' }}>{1240 + applications.length}</div>
           <div style={{ fontSize: '0.72rem', color: '#059669', marginTop: '0.2rem' }}>96.2% Repeat Rate</div>
         </div>
 
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '18px', border: '1px solid #E2E8F0' }}>
           <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>Total Service Orders</div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#1D4ED8', marginTop: '0.2rem' }}>384</div>
-          <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.2rem' }}>This Calendar Month</div>
+          <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#1D4ED8', marginTop: '0.2rem' }}>{totalOrders}</div>
+          <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.2rem' }}>{applications.length} Live Queue Items</div>
         </div>
 
         <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '18px', border: '1px solid #E2E8F0' }}>
@@ -139,12 +167,71 @@ Authentication Hash  : SHA256-${Math.random().toString(36).substring(2, 10).toUp
             </h3>
             <p style={{ fontSize: '0.8rem', color: '#64748B' }}>Target: ₹2,00,000 Net Commission for Q3 Incentive Bonus</p>
           </div>
-          <span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1D4ED8' }}>74.1% Achieved</span>
+          <span style={{ fontWeight: 800, fontSize: '1.2rem', color: '#1D4ED8' }}>{achievementPct}% Achieved</span>
         </div>
 
         {/* Progress Bar */}
         <div style={{ height: '12px', background: '#F1F5F9', borderRadius: '6px', overflow: 'hidden' }}>
-          <div style={{ width: '74.1%', height: '100%', background: 'linear-gradient(90deg, #1D4ED8 0%, #F59E0B 100%)' }} />
+          <div style={{ width: `${achievementPct}%`, height: '100%', background: 'linear-gradient(90deg, #1D4ED8 0%, #F59E0B 100%)' }} />
+        </div>
+      </div>
+
+      {/* Live Branch Applications Feed */}
+      <div style={{
+        background: '#FFFFFF',
+        borderRadius: '20px',
+        padding: '2rem',
+        border: '1px solid #E2E8F0',
+        marginBottom: '2.5rem',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
+            Live Branch Customer Queue ({applications.length} Applications)
+          </h3>
+          <button
+            type="button"
+            onClick={handleSyncBranchCommissionLedger}
+            disabled={ledgerSynced}
+            className="btn-primary btn-sm"
+            style={{ gap: '0.35rem', opacity: ledgerSynced ? 0.7 : 1 }}
+          >
+            <FileCheck2 size={14} />
+            <span>{ledgerSynced ? 'Settlement Posted to Ledger' : 'Sync Monthly Settlement to Ledger'}</span>
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+          {applications.slice(0, 5).map(app => (
+            <div
+              key={app.id}
+              style={{
+                padding: '0.85rem 1rem',
+                borderRadius: '10px',
+                background: '#F8FAFC',
+                border: '1px solid #E2E8F0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0A192F' }}>
+                  {app.id} • {app.serviceName}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                  Applicant: {app.applicantName} • {app.submittedAt}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span style={{ fontWeight: 800, color: '#1D4ED8', fontSize: '0.88rem' }}>
+                  ₹{(app.feePaid || 0).toLocaleString('en-IN')}
+                </span>
+                <span className="badge badge-blue">{app.status}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
