@@ -65,19 +65,19 @@ export const RoleSwitcherBar: React.FC = () => {
       background: '#071324',
       borderBottom: '1px solid rgba(255,255,255,0.08)',
       padding: '0.35rem 1rem',
-      fontSize: '0.78rem',
+      fontSize: '0.76rem',
       color: '#94A3B8',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       flexWrap: 'wrap',
-      gap: '0.5rem',
+      gap: '0.45rem',
       position: 'relative',
       zIndex: 100,
     }}>
       {/* Left: Role Switcher Chips & Fast Dropdown */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflowX: 'auto', maxWidth: '78%' }}>
-        <span style={{ fontWeight: 700, color: '#38BDF8', marginRight: '0.2rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+        <span style={{ fontWeight: 700, color: '#38BDF8', marginRight: '0.15rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
           <span>🏢</span> 15 Portals:
         </span>
 
@@ -151,8 +151,8 @@ export const RoleSwitcherBar: React.FC = () => {
           )}
         </div>
 
-        {/* Quick Horizontal Scroll Pills */}
-        {roles.slice(0, 7).map(item => {
+        {/* Quick Access Role Pills */}
+        {roles.slice(1, 6).map(item => {
           const isActive = currentRole === item.role;
           return (
             <button

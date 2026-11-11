@@ -97,14 +97,15 @@ export const GlassNavbar: React.FC = () => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
+        gap: '0.75rem',
         height: '74px',
       }}>
         {/* Brand Logo */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', textDecoration: 'none' }}>
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none', flexShrink: 0 }}>
           <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '12px',
+            width: '42px',
+            height: '42px',
+            borderRadius: '11px',
             background: 'linear-gradient(135deg, #0A192F 0%, #1D4ED8 100%)',
             display: 'flex',
             alignItems: 'center',
@@ -113,25 +114,26 @@ export const GlassNavbar: React.FC = () => {
             boxShadow: '0 4px 14px rgba(29, 78, 216, 0.3)',
             border: '1.5px solid rgba(245, 158, 11, 0.6)',
             position: 'relative',
+            flexShrink: 0,
           }}>
-            <span style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: '1.3rem', color: '#F59E0B' }}>AD</span>
+            <span style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: '1.2rem', color: '#F59E0B' }}>AD</span>
             <div style={{
               position: 'absolute',
               bottom: '-2px',
               right: '-2px',
-              width: '12px',
-              height: '12px',
+              width: '11px',
+              height: '11px',
               borderRadius: '50%',
               background: '#059669',
               border: '2px solid #FFFFFF',
             }} />
           </div>
 
-          <div>
+          <div style={{ whiteSpace: 'nowrap' }}>
             <div style={{
               fontFamily: 'Outfit',
               fontWeight: 800,
-              fontSize: '1.18rem',
+              fontSize: '1.08rem',
               letterSpacing: '-0.02em',
               color: '#0A192F',
               lineHeight: 1.1,
@@ -139,16 +141,16 @@ export const GlassNavbar: React.FC = () => {
               AKUL DRAVIN
             </div>
             <div style={{
-              fontSize: '0.68rem',
+              fontSize: '0.64rem',
               fontWeight: 700,
-              letterSpacing: '0.12em',
+              letterSpacing: '0.1em',
               color: '#1D4ED8',
               textTransform: 'uppercase',
             }}>
               DIGITAL SERVICES
             </div>
             <div style={{
-              fontSize: '0.64rem',
+              fontSize: '0.6rem',
               color: '#D97706',
               fontWeight: 600,
               fontFamily: 'Noto Sans Devanagari, sans-serif',
@@ -162,11 +164,12 @@ export const GlassNavbar: React.FC = () => {
         <nav style={{
           display: 'none',
           alignItems: 'center',
-          gap: '0.4rem',
+          gap: '0.2rem',
+          minWidth: 0,
         }} className="desktop-nav">
           {/* Mega Menu Dropdown for All Services */}
           <div 
-            style={{ position: 'relative' }}
+            style={{ position: 'relative', flexShrink: 0 }}
             onMouseEnter={() => setServicesDropdownOpen(true)}
             onMouseLeave={() => setServicesDropdownOpen(false)}
           >
@@ -174,14 +177,15 @@ export const GlassNavbar: React.FC = () => {
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.35rem',
-                padding: '0.5rem 0.8rem',
+                gap: '0.3rem',
+                padding: '0.45rem 0.65rem',
                 borderRadius: '8px',
                 fontWeight: 600,
-                fontSize: '0.88rem',
+                fontSize: '0.84rem',
                 color: '#0A192F',
                 background: servicesDropdownOpen ? '#F1F5F9' : 'transparent',
                 transition: 'all 0.15s ease',
+                whiteSpace: 'nowrap',
               }}
             >
               <span>{language === 'en' ? 'All Services' : 'सभी सेवाएँ'}</span>
@@ -236,16 +240,16 @@ export const GlassNavbar: React.FC = () => {
             )}
           </div>
 
-          {primaryNavItems.slice(1, 7).map(item => {
+          {primaryNavItems.slice(1, 6).map(item => {
             const isActive = location.pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 style={{
-                  padding: '0.5rem 0.75rem',
+                  padding: '0.45rem 0.55rem',
                   borderRadius: '8px',
-                  fontSize: '0.86rem',
+                  fontSize: '0.83rem',
                   fontWeight: isActive ? 700 : 500,
                   color: isActive ? '#1D4ED8' : '#334155',
                   background: isActive ? '#EFF6FF' : 'transparent',
@@ -261,11 +265,12 @@ export const GlassNavbar: React.FC = () => {
           <Link
             to="/pricing"
             style={{
-              padding: '0.5rem 0.75rem',
+              padding: '0.45rem 0.55rem',
               borderRadius: '8px',
-              fontSize: '0.86rem',
+              fontSize: '0.83rem',
               fontWeight: 500,
               color: '#334155',
+              whiteSpace: 'nowrap',
             }}
           >
             {language === 'en' ? 'Pricing' : 'शुल्क'}
@@ -273,21 +278,22 @@ export const GlassNavbar: React.FC = () => {
         </nav>
 
         {/* Action Controls: Smart Search, Track, Ask AI, Cart, Login */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
           {/* AI Smart Search Button */}
           <button
             onClick={() => setIsSearchOpen(true)}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
+              gap: '0.4rem',
               background: '#F1F5F9',
               border: '1px solid #CBD5E1',
-              padding: '0.45rem 0.85rem',
+              padding: '0.4rem 0.7rem',
               borderRadius: '10px',
               color: '#475569',
-              fontSize: '0.84rem',
+              fontSize: '0.82rem',
               transition: 'all 0.15s ease',
+              whiteSpace: 'nowrap',
             }}
             title="Search any service / खोजें"
           >

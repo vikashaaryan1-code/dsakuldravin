@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
 import { PANApplicationEngine } from '../pan/PANApplicationEngine';
+import { resolveOfficialPortal, STATE_EDISTRICT_PORTALS } from '../../data/officialPortalRegistry';
 import { 
   X, 
   CheckCircle2, 
@@ -15,7 +16,9 @@ import {
   QrCode, 
   Sparkles,
   AlertCircle,
-  Printer
+  Printer,
+  ExternalLink,
+  Copy
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -48,11 +51,15 @@ export const ServiceApplicationModal: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedAppId, setGeneratedAppId] = useState<string | null>(null);
   const [showPrintSlip, setShowPrintSlip] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [copiedSummary, setCopiedSummary] = useState(false);
 
   const closeModal = () => {
     setIsApplyModalOpen(false);
     setStep(1);
     setGeneratedAppId(null);
+    setFormError(null);
+    setCopiedSummary(false);
   };
 
   useEffect(() => {
@@ -113,6 +120,35 @@ export const ServiceApplicationModal: React.FC = () => {
   const professionalFee = service.professionalFee || 0;
   const gst = Math.round((basePrice * 18) / 100);
   const totalAmount = basePrice + govtFee + gst;
+  const officialPortal = resolveOfficialPortal(`${service.slug} ${service.title} ${service.category}`, state);
+
+  const handleStep1Next = () => {
+    if (applicantName.trim().length < 2) {
+      setFormError('Please enter valid applicant or business full name.');
+      return;
+    }
+    if (applicantPhone.trim().length < 8) {
+      setFormError('Please enter a valid 10-digit WhatsApp/mobile number.');
+      return;
+    }
+    setFormError(null);
+    setStep(2);
+  };
+
+  const handleCopyPrefillSummary = () => {
+    const summary = [
+      `Service: ${service.title}`,
+      `ADCS Token: ${generatedAppId || 'DRAFT'}`,
+      `Applicant: ${applicantName}`,
+      `Phone: ${applicantPhone}`,
+      `Email: ${applicantEmail}`,
+      `Location: ${city}, ${state}`,
+      `Verified Docs: ${uploadedFiles.join(', ') || 'Pending'}`
+    ].join('\n');
+    navigator.clipboard.writeText(summary);
+    setCopiedSummary(true);
+    setTimeout(() => setCopiedSummary(false), 2000);
+  };
 
   const handleLiveDocumentScrutiny = async () => {
     if (!docNumberInput) return;
@@ -351,12 +387,9 @@ export const ServiceApplicationModal: React.FC = () => {
                     value={state}
                     onChange={(e) => setState(e.target.value)}
                   >
-                    <option value="Bihar">Bihar</option>
-                    <option value="Jharkhand">Jharkhand</option>
-                    <option value="Uttar Pradesh">Uttar Pradesh</option>
-                    <option value="Delhi">Delhi NCT</option>
-                    <option value="Maharashtra">Maharashtra</option>
-                    <option value="Karnataka">Karnataka</option>
+                    {Object.keys(STATE_EDISTRICT_PORTALS).map(st => (
+                      <option key={st} value={st}>{st}</option>
+                    ))}
                   </select>
                 </div>
 
@@ -372,6 +405,62 @@ export const ServiceApplicationModal: React.FC = () => {
                 </div>
               </div>
 
+              {officialPortal && (
+                <div style={{
+                  background: '#EFF6FF',
+                  border: '1px solid #BFDBFE',
+                  borderRadius: '12px',
+                  padding: '0.85rem 1rem',
+                  fontSize: '0.78rem',
+                  color: '#1E3A8A',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.35rem',
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.4rem' }}>
+                    <span style={{ fontWeight: 800 }}>
+                      🏛️ Official Authority: {officialPortal.portalName}
+                    </span>
+                    <a
+                      href={officialPortal.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: '#1D4ED8',
+                        fontWeight: 700,
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      <span>Visit Official Portal</span>
+                      <ExternalLink size={12} />
+                    </a>
+                  </div>
+                  <div style={{ color: '#475569' }}>
+                    {language === 'hi' ? officialPortal.complianceNoticeHi : officialPortal.complianceNotice}
+                  </div>
+                </div>
+              )}
+
+              {formError && (
+                <div style={{
+                  padding: '0.6rem 0.85rem',
+                  borderRadius: '8px',
+                  background: '#FEE2E2',
+                  color: '#B91C1C',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                }}>
+                  <AlertCircle size={15} />
+                  <span>{formError}</span>
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
                 <button
                   type="button"
@@ -383,7 +472,7 @@ export const ServiceApplicationModal: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setStep(2)}
+                  onClick={handleStep1Next}
                   className="btn-primary btn-lg"
                   style={{ flex: 2 }}
                 >
@@ -860,7 +949,7 @@ export const ServiceApplicationModal: React.FC = () => {
                   border: '1.5px dashed #93C5FD',
                   borderRadius: '16px',
                   padding: '1.25rem',
-                  marginBottom: '1.75rem',
+                  marginBottom: '1.25rem',
                   display: 'inline-block',
                   minWidth: '280px',
                 }}>
@@ -872,6 +961,68 @@ export const ServiceApplicationModal: React.FC = () => {
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '0.25rem' }}>
                     Use this token anytime to track progress live
+                  </div>
+                </div>
+              )}
+
+              {officialPortal && (
+                <div style={{
+                  background: '#F0FDF4',
+                  border: '1px solid #BBF7D0',
+                  borderRadius: '12px',
+                  padding: '1rem',
+                  marginBottom: '1.25rem',
+                  textAlign: 'left',
+                  fontSize: '0.82rem',
+                }}>
+                  <div style={{ fontWeight: 800, color: '#166534', marginBottom: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <ShieldCheck size={16} />
+                    <span>Authorized Portal Handoff: {officialPortal.portalName}</span>
+                  </div>
+                  <p style={{ color: '#334155', marginBottom: '0.75rem', fontSize: '0.78rem' }}>
+                    {language === 'hi' ? officialPortal.complianceNoticeHi : officialPortal.complianceNotice}
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    <a
+                      href={officialPortal.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        background: '#16A34A',
+                        color: '#FFFFFF',
+                        padding: '0.45rem 0.85rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        textDecoration: 'none',
+                      }}
+                    >
+                      <span>Open {officialPortal.portalName}</span>
+                      <ExternalLink size={13} />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={handleCopyPrefillSummary}
+                      style={{
+                        background: '#FFFFFF',
+                        color: '#0A192F',
+                        border: '1px solid #CBD5E1',
+                        padding: '0.45rem 0.85rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        fontSize: '0.78rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.35rem',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Copy size={13} />
+                      <span>{copiedSummary ? 'Copied Prefill Summary ✓' : 'Copy Citizen Prefill Data'}</span>
+                    </button>
                   </div>
                 </div>
               )}

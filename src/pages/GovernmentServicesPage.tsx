@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { ServiceCard } from '../components/cards/ServiceCard';
+import { STATE_EDISTRICT_PORTALS } from '../data/officialPortalRegistry';
 import { 
   Landmark, 
   ShieldCheck, 
@@ -15,7 +16,8 @@ import {
   Users,
   Award,
   Sparkles,
-  Calculator
+  Calculator,
+  ExternalLink
 } from 'lucide-react';
 
 export const GovernmentServicesPage: React.FC = () => {
@@ -406,6 +408,97 @@ export const GovernmentServicesPage: React.FC = () => {
         {filteredServices.map(service => (
           <ServiceCard key={service.id} service={service} />
         ))}
+      </div>
+
+      {/* Authorized Official Government Portals & State e-District Directory */}
+      <div style={{
+        background: '#FFFFFF',
+        borderRadius: '20px',
+        padding: '2rem',
+        border: '1px solid #E2E8F0',
+        marginBottom: '2.5rem',
+        boxShadow: '0 4px 16px rgba(10, 25, 47, 0.04)',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+          <div>
+            <span className="badge badge-blue" style={{ marginBottom: '0.4rem' }}>STATUTORY TRANSPARENCY DIRECTORY</span>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F' }}>
+              {language === 'hi' ? 'अधिकृत सरकारी एवं राज्य ई-डिस्ट्रिक्ट पोर्टल लिंक' : 'Authorized National & State e-District Official Portals'}
+            </h3>
+          </div>
+          <span style={{ fontSize: '0.76rem', color: '#047857', fontWeight: 700, background: '#ECFDF5', padding: '0.35rem 0.75rem', borderRadius: '999px', border: '1px solid #A7F3D0' }}>
+            Zero OTP / CAPTCHA Bypass • Direct Citizen Handoff
+          </span>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.85rem', marginBottom: '1.5rem' }}>
+          {[
+            { name: 'UTIITSL PAN Portal', desc: 'Form 49A / CSF Coupon Filing', url: 'https://www.pan.utiitsl.com/' },
+            { name: 'Protean (NSDL) eGov PAN', desc: 'Online New PAN & Reprint', url: 'https://www.onlineservices.nsdl.com/paam/endUserRegisterContact.html' },
+            { name: 'Passport Seva (MEA)', desc: 'Fresh / Tatkal & PSK Slots', url: 'https://www.passportindia.gov.in/' },
+            { name: 'myAadhaar (UIDAI)', desc: 'PVC Card & Address Update', url: 'https://myaadhaar.uidai.gov.in/' },
+            { name: 'Voters’ Service Portal (ECI)', desc: 'Form 6/8 & e-EPIC Download', url: 'https://voters.eci.gov.in/' },
+            { name: 'Parivahan Sewa (MoRTH)', desc: 'Driving License & Vehicle RC', url: 'https://parivahan.gov.in/' },
+            { name: 'e-Shram National Portal', desc: 'Unorganized Worker UAN Card', url: 'https://eshram.gov.in/' },
+            { name: 'NHA Ayushman Bharat', desc: 'PM-JAY ₹5L Health Card KYC', url: 'https://beneficiary.nha.gov.in/' },
+          ].map((portal, i) => (
+            <a
+              key={i}
+              href={portal.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '0.85rem 1rem',
+                borderRadius: '12px',
+                border: '1px solid #E2E8F0',
+                background: '#F8FAFC',
+                textDecoration: 'none',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.86rem', color: '#0A192F' }}>{portal.name}</div>
+                <div style={{ fontSize: '0.73rem', color: '#64748B' }}>{portal.desc}</div>
+              </div>
+              <ExternalLink size={15} color="#1D4ED8" />
+            </a>
+          ))}
+        </div>
+
+        <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '1rem' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '0.6rem' }}>
+            State Revenue / e-District Portals (Income, Caste, Domicile):
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+            {Object.entries(STATE_EDISTRICT_PORTALS).map(([st, info]) => (
+              <a
+                key={st}
+                href={info.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  fontSize: '0.76rem',
+                  fontWeight: 600,
+                  color: '#1D4ED8',
+                  background: '#EFF6FF',
+                  border: '1px solid #BFDBFE',
+                  padding: '0.3rem 0.65rem',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                }}
+              >
+                <span>{st}: {info.name}</span>
+                <ExternalLink size={11} />
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* SLA & Process Explanation Strip */}

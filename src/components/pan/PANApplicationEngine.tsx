@@ -338,7 +338,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                 FORM 49A / CSF STUDIO
               </span>
             </div>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, letterSpacing: '-0.01em' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0, letterSpacing: '-0.01em', color: '#FFFFFF' }}>
               PAN Card Universal Application & Document Engine
             </h2>
           </div>
