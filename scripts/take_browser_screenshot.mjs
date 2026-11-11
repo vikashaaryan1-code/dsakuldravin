@@ -22,14 +22,29 @@ setTimeout(async () => {
       const ws = new WebSocket(pageTab.webSocketDebuggerUrl);
       ws.onopen = () => {
         ws.send(JSON.stringify({ id: 1, method: 'Page.enable' }));
+        ws.send(JSON.stringify({ id: 2, method: 'Runtime.enable' }));
+        
+        // Wait until root is populated
+        const checkReady = setInterval(() => {
+          ws.send(JSON.stringify({
+            id: 100,
+            method: 'Runtime.evaluate',
+            params: { expression: 'document.getElementById("root") ? document.getElementById("root").innerHTML.length : 0' }
+          }));
+        }, 500);
+
         setTimeout(() => {
-          ws.send(JSON.stringify({ id: 2, method: 'Page.captureScreenshot', params: { format: 'png' } }));
-        }, 2000);
+          clearInterval(checkReady);
+          ws.send(JSON.stringify({ id: 3, method: 'Page.captureScreenshot', params: { format: 'png' } }));
+        }, 6000);
       };
 
       ws.onmessage = (event) => {
         const msg = JSON.parse(event.data);
-        if (msg.id === 2 && msg.result?.data) {
+        if (msg.id === 100 && msg.result?.result?.value > 500) {
+          console.log('DOM Content Ready! Root length:', msg.result.result.value);
+        }
+        if (msg.id === 3 && msg.result?.data) {
           const buffer = Buffer.from(msg.result.data, 'base64');
           fs.writeFileSync('scripts/rendered_homepage_screenshot.png', buffer);
           console.log('SCREENSHOT_SAVED: scripts/rendered_homepage_screenshot.png (' + buffer.length + ' bytes)');
