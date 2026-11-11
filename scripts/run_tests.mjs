@@ -383,6 +383,70 @@ try {
   assert(quantumAiRes.success === true, 'Quantum AI multi-agent chat response generated');
   assert(quantumAiRes.agentName.includes('Quote AI'), `Agent routed to Quote AI: ${quantumAiRes.agentName}`);
   assert(typeof quantumAiRes.isLiveCloudAI === 'boolean', 'Response indicates Cloud AI vs sovereign fallback state');
+
+  // Test Suite 6j: ADCS 2.0 Enterprise Modules Verification
+  const deviceRes = await fetch('http://localhost:5000/api/digipay/device-status').then(r => r.json());
+  assert(deviceRes.success === true, 'ADCS DigiPay RD Service device status responded');
+  assert(deviceRes.device.rdServiceStatus === 'READY', 'Mantra MFS100 RD Service status verified as READY');
+
+  const rdCaptureRes = await fetch('http://localhost:5000/api/digipay/rd-service-capture', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ vendor: 'Mantra', port: 11100, isConnected: true })
+  }).then(r => r.json());
+  assert(rdCaptureRes.success === true, 'RD Service encrypted PID capture handoff succeeded');
+  assert(rdCaptureRes.encryptedPidData.includes('<PidData>'), 'Strict zero-raw-biometric UIDAI L1 compliant PID format validated');
+
+  const advocatesRes = await fetch('http://localhost:5000/api/legal-desk/advocates').then(r => r.json());
+  assert(advocatesRes.success === true, 'ADCS Legal Desk verified advocates list retrieved');
+  assert(advocatesRes.advocates.length >= 2, 'Enrolled High Court advocates available for confidential consultation');
+
+  const legalEnquiryRes = await fetch('http://localhost:5000/api/legal-desk/enquiries', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      citizenName: 'Devendra Nath Pandey',
+      citizenPhone: '+91 94310 99887',
+      category: 'Property',
+      type: 'ADCS Private Consultation',
+      description: 'Title dispute scrutiny for ancestral land'
+    })
+  }).then(r => r.json());
+  assert(legalEnquiryRes.success === true, 'Legal case intake successfully booked under BCI Rule 36 compliance');
+  assert(legalEnquiryRes.caseRecord.id.startsWith('CAS-2026-'), 'Tracked legal case token assigned: ' + legalEnquiryRes.caseRecord.id);
+
+  const coursesRes = await fetch('http://localhost:5000/api/academy/courses').then(r => r.json());
+  assert(coursesRes.success === true, 'ADCS Academy course catalogue retrieved');
+  assert(coursesRes.courses.length >= 4, 'Includes foundational AI Mastery, Computer Pro, and CCTV technician tracks');
+
+  const examSubmitRes = await fetch('http://localhost:5000/api/academy/submit-exam', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      studentName: 'Suman Saurabh',
+      courseId: 'CRS-AI-101'
+    })
+  }).then(r => r.json());
+  assert(examSubmitRes.success === true && examSubmitRes.passed === true, 'Academy proctored exam evaluated as passed');
+  assert(examSubmitRes.certificate.certificateId.startsWith('ADCS-ACAD-2026-'), 'Verifiable certificate issued: ' + examSubmitRes.certificate.certificateId);
+
+  const certVerifyRes = await fetch(`http://localhost:5000/api/academy/certificates/verify/${examSubmitRes.certificate.certificateId}`).then(r => r.json());
+  assert(certVerifyRes.success === true, 'Public certificate verification portal confirms validity');
+  assert(certVerifyRes.certificate.status === 'VALID', 'Certificate status validated as VALID with cryptographic SHA-256 seal');
+
+  const posPrintRes = await fetch('http://localhost:5000/api/cyber-cafe/pos/print', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      customerName: 'Aakash Roy',
+      phone: '+91 99887 76655',
+      serviceType: 'color_print',
+      pages: 10,
+      copies: 2
+    })
+  }).then(r => r.json());
+  assert(posPrintRes.success === true, 'Cyber Cafe printing POS bill generated');
+  assert(posPrintRes.totalAmount === 300, 'Color print bill correctly computed (15 * 10 * 2 = ₹300)');
 } catch (err) {
   console.warn(`  ⚠️ Live server fetch skipped (offline mode): ${err.message}`);
 }

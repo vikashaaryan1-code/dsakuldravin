@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
 import { UserRole } from '../../types';
 import { 
@@ -11,9 +11,15 @@ import {
   ShieldAlert, 
   Wallet,
   Globe2,
-  Bell,
   Network,
-  Gift
+  Gift,
+  Scale,
+  GraduationCap,
+  BookOpen,
+  Wrench,
+  Landmark,
+  Headphones,
+  ChevronDown
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,28 +29,36 @@ export const RoleSwitcherBar: React.FC = () => {
     setCurrentRole, 
     walletBalance, 
     language, 
-    setLanguage,
-    t,
-    toasts
+    setLanguage
   } = useApp();
   const navigate = useNavigate();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const roles: { role: UserRole; label: string; icon: React.ReactNode; path: string }[] = [
-    { role: 'customer', label: t.roleCustomer, icon: <User size={13} />, path: '/customer/dashboard' },
-    { role: 'vle', label: 'ADCS Kendra (Akul Dravin Digital Services)', icon: <Store size={13} />, path: '/digitalseva' },
-    { role: 'cafe_operator', label: t.roleCafe, icon: <Monitor size={13} />, path: '/cyber-cafe/operator' },
-    { role: 'franchise', label: t.roleFranchise, icon: <Building size={13} />, path: '/franchise/dashboard' },
+    { role: 'customer', label: 'Customer Portal', icon: <User size={13} />, path: '/customer/dashboard' },
+    { role: 'vle', label: 'ADCS Kendra', icon: <Store size={13} />, path: '/digitalseva' },
+    { role: 'cafe_operator', label: 'Cyber Café Console', icon: <Monitor size={13} />, path: '/cyber-cafe/operator' },
+    { role: 'franchise', label: 'Franchise Owner', icon: <Building size={13} />, path: '/franchise/dashboard' },
     { role: 'distributor', label: 'Distributor Hub', icon: <Network size={13} />, path: '/distributor/dashboard' },
     { role: 'affiliate', label: 'Affiliate Portal', icon: <Gift size={13} />, path: '/affiliate/dashboard' },
-    { role: 'employee', label: t.roleEmployee, icon: <UserCheck size={13} />, path: '/employee/dashboard' },
-    { role: 'partner', label: t.rolePartner, icon: <Briefcase size={13} />, path: '/partner/dashboard' },
-    { role: 'admin', label: t.roleAdmin, icon: <ShieldAlert size={13} />, path: '/admin/dashboard' },
+    { role: 'executive', label: 'Service Executive', icon: <Headphones size={13} />, path: '/support-portal' },
+    { role: 'partner', label: 'Partner Portal', icon: <Briefcase size={13} />, path: '/partner/dashboard' },
+    { role: 'admin', label: 'Super Admin', icon: <ShieldAlert size={13} />, path: '/admin/dashboard' },
+    { role: 'advocate', label: 'Advocate Portal', icon: <Scale size={13} />, path: '/portal/advocate' },
+    { role: 'instructor', label: 'Instructor Portal', icon: <GraduationCap size={13} />, path: '/portal/instructor' },
+    { role: 'student', label: 'Student Portal', icon: <BookOpen size={13} />, path: '/portal/student' },
+    { role: 'technician', label: 'Technician Portal', icon: <Wrench size={13} />, path: '/portal/technician' },
+    { role: 'finance', label: 'Finance & Settlement', icon: <Landmark size={13} />, path: '/finance-portal' },
+    { role: 'employee', label: 'HRMS Employee Portal', icon: <UserCheck size={13} />, path: '/employee/dashboard' },
   ];
 
   const handleRoleChange = (r: UserRole, path: string) => {
     setCurrentRole(r);
+    setDropdownOpen(false);
     navigate(path);
   };
+
+  const activeRoleObj = roles.find(r => r.role === currentRole) || roles[0];
 
   return (
     <div style={{
@@ -61,12 +75,84 @@ export const RoleSwitcherBar: React.FC = () => {
       position: 'relative',
       zIndex: 100,
     }}>
-      {/* Left: Role Switcher Chips */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflowX: 'auto', maxWidth: '80%' }}>
-        <span style={{ fontWeight: 600, color: '#E2E8F0', marginRight: '0.2rem', whiteSpace: 'nowrap' }}>
-          Role Portal:
+      {/* Left: Role Switcher Chips & Fast Dropdown */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', overflowX: 'auto', maxWidth: '78%' }}>
+        <span style={{ fontWeight: 700, color: '#38BDF8', marginRight: '0.2rem', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span>🏢</span> 15 Portals:
         </span>
-        {roles.map(item => {
+
+        {/* Dropdown for quick access to all 15 */}
+        <div style={{ position: 'relative', display: 'inline-block' }}>
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              padding: '0.22rem 0.65rem',
+              borderRadius: '6px',
+              background: 'linear-gradient(135deg, #1E293B 0%, #0F172A 100%)',
+              color: '#F8FAFC',
+              fontWeight: 700,
+              border: '1px solid #38BDF8',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            {activeRoleObj.icon}
+            <span>{activeRoleObj.label}</span>
+            <ChevronDown size={12} />
+          </button>
+
+          {dropdownOpen && (
+            <div style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              marginTop: '4px',
+              background: '#0F172A',
+              border: '1px solid #334155',
+              borderRadius: '8px',
+              padding: '0.4rem',
+              boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, minmax(180px, 1fr))',
+              gap: '4px',
+              zIndex: 9999,
+              minWidth: '580px'
+            }}>
+              {roles.map(item => {
+                const isActive = currentRole === item.role;
+                return (
+                  <button
+                    key={item.role}
+                    onClick={() => handleRoleChange(item.role, item.path)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.35rem 0.5rem',
+                      borderRadius: '5px',
+                      background: isActive ? '#2563EB' : 'rgba(255,255,255,0.04)',
+                      color: isActive ? '#FFFFFF' : '#CBD5E1',
+                      border: 'none',
+                      fontSize: '0.74rem',
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: 'pointer',
+                      textAlign: 'left'
+                    }}
+                  >
+                    {item.icon}
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Horizontal Scroll Pills */}
+        {roles.slice(0, 7).map(item => {
           const isActive = currentRole === item.role;
           return (
             <button
@@ -76,7 +162,7 @@ export const RoleSwitcherBar: React.FC = () => {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.3rem',
-                padding: '0.2rem 0.6rem',
+                padding: '0.2rem 0.55rem',
                 borderRadius: '6px',
                 background: isActive ? 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)' : 'rgba(255,255,255,0.05)',
                 color: isActive ? '#FFFFFF' : '#CBD5E1',
@@ -84,6 +170,7 @@ export const RoleSwitcherBar: React.FC = () => {
                 transition: 'all 0.15s ease',
                 whiteSpace: 'nowrap',
                 border: isActive ? '1px solid #3B82F6' : '1px solid transparent',
+                cursor: 'pointer'
               }}
             >
               {item.icon}
@@ -94,7 +181,7 @@ export const RoleSwitcherBar: React.FC = () => {
       </div>
 
       {/* Right: Wallet & Language Toggle */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: 'auto' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginLeft: 'auto' }}>
         <button
           onClick={() => navigate('/connect/csc')}
           style={{
@@ -163,6 +250,7 @@ export const RoleSwitcherBar: React.FC = () => {
             borderRadius: '6px',
             fontWeight: 600,
             border: '1px solid rgba(255, 255, 255, 0.15)',
+            cursor: 'pointer'
           }}
           title="Switch Language / भाषा बदलें"
         >

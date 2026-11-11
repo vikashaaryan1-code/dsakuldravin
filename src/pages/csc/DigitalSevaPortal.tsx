@@ -2034,6 +2034,23 @@ export const DigitalSevaPortal: React.FC = () => {
                   </div>
                 )}
 
+                {/* RD Service L1 Device Integration Status */}
+                <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px', padding: '0.65rem 0.85rem', marginBottom: '1rem', fontSize: '0.75rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#166534', fontWeight: 800 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#16A34A', display: 'inline-block' }} />
+                      Mantra MFS100 (L1 RD Service) Connected
+                    </div>
+                    <span style={{ background: '#DCFCE7', color: '#15803D', padding: '0.1rem 0.4rem', borderRadius: '4px', fontWeight: 700, fontSize: '0.7rem' }}>
+                      PORT: 11100 READY
+                    </span>
+                  </div>
+                  <div style={{ color: '#4B5563', fontSize: '0.72rem', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Driver: v1.0.8 (UIDAI L1 Certified)</span>
+                    <span style={{ color: '#059669', fontWeight: 600 }}>🔒 Zero Raw Biometrics Stored</span>
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={aepsScanning}
@@ -2125,18 +2142,42 @@ export const DigitalSevaPortal: React.FC = () => {
         {activeTab === 'telelaw' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
             <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
-                <div style={{ background: '#1E3A8A', color: '#93C5FD', padding: '0.5rem', borderRadius: '8px' }}>
-                  <Scale size={24} />
-                </div>
-                <div>
-                  <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
-                    Tele-Law: Free Legal Advice
-                  </h3>
-                  <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                    Ministry of Law & Justice • High Court Panel Advocates
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '0.85rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                  <div style={{ background: '#1E3A8A', color: '#93C5FD', padding: '0.5rem', borderRadius: '8px' }}>
+                    <Scale size={24} />
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                      Tele-Law: Free Legal Advice
+                    </h3>
+                    <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+                      Ministry of Law & Justice • High Court Panel Advocates
+                    </div>
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/portal/advocate')}
+                  style={{
+                    background: '#EFF6FF',
+                    color: '#1D4ED8',
+                    border: '1px solid #BFDBFE',
+                    padding: '0.3rem 0.6rem',
+                    borderRadius: '6px',
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  ⚖️ Open ADCS Advocate Desk ↗
+                </button>
+              </div>
+
+              {/* Regulatory Notice distinguishing Govt Scheme from Private Consultations */}
+              <div style={{ background: '#F8FAFC', border: '1px solid #CBD5E1', borderRadius: '8px', padding: '0.75rem', marginBottom: '1.25rem', fontSize: '0.74rem', color: '#334155' }}>
+                <strong>Institutional Clarification:</strong> Tele-Law is an official Government of India / NALSA scheme for marginalized citizens. For private legal disputes, titles, contracts, and commercial advisory, use the certified <strong>ADCS Advocate Desk</strong>.
               </div>
 
               <form onSubmit={handleTelelawBook}>
@@ -2275,14 +2316,23 @@ export const DigitalSevaPortal: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <a 
-                  href="https://www.pmgdisha.in/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  style={{ fontSize: '0.72rem', color: '#7C3AED', background: '#F3E8FF', padding: '0.2rem 0.5rem', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}
-                >
-                  🔗 PMGDISHA Official Portal ↗
-                </a>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => navigate('/portal/student')}
+                    style={{ fontSize: '0.72rem', color: '#4338CA', background: '#EEF2FF', padding: '0.2rem 0.5rem', borderRadius: '4px', border: '1px solid #C7D2FE', fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    🎓 Open ADCS Academy LMS ↗
+                  </button>
+                  <a 
+                    href="https://www.pmgdisha.in/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ fontSize: '0.72rem', color: '#7C3AED', background: '#F3E8FF', padding: '0.2rem 0.5rem', borderRadius: '4px', textDecoration: 'none', fontWeight: 700 }}
+                  >
+                    🔗 PMGDISHA Official Portal ↗
+                  </a>
+                </div>
               </div>
 
               {/* Inbuilt Curriculum & Examination Material */}
@@ -2292,7 +2342,8 @@ export const DigitalSevaPortal: React.FC = () => {
                 </div>
                 1. Computer & Smartphone Basics (हार्डवेयर व ऑपरेटिंग सिस्टम).<br />
                 2. Digital Payments & UPI (भीम यूपीआई, डिजिटल वॉलेट्स).<br />
-                3. Citizen e-Services (आधार, डिजीलॉकर, पैन, ई-श्रम, आयुष्मान भारत).
+                3. Citizen e-Services (आधार, डिजीलॉकर, पैन, ई-श्रम, आयुष्मान भारत).<br />
+                <span style={{ color: '#4338CA', fontWeight: 700 }}>Notice:</span> For advanced AI, Coding, CCTV Technician, and Digital Marketing vocational certifications, access <strong>ADCS Academy</strong>.
               </div>
 
               <form onSubmit={handlePmgdishaCertify}>

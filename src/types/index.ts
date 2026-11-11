@@ -5,9 +5,15 @@ export type UserRole =
   | 'franchise' 
   | 'distributor'
   | 'affiliate'
-  | 'employee' 
+  | 'executive'
   | 'partner' 
-  | 'admin';
+  | 'admin'
+  | 'advocate'
+  | 'instructor'
+  | 'student'
+  | 'technician'
+  | 'finance'
+  | 'employee';
 
 export type Language = 'en' | 'hi';
 
@@ -368,3 +374,93 @@ export interface WhiteLabelConfig {
   invoiceHeader: string;
   gstin: string;
 }
+
+export interface AdvocateProfile {
+  id: string;
+  name: string;
+  barCouncilNumber: string;
+  stateBarCouncil: string;
+  experienceYears: number;
+  specialization: string[];
+  languages: string[];
+  consultationFee: number;
+  availableDays: string[];
+  availableTimeSlots: string[];
+  status: 'VERIFIED' | 'PENDING' | 'SUSPENDED';
+}
+
+export interface LegalCaseEnquiry {
+  id: string;
+  caseToken: string;
+  citizenName: string;
+  citizenPhone: string;
+  category: 'Property' | 'Matrimonial' | 'Consumer' | 'Employment' | 'Business' | 'Civil' | 'Documentation' | 'Tele-Law Govt Aid';
+  type: 'ADCS Private Consultation' | 'Official Tele-Law Government Scheme';
+  description: string;
+  assignedAdvocateId?: string;
+  assignedAdvocateName?: string;
+  appointmentDateTime?: string;
+  meetingLink?: string;
+  status: 'SUBMITTED' | 'SCHEDULED' | 'IN_CONSULTATION' | 'COMPLETED' | 'CLOSED';
+  caseNotes?: string[];
+  feePaid: number;
+}
+
+export interface AcademyCourse {
+  id: string;
+  code: string;
+  title: string;
+  titleHi: string;
+  category: 'AI' | 'Foundational' | 'Programming' | 'Marketing' | 'Business' | 'Vocational';
+  durationHours: number;
+  modulesCount: number;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  price: number;
+  isFree?: boolean;
+  syllabus: string[];
+  enrolledStudentsCount: number;
+  passingScorePercent: number;
+}
+
+export interface AcademyCertificate {
+  certificateId: string;
+  studentName: string;
+  studentAadhaarMasked: string;
+  courseTitle: string;
+  courseCode: string;
+  issuedDate: string;
+  grade: 'Distinction' | 'Grade A' | 'Grade B' | 'Pass';
+  issuerName: string;
+  issuerDesignation: string;
+  verificationUrl: string;
+  qrCodeData: string;
+  status: 'VALID' | 'REVOKED';
+  isPrivateTrainingCert: true;
+}
+
+export interface TechnicianJob {
+  id: string;
+  jobTicketNumber: string;
+  customerName: string;
+  customerPhone: string;
+  serviceCategory: 'CCTV' | 'Networking' | 'Biometric Device' | 'Hardware Repair';
+  address: string;
+  packageDetails: string;
+  assignedTechnicianName: string;
+  scheduledTime: string;
+  status: 'DISPATCHED' | 'EN_ROUTE' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
+  checklist: { item: string; completed: boolean }[];
+  warrantyMonths: number;
+  amount: number;
+}
+
+export interface BiometricDeviceState {
+  vendor: 'Mantra' | 'Morpho' | 'Startek' | 'SecuGen';
+  model: string;
+  rdServiceStatus: 'READY' | 'NOT_READY' | 'DISCONNECTED' | 'ERROR';
+  port: number;
+  driverVersion: string;
+  deviceSerial: string;
+  lastPingTime: string;
+}
+

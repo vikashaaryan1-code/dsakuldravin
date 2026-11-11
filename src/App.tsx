@@ -77,6 +77,11 @@ const SupportPortal = lazyNamed(() => import('./pages/portals/SupportPortal'), '
 const EmployeePortal = lazyNamed(() => import('./pages/portals/EmployeePortal'), 'EmployeePortal');
 const PartnerPortal = lazyNamed(() => import('./pages/portals/PartnerPortal'), 'PartnerPortal');
 const SuperAdminPortal = lazyNamed(() => import('./pages/portals/SuperAdminPortal'), 'SuperAdminPortal');
+const AdvocatePortal = lazyNamed(() => import('./pages/portals/AdvocatePortal'), 'AdvocatePortal');
+const InstructorPortal = lazyNamed(() => import('./pages/portals/InstructorPortal'), 'InstructorPortal');
+const StudentPortal = lazyNamed(() => import('./pages/portals/StudentPortal'), 'StudentPortal');
+const TechnicianPortal = lazyNamed(() => import('./pages/portals/TechnicianPortal'), 'TechnicianPortal');
+const AcademyCertificateVerificationPage = lazyNamed(() => import('./pages/AcademyCertificateVerificationPage'), 'AcademyCertificateVerificationPage');
 
 // Lazy Loaded CSC Connect & Digital Seva Sovereign Pages
 const CSCConnectLoginPage = lazyNamed(() => import('./pages/csc/CSCConnectLoginPage'), 'CSCConnectLoginPage');
@@ -194,6 +199,20 @@ export const App: React.FC = () => {
             <Route path="/employee/*" element={<ProtectedRoute allowedRoles={['employee', 'admin']} portalName="Employee Corporate Workspace"><EmployeePortal /></ProtectedRoute>} />
             <Route path="/partner/*" element={<ProtectedRoute allowedRoles={['partner', 'admin']} portalName="B2B Channel Partner Hub"><PartnerPortal /></ProtectedRoute>} />
             <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['admin']} portalName="Super Admin Sovereign Console"><SuperAdminPortal /></ProtectedRoute>} />
+
+            {/* 15 Role Portals & Academy Routes */}
+            <Route path="/portal/advocate/*" element={<ProtectedRoute allowedRoles={['advocate', 'admin']} portalName="Advocate Practice & Consultation Desk"><AdvocatePortal /></ProtectedRoute>} />
+            <Route path="/advocate/*" element={<ProtectedRoute allowedRoles={['advocate', 'admin']} portalName="Advocate Practice & Consultation Desk"><AdvocatePortal /></ProtectedRoute>} />
+            <Route path="/portal/instructor/*" element={<ProtectedRoute allowedRoles={['instructor', 'admin']} portalName="ADCS Academy Instructor Desk"><InstructorPortal /></ProtectedRoute>} />
+            <Route path="/instructor/*" element={<ProtectedRoute allowedRoles={['instructor', 'admin']} portalName="ADCS Academy Instructor Desk"><InstructorPortal /></ProtectedRoute>} />
+            <Route path="/portal/student/*" element={<ProtectedRoute allowedRoles={['student', 'admin', 'customer']} portalName="ADCS Academy Student Console"><StudentPortal /></ProtectedRoute>} />
+            <Route path="/student/*" element={<ProtectedRoute allowedRoles={['student', 'admin', 'customer']} portalName="ADCS Academy Student Console"><StudentPortal /></ProtectedRoute>} />
+            <Route path="/academy" element={<StudentPortal />} />
+            <Route path="/academy/*" element={<StudentPortal />} />
+            <Route path="/portal/technician/*" element={<ProtectedRoute allowedRoles={['technician', 'admin']} portalName="Field Technician Dispatch Console"><TechnicianPortal /></ProtectedRoute>} />
+            <Route path="/technician/*" element={<ProtectedRoute allowedRoles={['technician', 'admin']} portalName="Field Technician Dispatch Console"><TechnicianPortal /></ProtectedRoute>} />
+            <Route path="/verify-certificate/:certId" element={<AcademyCertificateVerificationPage />} />
+            <Route path="/verify-certificate" element={<AcademyCertificateVerificationPage />} />
 
             {/* Complete Astrology (ज्योतिष) Suite Routes */}
             <Route path="/astrology" element={<AstrologyHubPage />} />
