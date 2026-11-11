@@ -122,10 +122,11 @@ export const TravelPage: React.FC = () => {
         border: '1px solid #E2E8F0',
         marginBottom: '3rem',
       }}>
+        {/* Mode Selector & Search Widget */}
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.75rem', overflowX: 'auto' }}>
           {[
             { id: 'flights', label: 'Flights', icon: <Plane size={18} /> },
-            { id: 'trains', label: 'Trains (Tatkal Help)', icon: <Train size={18} /> },
+            { id: 'trains', label: 'Trains & Tatkal (IRCTC)', icon: <Train size={18} /> },
             { id: 'buses', label: 'Intercity Buses', icon: <Bus size={18} /> },
             { id: 'hotels', label: 'Hotels & Resorts', icon: <Building size={18} /> },
           ].map(m => (
@@ -155,6 +156,54 @@ export const TravelPage: React.FC = () => {
             </button>
           ))}
         </div>
+
+        {/* IRCTC Tatkal Statutory Compliance Notice (when trains selected) */}
+        {activeMode === 'trains' && (
+          <div style={{
+            background: '#EFF6FF',
+            border: '1px solid #BFDBFE',
+            borderRadius: '12px',
+            padding: '1rem 1.25rem',
+            marginBottom: '1.5rem',
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '0.75rem',
+            fontSize: '0.82rem',
+            color: '#1E3A8A'
+          }}>
+            <ShieldCheck size={20} color="#1D4ED8" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <div>
+              <strong style={{ display: 'block', marginBottom: '0.2rem', color: '#1E40AF' }}>
+                IRCTC & Railway Board Statutory Compliance (Circular 08/2025):
+              </strong>
+              <span>
+                Under Railway regulations, passenger Aadhaar OTP authentication is mandatory for Tatkal bookings. 
+                ADCS provides assisted scheduling and status tracking; official tickets are booked directly via official 
+                IRCTC channels without CAPTCHA manipulation or unauthorized credential storage.
+              </span>
+              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
+                <a
+                  href="https://www.irctc.co.in/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-sm btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                >
+                  Official IRCTC Portal <ArrowRight size={12} />
+                </a>
+                <a
+                  href="https://www.operations.irctc.co.in/AgentInterface/loginHome.jsf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-sm btn-outline"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '0.75rem' }}
+                >
+                  Authorized Agent Interface <ArrowRight size={12} />
+                </a>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Search Inputs */}
         <div style={{

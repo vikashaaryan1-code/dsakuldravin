@@ -248,17 +248,17 @@ async function run() {
   total++;
   if (await step('12. Frontend Web Presentation - Route Availability & Bundle Integrity', async () => {
     const urls = [
-      'http://localhost:3001/',
-      'http://localhost:3001/government',
-      'http://localhost:3001/cyber-cafe',
-      'http://localhost:3001/business',
-      'http://localhost:3001/distributor',
-      'http://localhost:3001/affiliate',
-      'http://localhost:3001/finance-portal',
-      'http://localhost:3001/support-portal',
-      'http://localhost:3001/marketing',
-      'http://localhost:3001/crm',
-      'http://localhost:3001/erp'
+      'http://localhost:3000/',
+      'http://localhost:3000/government',
+      'http://localhost:3000/cyber-cafe',
+      'http://localhost:3000/business',
+      'http://localhost:3000/distributor',
+      'http://localhost:3000/affiliate',
+      'http://localhost:3000/finance-portal',
+      'http://localhost:3000/support-portal',
+      'http://localhost:3000/marketing',
+      'http://localhost:3000/crm',
+      'http://localhost:3000/erp'
     ];
     let reachable = 0;
     for (const u of urls) {
