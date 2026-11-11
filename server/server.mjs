@@ -475,6 +475,27 @@ app.post('/api/ai/chat', async (req, res) => {
       ? 'प्रशासनिक स्थिति: 2 सक्रिय आवेदन विचाराधीन हैं। वीएलई कमीशन बैच ऑटो-सुलझाव के लिए तैयार है। ऑडिट लॉग 100% सुचारू है।'
       : 'Executive Status: 2 applications currently pending review. VLE Commission batch settlement of ₹14,800 prepared for approval. Audit logs tamper-free.';
     suggestedAction = { label: 'Open Admin Portal', actionType: 'navigate', targetPayload: '/admin' };
+  } else if (activeAgent === 'Legal Advisor' || (activeAgent === 'Universal' && (/\b(legal|advocate|lawyer|court|affidavit|vakil)\b/i.test(q) || q.includes('वकील') || q.includes('कानूनी')))) {
+    agentName = 'Legal Advisory & BCI Rule 36 Desk';
+    governanceLevel = 'RECOMMEND';
+    replyText = language === 'hi'
+      ? 'विधिक परामर्श डेस्क सक्रिय है। पटना उच्च न्यायालय एवं सत्र न्यायालय के नामांकित अधिवक्ताओं से गोपनीय परामर्श (BCI Rule 36 अनुसार) एवं शपथ पत्र / एग्रीमेंट ड्राफ्टिंग उपलब्ध है।'
+      : 'Legal Advisory Desk active under BCI Rule 36 compliance. Confidential video consultation with enrolled High Court advocates, dispute mediation, and statutory document drafting ready.';
+    suggestedAction = { label: 'Consult Enrolled Advocate', actionType: 'navigate', targetPayload: '/portal/advocate' };
+  } else if (activeAgent === 'Academy Guide' || (activeAgent === 'Universal' && (/\b(course|academy|student|certificate|lms|study|exam|learn)\b/i.test(q) || q.includes('कोर्स') || q.includes('प्रमाणपत्र')))) {
+    agentName = 'ADCS Academy & Vocational LMS Guide';
+    governanceLevel = 'RECOMMEND';
+    replyText = language === 'hi'
+      ? 'एकेडमी वोकेशनल एलएमएस सक्रिय है। AI Mastery (CRS-AI-101), Computer Pro (CRS-COMP-102), CCTV Technician (CRS-CCTV-103), एवं Digital Marketing (CRS-MKT-104) में 16 मॉड्यूल व QR-सत्यापित प्रमाणपत्र उपलब्ध हैं।'
+      : 'ADCS Academy & Vocational LMS active. Offering 16 bilingual modules across AI Engineering (CRS-AI-101), Computer Fundamentals (CRS-COMP-102), CCTV Technician (CRS-CCTV-103), and Digital Marketing (CRS-MKT-104) with QR-verifiable credentials.';
+    suggestedAction = { label: 'Launch Academy LMS', actionType: 'navigate', targetPayload: '/portal/student' };
+  } else if (activeAgent === 'Universal' && (/\b(kundli|astrology|rashifal|panchang|horoscope)\b/i.test(q) || q.includes('कुंडली') || q.includes('ज्योतिष'))) {
+    agentName = 'Vedic Astrology & Panchang Oracle';
+    governanceLevel = 'READ';
+    replyText = language === 'hi'
+      ? 'वैदिक ज्योतिष केंद्र सक्रिय है। निःशुल्क उत्तर भारतीय जन्म कुंडली, 36 गुण अष्टकूट मिलान, दैनिक पंचांग, एवं सरकारी लैब प्रमाणित रत्न उपलब्ध हैं।'
+      : 'Vedic Astrology & Panchang Oracle active. Free North Indian Janam Kundli, 36 Guna Ashtakoot Matching, Daily Panchang, and Lab-Certified Gemstones available.';
+    suggestedAction = { label: 'Open Vedic Astrology Hub', actionType: 'navigate', targetPayload: '/astrology' };
   } else {
     agentName = 'Universal AI Assistant';
     governanceLevel = 'READ';

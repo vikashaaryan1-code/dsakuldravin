@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { apiClient } from '../services/apiClient';
 import { 
@@ -52,6 +53,7 @@ export const QuantumAIPage: React.FC = () => {
     logAudit,
     language 
   } = useApp();
+  const navigate = useNavigate();
 
   const [activeAgent, setActiveAgent] = useState<'Universal' | 'Document AI' | 'Quote AI' | 'Legal Advisor' | 'Academy Guide' | 'Admin Copilot'>('Universal');
   const [inputText, setInputText] = useState('');
@@ -185,6 +187,48 @@ export const QuantumAIPage: React.FC = () => {
             },
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           };
+        } else if (q.includes('legal') || q.includes('advocate') || q.includes('lawyer') || q.includes('court') || q.includes('वकील')) {
+          reply = {
+            id: 'ai-' + Date.now(),
+            sender: 'quantum_ai',
+            agentName: 'Legal Advisor & BCI Rule 36 Desk',
+            text: `Legal Consultation Protocol: Strictly confidential video/in-person consultation with enrolled High Court advocates for civil, corporate, property, and affidavit drafting under Bar Council of India Rule 36 compliance.`,
+            governanceLevel: 'RECOMMEND',
+            suggestedAction: {
+              label: 'Consult Enrolled High Court Advocate',
+              actionType: 'navigate',
+              targetPayload: '/portal/advocate'
+            },
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+        } else if (q.includes('course') || q.includes('academy') || q.includes('student') || q.includes('certificate') || q.includes('lms') || q.includes('कोर्स')) {
+          reply = {
+            id: 'ai-' + Date.now(),
+            sender: 'quantum_ai',
+            agentName: 'ADCS Academy & Vocational LMS Guide',
+            text: `ADCS Academy Vocational Tracks: 16 bilingual modules covering AI Mastery (CRS-AI-101), Computer Fundamentals (CRS-COMP-102), CCTV Technician (CRS-CCTV-103), and Digital Marketing (CRS-MKT-104) with proctored exams and QR-verifiable credentials.`,
+            governanceLevel: 'RECOMMEND',
+            suggestedAction: {
+              label: 'Launch Academy LMS Console',
+              actionType: 'navigate',
+              targetPayload: '/portal/student'
+            },
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+        } else if (q.includes('kundli') || q.includes('astrology') || q.includes('rashifal') || q.includes('panchang') || q.includes('कुंडली')) {
+          reply = {
+            id: 'ai-' + Date.now(),
+            sender: 'quantum_ai',
+            agentName: 'Vedic Astrology & Kundli Engine',
+            text: `Vedic Astrology Suite: Free North Indian Janam Kundli with 12 houses & Navagrahas, 36 Guna Ashtakoot Matching, Daily Panchang with Rahukaal, and certified gemstone recommendations.`,
+            governanceLevel: 'READ',
+            suggestedAction: {
+              label: 'Open Vedic Astrology Hub',
+              actionType: 'navigate',
+              targetPayload: '/astrology'
+            },
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
         } else {
           reply = {
             id: 'ai-' + Date.now(),
@@ -237,7 +281,13 @@ export const QuantumAIPage: React.FC = () => {
       }
       setIsTrackerOpen(true);
     } else if (action.actionType === 'navigate') {
-      window.location.href = action.targetPayload;
+      if (typeof action.targetPayload === 'string') {
+        if (action.targetPayload.startsWith('http')) {
+          window.location.href = action.targetPayload;
+        } else {
+          navigate(action.targetPayload);
+        }
+      }
     }
   };
 
