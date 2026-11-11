@@ -187,20 +187,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Services
   const [services, setServices] = useState<ServiceItem[]>(() => {
-    const saved = localStorage.getItem('ad_services_catalog');
-    return saved ? JSON.parse(saved) : initialServicesCatalog;
+    try {
+      const saved = localStorage.getItem('ad_services_catalog');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map((s: any) => ({
+            ...s,
+            basePrice: Number(s.basePrice ?? s.price ?? 0),
+            requiredDocs: Array.isArray(s.requiredDocs) && s.requiredDocs.length > 0 ? s.requiredDocs : ['Aadhaar Card', 'Passport Photo'],
+            requiredDocsHi: Array.isArray(s.requiredDocsHi) && s.requiredDocsHi.length > 0 ? s.requiredDocsHi : ['आधार कार्ड', 'पासपोर्ट फोटो'],
+            timeline: s.timeline || '2-4 Working Days',
+            timelineHi: s.timelineHi || '2-4 कार्य दिवस'
+          }));
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to parse cached services catalog, resetting to initial', e);
+    }
+    return initialServicesCatalog;
   });
 
   // Applications
   const [applications, setApplications] = useState<Application[]>(() => {
-    const saved = localStorage.getItem('ad_applications');
-    return saved ? JSON.parse(saved) : initialApplications;
+    try {
+      const saved = localStorage.getItem('ad_applications');
+      return saved ? JSON.parse(saved) : initialApplications;
+    } catch (e) {
+      return initialApplications;
+    }
   });
 
   // Cart
   const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('ad_cart');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem('ad_cart');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
   });
 
   // Workstations
@@ -218,8 +243,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Enterprise Subsystems
   const [whiteLabelConfig, setWhiteLabelConfig] = useState<WhiteLabelConfig>(() => {
-    const saved = localStorage.getItem('ad_whitelabel_config');
-    return saved ? JSON.parse(saved) : initialWhiteLabelConfig;
+    try {
+      const saved = localStorage.getItem('ad_whitelabel_config');
+      return saved ? JSON.parse(saved) : initialWhiteLabelConfig;
+    } catch (e) {
+      return initialWhiteLabelConfig;
+    }
   });
   const [doubleEntryJournals, setDoubleEntryJournals] = useState<DoubleEntryJournal[]>(initialDoubleEntryJournals);
   const [supportTickets, setSupportTickets] = useState<SupportTicket[]>(initialSupportTickets);

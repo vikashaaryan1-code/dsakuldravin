@@ -87,7 +87,7 @@ export class ErrorBoundary extends Component<Props, State> {
               </div>
             )}
 
-            <div style={{ display: 'flex', gap: '0.85rem', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '0.85rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button
                 onClick={() => window.location.reload()}
                 className="btn btn-primary"
@@ -100,6 +100,27 @@ export class ErrorBoundary extends Component<Props, State> {
                 }}
               >
                 <RefreshCw size={16} /> Reload Application
+              </button>
+              <button
+                onClick={() => {
+                  try {
+                    localStorage.clear();
+                    sessionStorage.clear();
+                  } catch (_) {}
+                  window.location.href = '/';
+                }}
+                className="btn btn-outline"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.75rem 1.5rem',
+                  fontWeight: 700,
+                  borderColor: '#F59E0B',
+                  color: '#F59E0B'
+                }}
+              >
+                <RefreshCw size={16} /> Reset Storage & Return Home
               </button>
               <button
                 onClick={() => {
