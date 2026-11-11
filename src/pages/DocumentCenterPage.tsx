@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
+import { CertificateStudio } from '../components/documents/CertificateStudio';
+import { LetterGenerator } from '../components/documents/LetterGenerator';
 import { 
   FileText, 
   UploadCloud, 
@@ -21,11 +23,14 @@ import {
   Check,
   RefreshCw,
   Eye,
-  Plus
+  Plus,
+  Award,
+  Mail
 } from 'lucide-react';
 
 export const DocumentCenterPage: React.FC = () => {
   const { documents, uploadDocument, deleteDocument, showToast, language } = useApp();
+  const [mainSection, setMainSection] = useState<'vault' | 'certificate_studio' | 'letter_generator' | 'utilities'>('vault');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [isUploading, setIsUploading] = useState(false);
@@ -217,59 +222,112 @@ This certified digital copy is authenticated against institutional registries.
         </button>
       </div>
 
-      {/* QUICK DOCUMENT UTILITY TOOLS */}
-      <div style={{ marginBottom: '3.5rem' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
-          Universal Document Processing Tools
-        </h3>
-
-        <div className="grid-4" style={{ gap: '1rem' }}>
-          {[
-            { id: 'ocr' as const, title: 'Quantum AI OCR Extractor', desc: 'Extract clean Unicode text from photos, PDFs & Aadhaar cards.', icon: <ScanLine size={20} color="#1D4ED8" /> },
-            { id: 'merge' as const, title: 'PDF Merge & Splitter', desc: 'Combine multiple marksheets or deed pages into one PDF.', icon: <Split size={20} color="#059669" /> },
-            { id: 'compress' as const, title: 'Smart PDF Compressor', desc: 'Reduce file size below 200KB for government job portals.', icon: <Minimize2 size={20} color="#D97706" /> },
-            { id: 'resume' as const, title: 'Resume & Biodata Maker', desc: 'ATS-friendly professional CV templates with instant PDF export.', icon: <FileCode size={20} color="#7C3AED" /> },
-          ].map((tool) => (
-            <div
-              key={tool.id}
-              className="card"
-              style={{
-                padding: '1.25rem',
-                borderRadius: '14px',
-                cursor: 'pointer',
-                border: activeTool === tool.id ? '2px solid #2563EB' : '1px solid #E2E8F0',
-                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
-              }}
-              onClick={() => {
-                setActiveTool(tool.id);
-                setCompressDone(false);
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-              onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
-                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {tool.icon}
-                </div>
-                <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0A192F' }}>{tool.title}</h4>
-              </div>
-              <p style={{ fontSize: '0.78rem', color: '#64748B', lineHeight: 1.4, margin: 0 }}>{tool.desc}</p>
-              <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1D4ED8', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                <span>Launch Interactive Tool →</span>
-              </div>
-            </div>
-          ))}
-        </div>
+      {/* Document Studio Module Navigation Tabs */}
+      <div style={{
+        display: 'flex',
+        gap: '0.75rem',
+        marginBottom: '2.5rem',
+        borderBottom: '2px solid #E2E8F0',
+        paddingBottom: '0.75rem',
+        overflowX: 'auto'
+      }}>
+        {[
+          { id: 'vault', label: '1. Encrypted Document Vault', icon: <Lock size={16} /> },
+          { id: 'certificate_studio', label: '2. Certificate Studio (QR Verified)', icon: <Award size={16} /> },
+          { id: 'letter_generator', label: '3. Letter Generator (Letterhead)', icon: <Mail size={16} /> },
+          { id: 'utilities', label: '4. Universal Processing Tools', icon: <Sparkles size={16} /> },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            onClick={() => setMainSection(tab.id as any)}
+            style={{
+              padding: '0.65rem 1.25rem',
+              borderRadius: '10px',
+              fontWeight: 800,
+              fontSize: '0.88rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: mainSection === tab.id ? '#0A192F' : '#FFFFFF',
+              color: mainSection === tab.id ? '#FFFFFF' : '#475569',
+              border: mainSection === tab.id ? '1px solid #0A192F' : '1px solid #CBD5E1',
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            {tab.icon}
+            <span>{tab.label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* CUSTOMER DOCUMENT VAULT (Section 69) */}
-      <div style={{
-        background: '#FFFFFF',
-        borderRadius: '24px',
-        padding: '2rem',
-        border: '1px solid #E2E8F0',
-        boxShadow: '0 8px 30px rgba(10, 25, 47, 0.05)',
-      }}>
+      {/* 2. CERTIFICATE STUDIO VIEW */}
+      {mainSection === 'certificate_studio' && (
+        <CertificateStudio />
+      )}
+
+      {/* 3. LETTER GENERATOR VIEW */}
+      {mainSection === 'letter_generator' && (
+        <LetterGenerator />
+      )}
+
+      {/* 4. UNIVERSAL UTILITY TOOLS VIEW */}
+      {(mainSection === 'utilities' || (mainSection === 'vault' && activeTool !== null)) && (
+        <div style={{ marginBottom: '3.5rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
+            Universal Document Processing Tools
+          </h3>
+
+          <div className="grid-4" style={{ gap: '1rem' }}>
+            {[
+              { id: 'ocr' as const, title: 'Quantum AI OCR Extractor', desc: 'Extract clean Unicode text from photos, PDFs & Aadhaar cards.', icon: <ScanLine size={20} color="#1D4ED8" /> },
+              { id: 'merge' as const, title: 'PDF Merge & Splitter', desc: 'Combine multiple marksheets or deed pages into one PDF.', icon: <Split size={20} color="#059669" /> },
+              { id: 'compress' as const, title: 'Smart PDF Compressor', desc: 'Reduce file size below 200KB for government job portals.', icon: <Minimize2 size={20} color="#D97706" /> },
+              { id: 'resume' as const, title: 'Resume & Biodata Maker', desc: 'ATS-friendly professional CV templates with instant PDF export.', icon: <FileCode size={20} color="#7C3AED" /> },
+            ].map((tool) => (
+              <div
+                key={tool.id}
+                className="card"
+                style={{
+                  padding: '1.25rem',
+                  borderRadius: '14px',
+                  cursor: 'pointer',
+                  border: activeTool === tool.id ? '2px solid #2563EB' : '1px solid #E2E8F0',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                }}
+                onClick={() => {
+                  setActiveTool(tool.id);
+                  setCompressDone(false);
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'none'}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.75rem' }}>
+                  <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {tool.icon}
+                  </div>
+                  <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0A192F' }}>{tool.title}</h4>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: '#64748B', lineHeight: 1.4, margin: 0 }}>{tool.desc}</p>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1D4ED8', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                  <span>Launch Interactive Tool →</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* CUSTOMER DOCUMENT VAULT */}
+      {mainSection === 'vault' && (
+        <div style={{
+          background: '#FFFFFF',
+          borderRadius: '24px',
+          padding: '2rem',
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 8px 30px rgba(10, 25, 47, 0.05)',
+        }}>
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -424,6 +482,7 @@ This certified digital copy is authenticated against institutional registries.
           ))}
         </div>
       </div>
+      )}
 
       {/* INTERACTIVE UNIVERSAL UTILITY TOOL MODAL */}
       {activeTool && (
