@@ -144,7 +144,7 @@ export const FinancePortal: React.FC = () => {
               <Scale size={14} />
               <span>DOUBLE-ENTRY GENERAL LEDGER • STATUTORY COMPLIANCE</span>
             </div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.5rem' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.5rem', color: '#FFFFFF' }}>
               FinTech Sovereign Accounting & Ledger
             </h1>
             <p style={{ color: '#E2E8F0', fontSize: '0.92rem', maxWidth: '680px', margin: 0, lineHeight: 1.5 }}>

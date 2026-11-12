@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<Props, State> {
               <AlertTriangle size={32} />
             </div>
 
-            <h1 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.75rem' }}>
+            <h1 style={{ fontSize: '1.6rem', fontWeight: 900, marginBottom: '0.75rem', color: '#FFFFFF' }}>
               सॉवरेन रिकवरी मोड • Application Shield
             </h1>
             <p style={{ color: '#94A3B8', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>

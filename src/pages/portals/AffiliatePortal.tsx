@@ -30,7 +30,7 @@ export const AffiliatePortal: React.FC = () => {
   const [payoutUpi, setPayoutUpi] = useState('rahul.affiliate@okaxis');
 
   const referralCode = 'AD-REF-RAHUL99';
-  const referralUrl = `https://cloud.akuldravin.com/?ref=${referralCode}`;
+  const referralUrl = `https://akuldravindigital.com/?ref=${referralCode}`;
 
   const totalReferrals = affiliateReferrals.length;
   const totalEarned = affiliateReferrals.reduce((sum, r) => sum + r.commissionAmount, 0);
@@ -45,7 +45,14 @@ export const AffiliatePortal: React.FC = () => {
 
   const handlePayoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (payoutAmount <= 0) return;
+    if (payoutAmount <= 0 || payoutAmount > Math.max(2100, totalEarned)) {
+      showToast('Invalid Payout Amount', 'Enter a valid payout amount within earned commission balance.', 'warning');
+      return;
+    }
+    if (!payoutUpi.trim() || !payoutUpi.includes('@')) {
+      showToast('Invalid UPI Handle', 'Please enter a valid NPCI UPI ID (e.g. name@bank) for settlement.', 'warning');
+      return;
+    }
     requestAffiliatePayout(payoutAmount);
     setShowPayoutModal(false);
   };
@@ -184,7 +191,7 @@ Authorized by: ADCS National Partner Growth Cell
               <Gift size={14} color="#F59E0B" />
               <span>OFFICIAL AFFILIATE PARTNER ACCELERATOR</span>
             </div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.5rem' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.5rem', color: '#FFFFFF' }}>
               Affiliate Growth & Referral Monetization
             </h1>
             <p style={{ color: '#CBD5E1', fontSize: '0.92rem', maxWidth: '650px', margin: 0, lineHeight: 1.5 }}>

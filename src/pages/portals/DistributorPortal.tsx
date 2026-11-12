@@ -84,7 +84,7 @@ HARDWARE RECONCILIATION:
 - Micro-ATM Terminal : PAX D180 MPOS (PIN-pad Certified)
 - Thermal Printer    : Citizen CT-E351 (High Speed 203 DPI)
 ================================================================================
-Audit Dossier Hash : SHA256-${Math.random().toString(36).substring(2, 12).toUpperCase()}
+Audit Dossier Hash : SHA256-${item.id.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-${String(item.monthlyGtv + item.vleCount * 97).slice(-6)}
 Issued By          : ADCS National Governance & Compliance Cell
 ================================================================================`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
@@ -148,7 +148,7 @@ Issued By          : ADCS National Governance & Compliance Cell
               <Network size={14} />
               <span>TERRITORY DISTRIBUTOR COMMAND HUB • DOWNLINE OVERRIDES</span>
             </div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.5rem' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.5rem', color: '#FFFFFF' }}>
               Master Regional Distributor Operations
             </h1>
             <p style={{ color: '#CBD5E1', fontSize: '0.92rem', maxWidth: '650px', margin: 0, lineHeight: 1.5 }}>

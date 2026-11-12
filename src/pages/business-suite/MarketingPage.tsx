@@ -107,7 +107,7 @@ export const MarketingPage: React.FC = () => {
               <Sparkles size={14} color="#F59E0B" />
               <span>ADVANCED MARKETING AUTOMATION & AUDIENCE ORCHESTRATION</span>
             </div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.5rem' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.5rem', color: '#FFFFFF' }}>
               Multi-Channel Campaign & WhatsApp Automation
             </h1>
             <p style={{ color: '#E2E8F0', fontSize: '0.92rem', maxWidth: '680px', margin: 0, lineHeight: 1.5 }}>

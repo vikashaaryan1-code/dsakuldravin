@@ -59,20 +59,29 @@ export const SupportPortal: React.FC = () => {
 
   const handleCreateTicket = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCustName || !newSubject || !newInitialMsg) return;
+    if (!newCustName.trim() || !newSubject.trim() || !newInitialMsg.trim()) {
+      showToast('Required Fields Missing', 'Please enter citizen name, ticket subject, and issue description.', 'warning');
+      return;
+    }
+    const digits = newPhone.replace(/\D/g, '');
+    if (newPhone.trim() && digits.length !== 10 && digits.length !== 12) {
+      showToast('Invalid Phone Number', 'Please enter a valid 10-digit Indian mobile number.', 'warning');
+      return;
+    }
 
     createSupportTicket({
-      customerName: newCustName,
-      customerPhone: newPhone || '+91 98000 00000',
+      customerName: newCustName.trim(),
+      customerPhone: newPhone.trim() || '+91 98000 00000',
       serviceCategory: newCategory,
-      subject: newSubject,
+      subject: newSubject.trim(),
       priority: newPriority,
       assignedAgent: 'Priority Response Desk',
-      initialMessage: newInitialMsg
+      initialMessage: newInitialMsg.trim()
     });
 
     setShowNewTicketModal(false);
     setNewCustName('');
+    setNewPhone('');
     setNewSubject('');
     setNewInitialMsg('');
   };
@@ -100,7 +109,7 @@ export const SupportPortal: React.FC = () => {
               <LifeBuoy size={14} />
               <span>SLA ESCALATION COMMAND & CITIZEN SUPPORT DESK</span>
             </div>
-            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.5rem' }}>
+            <h1 style={{ fontSize: '2rem', fontWeight: 900, margin: '0 0 0.5rem', color: '#FFFFFF' }}>
               Customer Support & SLA Resolution Desk
             </h1>
             <p style={{ color: '#E2E8F0', fontSize: '0.92rem', maxWidth: '680px', margin: 0, lineHeight: 1.5 }}>
