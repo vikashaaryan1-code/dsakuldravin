@@ -11,6 +11,7 @@ import {
   TrendingDown
 } from 'lucide-react';
 import { InventoryRecord } from '../../types';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 
 export const ERPPage: React.FC = () => {
   const { inventory, updateInventoryStock, recordJournalEntry, logAudit, showToast } = useApp();
@@ -89,54 +90,34 @@ PO Hash        : SHA256-${poId.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-PO-APPR
     const cgst = Number((invAmount * 0.09).toFixed(2));
     const sgst = Number((invAmount * 0.09).toFixed(2));
     const total = Number((invAmount + cgst + sgst).toFixed(2));
-    const content = `================================================================================
-AKUL DRAVIN DIGITAL SERVICES (ADCS)
-OFFICIAL B2B / B2C GST TAX INVOICE
-================================================================================
-Invoice No     : ${invNumber}
-Invoice Date   : ${new Date().toLocaleDateString('en-GB')}
-Place of Supply: Delhi (07)
-Reverse Charge : No
---------------------------------------------------------------------------------
-SUPPLIER DETAILS:
-Company Name   : Akul Dravin Digital Services Private Limited
-GSTIN          : 07AABCA1234F1Z5
-State / Code   : Delhi / 07
-SAC / HSN Code : 8528 / 998313
-
-RECIPIENT (BUYER) DETAILS:
-Buyer Name     : ${cleanBuyer}
-Buyer GSTIN    : ${cleanGstin || 'URP (Unregistered Person)'}
-Billing Address: Verified Corporate / Commercial Address
---------------------------------------------------------------------------------
-LINE ITEMS:
-Item Description                              | Qty | Base Rate    | Total (INR)
---------------------------------------------------------------------------------
-${invItem.padEnd(46)} | 1   | ₹${invAmount.toLocaleString('en-IN')}.00 | ₹${invAmount.toLocaleString('en-IN')}.00
---------------------------------------------------------------------------------
-TAX COMPUTATION:
-Subtotal (Taxable Value) : ₹${invAmount.toLocaleString('en-IN')}.00
-Central GST (CGST @ 9%)  : ₹${cgst.toLocaleString('en-IN')}
-State GST (SGST @ 9%)    : ₹${sgst.toLocaleString('en-IN')}
-Integrated GST (IGST @ 0): ₹0.00
---------------------------------------------------------------------------------
-TOTAL INVOICE AMOUNT     : ₹${total.toLocaleString('en-IN')}
-Amount in Words          : Indian Rupees ${Math.round(total).toLocaleString('en-IN')} Only
---------------------------------------------------------------------------------
-Cryptographic IRN Hash   : SHA256-${invNumber.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-GST-VALID
-QR Code Portal Link      : https://akuldravindigital.com/verify-invoice?irn=${invNumber}
-================================================================================
-This is a digitally signed computer-generated document requiring no physical signature.
-================================================================================`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ADCS_GST_Invoice_${invNumber}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'Official B2B / B2C GST Tax Invoice',
+      documentType: 'ADCS GST TAX INVOICE',
+      documentNumber: invNumber,
+      issuedDate: new Date().toLocaleDateString('en-GB'),
+      rows: [
+        { label: 'Supplier Legal Name', value: 'Akul Dravin Digital Services Private Limited' },
+        { label: 'Supplier GSTIN / State', value: '07AABCA1234F1Z5 (Delhi - 07)' },
+        { label: 'SAC / HSN Classification', value: '8528 / 998313' },
+        { label: 'Buyer / Recipient Name', value: cleanBuyer },
+        { label: 'Buyer GSTIN', value: cleanGstin || 'URP (Unregistered Person)' },
+        { label: 'Place of Supply', value: 'Delhi (07) • Reverse Charge: No' },
+        { label: 'Line Item (Qty: 1)', value: `${invItem} (Taxable Base ₹${invAmount.toLocaleString('en-IN')}.00)` },
+        { label: 'IRN Digest Reference', value: `SHA256-${invNumber.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-GST-VALID` },
+      ],
+      amountSummary: {
+        subtotal: invAmount,
+        tax: Number((cgst + sgst).toFixed(2)),
+        total,
+        currency: '₹',
+        paymentStatus: `CGST @ 9% ₹${cgst.toLocaleString('en-IN')} + SGST @ 9% ₹${sgst.toLocaleString('en-IN')}`,
+      },
+      notes: [
+        `Amount in Words: Indian Rupees ${Math.round(total).toLocaleString('en-IN')} Only.`,
+        'Generated through Akul Dravin Digital Services Enterprise ERP Invoicing Engine.',
+      ],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/verify-invoice?irn=${encodeURIComponent(invNumber)}`,
+    });
 
     recordJournalEntry({
       date: new Date().toISOString().substring(0, 10),
@@ -149,7 +130,7 @@ This is a digitally signed computer-generated document requiring no physical sig
       ],
     });
     logAudit('GENERATE_INVOICE', `Generated GST Tax Invoice for ${cleanBuyer} (Amount: ₹${total})`, 'Success');
-    showToast('GST Invoice Generated', `✓ Official GST Tax Invoice #${invNumber} downloaded & posted to General Ledger!`, 'success');
+    showToast('GST Invoice Generated', `✓ Official ADCS GST Tax Invoice #${invNumber} opened for print/PDF & posted to General Ledger!`, 'success');
   };
 
   return (

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   User, 
   FileText, 
@@ -44,69 +45,54 @@ export const CustomerPortal: React.FC = () => {
   }, []);
 
   const handleDownloadDoc = (doc: any) => {
-    const content = `================================================================================
-AKUL DRAVIN DIGITAL SERVICES (ADCS)
-SECURE CITIZEN DOCUMENT VAULT - VERIFIED RECORD
-================================================================================
-Document Name   : ${doc.name}
-Category        : ${doc.category || 'General'}
-File Size       : ${doc.size || 'N/A'}
-Uploaded On     : ${doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString('en-IN') : 'Verified Active'}
-OCR Confidence  : ${doc.ocrConfidence}% Match
-Verification    : UIDAI / MCA / Income Tax Compliant Digital Signature
-Audit Hash      : SHA256-${String(doc.id || 'VAULT').replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(-8)}-${doc.ocrConfidence || 99}-ADCS-VALID
-DPDP Act 2025   : Fully Encrypted (AES-256-GCM) under Purpose Limitation
-Issuing Authority: Akul Dravin Digital Services Private Trust Network
-================================================================================
-This certified digital archive has been authenticated against institutional records.
-================================================================================`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${doc.name.replace(/\s+/g, '_')}_Verified_Copy.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Download Complete', `${doc.name} verified copy saved to your device.`, 'success');
+    const auditHash = `SHA256-${String(doc.id || 'VAULT').replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(-8)}-${doc.ocrConfidence || 99}-ADCS-VALID`;
+    printBrandedADCSDocument({
+      title: 'ADCS Citizen Document Vault Verification Coversheet',
+      documentType: 'VAULT COVER RECORD',
+      documentNumber: String(doc.id || 'VAULT-DOC'),
+      issuedDate: doc.uploadedAt ? new Date(doc.uploadedAt).toLocaleString('en-IN') : 'Active Vault Record',
+      rows: [
+        { label: 'Document Name', value: String(doc.name || 'Document') },
+        { label: 'Category', value: String(doc.category || 'General') },
+        { label: 'Recorded Size', value: String(doc.size || 'N/A') },
+        { label: 'OCR Check Confidence', value: `${doc.ocrConfidence || 99}% Match` },
+        { label: 'Vault Audit Digest', value: auditHash },
+        { label: 'Privacy Control', value: 'DPDP Act 2025 Purpose-Limited Vault Storage' },
+      ],
+      notes: [
+        'Coversheet issued solely by ADCS Citizen Vault to attest vault storage metadata and integrity digest.',
+        'Official source documents (Aadhaar, PAN, Passport, or government certificates) remain property of their respective statutory issuers.',
+      ],
+    });
+    showToast('Vault Record Ready', `${doc.name} ADCS verification coversheet opened for print/PDF.`, 'success');
   };
 
   const handleDownloadInvoice = (inv: any) => {
-    const content = `================================================================================
-AKUL DRAVIN DIGITAL SERVICES (ADCS) - OFFICIAL GST TAX INVOICE
-================================================================================
-Invoice Number  : ${inv.inv}
-Invoice Date    : ${inv.date}
-Payment Status  : ${inv.status || 'Verified Paid'}
-Payment Method  : Realtime UPI / NetBanking / BBPS
-Customer Name   : Citizen / Enterprise Account Holder
-Service Details : ${inv.desc}
---------------------------------------------------------------------------------
-TAXABLE BREAKDOWN:
-Base Amount     : ₹${(inv.amount / 1.18).toFixed(2)}
-CGST (9%)       : ₹${((inv.amount / 1.18) * 0.09).toFixed(2)}
-SGST (9%)       : ₹${((inv.amount / 1.18) * 0.09).toFixed(2)}
-TOTAL PAID      : ₹${Number(inv.amount).toLocaleString('en-IN')}.00
---------------------------------------------------------------------------------
-GSTIN           : 07AABCA1234F1Z5
-SAC / HSN Code  : 998313 (Information Technology & Digital E-Governance Services)
-IRN Number      : 4f8b9e1a2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f
-Verification QR : https://akuldravindigital.com/verify-invoice?irn=${inv.inv}
-================================================================================
-This is a computer-generated tax invoice requiring no physical signature.
-Issued in accordance with Section 31 of CGST Act, 2017.
-================================================================================`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ADCS_Tax_Invoice_${inv.inv}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Invoice Downloaded', `${inv.inv} saved as tax invoice receipt.`, 'success');
+    const baseAmt = Number((inv.amount / 1.18).toFixed(2));
+    const totalGst = Number((inv.amount - baseAmt).toFixed(2));
+    printBrandedADCSDocument({
+      title: 'Official Citizen / Enterprise GST Tax Invoice',
+      documentType: 'ADCS TAX INVOICE',
+      documentNumber: String(inv.inv || 'INV-ADCS'),
+      issuedDate: String(inv.date || new Date().toLocaleDateString('en-IN')),
+      rows: [
+        { label: 'Supplier Legal Entity', value: 'Akul Dravin Digital Services Private Limited' },
+        { label: 'Supplier GSTIN / SAC', value: '07AABCA1234F1Z5 • SAC 998313' },
+        { label: 'Customer Account', value: 'Citizen / Enterprise Account Holder' },
+        { label: 'Service / Particulars', value: String(inv.desc || 'Digital Service Facilitation') },
+        { label: 'Payment Status & Channel', value: `${inv.status || 'Verified Paid'} (UPI / NetBanking / BBPS)` },
+      ],
+      amountSummary: {
+        subtotal: baseAmt,
+        tax: totalGst,
+        total: Number(inv.amount),
+        currency: '₹',
+        paymentStatus: `CGST 9% ₹${(totalGst / 2).toFixed(2)} + SGST 9% ₹${(totalGst / 2).toFixed(2)}`,
+      },
+      notes: ['Computer-generated ADCS Tax Invoice under Section 31 of CGST Act, 2017.'],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/verify-invoice?irn=${encodeURIComponent(String(inv.inv || ''))}`,
+    });
+    showToast('Invoice Ready', `${inv.inv} opened as branded ADCS GST Tax Invoice.`, 'success');
   };
 
   return (
@@ -130,7 +116,7 @@ Issued in accordance with Section 31 of CGST Act, 2017.
             width: '60px',
             height: '60px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)',
+            background: 'linear-gradient(135deg, #075ACB 0%, #2563EB 100%)',
             color: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',
@@ -144,7 +130,7 @@ Issued in accordance with Section 31 of CGST Act, 2017.
 
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F' }}>
+              <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36' }}>
                 Rahul Verma
               </h1>
               <span className="badge badge-green">Verified Citizen Account</span>
@@ -185,10 +171,10 @@ Issued in accordance with Section 31 of CGST Act, 2017.
               borderRadius: '12px',
               fontWeight: 700,
               fontSize: '0.85rem',
-              background: activeTab === t.id ? '#1D4ED8' : '#FFFFFF',
+              background: activeTab === t.id ? '#075ACB' : '#FFFFFF',
               color: activeTab === t.id ? '#FFFFFF' : '#475569',
               border: '1px solid',
-              borderColor: activeTab === t.id ? '#1D4ED8' : '#CBD5E1',
+              borderColor: activeTab === t.id ? '#075ACB' : '#CBD5E1',
               boxShadow: activeTab === t.id ? '0 4px 12px rgba(29, 78, 216, 0.25)' : 'none',
               transition: 'all 0.15s',
             }}
@@ -206,7 +192,7 @@ Issued in accordance with Section 31 of CGST Act, 2017.
           <div className="grid-4" style={{ gap: '1.25rem' }}>
             <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '18px', border: '1px solid #E2E8F0' }}>
               <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>Active Applications</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#1D4ED8', marginTop: '0.25rem' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#075ACB', marginTop: '0.25rem' }}>
                 {applications.filter(a => a.status !== 'Completed').length}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '0.2rem' }}>In Live Processing</div>
@@ -214,7 +200,7 @@ Issued in accordance with Section 31 of CGST Act, 2017.
 
             <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '18px', border: '1px solid #E2E8F0' }}>
               <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>Documents in Vault</div>
-              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0A192F', marginTop: '0.25rem' }}>
+              <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#061A36', marginTop: '0.25rem' }}>
                 {documents.length}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.2rem' }}>Protected Demo Vault</div>
@@ -245,10 +231,10 @@ Issued in accordance with Section 31 of CGST Act, 2017.
             border: '1px solid #E2E8F0',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36' }}>
                 Recent Applications & Service Orders
               </h3>
-              <button onClick={() => setActiveTab('applications')} style={{ fontSize: '0.82rem', color: '#1D4ED8', fontWeight: 700 }}>
+              <button onClick={() => setActiveTab('applications')} style={{ fontSize: '0.82rem', color: '#075ACB', fontWeight: 700 }}>
                 View All ➔
               </button>
             </div>
@@ -271,10 +257,10 @@ Issued in accordance with Section 31 of CGST Act, 2017.
                 >
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                      <span style={{ fontWeight: 800, color: '#0A192F' }}>{app.id}</span>
+                      <span style={{ fontWeight: 800, color: '#061A36' }}>{app.id}</span>
                       <span className="badge badge-blue">{app.status}</span>
                     </div>
-                    <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#1D4ED8' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#075ACB' }}>
                       {app.serviceName}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.2rem' }}>
@@ -318,13 +304,13 @@ Issued in accordance with Section 31 of CGST Act, 2017.
             >
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0A192F' }}>{app.id}</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#061A36' }}>{app.id}</span>
                   <span className={`badge ${app.status === 'Completed' ? 'badge-green' : 'badge-blue'}`}>
                     {app.status}
                   </span>
-                  <span className="badge badge-gray">{app.category.toUpperCase()}</span>
+                  <span className="badge badge-gray">{(app.category || 'SERVICE').toUpperCase()}</span>
                 </div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1D4ED8', marginBottom: '0.25rem' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#075ACB', marginBottom: '0.25rem' }}>
                   {app.serviceName}
                 </h3>
                 <p style={{ fontSize: '0.82rem', color: '#64748B' }}>
@@ -360,7 +346,7 @@ Issued in accordance with Section 31 of CGST Act, 2017.
           padding: '2rem',
           border: '1px solid #E2E8F0',
         }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '1.25rem' }}>
             Encrypted Documents in Vault
           </h3>
 
@@ -383,7 +369,7 @@ Issued in accordance with Section 31 of CGST Act, 2017.
                   <span className="badge badge-green" style={{ marginBottom: '0.5rem' }}>
                     OCR {doc.ocrConfidence}% Match
                   </span>
-                  <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0A192F' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#061A36' }}>
                     {doc.name}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
@@ -413,7 +399,7 @@ Issued in accordance with Section 31 of CGST Act, 2017.
           padding: '2rem',
           border: '1px solid #E2E8F0',
         }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '1.25rem' }}>
             Tax Invoices & Receipts
           </h3>
 
@@ -442,12 +428,12 @@ Issued in accordance with Section 31 of CGST Act, 2017.
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 800, color: '#0A192F', fontSize: '0.95rem' }}>{inv.inv}</div>
+                  <div style={{ fontWeight: 800, color: '#061A36', fontSize: '0.95rem' }}>{inv.inv}</div>
                   <div style={{ fontSize: '0.82rem', color: '#475569' }}>{inv.desc} • {inv.date}</div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0A192F' }}>
+                    <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#061A36' }}>
                       ₹{inv.amount.toLocaleString('en-IN')}
                     </div>
                     <span className="badge badge-green">{inv.status}</span>

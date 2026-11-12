@@ -149,7 +149,7 @@ export const UniversalSmartSearch: React.FC = () => {
           background: '#F8FAFC',
         }}>
           <div style={{
-            background: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)',
+            background: 'linear-gradient(135deg, #075ACB 0%, #2563EB 100%)',
             borderRadius: '10px',
             width: '38px',
             height: '38px',
@@ -174,7 +174,7 @@ export const UniversalSmartSearch: React.FC = () => {
                 background: 'transparent',
                 fontSize: '1.1rem',
                 fontWeight: 600,
-                color: '#0A192F',
+                color: '#061A36',
                 outline: 'none',
               }}
             />
@@ -255,7 +255,7 @@ export const UniversalSmartSearch: React.FC = () => {
           {filteredServices.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#64748B' }}>
               <Bot size={40} color="#94A3B8" style={{ margin: '0 auto 1rem' }} />
-              <div style={{ fontWeight: 600, fontSize: '1.05rem', color: '#0A192F' }}>No direct service found</div>
+              <div style={{ fontWeight: 600, fontSize: '1.05rem', color: '#061A36' }}>No direct service found</div>
               <p style={{ fontSize: '0.88rem', marginTop: '0.25rem' }}>
                 Ask Quantum AI to auto-route or configure this custom service for you.
               </p>
@@ -294,7 +294,7 @@ export const UniversalSmartSearch: React.FC = () => {
                     )}
                   </div>
 
-                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#0A192F', marginBottom: '0.25rem' }}>
+                  <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#061A36', marginBottom: '0.25rem' }}>
                     {language === 'hi' ? item.titleHi : item.title}
                   </h4>
                   <p style={{ fontSize: '0.82rem', color: '#64748B', lineHeight: 1.4, marginBottom: '0.5rem' }}>
@@ -307,10 +307,10 @@ export const UniversalSmartSearch: React.FC = () => {
                       <span>{language === 'hi' ? item.timelineHi : item.timeline}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
-                      <FileText size={13} color="#1D4ED8" />
+                      <FileText size={13} color="#075ACB" />
                       <span>{item.requiredDocs.length} Docs Required</span>
                     </div>
-                    <div style={{ fontWeight: 700, color: '#0A192F', fontSize: '0.92rem' }}>
+                    <div style={{ fontWeight: 700, color: '#061A36', fontSize: '0.92rem' }}>
                       {item.basePrice === 0 ? 'Free Discovery' : `₹${item.basePrice.toLocaleString('en-IN')}`}
                     </div>
                   </div>

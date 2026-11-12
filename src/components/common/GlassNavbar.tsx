@@ -1,259 +1,237 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../../store/AppContext';
-import { 
-  Search, 
-  Sparkles, 
-  ShoppingCart, 
-  MapPin, 
-  ChevronDown, 
-  Menu, 
-  X, 
-  ShieldCheck, 
-  Compass, 
+import {
+  Search,
+  Sparkles,
+  ShoppingCart,
+  MapPin,
+  ChevronDown,
+  Menu,
+  X,
+  ShieldCheck,
+  Compass,
   UserCircle2,
-  FileCheck,
   Landmark,
   Monitor,
   Briefcase,
-  Zap,
   Building2,
   Hammer,
   Truck,
   Coins,
-  Shield,
-  Code2
+  Code2,
 } from 'lucide-react';
+import { ADCSLogo } from '../branding';
+import { ADCS_BRAND_IDENTITY } from '../../config/brandAssets';
 
 export const GlassNavbar: React.FC = () => {
-  const { 
-    cart, 
-    setIsSearchOpen, 
-    setIsCartOpen, 
-    setIsQuantumAIOpen, 
-    setIsTrackerOpen, 
+  const {
+    cart,
+    setIsSearchOpen,
+    setIsCartOpen,
+    setIsQuantumAIOpen,
+    setIsTrackerOpen,
     setIsAuthModalOpen,
     currentRole,
     language,
-    t
+    theme,
+    whiteLabelConfig,
   } = useApp();
-  
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [servicesDropdownOpen, setServicesDropdownOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const isDark = theme === 'dark';
 
   const primaryNavItems = [
     { label: language === 'en' ? 'Home' : 'होम', path: '/' },
+    { label: language === 'en' ? 'All Services' : 'सेवाएँ', path: '/services', icon: <Landmark size={15} /> },
     { label: language === 'en' ? 'Government' : 'सरकारी सेवा', path: '/government', icon: <Landmark size={15} /> },
     { label: language === 'en' ? 'Cyber Café' : 'साइबर कैफ़े', path: '/cyber-cafe', icon: <Monitor size={15} /> },
     { label: language === 'en' ? 'Business' : 'व्यापार', path: '/business', icon: <Briefcase size={15} /> },
-    { label: language === 'en' ? 'Property & Rent' : 'प्रॉपर्टी व किराया', path: '/property', icon: <Building2 size={15} /> },
-    { label: language === 'en' ? 'Construction' : 'कंस्ट्रक्शन', path: '/construction', icon: <Hammer size={15} /> },
-    { label: language === 'en' ? 'CCTV' : 'सीसीटीवी', path: '/cctv', icon: <ShieldCheck size={15} /> },
-    { label: language === 'en' ? 'Courier' : 'कूरियर', path: '/courier', icon: <Truck size={15} /> },
-    { label: language === 'en' ? 'Finance & Insurance' : 'लोन व बीमा', path: '/finance', icon: <Coins size={15} /> },
-    { label: language === 'en' ? 'Astrology & Kundli' : 'ज्योतिष व कुंडली', path: '/astrology', icon: <Sparkles size={15} /> },
-    { label: language === 'en' ? 'IT & SaaS' : 'आईटी एवं सॉफ्टवेयर', path: '/website-it', icon: <Code2 size={15} /> },
-    { label: language === 'en' ? 'Franchise' : 'फ़्रैंचाइज़ी', path: '/franchise' },
+    { label: language === 'en' ? 'Academy' : 'अकादमी', path: '/portal/student', icon: <Code2 size={15} /> },
+    { label: language === 'en' ? 'Franchise' : 'फ़्रैंचाइज़ी', path: '/franchise', icon: <Building2 size={15} /> },
+    { label: language === 'en' ? 'Verify Cert' : 'प्रमाणपत्र जांच', path: '/verify-certificate', icon: <ShieldCheck size={15} /> },
+    { label: language === 'en' ? 'Astrology' : 'ज्योतिष', path: '/astrology', icon: <Sparkles size={15} /> },
   ];
 
   const megaMenuServices = [
-    { name: 'ADCS Portal (Akul Dravin Digital Services)', path: '/digitalseva', desc: 'ADCS Connect SSO, DigiPay AEPS, Tele-Law & PMGDISHA' },
-    { name: 'ADCS Sovereign Hub (e-Gov)', path: '/csc', desc: 'Akul Dravin Digital Services Kendra & Partner Registration' },
-    { name: 'Vedic Astrology & Kundli', path: '/astrology', desc: 'Janam Kundli, 36 Guna Milan, Rashifal, Astrologers, Store' },
-    { name: 'Government Seva', path: '/government', desc: 'Aadhaar, PAN, Passport, Certificates' },
-    { name: 'Cyber Café Station', path: '/cyber-cafe', desc: 'PC access, Online Forms, Xerox, Printing' },
-    { name: 'Business Setup', path: '/business', desc: 'Pvt Ltd, LLP, GST, MSME, DSC, Bookkeeping' },
-    { name: 'Document Vault', path: '/documents', desc: 'Document Center & PDF Tools (Demo)' },
-    { name: 'Recharge & Bills', path: '/bills', desc: 'Electricity, FASTag, Gas, Mobile BBPS' },
-    { name: 'Travel Super App', path: '/travel', desc: 'Flights, Tatkal Trains, Buses, Hotels' },
-    { name: 'Property Hub', path: '/property', desc: 'Buy, Sell, Plots, Commercial spaces' },
-    { name: 'Rental Lifecycle', path: '/rental', desc: 'Rent agreements, police verification, rent pay' },
-    { name: 'Construction & BOQ', path: '/construction', desc: 'Turnkey villa builder, 2D/3D house plans' },
-    { name: 'CCTV & Security', path: '/cctv', desc: 'HD/IP Cameras, NVR, DVR, AMC maintenance' },
-    { name: 'Courier & Logistics', path: '/courier', desc: 'Express air & surface parcel booking, live AWB' },
-    { name: 'Loans & Mortgages', path: '/finance', desc: 'Business, Personal, Home, Mudra loans' },
-    { name: 'Insurance Desk', path: '/insurance', desc: 'Health mediclaim, Term life, Motor cover' },
-    { name: 'IT, Cloud & SaaS', path: '/website-it', desc: 'Domain, Hosting, Custom Apps, CRM/ERP' },
-    { name: 'ADCS Academy LMS & Certifications', path: '/portal/student', desc: '16 A-to-Z Modules across AI, Computer Pro, CCTV & Digital Marketing' },
-    { name: 'QR Digital Certificate Verification', path: '/verify-certificate', desc: 'Public SHA-256 Cryptographic Verification for Issued Academy Credentials' },
-    { name: 'Professional Consulting', path: '/consulting', desc: 'CA, CS, Legal and Startup advisors' },
-    { name: 'Education & Jobs', path: '/education', desc: 'Govt exam forms, admissions, admit cards' },
+    { name: 'ADCS Portal (VLE / Kendra)', path: '/digitalseva', desc: 'ADCS Connect SSO, DigiPay AEPS, Tele-Law & PMGDISHA' },
+    { name: 'ADCS Hub (Digital Seva)', path: '/csc', desc: 'Akul Dravin Digital Services Kendra & Partner Desk' },
+    { name: 'Government & Citizen Docs', path: '/government', desc: 'PAN, Passport, Birth/Domicile & Assisted Filing' },
+    { name: 'Cyber Café Station', path: '/cyber-cafe', desc: 'PC Booking, Online Forms, Scanning & Printing' },
+    { name: 'Business Setup & Compliance', path: '/business', desc: 'Pvt Ltd, LLP, GST, MSME, DSC & Accounting' },
+    { name: 'Document Vault & Studio', path: '/documents', desc: 'Certificates, Official Letterheads & Verified PDFs' },
+    { name: 'Recharge & Utility Bills', path: '/bills', desc: 'Electricity, FASTag, Gas & Mobile BBPS Receipts' },
+    { name: 'Travel & Ticketing Desk', path: '/travel', desc: 'Flights, Rail Reservations, Buses & Hotels' },
+    { name: 'Property & Rental Suite', path: '/property', desc: 'Verified Listings, Rent Agreements & Police Verification' },
+    { name: 'Construction & BOQ', path: '/construction', desc: 'Turnkey Villa Builder & Architectural Plans' },
+    { name: 'CCTV & Security Systems', path: '/cctv', desc: 'HD/IP Surveillance, NVR, DVR & AMC Service' },
+    { name: 'Courier & Logistics', path: '/courier', desc: 'Express Air/Surface Dispatch & Live AWB Tracking' },
+    { name: 'Loans & Insurance Desk', path: '/finance', desc: 'Partner Banking, Business Finance & Insurance' },
+    { name: 'IT, Cloud & Enterprise SaaS', path: '/website-it', desc: 'Domains, Websites, CRM, HRMS & ERP Ledgers' },
+    { name: 'ADCS Academy LMS', path: '/portal/student', desc: 'Certification Tracks across AI, Computer Pro, CCTV & Marketing' },
+    { name: 'Certificate Verification Registry', path: '/verify-certificate', desc: 'QR & Hash Lookup for Issued ADCS Credentials' },
+    { name: 'Vedic Astrology & Kundli', path: '/astrology', desc: 'Janam Kundli, 36 Guna Milan, Rashifal & Reports' },
+    { name: 'Professional Consulting & Jobs', path: '/consulting', desc: 'CA, CS, Advocate Consultation & Career Portal' },
   ];
 
+  const handlePortalNavigate = () => {
+    const routeMap: Record<string, string> = {
+      customer: '/customer/dashboard',
+      vle: '/digitalseva',
+      cafe_operator: '/cyber-cafe/operator',
+      franchise: '/franchise/dashboard',
+      distributor: '/distributor/dashboard',
+      affiliate: '/affiliate/dashboard',
+      partner: '/partner/dashboard',
+      advocate: '/portal/advocate',
+      instructor: '/portal/instructor',
+      student: '/portal/student',
+      technician: '/portal/technician',
+      executive: '/support-portal',
+      finance: '/finance-portal',
+      employee: '/employee/dashboard',
+      admin: '/admin/dashboard',
+    };
+    navigate(routeMap[currentRole] || '/customer/dashboard');
+  };
+
   return (
-    <header style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 90,
-      background: 'rgba(255, 255, 255, 0.94)',
-      backdropFilter: 'blur(16px)',
-      WebkitBackdropFilter: 'blur(16px)',
-      borderBottom: '1px solid #E2E8F0',
-      boxShadow: '0 4px 20px rgba(10, 25, 47, 0.05)',
-    }}>
-      <div className="container-wide" style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        gap: '0.75rem',
-        height: '74px',
-      }}>
-        {/* Brand Logo */}
-        <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none', flexShrink: 0 }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '11px',
-            background: 'linear-gradient(135deg, #0A192F 0%, #1D4ED8 100%)',
+    <header
+      className="adcs-no-print"
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 90,
+        background: isDark ? 'rgba(6, 26, 54, 0.96)' : 'rgba(255, 255, 255, 0.97)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        borderBottom: isDark ? '1px solid rgba(214, 161, 43, 0.25)' : '1px solid #DCE4EF',
+        boxShadow: 'var(--adcs-shadow-sm)',
+      }}
+    >
+      <div
+        className="container-wide"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '0.75rem',
+          height: '74px',
+        }}
+      >
+        {/* Official ADCS Master Brand Logo */}
+        <Link
+          to="/"
+          style={{
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: '#FFFFFF',
-            boxShadow: '0 4px 14px rgba(29, 78, 216, 0.3)',
-            border: '1.5px solid rgba(245, 158, 11, 0.6)',
-            position: 'relative',
+            gap: '0.7rem',
+            textDecoration: 'none',
             flexShrink: 0,
-          }}>
-            <span style={{ fontFamily: 'Outfit', fontWeight: 900, fontSize: '1.2rem', color: '#F59E0B' }}>AD</span>
-            <div style={{
-              position: 'absolute',
-              bottom: '-2px',
-              right: '-2px',
-              width: '11px',
-              height: '11px',
-              borderRadius: '50%',
-              background: '#059669',
-              border: '2px solid #FFFFFF',
-            }} />
-          </div>
-
-          <div style={{ whiteSpace: 'nowrap' }}>
-            <div style={{
-              fontFamily: 'Outfit',
-              fontWeight: 800,
-              fontSize: '1.08rem',
-              letterSpacing: '-0.02em',
-              color: '#0A192F',
-              lineHeight: 1.1,
-            }}>
-              AKUL DRAVIN
+          }}
+          aria-label={ADCS_BRAND_IDENTITY.legalName}
+        >
+          <ADCSLogo
+            variant="header"
+            theme={isDark ? 'dark' : 'light'}
+            customSrc={isDark ? whiteLabelConfig.darkLogoUrl : undefined}
+            height={52}
+          />
+          <div style={{ display: 'none' }} className="brand-wordmark-meta">
+            <div style={{ fontWeight: 800, fontSize: '0.94rem', color: isDark ? '#FFFFFF' : '#061A36' }}>
+              {whiteLabelConfig.shortName || ADCS_BRAND_IDENTITY.shortName}
             </div>
-            <div style={{
-              fontSize: '0.64rem',
-              fontWeight: 700,
-              letterSpacing: '0.1em',
-              color: '#1D4ED8',
-              textTransform: 'uppercase',
-            }}>
-              DIGITAL SERVICES
-            </div>
-            <div style={{
-              fontSize: '0.6rem',
-              color: '#D97706',
-              fontWeight: 600,
-              fontFamily: 'Noto Sans Devanagari, sans-serif',
-            }}>
-              {language === 'hi' ? 'हर काम डिजिटल • हर समाधान एक जगह' : 'One Platform. Every Service.'}
+            <div style={{ fontSize: '0.62rem', fontWeight: 700, color: isDark ? '#F3D477' : '#075ACB' }}>
+              {ADCS_BRAND_IDENTITY.heroHeadline}
             </div>
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav style={{
-          display: 'none',
-          alignItems: 'center',
-          gap: '0.2rem',
-          minWidth: 0,
-        }} className="desktop-nav">
-          {/* Mega Menu Dropdown for All Services */}
-          <div 
+        {/* Desktop Primary Navigation */}
+        <nav
+          aria-label="Primary Navigation"
+          style={{ display: 'none', alignItems: 'center', gap: '0.18rem', minWidth: 0 }}
+          className="desktop-nav"
+        >
+          <div
             style={{ position: 'relative', flexShrink: 0 }}
             onMouseEnter={() => setServicesDropdownOpen(true)}
             onMouseLeave={() => setServicesDropdownOpen(false)}
           >
-            <button 
+            <button
+              type="button"
+              onClick={() => setServicesDropdownOpen((p) => !p)}
+              aria-expanded={servicesDropdownOpen}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.3rem',
-                padding: '0.45rem 0.65rem',
+                padding: '0.48rem 0.7rem',
                 borderRadius: '8px',
-                fontWeight: 600,
+                fontWeight: 700,
                 fontSize: '0.84rem',
-                color: '#0A192F',
-                background: servicesDropdownOpen ? '#F1F5F9' : 'transparent',
-                transition: 'all 0.15s ease',
+                color: isDark ? '#FFFFFF' : '#061A36',
+                background: servicesDropdownOpen ? (isDark ? '#0B2447' : '#EDF2F9') : 'transparent',
                 whiteSpace: 'nowrap',
               }}
             >
-              <span>{language === 'en' ? 'All Services' : 'सभी सेवाएँ'}</span>
-              <ChevronDown size={14} style={{ transform: servicesDropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.2s' }} />
+              <span>{language === 'en' ? '16 Sectors' : '16 सेक्टर'}</span>
+              <ChevronDown size={14} style={{ transform: servicesDropdownOpen ? 'rotate(180deg)' : 'none', transition: '0.18s' }} />
             </button>
 
             {servicesDropdownOpen && (
-              <div 
+              <div
                 style={{
                   position: 'absolute',
                   top: '100%',
-                  left: '-120px',
-                  width: '680px',
-                  background: '#FFFFFF',
-                  borderRadius: '16px',
-                  padding: '1.25rem',
-                  boxShadow: '0 20px 50px rgba(10, 25, 47, 0.15)',
-                  border: '1px solid #E2E8F0',
+                  left: '-80px',
+                  width: 'min(700px, 90vw)',
+                  background: 'var(--adcs-surface)',
+                  borderRadius: '14px',
+                  padding: '1.15rem',
+                  boxShadow: 'var(--adcs-shadow-xl)',
+                  border: '1px solid var(--adcs-border)',
                   display: 'grid',
                   gridTemplateColumns: 'repeat(2, 1fr)',
-                  gap: '0.75rem',
+                  gap: '0.55rem',
                   zIndex: 1000,
-                  animation: 'fadeIn 0.2s ease-out',
                 }}
               >
-                {megaMenuServices.map(item => (
+                {megaMenuServices.map((item) => (
                   <Link
-                    key={item.path}
+                    key={item.path + item.name}
                     to={item.path}
                     onClick={() => setServicesDropdownOpen(false)}
                     style={{
-                      padding: '0.65rem 0.85rem',
-                      borderRadius: '10px',
-                      textDecoration: 'none',
-                      transition: 'all 0.15s ease',
+                      padding: '0.6rem 0.8rem',
+                      borderRadius: '8px',
                       border: '1px solid transparent',
                     }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#F8FAFC';
-                      e.currentTarget.style.borderColor = '#CBD5E1';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.borderColor = 'transparent';
-                    }}
                   >
-                    <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#0A192F' }}>{item.name}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{item.desc}</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.84rem', color: 'var(--adcs-text)' }}>{item.name}</div>
+                    <div style={{ fontSize: '0.73rem', color: 'var(--adcs-muted)' }}>{item.desc}</div>
                   </Link>
                 ))}
               </div>
             )}
           </div>
 
-          {primaryNavItems.slice(1, 6).map(item => {
+          {primaryNavItems.slice(1, 6).map((item) => {
             const isActive = location.pathname === item.path;
             return (
               <Link
                 key={item.path}
                 to={item.path}
                 style={{
-                  padding: '0.45rem 0.55rem',
+                  padding: '0.46rem 0.62rem',
                   borderRadius: '8px',
                   fontSize: '0.83rem',
-                  fontWeight: isActive ? 700 : 500,
-                  color: isActive ? '#1D4ED8' : '#334155',
-                  background: isActive ? '#EFF6FF' : 'transparent',
-                  transition: 'all 0.15s ease',
+                  fontWeight: isActive ? 700 : 600,
+                  color: isActive ? '#FFFFFF' : isDark ? '#DCE7F5' : '#14243A',
+                  background: isActive ? '#075ACB' : 'transparent',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -265,11 +243,12 @@ export const GlassNavbar: React.FC = () => {
           <Link
             to="/pricing"
             style={{
-              padding: '0.45rem 0.55rem',
+              padding: '0.46rem 0.62rem',
               borderRadius: '8px',
               fontSize: '0.83rem',
-              fontWeight: 500,
-              color: '#334155',
+              fontWeight: location.pathname === '/pricing' ? 700 : 600,
+              color: location.pathname === '/pricing' ? '#FFFFFF' : isDark ? '#DCE7F5' : '#14243A',
+              background: location.pathname === '/pricing' ? '#075ACB' : 'transparent',
               whiteSpace: 'nowrap',
             }}
           >
@@ -277,147 +256,146 @@ export const GlassNavbar: React.FC = () => {
           </Link>
         </nav>
 
-        {/* Action Controls: Smart Search, Track, Ask AI, Cart, Login */}
+        {/* Action Controls: Search, Track, QUANTUM AI, Cart, Portal/Login */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexShrink: 0 }}>
-          {/* AI Smart Search Button */}
           <button
+            type="button"
             onClick={() => setIsSearchOpen(true)}
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '0.4rem',
-              background: '#F1F5F9',
-              border: '1px solid #CBD5E1',
-              padding: '0.4rem 0.7rem',
-              borderRadius: '10px',
-              color: '#475569',
+              background: isDark ? '#0B2447' : '#F5F8FC',
+              border: isDark ? '1px solid #274A7A' : '1px solid #DCE4EF',
+              padding: '0.42rem 0.72rem',
+              borderRadius: '8px',
+              color: isDark ? '#E2E8F0' : '#334861',
               fontSize: '0.82rem',
-              transition: 'all 0.15s ease',
               whiteSpace: 'nowrap',
             }}
             title="Search any service / खोजें"
           >
-            <Search size={15} color="#1D4ED8" />
+            <Search size={15} color="#0878F9" />
             <span style={{ display: 'none' }} className="search-text-desktop">
               {language === 'hi' ? 'खोजें...' : 'Search...'}
             </span>
-            <kbd style={{
-              fontSize: '0.7rem',
-              background: '#E2E8F0',
-              padding: '0.1rem 0.35rem',
-              borderRadius: '4px',
-              color: '#475569',
-              fontWeight: 600,
-            }}>
+            <kbd
+              className="hide-mobile"
+              style={{
+                fontSize: '0.7rem',
+                background: isDark ? '#061A36' : '#DCE4EF',
+                padding: '0.1rem 0.35rem',
+                borderRadius: '4px',
+                color: isDark ? '#CBD5E1' : '#334861',
+                fontWeight: 700,
+              }}
+            >
               ⌘K
             </kbd>
           </button>
 
-          {/* Track Application / Order */}
           <button
+            type="button"
             onClick={() => setIsTrackerOpen(true)}
+            className="hide-mobile"
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.35rem',
               padding: '0.45rem 0.75rem',
               borderRadius: '8px',
-              fontSize: '0.84rem',
-              fontWeight: 600,
-              color: '#0A192F',
-              background: '#F8FAFC',
-              border: '1px solid #E2E8F0',
+              fontSize: '0.83rem',
+              fontWeight: 700,
+              color: isDark ? '#FFFFFF' : '#061A36',
+              background: isDark ? '#0B2447' : '#F5F8FC',
+              border: isDark ? '1px solid #274A7A' : '1px solid #DCE4EF',
             }}
           >
-            <Compass size={15} color="#D97706" />
+            <Compass size={15} color="#D6A12B" />
             <span className="hide-mobile">{language === 'en' ? 'Track' : 'ट्रैक'}</span>
           </button>
 
-          {/* Ask QUANTUM AI Button */}
           <button
+            type="button"
             onClick={() => setIsQuantumAIOpen(true)}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.4rem',
-              background: 'linear-gradient(135deg, #0A192F 0%, #1E3A8A 100%)',
-              color: '#F59E0B',
-              padding: '0.45rem 0.9rem',
-              borderRadius: '10px',
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              border: '1px solid rgba(245, 158, 11, 0.4)',
-              boxShadow: '0 2px 10px rgba(10, 25, 47, 0.15)',
-              transition: 'all 0.2s ease',
+              background: 'linear-gradient(135deg, #061A36 0%, #075ACB 100%)',
+              color: '#F3D477',
+              padding: '0.46rem 0.88rem',
+              borderRadius: '8px',
+              fontWeight: 800,
+              fontSize: '0.82rem',
+              border: '1px solid rgba(214, 161, 43, 0.55)',
             }}
           >
-            <Sparkles size={14} className="animate-pulse-glow" />
+            <Sparkles size={14} />
             <span className="hide-mobile">QUANTUM AI</span>
           </button>
 
-          {/* Unified Cart Button */}
           <button
+            type="button"
             onClick={() => setIsCartOpen(true)}
             style={{
               position: 'relative',
               width: '40px',
               height: '40px',
-              borderRadius: '10px',
-              background: '#F1F5F9',
+              borderRadius: '8px',
+              background: isDark ? '#0B2447' : '#F5F8FC',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#0A192F',
-              border: '1px solid #E2E8F0',
+              color: isDark ? '#FFFFFF' : '#061A36',
+              border: isDark ? '1px solid #274A7A' : '1px solid #DCE4EF',
             }}
-            title="View Cart"
+            aria-label="Open Service Cart"
           >
             <ShoppingCart size={17} />
             {cart.length > 0 && (
-              <span style={{
-                position: 'absolute',
-                top: '-4px',
-                right: '-4px',
-                background: '#D97706',
-                color: '#FFFFFF',
-                borderRadius: '50%',
-                width: '18px',
-                height: '18px',
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 2px 6px rgba(217, 119, 6, 0.4)',
-              }}>
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-5px',
+                  right: '-5px',
+                  background: '#075ACB',
+                  color: '#FFFFFF',
+                  borderRadius: '50%',
+                  width: '18px',
+                  height: '18px',
+                  fontSize: '0.7rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 {cart.length}
               </span>
             )}
           </button>
 
-          {/* Role Portal / Login Button */}
           <button
-            onClick={() => {
-              if (currentRole === 'customer') {
-                navigate('/customer/dashboard');
-              } else if (currentRole === 'admin') {
-                navigate('/admin/dashboard');
-              } else {
-                navigate(`/${currentRole === 'cafe_operator' ? 'cyber-cafe/operator' : currentRole + '/dashboard'}`);
-              }
+            type="button"
+            onClick={handlePortalNavigate}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setIsAuthModalOpen(true);
             }}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.4rem',
-              padding: '0.45rem 0.85rem',
-              borderRadius: '10px',
-              background: '#EFF6FF',
-              color: '#1D4ED8',
-              fontWeight: 600,
-              fontSize: '0.84rem',
-              border: '1px solid #BFDBFE',
+              padding: '0.46rem 0.88rem',
+              borderRadius: '8px',
+              background: '#075ACB',
+              color: '#FFFFFF',
+              fontWeight: 700,
+              fontSize: '0.83rem',
+              border: '1px solid #064BA8',
             }}
+            title="Open Active Workspace Portal"
           >
             <UserCircle2 size={16} />
             <span className="hide-mobile" style={{ textTransform: 'capitalize' }}>
@@ -425,15 +403,33 @@ export const GlassNavbar: React.FC = () => {
             </span>
           </button>
 
-          {/* Mobile Hamburger Toggle */}
           <button
+            type="button"
+            onClick={() => setIsAuthModalOpen(true)}
+            className="hide-mobile"
+            style={{
+              padding: '0.46rem 0.78rem',
+              borderRadius: '8px',
+              border: isDark ? '1px solid rgba(243, 212, 119, 0.5)' : '1px solid #DCE4EF',
+              color: isDark ? '#F3D477' : '#061A36',
+              background: 'transparent',
+              fontWeight: 700,
+              fontSize: '0.82rem',
+            }}
+          >
+            {language === 'hi' ? 'लॉगिन' : 'Login'}
+          </button>
+
+          <button
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="mobile-menu-btn"
+            aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
             style={{
               display: 'none',
-              padding: '0.4rem',
+              padding: '0.42rem',
               borderRadius: '8px',
-              color: '#0A192F',
+              color: isDark ? '#FFFFFF' : '#061A36',
             }}
           >
             {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -441,31 +437,33 @@ export const GlassNavbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Drawer Menu */}
+      {/* Responsive Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div style={{
-          background: '#FFFFFF',
-          borderTop: '1px solid #E2E8F0',
-          padding: '1rem',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '0.5rem',
-        }}>
-          {primaryNavItems.map(item => (
+        <div
+          style={{
+            background: 'var(--adcs-surface)',
+            borderTop: '1px solid var(--adcs-border)',
+            padding: '1rem',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0.45rem',
+          }}
+        >
+          {primaryNavItems.map((item) => (
             <Link
               key={item.path}
               to={item.path}
               onClick={() => setMobileMenuOpen(false)}
               style={{
-                padding: '0.65rem 0.85rem',
+                padding: '0.7rem 0.9rem',
                 borderRadius: '8px',
                 fontWeight: 600,
                 fontSize: '0.92rem',
-                color: '#0A192F',
-                background: '#F8FAFC',
+                color: 'var(--adcs-text)',
+                background: 'var(--adcs-background)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
+                gap: '0.55rem',
               }}
             >
               {item.icon}
@@ -476,24 +474,34 @@ export const GlassNavbar: React.FC = () => {
             to="/locations"
             onClick={() => setMobileMenuOpen(false)}
             style={{
-              padding: '0.65rem 0.85rem',
+              padding: '0.7rem 0.9rem',
               borderRadius: '8px',
               fontWeight: 600,
               fontSize: '0.92rem',
-              color: '#0A192F',
-              background: '#F8FAFC',
+              color: 'var(--adcs-text)',
+              background: 'var(--adcs-background)',
               display: 'flex',
               alignItems: 'center',
-              gap: '0.5rem',
+              gap: '0.55rem',
             }}
           >
-            <MapPin size={16} color="#D97706" />
+            <MapPin size={16} color="#075ACB" />
             Find Nearest Center
           </Link>
+          <button
+            type="button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setIsAuthModalOpen(true);
+            }}
+            className="btn-primary"
+            style={{ width: '100%', marginTop: '0.35rem' }}
+          >
+            Login / Switch Workspace
+          </button>
         </div>
       )}
 
-      {/* Inline styles for responsive rules */}
       <style>{`
         @media (min-width: 1024px) {
           .desktop-nav { display: flex !important; }

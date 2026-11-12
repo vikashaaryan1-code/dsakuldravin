@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   Network, 
   Building2, 
@@ -60,43 +61,26 @@ export const DistributorPortal: React.FC = () => {
   };
 
   const handleDownloadFranchiseAuditDossier = (item: DistributorDownline) => {
-    const content = `================================================================================
-AKUL DRAVIN DIGITAL SERVICES (ADCS) - STATUTORY FRANCHISE AUDIT DOSSIER
-================================================================================
-Franchise Center   : ${item.franchiseName}
-Franchise UID      : ${item.id}
-Territory Location : ${item.location}
-Affiliated VLEs    : ${item.vleCount} Active Micro-Centers
-Monthly GTV (Sept) : ₹${item.monthlyGtv.toLocaleString('en-IN')}
-Commission Accrual : ₹${item.commissionEarned.toLocaleString('en-IN')} (${item.overrideCommissionRate}% Override)
-Operating Status   : ${item.status.toUpperCase()}
---------------------------------------------------------------------------------
-COMPLIANCE & STATUTORY VERIFICATIONS:
-- UIDAI L1 Biometric Device Registration: VALID (Hardware Root-of-Trust)
-- CCTNS Police Background Clearance    : PASSED / DIGITALLY VERIFIED
-- BBPS & NPCI Agent Institution Code    : AI-ADCS-TERR-${item.id.slice(-4)}
-- DPDP Act 2025 Data Privacy Protocol   : ACTIVE (Zero Local PII Storage)
-- ISO 27001 / SOC-2 Audit Status        : CERTIFIED TIER-3 COMPLIANT
---------------------------------------------------------------------------------
-HARDWARE RECONCILIATION:
-- Fingerprint Scanner: Mantra MFS100 L1 (Serial: SN-MFS-98214)
-- Iris Scanner       : Iris ID iCAM R100 (Operational)
-- Micro-ATM Terminal : PAX D180 MPOS (PIN-pad Certified)
-- Thermal Printer    : Citizen CT-E351 (High Speed 203 DPI)
-================================================================================
-Audit Dossier Hash : SHA256-${item.id.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-${String(item.monthlyGtv + item.vleCount * 97).slice(-6)}
-Issued By          : ADCS National Governance & Compliance Cell
-================================================================================`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ADCS_Franchise_Audit_${item.id}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Audit Dossier Downloaded', `Audit dossier for ${item.franchiseName} saved to disk.`, 'success');
+    const dossierHash = `SHA256-${item.id.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-${String(item.monthlyGtv + item.vleCount * 97).slice(-6)}`;
+    printBrandedADCSDocument({
+      title: `Statutory Franchise Territory Audit Dossier — ${item.franchiseName}`,
+      documentType: 'FRANCHISE AUDIT DOSSIER',
+      documentNumber: item.id,
+      issuedDate: new Date().toLocaleDateString('en-IN'),
+      rows: [
+        { label: 'Franchise Center', value: item.franchiseName },
+        { label: 'Territory Location', value: item.location },
+        { label: 'Affiliated VLE Micro-Centers', value: `${item.vleCount} Centers` },
+        { label: 'Monthly GTV / Commission', value: `₹${item.monthlyGtv.toLocaleString('en-IN')} GTV • ₹${item.commissionEarned.toLocaleString('en-IN')} (${item.overrideCommissionRate}% Override)` },
+        { label: 'Operating Status', value: item.status.toUpperCase() },
+        { label: 'UIDAI & CCTNS Readiness', value: 'Biometric Device Registered • Police Clearance On File' },
+        { label: 'NPCI / DPDP Safeguards', value: `Agent Code AI-ADCS-TERR-${item.id.slice(-4)} • DPDP Act 2025 Zero-Local-PII` },
+        { label: 'Hardware Stack Check', value: 'Mantra MFS100 L1, Iris iCAM R100, PAX D180 MPOS, Thermal 203 DPI' },
+        { label: 'Audit Dossier Digest', value: dossierHash },
+      ],
+      notes: ['Issued by ADCS National Governance & Compliance Cell for internal distributor territory auditing.'],
+    });
+    showToast('Audit Dossier Ready', `Audit dossier for ${item.franchiseName} opened for print/PDF.`, 'success');
   };
 
   const totalGtv = distributorDownlines.reduce((sum, d) => sum + d.monthlyGtv, 0);
@@ -131,7 +115,7 @@ Issued By          : ADCS National Governance & Compliance Cell
         
         {/* Header Strip */}
         <div style={{
-          background: 'linear-gradient(135deg, #0A192F 0%, #0F2A4A 60%, #1D4ED8 100%)',
+          background: 'linear-gradient(135deg, #061A36 0%, #0F2A4A 60%, #075ACB 100%)',
           borderRadius: '24px',
           padding: '2.5rem',
           color: '#FFFFFF',
@@ -184,9 +168,9 @@ Issued By          : ADCS National Governance & Compliance Cell
           <div className="card" style={{ padding: '1.5rem', borderRadius: '16px', background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748B', fontSize: '0.82rem', fontWeight: 600 }}>
               <span>ACTIVE DOWNLINE FRANCHISES</span>
-              <Building2 size={18} color="#1D4ED8" />
+              <Building2 size={18} color="#075ACB" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0A192F', margin: '0.4rem 0' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#061A36', margin: '0.4rem 0' }}>
               {distributorDownlines.length} Centers
             </div>
             <div style={{ fontSize: '0.78rem', color: '#059669', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
@@ -199,7 +183,7 @@ Issued By          : ADCS National Governance & Compliance Cell
               <span>ACTIVE VLE NETWORK REACH</span>
               <Users size={18} color="#D97706" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0A192F', margin: '0.4rem 0' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#061A36', margin: '0.4rem 0' }}>
               {totalVles} VLE Booths
             </div>
             <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
@@ -244,7 +228,7 @@ Issued By          : ADCS National Governance & Compliance Cell
         }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
-              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
+              <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
                 Subordinated Franchise Portfolio
               </h2>
               <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '2px 0 0' }}>
@@ -282,11 +266,11 @@ Issued By          : ADCS National Governance & Compliance Cell
                 {filteredDownlines.map((item) => (
                   <tr key={item.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
                     <td style={{ padding: '1rem 1.25rem' }}>
-                      <div style={{ fontWeight: 800, color: '#0A192F' }}>{item.franchiseName}</div>
+                      <div style={{ fontWeight: 800, color: '#061A36' }}>{item.franchiseName}</div>
                       <div style={{ fontSize: '0.72rem', color: '#64748B' }}>ID: {item.id}</div>
                     </td>
                     <td style={{ padding: '1rem 1.25rem', color: '#475569' }}>{item.location}</td>
-                    <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#1D4ED8' }}>{item.vleCount} VLEs</td>
+                    <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#075ACB' }}>{item.vleCount} VLEs</td>
                     <td style={{ padding: '1rem 1.25rem', fontWeight: 700 }}>₹{item.monthlyGtv.toLocaleString('en-IN')}</td>
                     <td style={{ padding: '1rem 1.25rem' }}>
                       <span className="badge badge-gold" style={{ fontSize: '0.75rem' }}>
@@ -330,7 +314,7 @@ Issued By          : ADCS National Governance & Compliance Cell
             padding: '1rem'
           }}>
             <div style={{ background: '#FFFFFF', borderRadius: '20px', maxWidth: '500px', width: '100%', padding: '2rem', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0A192F', marginBottom: '0.25rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#061A36', marginBottom: '0.25rem' }}>
                 Onboard Subordinated Franchise
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748B', marginBottom: '1.25rem' }}>
@@ -375,16 +359,17 @@ Issued By          : ADCS National Governance & Compliance Cell
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Override Slab (%)</label>
+                    <label className="form-label">Override Slab (%) — Admin Locked</label>
                     <input
                       type="number"
-                      step={0.1}
-                      min={1}
-                      max={5}
                       className="form-input"
                       value={overrideRate}
-                      onChange={(e) => setOverrideRate(Number(e.target.value))}
+                      disabled
+                      readOnly
+                      title="Only Super Admin may modify commission rates"
+                      style={{ background: '#F1F5F9', color: '#64748B', cursor: 'not-allowed' }}
                     />
+                    <span style={{ fontSize: '0.7rem', color: '#64748B' }}>Commission slabs are governed exclusively by Super Admin.</span>
                   </div>
                 </div>
 
@@ -430,7 +415,7 @@ Issued By          : ADCS National Governance & Compliance Cell
                   <span className="badge badge-green" style={{ marginBottom: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
                     <ShieldCheck size={14} /> Statutory Audit Packet Verified
                   </span>
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: '#0A192F' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: 800, margin: 0, color: '#061A36' }}>
                     {selectedAuditFranchise.franchiseName}
                   </h3>
                   <div style={{ fontSize: '0.85rem', color: '#64748B', marginTop: '0.2rem' }}>
@@ -449,7 +434,7 @@ Issued By          : ADCS National Governance & Compliance Cell
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>MONTHLY GTV</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F', marginTop: '0.25rem' }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36', marginTop: '0.25rem' }}>
                     ₹{selectedAuditFranchise.monthlyGtv.toLocaleString('en-IN')}
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 600, marginTop: '0.2rem' }}>✓ 100% Reconciled</div>
@@ -463,7 +448,7 @@ Issued By          : ADCS National Governance & Compliance Cell
                 </div>
                 <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
                   <div style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>ATTACHED VLEs</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1D4ED8', marginTop: '0.25rem' }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#075ACB', marginTop: '0.25rem' }}>
                     {selectedAuditFranchise.vleCount} Units
                   </div>
                   <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 600, marginTop: '0.2rem' }}>All Active Operators</div>
@@ -472,7 +457,7 @@ Issued By          : ADCS National Governance & Compliance Cell
 
               {/* Statutory Compliance Checklist */}
               <div style={{ background: '#F8FAFC', borderRadius: '14px', padding: '1.25rem', border: '1px solid #E2E8F0', marginBottom: '1.5rem' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#061A36', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                   Compliance & Regulatory Status
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.82rem' }}>

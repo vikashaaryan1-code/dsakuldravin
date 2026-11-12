@@ -539,7 +539,7 @@ Statutory Note: Generated under Section 192 of the Income Tax Act, 1961.
                     Staff Leave Formally Approved
                   </h3>
                   <div style={{ background: 'var(--bg-light)', padding: '1rem', borderRadius: 'var(--radius-sm)', margin: '1rem 0', textAlign: 'left', fontSize: '0.85rem' }}>
-                    <div>Ref Token: <strong style={{ color: '#1D4ED8' }}>{leaveConfirmed}</strong></div>
+                    <div>Ref Token: <strong style={{ color: '#075ACB' }}>{leaveConfirmed}</strong></div>
                     <div>Leave Type: <strong>{leaveType}</strong></div>
                     <div>Duration: <strong>{startDate} to {endDate}</strong></div>
                   </div>

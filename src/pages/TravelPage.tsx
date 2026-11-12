@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Plane, 
   Train, 
@@ -94,36 +95,32 @@ export const TravelPage: React.FC = () => {
 
   const handleDownloadTicket = () => {
     if (!bookingConfirmed) return;
-    const content = `================================================================================
-AKUL DRAVIN DIGITAL SERVICES (ADCS) - ELECTRONIC TRAVEL VOUCHER
-================================================================================
-PNR / Confirmation Ref : ${bookingConfirmed.pnr}
-Travel Mode            : ${bookingConfirmed.mode}
-Carrier / Property     : ${bookingConfirmed.carrier}
-Sector                 : ${bookingConfirmed.from} -> ${bookingConfirmed.to}
-Travel / Check-in Date : ${bookingConfirmed.date}
-Passengers / Guests    : ${bookingConfirmed.passengers}
-Total Amount Paid      : ₹${bookingConfirmed.totalPaid.toLocaleString('en-IN')}.00
-Issue Timestamp        : ${new Date().toLocaleString('en-IN')}
-================================================================================
-Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
-================================================================================`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_ETicket_${bookingConfirmed.pnr}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'ADCS Authorized Electronic Travel Voucher / E-Ticket',
+      documentType: 'E-TICKET VOUCHER',
+      documentNumber: bookingConfirmed.pnr,
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: [
+        { label: 'Travel Mode', value: String(bookingConfirmed.mode) },
+        { label: 'Carrier / Property', value: String(bookingConfirmed.carrier) },
+        { label: 'Sector / Route', value: `${bookingConfirmed.from} -> ${bookingConfirmed.to}` },
+        { label: 'Travel / Check-in Date', value: String(bookingConfirmed.date) },
+        { label: 'Passengers / Guests', value: String(bookingConfirmed.passengers) },
+      ],
+      amountSummary: {
+        total: Number(bookingConfirmed.totalPaid),
+        currency: '₹',
+        paymentStatus: 'CONFIRMED & LOGGED',
+      },
+      notes: ['Carry valid Government Photo ID during check-in or boarding.'],
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -185,10 +182,10 @@ Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
                 borderRadius: '12px',
                 fontWeight: 700,
                 fontSize: '0.88rem',
-                background: activeMode === m.id ? '#1D4ED8' : '#F1F5F9',
+                background: activeMode === m.id ? '#075ACB' : '#F1F5F9',
                 color: activeMode === m.id ? '#FFFFFF' : '#475569',
                 border: '1px solid',
-                borderColor: activeMode === m.id ? '#1D4ED8' : '#E2E8F0',
+                borderColor: activeMode === m.id ? '#075ACB' : '#E2E8F0',
                 transition: 'all 0.15s',
               }}
             >
@@ -210,9 +207,9 @@ Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
             alignItems: 'flex-start',
             gap: '0.75rem',
             fontSize: '0.82rem',
-            color: '#1E3A8A'
+            color: '#061A36'
           }}>
-            <ShieldCheck size={20} color="#1D4ED8" style={{ flexShrink: 0, marginTop: '2px' }} />
+            <ShieldCheck size={20} color="#075ACB" style={{ flexShrink: 0, marginTop: '2px' }} />
             <div>
               <strong style={{ display: 'block', marginBottom: '0.2rem', color: '#1E40AF' }}>
                 IRCTC & Railway Board Statutory Compliance (Circular 08/2025):
@@ -314,7 +311,7 @@ Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
 
       {/* Search Results */}
       <div>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '1.25rem' }}>
           Available Options for {fromCity} ➔ {toCity}
         </h3>
 
@@ -343,7 +340,7 @@ Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
               <CheckCircle2 size={36} />
             </div>
 
-            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+            <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
               Booking Confirmed!
             </h3>
             <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.5rem' }}>
@@ -364,7 +361,7 @@ Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#64748B' }}>Confirmed PNR:</span>
-                <span style={{ fontWeight: 800, color: '#1D4ED8', fontSize: '1rem' }}>{bookingConfirmed.pnr}</span>
+                <span style={{ fontWeight: 800, color: '#075ACB', fontSize: '1rem' }}>{bookingConfirmed.pnr}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span style={{ color: '#64748B' }}>Flight / Train:</span>
@@ -380,7 +377,7 @@ Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #E2E8F0', paddingTop: '0.5rem', marginTop: '0.2rem' }}>
                 <span style={{ fontWeight: 700 }}>Total Paid:</span>
-                <span style={{ fontWeight: 800, color: '#0A192F' }}>₹{bookingConfirmed.totalPaid.toLocaleString('en-IN')}</span>
+                <span style={{ fontWeight: 800, color: '#061A36' }}>₹{bookingConfirmed.totalPaid.toLocaleString('en-IN')}</span>
               </div>
             </div>
 
@@ -419,7 +416,7 @@ Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0A192F' }}>
+                  <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#061A36' }}>
                     {itn.carrier}
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '0.2rem' }}>
@@ -429,7 +426,7 @@ Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#0A192F' }}>{itn.departure}</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#061A36' }}>{itn.departure}</div>
                     <div style={{ fontSize: '0.72rem', color: '#64748B' }}>Depart</div>
                   </div>
 
@@ -439,14 +436,14 @@ Assisted via Akul Dravin Digital Services • https://akuldravindigital.com
                   </div>
 
                   <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#0A192F' }}>{itn.arrival}</div>
+                    <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#061A36' }}>{itn.arrival}</div>
                     <div style={{ fontSize: '0.72rem', color: '#64748B' }}>Arrive</div>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0A192F' }}>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#061A36' }}>
                       ₹{itn.price.toLocaleString('en-IN')}
                     </div>
                     <div style={{ fontSize: '0.72rem', color: '#EF4444' }}>

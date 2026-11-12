@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AstroHeaderNav } from '../../components/astrology/AstroHeaderNav';
 import { ZODIAC_SIGNS } from '../../utils/astrologyCalculators';
+import { makeAstroArtworkSvg } from '../../data/astrologyData';
 import { Gem, Sparkles, ShieldCheck, CheckCircle2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -33,7 +34,7 @@ export const GemstonePage: React.FC = () => {
       mantra: 'ॐ ह्रां ह्रीं ह्रौं सः सूर्याय नमः (108 बार)',
       benefitsHi: 'सरकारी नौकरी, प्रशासनिक पद, नेत्र ज्योति, आत्म-सम्मान और पिता से मधुर संबंध।',
       cautionHi: 'शनि की राशि (मकर, कुंभ) वाले जातक बिना ज्योतिषी परामर्श के न पहनें।',
-      imageUrl: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&q=80'
+      imageUrl: makeAstroArtworkSvg('RUBY', 'Manikya • Sun', '#EF4444', '#2D0A10')
     },
     {
       nameHi: 'पीला पुखराज (Yellow Sapphire)',
@@ -46,7 +47,7 @@ export const GemstonePage: React.FC = () => {
       mantra: 'ॐ ग्रां ग्रीं ग्रौं सः गुरवे नमः (108 बार)',
       benefitsHi: 'विवाह में शीघ्रता, ज्ञान, उच्च शिक्षा, संतान सुख, आध्यात्मिक उन्नति और विपुल धन।',
       cautionHi: 'अत्यंत सात्विक रत्न है, धारण करने के बाद आचरण पवित्र रखें।',
-      imageUrl: 'https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=400&q=80'
+      imageUrl: makeAstroArtworkSvg('PUKH', 'Yellow Sapphire • Guru', '#F59E0B', '#261804')
     },
     {
       nameHi: 'पन्ना (Emerald)',
@@ -59,7 +60,7 @@ export const GemstonePage: React.FC = () => {
       mantra: 'ॐ ब्रां ब्रीं ब्रौं सः बुधाय नमः (108 बार)',
       benefitsHi: 'व्यापार में लाभ, शेयर बाजार में सफलता, भाषण कला, तीव्र बुद्धि और स्मरण शक्ति।',
       cautionHi: 'टूटा या जालीदार पन्ना कभी न पहनें, पूर्ण पारदर्शी व चमकदार होना चाहिए।',
-      imageUrl: 'https://images.unsplash.com/photo-1598560917505-59a3ad559071?w=400&q=80'
+      imageUrl: makeAstroArtworkSvg('PANNA', 'Emerald • Budh', '#10B981', '#04261B')
     },
     {
       nameHi: 'सच्चा मोती (Natural Pearl)',
@@ -72,7 +73,7 @@ export const GemstonePage: React.FC = () => {
       mantra: 'ॐ श्रां श्रीं श्रौं सः चन्द्रमसे नमः (108 बार)',
       benefitsHi: 'मानसिक शांति, अनिद्रा से मुक्ति, क्रोध नियंत्रण और माता का स्वास्थ्य सुधार।',
       cautionHi: 'गोमेद या लहसुनिया के साथ मोती कभी धारण न करें।',
-      imageUrl: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=400&q=80'
+      imageUrl: makeAstroArtworkSvg('MOTI', 'Natural Pearl • Moon', '#E2E8F0', '#0F172A')
     },
     {
       nameHi: 'लाल मूंगा (Red Coral)',
@@ -85,7 +86,7 @@ export const GemstonePage: React.FC = () => {
       mantra: 'ॐ क्रां क्रीं क्रौं सः भौमाय नमः (108 बार)',
       benefitsHi: 'साहस, आत्मविश्वास, रक्त विकार से मुक्ति, भूमि-भवन लाभ और मांगलिक दोष शांति।',
       cautionHi: 'उच्च रक्तचाप वाले जातक ज्योतिषी से जांच कराकर ही पहनें।',
-      imageUrl: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=400&q=80'
+      imageUrl: makeAstroArtworkSvg('MUNGA', 'Red Coral • Mars', '#F97316', '#2E1004')
     },
     {
       nameHi: 'नीलम (Blue Sapphire)',
@@ -98,12 +99,12 @@ export const GemstonePage: React.FC = () => {
       mantra: 'ॐ प्रां प्रीं प्रौं सः शनैश्चराय नमः (108 बार)',
       benefitsHi: 'अथाह धन संपदा, अचानक भाग्योदय, दीर्घायु, उद्योग व राजनीतिक प्रभुत्व।',
       cautionHi: 'अत्यंत तीव्र प्रभाव वाला रत्न है। पहनने से पहले 3 दिन तक तकिये के नीचे रखकर परीक्षण करें।',
-      imageUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400&q=80'
+      imageUrl: makeAstroArtworkSvg('NEELAM', 'Blue Sapphire • Shani', '#3B82F6', '#041230')
     }
   ];
 
   return (
-    <div style={{ background: '#090E17', color: '#F8FAFC', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div style={{ background: '#031126', color: '#F8FAFC', minHeight: '100vh', paddingBottom: '80px' }}>
       <AstroHeaderNav />
 
       {/* Hero Banner */}

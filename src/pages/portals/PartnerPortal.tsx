@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   Briefcase, 
   DollarSign, 
@@ -94,34 +95,30 @@ export const PartnerPortal: React.FC = () => {
   };
 
   const handleDownloadSlip = (slip: NonNullable<typeof lastSlip>) => {
-    const lines = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — PARTNER SETTLEMENT ADVICE',
-      '==================================================================',
-      `Reference   : ${slip.ref}`,
-      `Type        : ${slip.type}`,
-      `Partner     : Santosh Kumar (AD-PTR-5520)`,
-      `Particulars : ${slip.detail}`,
-      `Amount      : INR ${slip.amount.toLocaleString('en-IN')}.00`,
-      `Timestamp   : ${slip.timestamp}`,
-      'Ledger Sync : Balanced Double-Entry Recorded',
-      '==================================================================',
-    ].join('\n');
-    const blob = new Blob([lines], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Partner_Slip_${slip.ref}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'ADCS Field Partner Settlement & Work-Order Advice',
+      documentType: 'PARTNER SETTLEMENT SLIP',
+      documentNumber: slip.ref,
+      issuedDate: slip.timestamp,
+      rows: [
+        { label: 'Advice Category', value: slip.type },
+        { label: 'Registered Partner', value: 'Santosh Kumar (AD-PTR-5520)' },
+        { label: 'Work Order / Particulars', value: slip.detail },
+        { label: 'Ledger Sync', value: 'Balanced Double-Entry Recorded' },
+      ],
+      amountSummary: {
+        total: slip.amount,
+        currency: '₹',
+        paymentStatus: 'CREDITED / ADVICE ISSUED',
+      },
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '2.5rem',
         color: '#FFFFFF',
@@ -193,7 +190,7 @@ export const PartnerPortal: React.FC = () => {
             style={{ gap: '0.35rem' }}
           >
             <Download size={14} />
-            <span>Download Settlement Advice (.txt)</span>
+            <span>Print / PDF Settlement Advice</span>
           </button>
         </div>
       )}
@@ -205,7 +202,7 @@ export const PartnerPortal: React.FC = () => {
         padding: '2rem',
         border: '1px solid #E2E8F0',
       }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '1.25rem' }}>
           Assigned Service Work Orders & Leads
         </h3>
 
@@ -227,10 +224,10 @@ export const PartnerPortal: React.FC = () => {
             >
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                  <span style={{ fontWeight: 800, color: '#0A192F' }}>{job.id}</span>
+                  <span style={{ fontWeight: 800, color: '#061A36' }}>{job.id}</span>
                   <span className="badge badge-blue">{job.status}</span>
                 </div>
-                <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#1D4ED8' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#075ACB' }}>
                   {job.service}
                 </h4>
                 <div style={{ fontSize: '0.8rem', color: '#64748B', marginTop: '0.2rem' }}>

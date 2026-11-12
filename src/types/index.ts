@@ -110,6 +110,11 @@ export interface Application {
   updatedAt: string;
   assignedTo?: string;
   feePaid: number;
+  utrNumber?: string;
+  transactionId?: string;
+  paymentStatus?: 'UTR_SUBMITTED' | 'VERIFIED' | 'REJECTED';
+  paymentMode?: string;
+  aiRoutingNote?: string;
   documentsUploaded: string[];
   notes?: string;
   trackingSteps: TrackingStep[];
@@ -372,16 +377,51 @@ export interface ApiConnectorProvider {
 
 export interface WhiteLabelConfig {
   brandName: string;
+  shortName?: string;
   tagline: string;
   taglineHi: string;
   logoUrl?: string;
+  darkLogoUrl?: string;
+  emblemUrl?: string;
+  certificateLogoUrl?: string;
   primaryColor: string;
   accentColor: string;
+  navyColor?: string;
   customDomain: string;
   supportPhone: string;
   supportEmail: string;
+  registeredAddress?: string;
   invoiceHeader: string;
+  footerText?: string;
   gstin: string;
+  approvedSignatoryName?: string;
+  approvedSignatoryDesignation?: string;
+  certificateTemplateStyle?: 'classic-navy-gold' | 'executive-royal' | 'minimal-enterprise';
+  letterheadTemplateStyle?: 'corporate-navy' | 'royal-accent';
+  invoiceTemplateStyle?: 'gst-standard' | 'compact-thermal';
+  watermarkEnabled?: boolean;
+  approvalStatus?: 'DRAFT' | 'PENDING_APPROVAL' | 'PUBLISHED';
+  version?: number;
+  lastPublishedAt?: string;
+  lastPublishedBy?: string;
+}
+
+export interface BrandAuditEntry {
+  id: string;
+  timestamp: string;
+  actor: string;
+  action: 'BRAND_DRAFT_SAVED' | 'BRAND_PUBLISHED' | 'CERTIFICATE_REISSUED' | 'TEMPLATE_UPDATED';
+  summary: string;
+  version: number;
+}
+
+export interface CertificateReissueEntry {
+  version: number;
+  reason: string;
+  reissuedBy: string;
+  reissuedAt: string;
+  previousHash?: string;
+  newHash: string;
 }
 
 export interface AdvocateProfile {
@@ -445,6 +485,9 @@ export interface AcademyCertificate {
   qrCodeData: string;
   status: 'VALID' | 'REVOKED';
   isPrivateTrainingCert: true;
+  versionNumber?: number;
+  documentHash?: string;
+  reissueHistory?: CertificateReissueEntry[];
 }
 
 export interface TechnicianJob {
@@ -472,4 +515,144 @@ export interface BiometricDeviceState {
   deviceSerial: string;
   lastPingTime: string;
 }
+
+export type DigitalSevaTier = 'none' | 'rural' | 'district' | 'state' | 'main_head' | 'super_admin';
+
+export type DepartmentName =
+  | 'Sovereign Governance'
+  | 'National Command Center'
+  | 'State Administration & Policy'
+  | 'District Operations & VLE Supervision'
+  | 'Rural Digital Seva Kendra'
+  | 'Retail & Citizen Services'
+  | 'Distribution & Sub-VLE Network'
+  | 'Kiosk & Print Operations'
+  | 'Regional Franchise Network'
+  | 'Legal & Compliance'
+  | 'ADCS Academy'
+  | 'Field Engineering'
+  | 'Finance & Clearing'
+  | 'Channel & Affiliate Growth';
+
+export type PermissionFlag =
+  | 'view_services'
+  | 'process_applications'
+  | 'verify_utr_payments'
+  | 'view_commissions'
+  | 'edit_commissions'
+  | 'manage_users_access'
+  | 'manage_ai_control'
+  | 'access_crm_erp'
+  | 'export_reports'
+  | 'manage_banners';
+
+export type LoginPanelKey =
+  | 'customer'
+  | 'vle_rural'
+  | 'vle_district'
+  | 'vle_state'
+  | 'vle_main_head'
+  | 'distributor'
+  | 'cafe_operator'
+  | 'franchise'
+  | 'affiliate'
+  | 'partner'
+  | 'employee'
+  | 'finance'
+  | 'advocate'
+  | 'instructor'
+  | 'student'
+  | 'technician'
+  | 'admin';
+
+export interface AuthUserAccount {
+  id: string;
+  loginId: string;
+  password: string;
+  name: string;
+  role: UserRole;
+  panelKey: LoginPanelKey;
+  digitalSevaTier: DigitalSevaTier;
+  designation: string;
+  department: DepartmentName;
+  regionCode: string;
+  status: 'Active' | 'Suspended';
+  permissions: PermissionFlag[];
+  activePlanId?: string;
+  walletBalance: number;
+}
+
+export interface UTRPaymentProof {
+  id: string;
+  orderId: string;
+  utrNumber: string;
+  transactionId: string;
+  paymentMethod: 'upi' | 'bank_transfer' | 'card' | 'wallet';
+  amountPaid: number;
+  serviceTitle: string;
+  applicantName: string;
+  applicantPhone?: string;
+  paidAt: string;
+  paymentStatus: 'UTR_SUBMITTED' | 'VERIFIED' | 'REJECTED';
+  verifiedBy?: string;
+  verifiedAt?: string;
+  aiRiskFlag: 'LOW_RISK' | 'REVIEW_REQUIRED' | 'VERIFIED_MATCH';
+}
+
+export interface PricingPlanItem {
+  id: string;
+  targetGroup: 'citizen_retailer' | 'vle_rural' | 'district_state' | 'cyber_franchise' | 'business_distributor';
+  name: string;
+  nameHi: string;
+  tierBadge: string;
+  priceMonthly: number;
+  priceAnnual: number;
+  features: string[];
+  maxApplications: string;
+  highlight?: boolean;
+}
+
+export interface CommissionRule {
+  id: string;
+  serviceCategory: string;
+  serviceTitle: string;
+  ruralVlePct: number;
+  districtMgrPct: number;
+  stateHeadPct: number;
+  mainHeadPct: number;
+  distributorPct: number;
+  franchisePct: number;
+  affiliatePct: number;
+  platformMarginPct: number;
+  flatBonusInr: number;
+  updatedAt: string;
+  updatedBy: string;
+}
+
+export interface AISystemControlConfig {
+  autonomousRoutingEnabled: boolean;
+  autoUtrScrutinyEnabled: boolean;
+  crossPanelIntrusionGuard: boolean;
+  commissionAnomalyGuard: boolean;
+  slaEscalationEnabled: boolean;
+  bilingualAiConcierge: boolean;
+  riskThresholdScore: number;
+  lastSyncedAt: string;
+  lastModifiedBy: string;
+}
+
+export interface ServiceBannerItem {
+  id: string;
+  sectorKey: string;
+  title: string;
+  titleHi: string;
+  subtitle: string;
+  subtitleHi: string;
+  badge: string;
+  ctaLabel: string;
+  targetRoute: string;
+  serviceId?: string;
+  themeVariant: 'navy' | 'royal' | 'gold';
+}
+
 

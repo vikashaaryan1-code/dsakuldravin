@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { CertificateBranding } from '../../components/branding';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   BookOpen, 
   Award, 
@@ -343,28 +345,23 @@ export const StudentPortal: React.FC = () => {
 
   const handleDownloadCertificate = () => {
     if (!generatedCert) return;
-    const text = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — ACADEMY CREDENTIAL',
-      '======================================================',
-      `Certificate Serial : ${generatedCert.certId}`,
-      `Scholar Name       : ${generatedCert.studentName}`,
-      `Student UID        : ${student.studentId}`,
-      `Course Track       : ${generatedCert.courseTitle}`,
-      `Performance Grade  : ${generatedCert.grade}`,
-      `Issue Date         : ${generatedCert.date}`,
-      `Verification URL   : ${generatedCert.qrUrl}`,
-      '======================================================',
-      'Private vocational & professional competency credential.',
-      'Signatory: Dr. Alok Nath Verma (Dean of Academy)',
-    ].join('\n');
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${generatedCert.certId}_ADCS_Certificate.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Credential Downloaded', `${generatedCert.certId}_ADCS_Certificate.txt saved.`, 'success');
+    printBrandedADCSDocument({
+      title: `Academy Certificate — ${generatedCert.courseTitle}`,
+      documentType: 'ACADEMY COMPLETION CERTIFICATE',
+      documentNumber: generatedCert.certId,
+      issuedDate: generatedCert.date,
+      orientation: 'landscape',
+      verificationUrl: generatedCert.qrUrl,
+      rows: [
+        { label: 'Scholar Name', value: generatedCert.studentName },
+        { label: 'Student UID', value: student.studentId },
+        { label: 'Course Track', value: generatedCert.courseTitle },
+        { label: 'Performance Grade', value: generatedCert.grade },
+        { label: 'Authorized Signatory', value: 'Dr. Alok Nath Verma (Dean of Academy)' },
+      ],
+      notes: ['Private vocational & professional competency credential issued by AKUL DRAVIN DIGITAL SERVICES.'],
+    });
+    showToast('Credential Print View Ready', `Opened A4 printable credential for ${generatedCert.certId}.`, 'success');
   };
 
   // Open Tutorial Viewer
@@ -414,7 +411,7 @@ export const StudentPortal: React.FC = () => {
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #1E3A8A 60%, #2563EB 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #061A36 60%, #2563EB 100%)',
         borderRadius: '24px',
         padding: '2.5rem',
         color: '#FFFFFF',
@@ -463,7 +460,7 @@ export const StudentPortal: React.FC = () => {
         padding: '0.85rem 1.25rem',
         marginBottom: '2rem',
         fontSize: '0.82rem',
-        color: '#1E3A8A',
+        color: '#061A36',
         display: 'flex',
         alignItems: 'center',
         gap: '0.6rem'
@@ -812,7 +809,7 @@ export const StudentPortal: React.FC = () => {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                       <Terminal size={20} color="#2563EB" />
-                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1E3A8A', margin: 0 }}>
+                      <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
                         {activeTutorial.practicalExercise.title}
                       </h3>
                     </div>
@@ -1224,105 +1221,29 @@ export const StudentPortal: React.FC = () => {
 
       {/* Generated Verifiable Certificate Display (When Passed) */}
       {generatedCert && (
-        <div style={{
-          background: 'linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%)',
-          borderRadius: '20px',
-          border: '2px solid #D97706',
-          padding: '2.5rem',
-          marginBottom: '2.5rem',
-          boxShadow: '0 10px 25px -5px rgba(217, 119, 6, 0.2)'
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem', borderBottom: '2px solid #B45309', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
-            <div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#B45309', letterSpacing: '1px' }}>
-                AKUL DRAVIN DIGITAL SERVICES • ACADEMY OF EXCELLENCE
-              </div>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#78350F', margin: '0.3rem 0' }}>
-                CERTIFICATE OF SKILL & PROFESSIONAL COMPETENCE
-              </h2>
-              <div style={{ fontSize: '0.85rem', color: '#92400E' }}>
-                Certificate Serial: <strong>{generatedCert.certId}</strong> • Issue Date: {generatedCert.date}
-              </div>
-            </div>
-
-            {/* QR Code Simulation */}
-            <div style={{ background: '#FFFFFF', border: '1px solid #D97706', borderRadius: '12px', padding: '0.75rem', textAlign: 'center' }}>
-              <div style={{ width: '80px', height: '80px', background: '#0F172A', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '6px', margin: '0 auto 0.4rem' }}>
-                <QrCode size={56} color="#FBBF24" />
-              </div>
-              <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#78350F' }}>
-                SCAN TO VERIFY
-              </div>
-            </div>
-          </div>
-
-          <p style={{ fontSize: '1rem', color: '#451A03', lineHeight: 1.6 }}>
-            This is to certify that <strong>{generatedCert.studentName}</strong> has satisfactorily completed all curriculum requirements, continuous hands-on laboratory modules, and successfully passed the proctored examination for:
-          </p>
-          <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#78350F', margin: '0.5rem 0 1rem' }}>
-            {generatedCert.courseTitle} ({generatedCert.grade})
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderTop: '1px solid #D97706', paddingTop: '1rem' }}>
-            <div style={{ fontSize: '0.78rem', color: '#92400E' }}>
-              Signatory: <strong>Dr. Alok Nath Verma (Dean of Academy)</strong> • Akul Dravin Digital Services Private Limited
-            </div>
-            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <button
-                onClick={handleDownloadCertificate}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  background: '#78350F',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <Download size={14} /> Download Credential (.txt)
-              </button>
-              <button
-                onClick={() => window.print()}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  background: '#B45309',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <Printer size={14} /> Print / PDF Slip
-              </button>
-              <button
-                onClick={() => navigate(`/verify-certificate/${generatedCert.certId}`)}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  background: '#FFFFFF',
-                  color: '#78350F',
-                  border: '1px solid #B45309',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <ExternalLink size={14} /> Public Verification Portal
-              </button>
-            </div>
+        <div style={{ marginBottom: '2.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <CertificateBranding
+            certificateId={generatedCert.certId}
+            certificateTitle="Certificate of Skill & Professional Competence"
+            recipientName={generatedCert.studentName}
+            subtitleOrCourse={generatedCert.courseTitle}
+            credentialDetail={`Scholar UID: ${student.studentId} — Satisfactorily completed all curriculum requirements, practical modules, and proctored examination.`}
+            gradeOrScore={generatedCert.grade}
+            issueDate={generatedCert.date}
+            issuerName="Dr. Alok Nath Verma"
+            issuerDesignation="Dean, ADCS Academy of Excellence"
+            verificationUrl={generatedCert.qrUrl}
+          />
+          <div className="adcs-no-print" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button type="button" onClick={handleDownloadCertificate} className="btn-primary">
+              <Download size={14} /> Export Printable Credential
+            </button>
+            <button type="button" onClick={() => window.print()} className="btn-navy">
+              <Printer size={14} /> Print / PDF Slip
+            </button>
+            <button type="button" onClick={() => navigate(`/verify-certificate/${generatedCert.certId}`)} className="btn-secondary">
+              <ExternalLink size={14} /> Public Verification Portal
+            </button>
           </div>
         </div>
       )}

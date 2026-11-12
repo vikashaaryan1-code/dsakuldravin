@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { apiClient } from '../services/apiClient';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Zap, 
   Smartphone, 
@@ -105,52 +106,40 @@ export const UtilityBillsPage: React.FC = () => {
 
   const handleDownloadReceipt = () => {
     if (!fetchedBill) return;
-    const content = `================================================================================
-BHARAT BILL PAYMENT SYSTEM (BBPS) - TRANSACTION RECEIPT
-AKUL DRAVIN DIGITAL SERVICES (ADCS) AGENT INSTITUTION
-================================================================================
-Transaction Reference : ${fetchedBill.billNumber}
-Payment Status        : SUCCESSFUL / SETTLED
-Timestamp             : ${new Date().toLocaleString('en-IN')}
---------------------------------------------------------------------------------
-BILL DETAILS:
-Biller Category       : ${activeBiller.toUpperCase()}
-Biller Organization   : ${operator}
-Consumer Account No   : ${consumerNumber}
-Consumer Name         : ${fetchedBill.consumerName}
-Billing Cycle / Due   : ${fetchedBill.dueDate}
-Units / Consumption   : ${fetchedBill.units} Units
---------------------------------------------------------------------------------
-PAYMENT BREAKDOWN:
-Bill Amount           : ₹${fetchedBill.amount.toLocaleString('en-IN')}.00
-Convenience Fee       : ₹0.00
-Platform Charges      : ₹0.00
-TOTAL AMOUNT PAID     : ₹${fetchedBill.amount.toLocaleString('en-IN')}.00
-Payment Mode          : ADCS Instant Citizen Wallet / BBPS Clearing
---------------------------------------------------------------------------------
-NPCI BBPS Approval Code: NPCI-ADCS-${String(fetchedBill.billNumber || consumerNumber).replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(-8)}
-Agent Institution ID  : AI-ADCS-09821
-Digital Verification  : SHA256-${String(fetchedBill.billNumber || 'BBPS').replace(/[^A-Z0-9]/gi, '').toUpperCase()}-${fetchedBill.amount}-BBPS-VALID
-================================================================================
-This is a computer generated electronic receipt. No signature is required.
-================================================================================`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `BBPS_Receipt_${fetchedBill.billNumber}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Receipt Downloaded', `Receipt for ${fetchedBill.billNumber} saved to your device.`, 'success');
+    const npciCode = `NPCI-ADCS-${String(fetchedBill.billNumber || consumerNumber).replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(-8)}`;
+    const digest = `SHA256-${String(fetchedBill.billNumber || 'BBPS').replace(/[^A-Z0-9]/gi, '').toUpperCase()}-${fetchedBill.amount}-BBPS-VALID`;
+    printBrandedADCSDocument({
+      title: 'Bharat Bill Payment System (BBPS) Transaction Receipt',
+      documentType: 'BBPS UTILITY RECEIPT',
+      documentNumber: String(fetchedBill.billNumber),
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: [
+        { label: 'Biller Category', value: activeBiller.toUpperCase() },
+        { label: 'Biller Organization', value: operator },
+        { label: 'Consumer Account Number', value: consumerNumber },
+        { label: 'Consumer Name', value: String(fetchedBill.consumerName) },
+        { label: 'Billing Cycle / Due', value: String(fetchedBill.dueDate) },
+        { label: 'Units / Consumption', value: `${fetchedBill.units} Units` },
+        { label: 'NPCI BBPS Approval Code', value: `${npciCode} (Agent AI-ADCS-09821)` },
+        { label: 'Verification Digest', value: digest },
+      ],
+      amountSummary: {
+        subtotal: Number(fetchedBill.amount),
+        tax: 0,
+        total: Number(fetchedBill.amount),
+        currency: '₹',
+        paymentStatus: 'SETTLED • CONVENIENCE FEE ₹0.00',
+      },
+      notes: ['Authorized ADCS BBPS Agent Institution Receipt (AI-ADCS-09821).'],
+    });
+    showToast('BBPS Receipt Ready', `Branded ADCS BBPS Receipt #${fetchedBill.billNumber} opened for print/PDF.`, 'success');
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -215,9 +204,9 @@ This is a computer generated electronic receipt. No signature is required.
               style={{
                 padding: '1rem 0.5rem',
                 borderRadius: '14px',
-                border: activeBiller === cat.id ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                border: activeBiller === cat.id ? '2px solid #075ACB' : '1px solid #E2E8F0',
                 background: activeBiller === cat.id ? '#EFF6FF' : '#F8FAFC',
-                color: activeBiller === cat.id ? '#1D4ED8' : '#475569',
+                color: activeBiller === cat.id ? '#075ACB' : '#475569',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -293,11 +282,11 @@ This is a computer generated electronic receipt. No signature is required.
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', fontSize: '0.85rem', marginBottom: '1.25rem' }}>
                 <div>
                   <div style={{ color: '#64748B' }}>Consumer Name:</div>
-                  <div style={{ fontWeight: 700, color: '#0A192F' }}>{fetchedBill.consumerName}</div>
+                  <div style={{ fontWeight: 700, color: '#061A36' }}>{fetchedBill.consumerName}</div>
                 </div>
                 <div>
                   <div style={{ color: '#64748B' }}>Units Consumed:</div>
-                  <div style={{ fontWeight: 700, color: '#0A192F' }}>{fetchedBill.units} kWh</div>
+                  <div style={{ fontWeight: 700, color: '#061A36' }}>{fetchedBill.units} kWh</div>
                 </div>
               </div>
 
@@ -310,7 +299,7 @@ This is a computer generated electronic receipt. No signature is required.
               }}>
                 <div>
                   <span style={{ fontSize: '0.78rem', color: '#64748B' }}>Bill Amount Payable:</span>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0A192F' }}>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#061A36' }}>
                     ₹{fetchedBill.amount.toLocaleString('en-IN')}
                   </div>
                 </div>
@@ -351,7 +340,7 @@ This is a computer generated electronic receipt. No signature is required.
                 <CheckCircle2 size={32} />
               </div>
 
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
                 Payment Confirmed & Settled!
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748B', marginBottom: '1.5rem' }}>
@@ -410,7 +399,7 @@ This is a computer generated electronic receipt. No signature is required.
         flexWrap: 'wrap',
         gap: '1rem',
       }}>
-        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0A192F', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#061A36', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
           <ShieldCheck size={16} color="#059669" />
           <span>Authorized Utility & Regulatory Portals (NPCI BBPS / NHAI):</span>
         </div>
@@ -431,7 +420,7 @@ This is a computer generated electronic receipt. No signature is required.
                 gap: '4px',
                 fontSize: '0.76rem',
                 fontWeight: 600,
-                color: '#1D4ED8',
+                color: '#075ACB',
                 background: '#FFFFFF',
                 border: '1px solid #BFDBFE',
                 padding: '0.35rem 0.7rem',

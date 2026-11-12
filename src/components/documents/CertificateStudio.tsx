@@ -1,30 +1,38 @@
-import React, { useState } from 'react';
-import { 
-  Award, 
-  QrCode, 
-  Printer, 
-  Download, 
-  ShieldCheck, 
-  CheckCircle2, 
-  Sparkles, 
-  FileText, 
+import React, { useState, useEffect } from 'react';
+import {
+  Printer,
+  Download,
   RefreshCw,
-  Copy,
-  Check,
-  Building,
-  UserCheck
+  History,
+  Lock,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
+import { CertificateBranding } from '../branding';
+import { ADCS_BRAND_IDENTITY, ADCS_APPROVED_SIGNATORIES } from '../../config/brandAssets';
+import { computeDocumentHash, printBrandedADCSDocument } from '../../utils/documentBranding';
 
 export const CertificateStudio: React.FC = () => {
-  const { showToast } = useApp();
+  const { showToast, whiteLabelConfig } = useApp();
 
-  // Certificate Types
+  // Certificate Types (covers Academy, Vocational, Achievement, Assessment, Participation, Internship, Experience, Franchise, Staff, etc.)
   const [certType, setCertType] = useState<
-    'training' | 'experience' | 'character' | 'salary' | 'membership' | 'internship'
+    | 'training'
+    | 'vocational'
+    | 'achievement'
+    | 'assessment'
+    | 'participation'
+    | 'internship'
+    | 'experience'
+    | 'franchise'
+    | 'staff'
+    | 'character'
+    | 'salary'
+    | 'membership'
   >('training');
+
+  const [orientation, setOrientation] = useState<'landscape' | 'portrait'>('landscape');
 
   // Form Fields
   const [recipientName, setRecipientName] = useState('Anand Kumar Verma');
@@ -34,70 +42,168 @@ export const CertificateStudio: React.FC = () => {
   const [startDate, setStartDate] = useState('2026-01-10');
   const [endDate, setEndDate] = useState('2026-06-30');
   const [performanceGrade, setPerformanceGrade] = useState('Grade A+ (Distinction - 94.6%)');
-  const [signatoryName, setSignatoryName] = useState('Dravin Akul');
-  const [signatoryTitle, setSignatoryTitle] = useState('Chief Executive & Registrar, ADCS Council');
+  const [signatoryName, setSignatoryName] = useState<string>(ADCS_APPROVED_SIGNATORIES[0].name);
+  const [signatoryTitle, setSignatoryTitle] = useState<string>(ADCS_APPROVED_SIGNATORIES[0].designation);
   const [issueDate, setIssueDate] = useState('2026-07-05');
   const [centerLocation, setCenterLocation] = useState('Patna Regional Operations Hub, Bihar');
 
-  // Serial & Hash
+  // Controlled Reissue & Versioning Integrity State
   const [serialNo, setSerialNo] = useState('ADCS-CERT-2026-89412');
-  const [securityHash, setSecurityHash] = useState('E93A-782F-B01C-5491');
+  const [securityHash, setSecurityHash] = useState('A9F2C81E04D721B890F452E1');
+  const [versionNumber, setVersionNumber] = useState<number>(1);
+  const [isIssuedLocked, setIsIssuedLocked] = useState<boolean>(false);
+  const [reissueReason, setReissueReason] = useState('Official ADCS Master Logo & Identity Upgrade');
+  const [reissuedBy, setReissuedBy] = useState('Super Admin Brand Registrar');
+  const [reissueMeta, setReissueMeta] = useState<
+    { reason: string; reissuedBy: string; reissuedAt: string; originalIssueDate: string } | undefined
+  >(undefined);
+  const [reissueLedger, setReissueLedger] = useState<
+    Array<{ version: number; serialNo: string; qrRef: string; hash: string; timestamp: string; actor: string; reason: string }>
+  >([]);
   const [savedToVault, setSavedToVault] = useState(false);
+
+  const verificationUrl = `${ADCS_BRAND_IDENTITY.verificationBaseUrl}?id=${encodeURIComponent(serialNo)}`;
+
+  useEffect(() => {
+    let active = true;
+    computeDocumentHash({
+      serialNo,
+      certType,
+      recipientName,
+      roleCourse,
+      issueDate,
+      versionNumber,
+      logoAsset: whiteLabelConfig.certificateLogoUrl || '/branding/adcs-logo-certificate.png',
+    }).then((hash) => {
+      if (active) setSecurityHash(hash);
+    });
+    return () => {
+      active = false;
+    };
+  }, [serialNo, certType, recipientName, roleCourse, issueDate, versionNumber, whiteLabelConfig.certificateLogoUrl]);
 
   const generateNewSerial = () => {
     const randomNum = Math.floor(10000 + Math.random() * 90000);
     const newSerial = `ADCS-CERT-2026-${randomNum}`;
-    const newHash = Math.random().toString(36).substring(2, 6).toUpperCase() + '-' +
-                    Math.random().toString(36).substring(2, 6).toUpperCase() + '-' +
-                    Math.random().toString(36).substring(2, 6).toUpperCase();
     setSerialNo(newSerial);
-    setSecurityHash(newHash);
+    setVersionNumber(1);
+    setIsIssuedLocked(false);
+    setReissueMeta(undefined);
     setSavedToVault(false);
-    showToast('New Serial Generated', `Assigned unique token: ${newSerial}`, 'info');
+    showToast('New Certificate Serial Assigned', `Assigned immutable credential ID: ${newSerial}`, 'info');
+  };
+
+  const handleLockAndIssue = async () => {
+    const hash = await computeDocumentHash({
+      serialNo,
+      certType,
+      recipientName,
+      roleCourse,
+      issueDate,
+      versionNumber: 1,
+    });
+    setSecurityHash(hash);
+    setIsIssuedLocked(true);
+    setReissueLedger((prev) => [
+      {
+        version: 1,
+        serialNo,
+        qrRef: verificationUrl,
+        hash,
+        timestamp: new Date().toISOString(),
+        actor: signatoryName,
+        reason: 'Original Issuance (Immutable Baseline)',
+      },
+      ...prev,
+    ]);
+    showToast('Certificate Issued & Locked', `Original record ${serialNo} v1.0 archived with SHA-256 integrity hash.`, 'success');
+    confetti({ particleCount: 55, spread: 50, origin: { y: 0.65 } });
+  };
+
+  const handleControlledReissue = async () => {
+    if (!reissueReason.trim()) {
+      showToast('Reason Required', 'Please record the formal reason for controlled certificate reissue.', 'error');
+      return;
+    }
+    const nextVersion = versionNumber + 1;
+    const timestamp = new Date().toISOString();
+    const nextHash = await computeDocumentHash({
+      serialNo,
+      certType,
+      recipientName,
+      roleCourse,
+      originalIssueDate: issueDate,
+      versionNumber: nextVersion,
+      reissueReason,
+      reissuedBy,
+      timestamp,
+      logoAsset: whiteLabelConfig.certificateLogoUrl || '/branding/adcs-logo-certificate.png',
+    });
+    setVersionNumber(nextVersion);
+    setSecurityHash(nextHash);
+    setIsIssuedLocked(true);
+    setReissueMeta({
+      reason: reissueReason,
+      reissuedBy,
+      reissuedAt: timestamp.slice(0, 10),
+      originalIssueDate: issueDate,
+    });
+    setReissueLedger((prev) => [
+      {
+        version: nextVersion,
+        serialNo,
+        qrRef: verificationUrl,
+        hash: nextHash,
+        timestamp,
+        actor: reissuedBy,
+        reason: reissueReason,
+      },
+      ...prev,
+    ]);
+    showToast('Controlled Reissue Recorded', `${serialNo} reissued as v${nextVersion}.0 — original record & QR verification URL preserved.`, 'success');
+  };
+
+  const certTitleMap: Record<string, string> = {
+    training: 'Certificate of Training & Completion',
+    vocational: 'Vocational Skill Qualification Certificate',
+    achievement: 'Course Achievement & Merit Certificate',
+    assessment: 'Skill Assessment Proficiency Certificate',
+    participation: 'Certificate of Program Participation',
+    internship: 'Certificate of Internship Completion',
+    experience: 'Certificate of Employment & Experience',
+    franchise: 'Authorized Franchise Onboarding Certificate',
+    staff: 'Staff Operational Excellence Certificate',
+    character: 'Certificate of Conduct & Standing',
+    salary: 'Employment & Compensation Verification',
+    membership: 'Authorized Partner Membership Certificate',
   };
 
   const handleDownloadCertificate = () => {
-    const content = `
-================================================================================
-          AKUL DRAVIN DIGITAL SERVICES PRIVATE LIMITED (ADCS)
-               NATIONAL CERTIFICATE VERIFICATION REGISTRY
-================================================================================
-CERTIFICATE SERIAL NUMBER : ${serialNo}
-CRYPTOGRAPHIC SEAL HASH   : SHA256-${securityHash}
-ISSUE DATE                : ${issueDate}
-VERIFICATION URL          : https://akuldravindigital.com/verify-certificate/${serialNo}
---------------------------------------------------------------------------------
-THIS IS TO CERTIFY THAT:
-RECIPIENT NAME            : ${recipientName.toUpperCase()}
-FATHER'S / GUARDIAN NAME  : ${guardianName}
-REGISTRATION / ID NUMBER  : ${identifierNo}
-DESIGNATION / COURSE TITLE: ${roleCourse}
-TENURE / DURATION         : ${startDate} to ${endDate}
-PERFORMANCE / ASSESSMENT  : ${performanceGrade}
-ISSUING LOCATION          : ${centerLocation}
---------------------------------------------------------------------------------
-AUTHORIZED SIGNATORY      : ${signatoryName}
-SIGNATORY DESIGNATION     : ${signatoryTitle}
-SECURITY STANDARD         : ISO/IEC 27001 Certified • QR Encrypted Ledger
-================================================================================
-Certified valid by Akul Dravin Digital Services Council.
-    `.trim();
-
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${recipientName.replace(/\s+/g, '_')}_Certificate_${serialNo}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Certificate Exported', `Downloaded verified certificate record for ${recipientName}.`, 'success');
-
-    confetti({
-      particleCount: 80,
-      spread: 60,
-      origin: { y: 0.6 }
+    printBrandedADCSDocument({
+      title: certTitleMap[certType] || 'ADCS Official Certificate',
+      documentType: 'ADCS CREDENTIAL RECORD',
+      documentNumber: `${serialNo} (v${versionNumber}.0)`,
+      issuedDate: issueDate,
+      orientation,
+      verificationUrl,
+      rows: [
+        { label: 'Recipient Name', value: recipientName },
+        { label: 'Father / Guardian Name', value: guardianName || 'N/A' },
+        { label: 'Registration / ID', value: identifierNo },
+        { label: 'Program / Designation', value: roleCourse },
+        { label: 'Tenure / Duration', value: `${startDate} to ${endDate}` },
+        { label: 'Grade / Evaluation', value: performanceGrade },
+        { label: 'Issuing Hub', value: centerLocation },
+        { label: 'Authorized Signatory', value: `${signatoryName} — ${signatoryTitle}` },
+        { label: 'SHA-256 Digest', value: securityHash },
+      ],
+      notes: reissueMeta
+        ? [
+            `Original Issuance Date Preserved: ${reissueMeta.originalIssueDate}`,
+            `Controlled Reissue v${versionNumber}.0 by ${reissueMeta.reissuedBy} (${reissueMeta.reissuedAt})`,
+            `Reason: ${reissueMeta.reason}`,
+          ]
+        : ['Official ADCS credential record. Independently verifiable via QR & Registry URL.'],
     });
   };
 
@@ -121,7 +227,7 @@ Certified valid by Akul Dravin Digital Services Council.
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
       {/* Studio Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #1E3A8A 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #061A36 100%)',
         color: '#FFFFFF',
         borderRadius: '20px',
         padding: '2rem',
@@ -133,7 +239,7 @@ Certified valid by Akul Dravin Digital Services Council.
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.4rem' }}>
-            <span style={{ background: '#F59E0B', color: '#0A192F', fontSize: '0.7rem', fontWeight: 900, padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
+            <span style={{ background: '#F59E0B', color: '#061A36', fontSize: '0.7rem', fontWeight: 900, padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
               OFFICIAL CERTIFICATE STUDIO
             </span>
             <span style={{ background: 'rgba(255,255,255,0.2)', fontSize: '0.7rem', fontWeight: 700, padding: '0.2rem 0.5rem', borderRadius: '4px' }}>
@@ -182,7 +288,7 @@ Certified valid by Akul Dravin Digital Services Council.
           flexDirection: 'column',
           gap: '1.1rem'
         }}>
-          <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0A192F', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.5rem' }}>
+          <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#061A36', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.5rem' }}>
             1. Certificate Template & Type
           </div>
 
@@ -202,13 +308,36 @@ Certified valid by Akul Dravin Digital Services Council.
                 else if (val === 'internship') setRoleCourse('Full-Stack Web Development & AI Trainee');
               }}
             >
-              <option value="training">Training & Course Completion Certificate</option>
-              <option value="experience">Employee Work Experience Certificate</option>
+              <option value="training">Academy Completion & Training Certificate</option>
+              <option value="vocational">Vocational Training Certificate</option>
+              <option value="achievement">Course Achievement Certificate</option>
+              <option value="assessment">Skill Assessment Certificate</option>
+              <option value="participation">Participation Certificate</option>
+              <option value="internship">Internship Completion Certificate</option>
+              <option value="experience">Experience Certificate (Legitimate Employment)</option>
+              <option value="franchise">Franchise Onboarding Certificate</option>
+              <option value="staff">Staff Training Certificate</option>
               <option value="character">Character & Moral Conduct Certificate</option>
               <option value="salary">Salary & Employment Proof Certificate</option>
-              <option value="membership">Franchise / VLE Membership Certificate</option>
-              <option value="internship">Internship & Project Certificate</option>
+              <option value="membership">Partner Membership Certificate</option>
             </select>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" style={{ fontWeight: 700 }}>A4 Print Orientation</label>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {(['landscape', 'portrait'] as const).map((dir) => (
+                <button
+                  key={dir}
+                  type="button"
+                  onClick={() => setOrientation(dir)}
+                  className={orientation === dir ? 'btn-primary' : 'btn-secondary'}
+                  style={{ flex: 1, minHeight: '36px', fontSize: '0.78rem', textTransform: 'capitalize' }}
+                >
+                  {dir} A4
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="form-group">
@@ -310,8 +439,18 @@ Certified valid by Akul Dravin Digital Services Council.
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.5rem' }}>
             <button
+              type="button"
+              onClick={handleLockAndIssue}
+              disabled={isIssuedLocked}
+              className="btn-navy"
+              style={{ flex: '1 1 100%', fontSize: '0.8rem' }}
+            >
+              <Lock size={14} /> {isIssuedLocked ? `Issued v${versionNumber}.0 (Original Preserved)` : 'Issue & Lock Original Record'}
+            </button>
+            <button
+              type="button"
               onClick={handleSaveToVault}
               disabled={savedToVault}
               className="btn-secondary"
@@ -320,160 +459,118 @@ Certified valid by Akul Dravin Digital Services Council.
               {savedToVault ? '✓ In Vault' : 'Save to Vault'}
             </button>
             <button
+              type="button"
               onClick={handleDownloadCertificate}
               className="btn-primary"
               style={{ flex: 1, fontSize: '0.8rem' }}
             >
-              <Download size={14} /> Download
+              <Download size={14} /> Export PDF Record
+            </button>
+          </div>
+
+          {/* Controlled Reissue Panel — Existing issued certificates are NEVER silently overwritten */}
+          <div style={{ marginTop: '0.75rem', padding: '0.9rem', background: '#FFFFFF', border: '1px solid #DCE4EF', borderLeft: '4px solid #D6A12B', borderRadius: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 800, fontSize: '0.8rem', color: '#061A36', marginBottom: '0.5rem' }}>
+              <History size={14} color="#075ACB" />
+              <span>Controlled Reissue / Branding Version</span>
+            </div>
+            <p style={{ fontSize: '0.73rem', color: '#55677D', marginBottom: '0.6rem', lineHeight: 1.45 }}>
+              Preserves original record & QR reference while recomputing SHA-256 hash and recording audit metadata.
+            </p>
+            <input
+              type="text"
+              className="form-input"
+              value={reissueReason}
+              onChange={(e) => setReissueReason(e.target.value)}
+              placeholder="Reissue reason"
+              style={{ marginBottom: '0.45rem', fontSize: '0.78rem', minHeight: '34px' }}
+            />
+            <input
+              type="text"
+              className="form-input"
+              value={reissuedBy}
+              onChange={(e) => setReissuedBy(e.target.value)}
+              placeholder="Authorized Reissuer"
+              style={{ marginBottom: '0.55rem', fontSize: '0.78rem', minHeight: '34px' }}
+            />
+            <button
+              type="button"
+              onClick={handleControlledReissue}
+              className="btn-gold"
+              style={{ width: '100%', minHeight: '36px', fontSize: '0.78rem' }}
+            >
+              Reissue v{versionNumber + 1}.0 (Preserve Original)
             </button>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Live Interactive Certificate Sheet */}
+        {/* RIGHT COLUMN: Live Branded A4 Certificate Sheet */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#475569' }}>
-              Live Visual Print Preview (A4 High-Resolution Style):
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }} className="adcs-no-print">
+            <span style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--adcs-muted)' }}>
+              Live Print Preview — A4 {orientation.toUpperCase()} • {whiteLabelConfig.brandName}
             </span>
             <button
+              type="button"
               onClick={() => window.print()}
-              className="btn-secondary btn-sm"
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+              className="btn-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', minHeight: '36px', padding: '0.4rem 0.9rem', fontSize: '0.82rem' }}
             >
-              <Printer size={14} /> Print Certificate
+              <Printer size={14} /> Print / Save PDF
             </button>
           </div>
 
-          {/* Certificate Sheet Border Container */}
-          <div style={{
-            background: '#FFFFFF',
-            border: '12px solid #0A192F',
-            borderRadius: '16px',
-            padding: '2.5rem',
-            position: 'relative',
-            boxShadow: '0 15px 45px rgba(0,0,0,0.1)',
-            minHeight: '560px',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between'
-          }}>
-            {/* Inner Gold Foil Double Border */}
-            <div style={{
-              position: 'absolute',
-              inset: '8px',
-              border: '2px solid #D97706',
-              borderRadius: '8px',
-              pointerEvents: 'none'
-            }} />
+          <CertificateBranding
+            certificateId={serialNo}
+            certificateTitle={certTitleMap[certType] || 'Official ADCS Certificate'}
+            recipientName={recipientName}
+            subtitleOrCourse={roleCourse}
+            credentialDetail={`${guardianName ? `Son / Daughter of ${guardianName}, ` : ''}bearing Identifier ${identifierNo}, evaluated during ${startDate} to ${endDate} at ${centerLocation}.`}
+            gradeOrScore={performanceGrade}
+            issueDate={issueDate}
+            issuerName={signatoryName}
+            issuerDesignation={signatoryTitle}
+            organizationName={whiteLabelConfig.brandName}
+            logoUrl={whiteLabelConfig.certificateLogoUrl}
+            footerText={whiteLabelConfig.footerText}
+            verificationUrl={verificationUrl}
+            documentHash={securityHash}
+            versionNumber={versionNumber}
+            reissueMeta={reissueMeta}
+            orientation={orientation}
+          />
 
-            {/* Corner Decorative Ornaments */}
-            <div style={{ position: 'absolute', top: '12px', left: '12px', width: '24px', height: '24px', borderTop: '4px solid #D97706', borderLeft: '4px solid #D97706' }} />
-            <div style={{ position: 'absolute', top: '12px', right: '12px', width: '24px', height: '24px', borderTop: '4px solid #D97706', borderRight: '4px solid #D97706' }} />
-            <div style={{ position: 'absolute', bottom: '12px', left: '12px', width: '24px', height: '24px', borderBottom: '4px solid #D97706', borderLeft: '4px solid #D97706' }} />
-            <div style={{ position: 'absolute', bottom: '12px', right: '12px', width: '24px', height: '24px', borderBottom: '4px solid #D97706', borderRight: '4px solid #D97706' }} />
-
-            {/* Header Section */}
-            <div>
-              <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-                  <div style={{
-                    width: '54px',
-                    height: '54px',
-                    borderRadius: '50%',
-                    background: '#0A192F',
-                    color: '#F59E0B',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '2px solid #F59E0B'
-                  }}>
-                    <Award size={32} />
-                  </div>
-                </div>
-                <h4 style={{ fontSize: '0.82rem', fontWeight: 800, color: '#D97706', letterSpacing: '0.12em', margin: '0 0 0.25rem' }}>
-                  AKUL DRAVIN DIGITAL SERVICES PRIVATE LIMITED
-                </h4>
-                <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
-                  Incorporated under Companies Act, 2013 • Registered National Digital Service Facilitator
-                </div>
+          {reissueLedger.length > 0 && (
+            <div className="card adcs-no-print" style={{ padding: '1rem' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.84rem', color: 'var(--adcs-text)', marginBottom: '0.5rem' }}>
+                Immutable Certificate Issue & Reissue Audit Log
               </div>
-
-              {/* Certificate Title Badge */}
-              <div style={{ textAlign: 'center', margin: '1.25rem 0 1.5rem' }}>
-                <span style={{
-                  fontSize: '1.5rem',
-                  fontWeight: 900,
-                  fontFamily: 'serif',
-                  color: '#0A192F',
-                  textTransform: 'uppercase',
-                  borderBottom: '2px solid #D97706',
-                  paddingBottom: '0.25rem',
-                  letterSpacing: '0.04em'
-                }}>
-                  {certType === 'training' && 'Certificate of Training & Completion'}
-                  {certType === 'experience' && 'Certificate of Employment & Experience'}
-                  {certType === 'character' && 'Certificate of Conduct & Character'}
-                  {certType === 'salary' && 'Salary & Employment Proof Certificate'}
-                  {certType === 'membership' && 'Franchise Partner Membership Certificate'}
-                  {certType === 'internship' && 'Certificate of Internship Excellence'}
-                </span>
-              </div>
-
-              {/* Body Text */}
-              <div style={{ fontSize: '0.92rem', color: '#334155', lineHeight: 1.8, textAlign: 'center', maxWidth: '640px', margin: '0 auto 1.5rem' }}>
-                This is to officially certify that <strong style={{ color: '#0A192F', fontSize: '1.15rem', textDecoration: 'underline' }}>{recipientName}</strong>
-                {guardianName && <span>, S/o or D/o <strong>{guardianName}</strong></span>}
-                {identifierNo && <span>, bearing Registration ID <strong>{identifierNo}</strong></span>},
-                has satisfactorily completed the tenure and duties as
-                <br />
-                <span style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1D4ED8', display: 'inline-block', margin: '0.4rem 0' }}>
-                  "{roleCourse}"
-                </span>
-                <br />
-                for the period commencing from <strong>{startDate}</strong> to <strong>{endDate}</strong>.
-                During this tenure, their assessment was evaluated as <strong>{performanceGrade}</strong>.
+              <div className="adcs-table-wrap">
+                <table className="adcs-table">
+                  <thead>
+                    <tr>
+                      <th>Ver</th>
+                      <th>Serial / QR Ref</th>
+                      <th>Issuer</th>
+                      <th>Reason</th>
+                      <th>SHA-256 Digest</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reissueLedger.map((entry, idx) => (
+                      <tr key={idx}>
+                        <td><span className="badge-blue">v{entry.version}.0</span></td>
+                        <td>{entry.serialNo}</td>
+                        <td>{entry.actor}</td>
+                        <td>{entry.reason}</td>
+                        <td style={{ fontFamily: 'var(--adcs-font-mono)', fontSize: '0.72rem' }}>{entry.hash.slice(0, 18)}...</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             </div>
-
-            {/* Footer with Serial, QR Seal, and Signatures */}
-            <div style={{ borderTop: '1px dashed #CBD5E1', paddingTop: '1.25rem', marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-              {/* Left: QR Code & Serial */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                <div style={{ background: '#FFFFFF', padding: '0.3rem', border: '1px solid #CBD5E1', borderRadius: '6px' }}>
-                  <QrCode size={52} color="#0A192F" />
-                </div>
-                <div style={{ fontSize: '0.72rem', color: '#475569' }}>
-                  <div style={{ fontWeight: 800, color: '#0A192F', fontSize: '0.78rem' }}>SERIAL: {serialNo}</div>
-                  <div>Security Seal: <code>{securityHash}</code></div>
-                  <div style={{ color: '#059669', fontWeight: 700 }}>✓ Verified against National Ledger</div>
-                </div>
-              </div>
-
-              {/* Center: Issue Date & Hub */}
-              <div style={{ textAlign: 'center', fontSize: '0.72rem', color: '#64748B' }}>
-                <div>Date of Issue: <strong>{issueDate}</strong></div>
-                <div>{centerLocation}</div>
-              </div>
-
-              {/* Right: Signature */}
-              <div style={{ textAlign: 'center', width: '200px' }}>
-                <div style={{
-                  fontFamily: 'cursive',
-                  fontSize: '1.3rem',
-                  color: '#1E3A8A',
-                  fontWeight: 700,
-                  transform: 'rotate(-4deg)',
-                  marginBottom: '0.2rem'
-                }}>
-                  {signatoryName}
-                </div>
-                <div style={{ borderTop: '1.5px solid #0A192F', paddingTop: '0.3rem', fontSize: '0.75rem', fontWeight: 700, color: '#0A192F' }}>
-                  {signatoryTitle}
-                </div>
-                <div style={{ fontSize: '0.68rem', color: '#64748B' }}>Authorized Signatory</div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

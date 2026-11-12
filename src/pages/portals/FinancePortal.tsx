@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   Landmark, 
   FileText, 
@@ -127,7 +128,7 @@ export const FinancePortal: React.FC = () => {
         
         {/* Header */}
         <div style={{
-          background: 'linear-gradient(135deg, #0A192F 0%, #0F2A4A 60%, #059669 100%)',
+          background: 'linear-gradient(135deg, #061A36 0%, #0F2A4A 60%, #059669 100%)',
           borderRadius: '24px',
           padding: '2.5rem',
           color: '#FFFFFF',
@@ -193,9 +194,9 @@ export const FinancePortal: React.FC = () => {
           <div className="card" style={{ padding: '1.5rem', borderRadius: '16px', background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748B', fontSize: '0.82rem', fontWeight: 600 }}>
               <span>GATEWAY CLEARING TRANSIT</span>
-              <DollarSign size={18} color="#1D4ED8" />
+              <DollarSign size={18} color="#075ACB" />
             </div>
-            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#1D4ED8', margin: '0.4rem 0' }}>
+            <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#075ACB', margin: '0.4rem 0' }}>
               ₹4,89,200.00
             </div>
             <div style={{ fontSize: '0.78rem', color: '#059669' }}>
@@ -243,8 +244,8 @@ export const FinancePortal: React.FC = () => {
               onClick={() => setActiveTab(tab.id as any)}
               style={{
                 padding: '0.75rem 1.25rem',
-                borderBottom: activeTab === tab.id ? '3px solid #1D4ED8' : '3px solid transparent',
-                color: activeTab === tab.id ? '#1D4ED8' : '#64748B',
+                borderBottom: activeTab === tab.id ? '3px solid #075ACB' : '3px solid transparent',
+                color: activeTab === tab.id ? '#075ACB' : '#64748B',
                 fontWeight: activeTab === tab.id ? 800 : 600,
                 fontSize: '0.9rem',
                 background: 'none',
@@ -281,7 +282,7 @@ export const FinancePortal: React.FC = () => {
                   gap: '0.5rem'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span style={{ fontWeight: 800, color: '#0A192F', fontSize: '0.95rem' }}>{journal.id}</span>
+                    <span style={{ fontWeight: 800, color: '#061A36', fontSize: '0.95rem' }}>{journal.id}</span>
                     <span className="badge badge-gray">{journal.date}</span>
                     <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Ref: {journal.reference}</span>
                   </div>
@@ -308,7 +309,7 @@ export const FinancePortal: React.FC = () => {
                     <tbody>
                       {journal.lines.map((line, idx) => (
                         <tr key={idx} style={{ borderBottom: '1px solid #F8FAFC' }}>
-                          <td style={{ padding: '0.5rem 0', fontFamily: 'monospace', color: '#1D4ED8', fontWeight: 700 }}>{line.accountCode}</td>
+                          <td style={{ padding: '0.5rem 0', fontFamily: 'monospace', color: '#075ACB', fontWeight: 700 }}>{line.accountCode}</td>
                           <td style={{ padding: '0.5rem 0', color: '#0F172A' }}>{line.accountName}</td>
                           <td style={{ padding: '0.5rem 0', textAlign: 'right', fontWeight: line.debit > 0 ? 800 : 400 }}>
                             {line.debit > 0 ? `₹${line.debit.toLocaleString('en-IN')}` : '-'}
@@ -352,15 +353,15 @@ export const FinancePortal: React.FC = () => {
               <tbody>
                 {chartOfAccounts.map((acc) => (
                   <tr key={acc.code} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                    <td style={{ padding: '1rem 1.25rem', fontFamily: 'monospace', fontWeight: 800, color: '#1D4ED8' }}>{acc.code}</td>
-                    <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#0A192F' }}>{acc.name}</td>
+                    <td style={{ padding: '1rem 1.25rem', fontFamily: 'monospace', fontWeight: 800, color: '#075ACB' }}>{acc.code}</td>
+                    <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#061A36' }}>{acc.name}</td>
                     <td style={{ padding: '1rem 1.25rem' }}>
                       <span className={`badge ${acc.category === 'Assets' ? 'badge-blue' : acc.category === 'Liabilities' ? 'badge-red' : acc.category === 'Revenue' ? 'badge-green' : 'badge-gold'}`}>
                         {acc.category}
                       </span>
                     </td>
                     <td style={{ padding: '1rem 1.25rem', color: '#64748B' }}>{acc.type}</td>
-                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 800, color: '#0A192F' }}>{acc.balance}</td>
+                    <td style={{ padding: '1rem 1.25rem', textAlign: 'right', fontWeight: 800, color: '#061A36' }}>{acc.balance}</td>
                   </tr>
                 ))}
               </tbody>
@@ -378,7 +379,7 @@ export const FinancePortal: React.FC = () => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
                   Automated Bank & Payment Gateway Reconciliation Switch
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: '#64748B', margin: '4px 0 0' }}>
@@ -406,7 +407,7 @@ export const FinancePortal: React.FC = () => {
 
               <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', padding: '1.25rem', borderRadius: '12px' }}>
                 <div style={{ color: '#1E40AF', fontWeight: 700, fontSize: '0.85rem' }}>PENDING SETTLEMENT DISPATCH</div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#1D4ED8', marginTop: '0.2rem' }}>₹0.00</div>
+                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#075ACB', marginTop: '0.2rem' }}>₹0.00</div>
                 <div style={{ fontSize: '0.75rem', color: '#1E40AF' }}>All batches cleared to VLE wallets</div>
               </div>
 
@@ -424,7 +425,7 @@ export const FinancePortal: React.FC = () => {
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '2rem', border: '1px solid #E2E8F0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.35rem' }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '0.35rem' }}>
                   Statutory GSTIN Compliance Summary (07AABCA1234F1Z5)
                 </h3>
                 <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0 }}>
@@ -444,14 +445,14 @@ export const FinancePortal: React.FC = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
               <div style={{ border: '1px solid #E2E8F0', borderRadius: '14px', padding: '1.5rem' }}>
-                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0A192F' }}>GSTR-1 Monthly Return Table</div>
+                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#061A36' }}>GSTR-1 Monthly Return Table</div>
                 <div style={{ fontSize: '0.82rem', color: '#64748B', margin: '0.25rem 0 1rem' }}>Taxable citizen and business services outward supply invoices</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1D4ED8' }}>₹6,60,666.67 Taxable Value</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#075ACB' }}>₹6,60,666.67 Taxable Value</div>
                 <div style={{ fontSize: '0.85rem', color: '#059669', marginTop: '0.3rem' }}>IGST/CGST/SGST Total: ₹1,18,920.00</div>
               </div>
 
               <div style={{ border: '1px solid #E2E8F0', borderRadius: '14px', padding: '1.5rem' }}>
-                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0A192F' }}>Input Tax Credit (ITC) Summary</div>
+                <div style={{ fontWeight: 800, fontSize: '1.1rem', color: '#061A36' }}>Input Tax Credit (ITC) Summary</div>
                 <div style={{ fontSize: '0.82rem', color: '#64748B', margin: '0.25rem 0 1rem' }}>Eligible ITC on AWS Cloud, SMS Gateways and Server Hardware</div>
                 <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#059669' }}>₹32,450.00 ITC Claimable</div>
                 <div style={{ fontSize: '0.85rem', color: '#64748B', marginTop: '0.3rem' }}>Net Cash Payable in Electronic Ledger: ₹86,470.00</div>
@@ -474,7 +475,7 @@ export const FinancePortal: React.FC = () => {
             padding: '1rem'
           }}>
             <div style={{ background: '#FFFFFF', borderRadius: '20px', maxWidth: '540px', width: '100%', padding: '2rem', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0A192F', marginBottom: '0.25rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#061A36', marginBottom: '0.25rem' }}>
                 Manual Double-Entry Journal Voucher
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748B', marginBottom: '1.25rem' }}>
@@ -586,7 +587,7 @@ export const FinancePortal: React.FC = () => {
                   <span className="badge badge-green" style={{ marginBottom: '0.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}>
                     <ShieldCheck size={14} /> 100% Cleared & Cryptographically Sealed
                   </span>
-                  <h3 style={{ fontSize: '1.4rem', fontWeight: 900, margin: 0, color: '#0A192F' }}>
+                  <h3 style={{ fontSize: '1.4rem', fontWeight: 900, margin: 0, color: '#061A36' }}>
                     Bank & Gateway Reconciliation Summary
                   </h3>
                   <div style={{ fontSize: '0.85rem', color: '#64748B', marginTop: '0.2rem' }}>
@@ -609,7 +610,7 @@ export const FinancePortal: React.FC = () => {
                 </div>
                 <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
                   <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>DISCREPANCIES</div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#0A192F', marginTop: '0.2rem' }}>0.00</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#061A36', marginTop: '0.2rem' }}>0.00</div>
                   <div style={{ fontSize: '0.7rem', color: '#059669' }}>Zero Variance</div>
                 </div>
                 <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0', textAlign: 'center' }}>
@@ -641,29 +642,23 @@ export const FinancePortal: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    const content = `================================================================================
-AKUL DRAVIN DIGITAL SERVICES (ADCS) - CLEARING RECONCILIATION CERTIFICATE
-================================================================================
-Reconciliation Ref : REC-ICICI-${Date.now()}
-Bank Clearing Nodal: ICICI Bank Commercial Current Account (000405001234)
-Gateway Settlement : BBPS NPCI & Razorpay Webhook Feed
-Matched Transactions: 142 of 142 (100.00% Matched)
-Discrepant Records : 0 (INR 0.00 Variance)
-General Ledger State: Debit == Credit (Cryptographic Equilibrium Validated)
-Timestamp          : ${new Date().toISOString()}
-Compliance         : RBI Payment Aggregator / Section 134 Companies Act
-Digital Seal       : ADCS-FINANCE-CORP-SEAL-VALID
-================================================================================`;
-                    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = `ADCS_Bank_Reconciliation_${Date.now()}.txt`;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                    showToast('Certificate Saved', 'Reconciliation certificate downloaded.', 'success');
+                    const recRef = `REC-ICICI-${Date.now()}`;
+                    printBrandedADCSDocument({
+                      title: 'Clearing & Bank Nodal Settlement Reconciliation Certificate',
+                      documentType: 'CLEARING RECONCILIATION',
+                      documentNumber: recRef,
+                      issuedDate: new Date().toLocaleString('en-IN'),
+                      rows: [
+                        { label: 'Bank Clearing Nodal Account', value: 'ICICI Bank Commercial Current Account (000405001234)' },
+                        { label: 'Gateway Settlement Feed', value: 'BBPS NPCI & Razorpay Webhook Feed' },
+                        { label: 'Matched Transactions', value: '142 of 142 (100.00% Reconciled)' },
+                        { label: 'Discrepant Variance', value: '₹0.00 (Zero Variance)' },
+                        { label: 'General Ledger Equilibrium', value: 'Debit == Credit Validated' },
+                        { label: 'Statutory Governance', value: 'RBI Payment Aggregator / Sec 134 Companies Act' },
+                      ],
+                      notes: ['Digitally attested by Akul Dravin Digital Services Finance & Treasury Division.'],
+                    });
+                    showToast('Certificate Ready', 'Reconciliation certificate opened for print/PDF.', 'success');
                   }}
                   className="btn btn-primary"
                   style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 800 }}

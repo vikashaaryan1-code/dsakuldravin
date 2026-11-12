@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { ServiceCard } from '../components/cards/ServiceCard';
+import { ServiceBanners } from '../components/common/ServiceBanners';
 import { serviceCategories } from '../data/servicesData';
 import { 
   Grid, 
@@ -31,7 +32,7 @@ export const ServicesMarketplacePage: React.FC = () => {
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -63,6 +64,9 @@ export const ServicesMarketplacePage: React.FC = () => {
           <div style={{ fontSize: '0.75rem', color: '#93C5FD' }}>Active Services Live</div>
         </div>
       </div>
+
+      {/* Multi-Service Campaign Banners */}
+      <ServiceBanners mode="strip" />
 
       {/* Filter and Search Bar */}
       <div style={{

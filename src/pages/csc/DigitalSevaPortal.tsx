@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   Building2, 
   Wallet, 
@@ -58,6 +59,10 @@ export const DigitalSevaPortal: React.FC = () => {
     submitApplication, 
     walletBalance, 
     setWalletBalance, 
+    currentRole,
+    activeDigitalSevaTier,
+    authenticatedUser,
+    commissionRules,
     showToast, 
     logAudit,
     language 
@@ -294,6 +299,7 @@ export const DigitalSevaPortal: React.FC = () => {
   const [applicantAadhaar, setApplicantAadhaar] = useState('');
   const [servicePaymentMethod, setServicePaymentMethod] = useState<'WALLET' | 'UPI_QR'>('WALLET');
   const [serviceUtr, setServiceUtr] = useState('');
+  const [serviceTxnId, setServiceTxnId] = useState('');
   const [isApplying, setIsApplying] = useState(false);
   const [generatedReceipt, setGeneratedReceipt] = useState<any | null>(null);
 
@@ -363,16 +369,46 @@ export const DigitalSevaPortal: React.FC = () => {
     toastMessage: string,
     mimeType = 'text/plain;charset=utf-8'
   ) => {
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast(toastTitle, toastMessage, 'success');
+    if (filename.toLowerCase().endsWith('.csv') || mimeType.includes('csv')) {
+      const blob = new Blob([content], { type: mimeType });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(toastTitle, toastMessage, 'success');
+      return;
+    }
+
+    const parsedRows = content
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line && !/^[=\-_]+$/.test(line) && line.includes(':'))
+      .map((line) => {
+        const idx = line.indexOf(':');
+        return {
+          label: line.slice(0, idx).trim(),
+          value: line.slice(idx + 1).trim() || 'Recorded',
+        };
+      });
+    const docNum = parsedRows.find((r) => /ref|rrn|id|token|app|order|pan|bill|awb/i.test(r.label))?.value
+      || filename.replace(/\.[^/.]+$/, '');
+
+    printBrandedADCSDocument({
+      title: toastTitle || 'ADCS Kendra Counter Facilitation Slip',
+      documentType: 'KENDRA COUNTER SLIP',
+      documentNumber: docNum,
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: parsedRows.length > 0 ? parsedRows : [{ label: 'Summary', value: content.slice(0, 300) }],
+      notes: [
+        'Facilitated through ADCS Kendra / VLE Counter Operator Workspace.',
+        'Statutory government certificates remain authentic issuer records without third-party alterations.',
+      ],
+    });
+    showToast(toastTitle, `${toastMessage} Opened in branded ADCS Print/PDF format.`, 'success');
   };
 
   // Save Connector Configuration
@@ -513,11 +549,16 @@ export const DigitalSevaPortal: React.FC = () => {
     const govtFee = selectedService.govtFee ?? 107;
     const vleCommission = 50;
 
-    // Strict UTR Verification Gate if paying via UPI QR
+    // Strict UTR Number + Transaction ID Verification Gate before processing
     if (servicePaymentMethod === 'UPI_QR') {
       const cleanUtr = serviceUtr.trim();
+      const cleanTxn = serviceTxnId.trim();
       if (!cleanUtr || cleanUtr.length < 8) {
-        showToast('UTR Verification Required', 'Please pay the fee by scanning the QR code and enter the 12-digit Banking UTR / Transaction ID to proceed.', 'error');
+        showToast('UTR Verification Required', 'Please pay the fee by scanning the QR code and enter a valid 8+ digit Banking UTR Number.', 'error');
+        return;
+      }
+      if (!cleanTxn || cleanTxn.length < 6) {
+        showToast('Transaction ID Required', 'Enter your Payment App Transaction ID (minimum 6 characters) before submitting.', 'error');
         return;
       }
     } else {
@@ -538,9 +579,12 @@ export const DigitalSevaPortal: React.FC = () => {
         applicantName,
         applicantPhone,
         feePaid: govtFee + vleCommission,
+        utrNumber: servicePaymentMethod === 'UPI_QR' ? serviceUtr.trim().toUpperCase() : `WLT-${Date.now().toString().slice(-8)}`,
+        transactionId: servicePaymentMethod === 'UPI_QR' ? serviceTxnId.trim().toUpperCase() : `TXN-WLT-${Date.now().toString().slice(-6)}`,
+        paymentMode: servicePaymentMethod === 'UPI_QR' ? 'upi' : 'wallet',
         city: 'Patna Center #104',
         state: 'Bihar',
-        notes: `Filing through Akul Dravin Digital Services (ADCS) Sovereign Portal. Payment: ${servicePaymentMethod === 'UPI_QR' ? `UPI QR (UTR: ${serviceUtr.trim()})` : 'VLE Wallet Debit'}. Applicant Aadhaar: ${applicantAadhaar || 'Verified'}`
+        notes: `Filing through Akul Dravin Digital Services (ADCS) Sovereign Portal. Payment: ${servicePaymentMethod === 'UPI_QR' ? `UPI QR (UTR: ${serviceUtr.trim()}, TXN: ${serviceTxnId.trim()})` : 'VLE Wallet Debit'}. Applicant Aadhaar: ${applicantAadhaar || 'Verified'}`
       });
 
       let newBal = walletBalance;
@@ -639,9 +683,13 @@ export const DigitalSevaPortal: React.FC = () => {
     }, 700);
   };
 
-  // Handle Dynamic Price & Commission Update
+  // Handle Dynamic Price & Commission Update (Strictly Super Admin Exclusive)
   const handleSaveRates = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (currentRole !== 'admin') {
+      showToast('Admin Only Control', 'Only Super Admin has authority to modify service rates and commission slabs.', 'error');
+      return;
+    }
     if (!selectedServiceToEdit) return;
     setIsUpdatingRates(true);
 
@@ -2206,7 +2254,7 @@ export const DigitalSevaPortal: React.FC = () => {
             <div style={{ background: '#FFFFFF', padding: '1.75rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', borderBottom: '1px solid #F1F5F9', paddingBottom: '0.85rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <div style={{ background: '#1E3A8A', color: '#93C5FD', padding: '0.5rem', borderRadius: '8px' }}>
+                  <div style={{ background: '#061A36', color: '#93C5FD', padding: '0.5rem', borderRadius: '8px' }}>
                     <Scale size={24} />
                   </div>
                   <div>
@@ -2224,7 +2272,7 @@ export const DigitalSevaPortal: React.FC = () => {
                   onClick={() => navigate('/portal/advocate')}
                   style={{
                     background: '#EFF6FF',
-                    color: '#1D4ED8',
+                    color: '#075ACB',
                     border: '1px solid #BFDBFE',
                     padding: '0.3rem 0.6rem',
                     borderRadius: '6px',
@@ -2291,7 +2339,7 @@ export const DigitalSevaPortal: React.FC = () => {
                   disabled={telelawBooking}
                   style={{
                     width: '100%',
-                    background: '#1E3A8A',
+                    background: '#061A36',
                     color: '#FFFFFF',
                     border: 'none',
                     padding: '0.75rem',
@@ -2806,7 +2854,7 @@ export const DigitalSevaPortal: React.FC = () => {
                       cursor: 'pointer'
                     }}
                   >
-                    Download Record (.txt)
+                    Print / Save Record (PDF)
                   </button>
                 </div>
               )}
@@ -3080,7 +3128,7 @@ export const DigitalSevaPortal: React.FC = () => {
                       cursor: 'pointer'
                     }}
                   >
-                    Download Slip (.txt)
+                    Print / Save Slip (PDF)
                   </button>
                 </div>
               )}
@@ -4403,7 +4451,7 @@ export const DigitalSevaPortal: React.FC = () => {
                     <div style={{ height: '6px', background: 'linear-gradient(to right, #FF9933 33.3%, #FFFFFF 33.3%, #FFFFFF 66.6%, #138808 66.6%)' }} />
 
                     {/* Card Header */}
-                    <div style={{ background: '#1E3A8A', color: '#FFFFFF', padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ background: '#061A36', color: '#FFFFFF', padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <div style={{ fontSize: '0.78rem', fontWeight: 900, letterSpacing: '0.04em' }}>
                           MINISTRY OF LABOUR & EMPLOYMENT
@@ -4412,7 +4460,7 @@ export const DigitalSevaPortal: React.FC = () => {
                           National Database of Unorganized Workers (e-Shram)
                         </div>
                       </div>
-                      <div style={{ background: '#FACC15', color: '#1E3A8A', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 900 }}>
+                      <div style={{ background: '#FACC15', color: '#061A36', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 900 }}>
                         e-SHRAM CARD
                       </div>
                     </div>
@@ -4436,7 +4484,7 @@ export const DigitalSevaPortal: React.FC = () => {
                       </div>
 
                       <div style={{ fontSize: '0.82rem', lineHeight: 1.5 }}>
-                        <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#1E3A8A' }}>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#061A36' }}>
                           {esReceipt.workerName}
                         </div>
                         <div style={{ color: '#475569', fontSize: '0.75rem' }}>
@@ -4444,7 +4492,7 @@ export const DigitalSevaPortal: React.FC = () => {
                         </div>
                         <div style={{ marginTop: '0.35rem' }}>
                           <span style={{ fontSize: '0.65rem', color: '#854D0E', display: 'block', fontWeight: 800 }}>UNIVERSAL ACCOUNT NUMBER (UAN):</span>
-                          <strong style={{ fontSize: '1.15rem', color: '#1E3A8A', letterSpacing: '0.08em', fontFamily: 'monospace' }}>
+                          <strong style={{ fontSize: '1.15rem', color: '#061A36', letterSpacing: '0.08em', fontFamily: 'monospace' }}>
                             {esReceipt.uanNumber}
                           </strong>
                         </div>
@@ -4484,7 +4532,7 @@ export const DigitalSevaPortal: React.FC = () => {
                     onClick={() => window.print()}
                     style={{
                       flex: 1,
-                      background: '#1E3A8A',
+                      background: '#061A36',
                       color: '#FFFFFF',
                       border: 'none',
                       padding: '0.65rem',
@@ -4705,7 +4753,7 @@ export const DigitalSevaPortal: React.FC = () => {
                     <div style={{ borderBottom: '1.5px dashed #93C5FD', paddingBottom: '0.75rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
                         <div style={{ fontSize: '0.7rem', color: '#1E40AF', fontWeight: 700, textTransform: 'uppercase' }}>APPLICATION NUMBER</div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#1E3A8A', fontFamily: 'monospace' }}>{dlReceipt.appNo}</div>
+                        <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#061A36', fontFamily: 'monospace' }}>{dlReceipt.appNo}</div>
                       </div>
                       <span style={{ background: '#DCFCE7', color: '#166534', padding: '0.2rem 0.6rem', borderRadius: '12px', fontSize: '0.72rem', fontWeight: 800 }}>
                         ✓ {dlReceipt.status}
@@ -5291,7 +5339,7 @@ export const DigitalSevaPortal: React.FC = () => {
                           borderRadius: '8px',
                           border: bbpsCategory === cat ? '2px solid #2563EB' : '1px solid #CBD5E1',
                           background: bbpsCategory === cat ? '#EFF6FF' : '#FFFFFF',
-                          color: bbpsCategory === cat ? '#1D4ED8' : '#475569',
+                          color: bbpsCategory === cat ? '#075ACB' : '#475569',
                           fontWeight: bbpsCategory === cat ? 800 : 600,
                           fontSize: '0.78rem',
                           cursor: 'pointer'
@@ -5438,7 +5486,7 @@ export const DigitalSevaPortal: React.FC = () => {
                   <div style={{ background: '#EFF6FF', border: '1px solid #93C5FD', borderRadius: '8px', padding: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                     <div>
                       <div style={{ fontSize: '0.75rem', color: '#1E40AF' }}>Total Payable Amount:</div>
-                      <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#1E3A8A' }}>
+                      <div style={{ fontSize: '1.35rem', fontWeight: 900, color: '#061A36' }}>
                         ₹{bbpsBillDetails.billAmount.toLocaleString('en-IN')}.00
                       </div>
                     </div>
@@ -5552,7 +5600,7 @@ export const DigitalSevaPortal: React.FC = () => {
                       </div>
                       <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '0.35rem', display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: 800, color: '#0F172A' }}>Total Amount Deducted:</span>
-                        <strong style={{ color: '#1E3A8A', fontSize: '1rem' }}>₹{bbpsReceipt.totalPaid?.toLocaleString('en-IN')}.00</strong>
+                        <strong style={{ color: '#061A36', fontSize: '1rem' }}>₹{bbpsReceipt.totalPaid?.toLocaleString('en-IN')}.00</strong>
                       </div>
                     </div>
 
@@ -6765,7 +6813,7 @@ export const DigitalSevaPortal: React.FC = () => {
                           <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>{s.id}</div>
                         </td>
                         <td style={{ padding: '0.65rem 0.8rem' }}>
-                          <span style={{ background: '#EFF6FF', color: '#1D4ED8', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', textTransform: 'capitalize' }}>
+                          <span style={{ background: '#EFF6FF', color: '#075ACB', padding: '0.15rem 0.5rem', borderRadius: '4px', fontSize: '0.72rem', textTransform: 'capitalize' }}>
                             {s.category || 'General'}
                           </span>
                         </td>
@@ -6779,32 +6827,76 @@ export const DigitalSevaPortal: React.FC = () => {
                           ₹{currentGovtFee}
                         </td>
                         <td style={{ padding: '0.65rem 0.8rem', textAlign: 'right' }}>
-                          <button
-                            onClick={() => {
-                              setSelectedServiceToEdit(s);
-                              setEditPrice(currentPrice);
-                              setEditComm(currentComm);
-                              setEditGovtFee(currentGovtFee);
-                            }}
-                            style={{
-                              background: '#F1F5F9',
-                              border: '1px solid #CBD5E1',
-                              padding: '0.35rem 0.75rem',
-                              borderRadius: '6px',
-                              fontWeight: 700,
-                              fontSize: '0.75rem',
-                              cursor: 'pointer',
-                              color: '#0F172A'
-                            }}
-                          >
-                            ⚙️ Adjust Slabs
-                          </button>
+                          {currentRole === 'admin' ? (
+                            <button
+                              onClick={() => {
+                                setSelectedServiceToEdit(s);
+                                setEditPrice(currentPrice);
+                                setEditComm(currentComm);
+                                setEditGovtFee(currentGovtFee);
+                              }}
+                              style={{
+                                background: '#F1F5F9',
+                                border: '1px solid #CBD5E1',
+                                padding: '0.35rem 0.75rem',
+                                borderRadius: '6px',
+                                fontWeight: 700,
+                                fontSize: '0.75rem',
+                                cursor: 'pointer',
+                                color: '#0F172A'
+                              }}
+                            >
+                              ⚙️ Adjust Slabs (Admin)
+                            </button>
+                          ) : (
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#64748B', background: '#F8FAFC', border: '1px solid #E2E8F0', padding: '0.25rem 0.55rem', borderRadius: '6px' }}>
+                              🔒 Read-Only (Admin Controlled)
+                            </span>
+                          )}
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+            </div>
+
+            {/* Admin-Controlled Digital Seva 5-Tier & Channel Commission Matrix (Read-Only View for Operators) */}
+            <div style={{ marginTop: '1.25rem', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #CBD5E1', padding: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#061A36' }}>
+                  Hierarchy Commission Payout Matrix (Configured Exclusively by Super Admin)
+                </div>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#075ACB', background: '#EFF6FF', padding: '0.2rem 0.55rem', borderRadius: '999px' }}>
+                  Active Tier: {authenticatedUser?.designation || activeDigitalSevaTier.toUpperCase()}
+                </span>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.76rem' }}>
+                  <thead>
+                    <tr style={{ background: '#EFF6FF', color: '#061A36', textAlign: 'left' }}>
+                      <th style={{ padding: '0.45rem 0.6rem' }}>Vertical</th>
+                      <th style={{ padding: '0.45rem 0.6rem' }}>Rural VLE</th>
+                      <th style={{ padding: '0.45rem 0.6rem' }}>District Mgr</th>
+                      <th style={{ padding: '0.45rem 0.6rem' }}>State Head</th>
+                      <th style={{ padding: '0.45rem 0.6rem' }}>Main Head</th>
+                      <th style={{ padding: '0.45rem 0.6rem' }}>Flat Bonus</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {commissionRules.map((rule) => (
+                      <tr key={rule.id} style={{ borderBottom: '1px solid #E2E8F0' }}>
+                        <td style={{ padding: '0.45rem 0.6rem', fontWeight: 700 }}>{rule.serviceTitle}</td>
+                        <td style={{ padding: '0.45rem 0.6rem', color: '#047857', fontWeight: 700 }}>{rule.ruralVlePct}%</td>
+                        <td style={{ padding: '0.45rem 0.6rem' }}>{rule.districtMgrPct}%</td>
+                        <td style={{ padding: '0.45rem 0.6rem' }}>{rule.stateHeadPct}%</td>
+                        <td style={{ padding: '0.45rem 0.6rem' }}>{rule.mainHeadPct}%</td>
+                        <td style={{ padding: '0.45rem 0.6rem', fontWeight: 700 }}>₹{rule.flatBonusInr}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -6979,7 +7071,7 @@ export const DigitalSevaPortal: React.FC = () => {
                 <tbody>
                   {applications.slice(0, 8).map(app => (
                     <tr key={app.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                      <td style={{ padding: '0.65rem 0.8rem', fontFamily: 'monospace', fontWeight: 600, color: '#1D4ED8' }}>
+                      <td style={{ padding: '0.65rem 0.8rem', fontFamily: 'monospace', fontWeight: 600, color: '#075ACB' }}>
                         {app.id}
                       </td>
                       <td style={{ padding: '0.65rem 0.8rem', fontWeight: 600, color: '#0F172A' }}>
@@ -7672,19 +7764,35 @@ export const DigitalSevaPortal: React.FC = () => {
                       UPI: <strong>adcs.pay@icici</strong> • Total: <strong>₹{(selectedService.govtFee ?? 107) + 50}</strong>
                     </div>
 
-                    <div style={{ textAlign: 'left' }}>
-                      <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#DC2626', marginBottom: '0.25rem' }}>
-                        Enter 12-digit Banking UTR / Transaction ID * (Mandatory)
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        value={serviceUtr}
-                        onChange={(e) => setServiceUtr(e.target.value)}
-                        placeholder="e.g. 431902847291"
-                        maxLength={16}
-                        style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '0.88rem', fontWeight: 700, fontFamily: 'monospace' }}
-                      />
+                    <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#DC2626', marginBottom: '0.25rem' }}>
+                          Enter Banking UTR / RRN Number * (Mandatory)
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={serviceUtr}
+                          onChange={(e) => setServiceUtr(e.target.value)}
+                          placeholder="e.g. 431902847291"
+                          maxLength={22}
+                          style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '0.88rem', fontWeight: 700, fontFamily: 'monospace' }}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
+                          Enter Payment Transaction ID * (Mandatory)
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          value={serviceTxnId}
+                          onChange={(e) => setServiceTxnId(e.target.value)}
+                          placeholder="e.g. TXN-ADCS-90812"
+                          maxLength={24}
+                          style={{ width: '100%', padding: '0.55rem 0.75rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '0.88rem', fontWeight: 700, fontFamily: 'monospace' }}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
@@ -7793,7 +7901,7 @@ export const DigitalSevaPortal: React.FC = () => {
                 </div>
                 <div style={{ gridColumn: 'span 2' }}>
                   <div style={{ color: '#64748B' }}>Banking UTR / Reference:</div>
-                  <div style={{ fontWeight: 800, color: '#1D4ED8', fontFamily: 'monospace' }}>{generatedReceipt.utr}</div>
+                  <div style={{ fontWeight: 800, color: '#075ACB', fontFamily: 'monospace' }}>{generatedReceipt.utr}</div>
                 </div>
               </div>
 
@@ -7918,7 +8026,7 @@ export const DigitalSevaPortal: React.FC = () => {
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.82rem', fontWeight: isSelected ? 800 : 600, color: isSelected ? '#1D4ED8' : '#0F172A' }}>
+                        <span style={{ fontSize: '0.82rem', fontWeight: isSelected ? 800 : 600, color: isSelected ? '#075ACB' : '#0F172A' }}>
                           {s.name}
                         </span>
                         <span style={{

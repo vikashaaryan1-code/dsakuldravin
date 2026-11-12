@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   PlusCircle, 
   Building2, 
@@ -75,28 +76,25 @@ export const CRMPage: React.FC = () => {
     const discounted = (lead.estimatedValue * (100 - safeDisc)) / 100;
     const gst = Math.round(discounted * 0.18);
     const finalPayable = Math.round(discounted + gst);
-    const quoteText = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — COMMERCIAL QUOTATION',
-      '===========================================================',
-      `Lead ID       : ${lead.id}`,
-      `Client        : ${lead.name} (${lead.company})`,
-      `Contact       : ${lead.phone} | ${lead.email}`,
-      `Package       : ${lead.serviceInterested}`,
-      `Base Price    : INR ${lead.estimatedValue.toLocaleString('en-IN')}`,
-      `Discount (${safeDisc}%) : -INR ${Math.round(lead.estimatedValue - discounted).toLocaleString('en-IN')}`,
-      `GST (18%)     : INR ${gst.toLocaleString('en-IN')}`,
-      `TOTAL PAYABLE : INR ${finalPayable.toLocaleString('en-IN')}`,
-      '===========================================================',
-    ].join('\n');
-    const blob = new Blob([quoteText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Quote_${lead.id}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'Enterprise B2B / B2C Commercial Quotation',
+      documentType: 'COMMERCIAL QUOTATION',
+      documentNumber: lead.id,
+      issuedDate: new Date().toLocaleDateString('en-IN'),
+      rows: [
+        { label: 'Client / Organization', value: `${lead.name} (${lead.company})` },
+        { label: 'Client Contact', value: `${lead.phone} | ${lead.email}` },
+        { label: 'Quoted Solution / Package', value: lead.serviceInterested },
+        { label: `Commercial Discount (${safeDisc}%)`, value: `-₹${Math.round(lead.estimatedValue - discounted).toLocaleString('en-IN')}` },
+      ],
+      amountSummary: {
+        subtotal: Math.round(discounted),
+        tax: gst,
+        total: finalPayable,
+        currency: '₹',
+        paymentStatus: 'COMMERCIAL PROPOSAL',
+      },
+    });
   };
 
   const handleSendQuote = (lead: CRMLead) => {

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Building, 
   Award, 
@@ -106,34 +107,31 @@ export const FranchisePage: React.FC = () => {
 
   const handleDownloadProposal = () => {
     if (!submittedRef) return;
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — FRANCHISE TERRITORY APPLICATION SLIP',
-      '========================================================================',
-      `Tracking Reference : ${submittedRef}`,
-      `Date & Time        : ${new Date().toLocaleString('en-IN')}`,
-      `Applicant Name     : ${applicantName}`,
-      `Mobile (WhatsApp)  : ${phone}`,
-      `Selected Package   : ${selectedTier}`,
-      `Proposed Territory : ${city}, ${state} — PIN ${pincode}`,
-      `Carpet Area        : ${shopArea}`,
-      `Est. Net Profit    : ₹${estimatedNetProfit.toLocaleString('en-IN')}/month (${dailyFootfall} walk-ins/day)`,
-      `Track Approval     : https://akuldravindigital.com/track?id=${encodeURIComponent(submittedRef)}`,
-      '========================================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Franchise_${submittedRef}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'ADCS Authorized Franchise Territory Application Slip',
+      documentType: 'FRANCHISE APPLICATION',
+      documentNumber: submittedRef,
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: [
+        { label: 'Applicant Name', value: applicantName },
+        { label: 'Registered Mobile (WhatsApp)', value: phone },
+        { label: 'Selected Franchise Model', value: selectedTier },
+        { label: 'Proposed Territory', value: `${city}, ${state} — PIN ${pincode}` },
+        { label: 'Center Carpet Area', value: shopArea },
+        { label: 'Scenario Projection Note', value: `Illustrative Scenario: ₹${estimatedNetProfit.toLocaleString('en-IN')}/mo (${dailyFootfall} walk-ins/day)` },
+      ],
+      notes: [
+        'Territorial allotment is subject to formal premise inspection and KYC clearance by Akul Dravin Digital Services.',
+      ],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?id=${encodeURIComponent(submittedRef)}`,
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -175,7 +173,7 @@ export const FranchisePage: React.FC = () => {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <span className="badge badge-gold">PROFIT ESTIMATOR</span>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0A192F', marginTop: '0.4rem' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#061A36', marginTop: '0.4rem' }}>
             Calculate Your Branch Monthly Earnings
           </h2>
           <p style={{ fontSize: '0.88rem', color: '#64748B' }}>
@@ -193,7 +191,7 @@ export const FranchisePage: React.FC = () => {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span className="form-label">Estimated Daily Center Walk-ins:</span>
-                <span style={{ fontWeight: 800, color: '#1D4ED8', fontSize: '1.1rem' }}>
+                <span style={{ fontWeight: 800, color: '#075ACB', fontSize: '1.1rem' }}>
                   {dailyFootfall} Customers / Day
                 </span>
               </div>
@@ -204,7 +202,7 @@ export const FranchisePage: React.FC = () => {
                 step="5"
                 value={dailyFootfall}
                 onChange={(e) => setDailyFootfall(Number(e.target.value))}
-                style={{ width: '100%', accentColor: '#1D4ED8' }}
+                style={{ width: '100%', accentColor: '#075ACB' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#64748B' }}>
                 <span>10 (Village/Town)</span>
@@ -233,7 +231,7 @@ export const FranchisePage: React.FC = () => {
           </div>
 
           <div style={{
-            background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 100%)',
+            background: 'linear-gradient(135deg, #061A36 0%, #031126 100%)',
             borderRadius: '20px',
             padding: '2rem',
             color: '#FFFFFF',
@@ -279,7 +277,7 @@ export const FranchisePage: React.FC = () => {
 
       {/* FRANCHISE TIERS */}
       <div style={{ marginBottom: '4rem' }}>
-        <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.5rem', textAlign: 'center' }}>
+        <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36', marginBottom: '1.5rem', textAlign: 'center' }}>
           Franchise Investment Packages
         </h3>
 
@@ -291,7 +289,7 @@ export const FranchisePage: React.FC = () => {
                 background: '#FFFFFF',
                 borderRadius: '20px',
                 padding: '2rem',
-                border: t.isPopular ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                border: t.isPopular ? '2px solid #075ACB' : '1px solid #E2E8F0',
                 boxShadow: t.isPopular ? '0 12px 30px rgba(29, 78, 216, 0.12)' : '0 4px 16px rgba(0,0,0,0.04)',
                 display: 'flex',
                 flexDirection: 'column',
@@ -306,11 +304,11 @@ export const FranchisePage: React.FC = () => {
               )}
 
               <div>
-                <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>{t.tier}</h4>
+                <h4 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>{t.tier}</h4>
                 <div style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '1.25rem' }}>{t.bestFor}</div>
 
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <span style={{ fontSize: '2rem', fontWeight: 900, color: '#0A192F' }}>{t.investment}</span>
+                  <span style={{ fontSize: '2rem', fontWeight: 900, color: '#061A36' }}>{t.investment}</span>
                   <span style={{ fontSize: '0.75rem', color: '#64748B', display: 'block' }}>One-time setup fee + GST</span>
                 </div>
 
@@ -347,7 +345,7 @@ export const FranchisePage: React.FC = () => {
         margin: '0 auto',
         boxShadow: '0 8px 30px rgba(0,0,0,0.05)',
       }}>
-        <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.5rem', textAlign: 'center' }}>
+        <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36', marginBottom: '0.5rem', textAlign: 'center' }}>
           Apply for Akul Dravin Digital Branch
         </h3>
         <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.75rem', textAlign: 'center' }}>
@@ -369,11 +367,11 @@ export const FranchisePage: React.FC = () => {
             }}>
               <CheckCircle2 size={36} />
             </div>
-            <h4 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0A192F' }}>
+            <h4 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#061A36' }}>
               Application Successfully Submitted!
             </h4>
             <p style={{ fontSize: '0.88rem', color: '#475569', marginTop: '0.4rem', marginBottom: '1.25rem' }}>
-              Tracking Reference: <strong style={{ color: '#1D4ED8' }}>{submittedRef}</strong> ({selectedTier} • PIN {pincode}).
+              Tracking Reference: <strong style={{ color: '#075ACB' }}>{submittedRef}</strong> ({selectedTier} • PIN {pincode}).
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
               <button onClick={handleDownloadProposal} className="btn-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', fontWeight: 800 }}>
@@ -491,7 +489,7 @@ export const FranchisePage: React.FC = () => {
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             AUTHORIZED DIGITAL KENDRA, MSME & STARTUP ECOSYSTEM PORTALS
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>

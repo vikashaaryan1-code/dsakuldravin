@@ -1,0 +1,56 @@
+/* =========================================================================
+ * ADCS THEME SYSTEM — LIGHT (DEFAULT) & ENTERPRISE DARK MODE
+ * ========================================================================= */
+
+[data-theme='dark'],
+.adcs-theme-dark {
+  --adcs-background: #031126;
+  --adcs-surface: #061A36;
+  --adcs-surface-subtle: #0B2447;
+  --adcs-text: #F5F8FC;
+  --adcs-text-secondary: #D4E0EE;
+  --adcs-muted: #A9BDD6;
+  --adcs-border: #1A365D;
+  --adcs-border-strong: #274A7A;
+  --adcs-primary-soft: rgba(8, 120, 249, 0.18);
+  --adcs-gold-soft: rgba(243, 212, 119, 0.16);
+  --adcs-success: #34D399;
+  --adcs-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --adcs-shadow-md: 0 8px 22px rgba(0, 0, 0, 0.45);
+  --adcs-shadow-lg: 0 14px 34px rgba(0, 0, 0, 0.55);
+
+  --bg-light: var(--adcs-background);
+  --bg-surface: var(--adcs-background);
+  --bg-card: var(--adcs-surface);
+  --bg-slate: var(--adcs-surface-subtle);
+  --text-main: var(--adcs-text);
+  --text-muted: var(--adcs-muted);
+  --border-color: var(--adcs-border);
+  --border-subtle: var(--adcs-border);
+}
+
+/* Executive Dark Hero & Sidebar Surfaces */
+.adcs-surface-navy {
+  background: linear-gradient(135deg, var(--adcs-navy-deep) 0%, var(--adcs-navy) 62%, #0B2A57 100%);
+  color: #FFFFFF;
+}
+
+.adcs-surface-light {
+  background: var(--adcs-surface);
+  color: var(--adcs-text);
+}
+
+.adcs-surface-soft {
+  background: var(--adcs-background);
+  color: var(--adcs-text);
+}
+
+/* High-contrast accessible badge on light vs dark surfaces */
+.adcs-gold-accent-text {
+  color: var(--adcs-gold-dark);
+}
+
+[data-theme='dark'] .adcs-gold-accent-text,
+.adcs-surface-navy .adcs-gold-accent-text {
+  color: var(--adcs-gold-light);
+}

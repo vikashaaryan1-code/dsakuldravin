@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { apiClient } from '../services/apiClient';
 import { initialRentalAgreements } from '../data/initialState';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Key, 
   FileText, 
@@ -76,29 +77,25 @@ export const RentalManagementPage: React.FC = () => {
   };
 
   const handleDownloadRentReceipt = (agr: any, rec: { receiptNo: string; paidDate: string; amount: number }) => {
-    const content = [
-      '================================================================================',
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — HRA TAX COMPLIANT RENT RECEIPT',
-      '================================================================================',
-      `Receipt Number   : ${rec.receiptNo}`,
-      `Agreement ID     : ${agr.id}`,
-      `Payment Date     : ${rec.paidDate}`,
-      `Tenant Name      : ${agr.tenantName}`,
-      `Landlord Name    : ${agr.ownerName}`,
-      `Property Address : ${agr.propertyTitle}`,
-      `Amount Paid      : ₹${rec.amount.toLocaleString('en-IN')}/- (Digital Escrow Settled)`,
-      `Notice           : Valid for Section 10(13A) HRA Income Tax exemption claims.`,
-      '================================================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ADCS_Rent_Receipt_${rec.receiptNo}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'HRA Tax-Compliant Rent Payment Receipt (Sec 10(13A))',
+      documentType: 'RENT RECEIPT',
+      documentNumber: rec.receiptNo,
+      issuedDate: rec.paidDate,
+      rows: [
+        { label: 'Lease Agreement ID', value: String(agr.id) },
+        { label: 'Tenant Name', value: String(agr.tenantName) },
+        { label: 'Landlord / Lessor Name', value: String(agr.ownerName) },
+        { label: 'Rented Property Address', value: String(agr.propertyTitle) },
+        { label: 'Settlement Mode', value: 'ADCS Digital Rent Escrow Settled' },
+      ],
+      amountSummary: {
+        total: Number(rec.amount),
+        currency: '₹',
+        paymentStatus: 'SETTLED & HRA COMPLIANT',
+      },
+      notes: ['Valid supporting receipt for Section 10(13A) HRA Income Tax exemption claims where statutory PAN/landlord rules are satisfied.'],
+    });
   };
 
   const handleCreateAgreement = () => {
@@ -162,51 +159,42 @@ export const RentalManagementPage: React.FC = () => {
   };
 
   const handleDownloadAgreement = (agr: any) => {
-    const content = `================================================================================
-AKUL DRAVIN DIGITAL SERVICES (ADCS) - E-STAMPED RENTAL LEASE AGREEMENT
-================================================================================
-Agreement ID       : ${agr.id}
-Registration State : Valid Legal Lease under Transfer of Property Act, 1882
-Stamp Certificate  : IN-DL${String(agr.id || '88102').replace(/[^A-Z0-9]/gi, '').toUpperCase()}88102
-Property Details   : ${agr.propertyTitle}
-Monthly Rent       : ₹${agr.monthlyRent.toLocaleString('en-IN')}/- (Payable by 5th of each month)
-Tenancy Period     : ${agr.startDate} to ${agr.endDate}
---------------------------------------------------------------------------------
-PARTIES TO THE AGREEMENT:
-FIRST PARTY (LESSOR / LANDLORD):
-  Name             : ${agr.ownerName}
-  Verification     : UIDAI Aadhaar e-KYC Verified
-SECOND PARTY (LESSEE / TENANT):
-  Name             : ${agr.tenantName}
-  Contact Mobile   : ${agr.tenantPhone}
-  Verification     : CCTNS Police Background Verification Clear
---------------------------------------------------------------------------------
-STANDARD COVENANTS:
-1. The Tenant agrees to pay the stipulated rent of ₹${agr.monthlyRent.toLocaleString('en-IN')} on or before the due date.
-2. The premises shall be used exclusively for lawful residential / authorized purpose.
-3. ADCS Digital Escrow & BBPS provides verified automated rent receipt generation.
-4. Either party may terminate this agreement with 30 days prior written notice.
-================================================================================
-Digital e-Sign Hash: SHA256-${String(agr.id || 'LEASE').replace(/[^A-Z0-9]/gi, '').toUpperCase()}-${agr.monthlyRent}-LEGAL-VALID
-ADCS Legal Tech Division • BCI Compliant Automated Document Automation
-================================================================================`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ADCS_Lease_Agreement_${agr.id}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Agreement Downloaded', `PDF/Text for ${agr.id} downloaded with digital seal.`, 'success');
+    const eSignHash = `SHA256-${String(agr.id || 'LEASE').replace(/[^A-Z0-9]/gi, '').toUpperCase()}-${agr.monthlyRent}-LEGAL-VALID`;
+    const stampNo = `IN-DL${String(agr.id || '88102').replace(/[^A-Z0-9]/gi, '').toUpperCase()}88102`;
+    printBrandedADCSDocument({
+      title: 'e-Stamped Residential / Commercial Rental Lease Agreement Summary',
+      documentType: 'LEASE AGREEMENT RECORD',
+      documentNumber: String(agr.id),
+      issuedDate: `${agr.startDate} to ${agr.endDate}`,
+      rows: [
+        { label: 'Governing Statute', value: 'Transfer of Property Act, 1882' },
+        { label: 'e-Stamp Certificate Ref', value: stampNo },
+        { label: 'Demised Property Address', value: String(agr.propertyTitle) },
+        { label: 'First Party (Lessor / Landlord)', value: `${agr.ownerName} (e-KYC Verified)` },
+        { label: 'Second Party (Lessee / Tenant)', value: `${agr.tenantName} (${agr.tenantPhone})` },
+        { label: 'Monthly Rent Stipulated', value: `₹${Number(agr.monthlyRent).toLocaleString('en-IN')} (Due by 5th Monthly)` },
+        { label: 'Verification & Escrow Note', value: 'ADCS Digital Escrow & CCTNS Background Verification Logged' },
+        { label: 'Digital e-Sign Digest', value: eSignHash },
+      ],
+      amountSummary: {
+        total: Number(agr.monthlyRent),
+        currency: '₹',
+        paymentStatus: 'ACTIVE LEASE COVENANT',
+      },
+      notes: [
+        '1. Lessee agrees to remit stipulated rent on or before due date.',
+        '2. Premises to be occupied strictly for lawful residential/authorized purposes.',
+        '3. Termination subject to 30 days prior written notice by either party.',
+      ],
+    });
+    showToast('Agreement Ready', `Lease document ${agr.id} opened as printable ADCS PDF record.`, 'success');
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -255,10 +243,10 @@ ADCS Legal Tech Division • BCI Compliant Automated Document Automation
               borderRadius: '12px',
               fontWeight: 700,
               fontSize: '0.85rem',
-              background: activeTab === t.id ? '#1D4ED8' : '#FFFFFF',
+              background: activeTab === t.id ? '#075ACB' : '#FFFFFF',
               color: activeTab === t.id ? '#FFFFFF' : '#475569',
               border: '1px solid',
-              borderColor: activeTab === t.id ? '#1D4ED8' : '#CBD5E1',
+              borderColor: activeTab === t.id ? '#075ACB' : '#CBD5E1',
               boxShadow: activeTab === t.id ? '0 4px 12px rgba(29, 78, 216, 0.25)' : 'none',
               transition: 'all 0.15s',
             }}
@@ -290,10 +278,10 @@ ADCS Legal Tech Division • BCI Compliant Automated Document Automation
             >
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0A192F' }}>{agr.id}</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#061A36' }}>{agr.id}</span>
                   <span className="badge badge-green">{agr.status}</span>
                 </div>
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#1D4ED8', marginBottom: '0.25rem' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#075ACB', marginBottom: '0.25rem' }}>
                   {agr.propertyTitle}
                 </h3>
                 <div style={{ fontSize: '0.82rem', color: '#64748B' }}>
@@ -307,7 +295,7 @@ ADCS Legal Tech Division • BCI Compliant Automated Document Automation
               <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Monthly Rent</div>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0A192F' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#061A36' }}>
                     ₹{agr.monthlyRent.toLocaleString('en-IN')}
                   </div>
                   <div style={{ fontSize: '0.72rem', color: '#D97706', fontWeight: 600 }}>
@@ -343,7 +331,7 @@ ADCS Legal Tech Division • BCI Compliant Automated Document Automation
                       alignItems: 'center',
                       gap: '0.3rem',
                       fontSize: '0.78rem',
-                      color: '#1D4ED8',
+                      color: '#075ACB',
                       fontWeight: 600,
                       justifyContent: 'center',
                     }}
@@ -368,7 +356,7 @@ ADCS Legal Tech Division • BCI Compliant Automated Document Automation
           maxWidth: '720px',
           boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
         }}>
-          <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.5rem' }}>
+          <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#061A36', marginBottom: '0.5rem' }}>
             Draft Verified Online Rent Agreement
           </h3>
           <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.75rem' }}>
@@ -474,7 +462,7 @@ ADCS Legal Tech Division • BCI Compliant Automated Document Automation
           border: '1px solid #E2E8F0',
           maxWidth: '680px',
         }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.5rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '0.5rem' }}>
             Raise Property Maintenance Ticket
           </h3>
           <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.5rem' }}>
@@ -563,7 +551,7 @@ ADCS Legal Tech Division • BCI Compliant Automated Document Automation
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             AUTHORIZED E-STAMP PAPER & NATIONAL DEED REGISTRATION PORTALS
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>

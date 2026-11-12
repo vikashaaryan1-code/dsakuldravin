@@ -92,7 +92,7 @@ export const AstrologyHubPage: React.FC = () => {
   };
 
   return (
-    <div style={{ background: '#090E17', color: '#F8FAFC', minHeight: '100vh' }}>
+    <div style={{ background: '#031126', color: '#F8FAFC', minHeight: '100vh' }}>
       {/* Astrology Dedicated Header Navigation */}
       <AstroHeaderNav />
 
@@ -128,7 +128,7 @@ export const AstrologyHubPage: React.FC = () => {
       <section style={{
         position: 'relative',
         padding: '60px 16px 80px',
-        background: 'radial-gradient(ellipse at top, #1E1B4B 0%, #0F172A 50%, #090E17 100%)',
+        background: 'radial-gradient(ellipse at top, #1E1B4B 0%, #0F172A 50%, #031126 100%)',
         overflow: 'hidden',
         borderBottom: '1px solid rgba(245, 158, 11, 0.2)'
       }}>
@@ -633,7 +633,7 @@ export const AstrologyHubPage: React.FC = () => {
 
       {/* 5. Verified Astrologers Carousel / Spotlight */}
       <section style={{
-        background: 'linear-gradient(180deg, #090E17 0%, #111827 50%, #090E17 100%)',
+        background: 'linear-gradient(180deg, #031126 0%, #111827 50%, #031126 100%)',
         padding: '60px 16px',
         borderTop: '1px solid rgba(255, 255, 255, 0.05)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.05)'

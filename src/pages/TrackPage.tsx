@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Search, 
   Compass, 
@@ -44,7 +45,7 @@ export const TrackPage: React.FC = () => {
       );
       if (foundShip) return { type: 'shipment', data: foundShip };
     }
-    return { type: 'application', data: applications[0] };
+    return applications[0] ? { type: 'application', data: applications[0] } : null;
   });
 
   useEffect(() => {
@@ -90,48 +91,42 @@ export const TrackPage: React.FC = () => {
     const latestStage = isApp
       ? ([...(entity?.trackingSteps || [])].reverse().find((s: { done?: boolean; stage?: string }) => s.done)?.stage || entity?.status || 'Verification In Progress')
       : entity?.status || 'Booked';
-    const content = `================================================================================
-AKUL DRAVIN DIGITAL SERVICES (ADCS) - OFFICIAL TRACKING ACKNOWLEDGEMENT
-================================================================================
-Tracking Reference : ${trackingId}
-Record Type        : ${isApp ? 'Citizen E-Governance / Digital Service Application' : 'Logistics Express Consignment'}
-Current Status     : ${entity?.status || 'Active / Processing'}
-Timestamp          : ${new Date().toLocaleString('en-IN')}
---------------------------------------------------------------------------------
-DETAILS:
-${isApp ? `Service Name       : ${entity?.serviceName || 'E-Governance Service'}
-Applicant Name     : ${entity?.applicantName || 'Citizen Applicant'}
-Contact Mobile     : ${entity?.applicantPhone || 'Verified'}
-Fee Paid           : ₹${entity?.feePaid || 0} (${entity?.feePaid > 0 ? 'Paid & Verified' : 'Pending'})
-Current SLA Stage  : ${latestStage}
-Submission Date    : ${entity?.submittedAt || 'Recent'}` : `Courier Service    : ${entity?.serviceType || 'ADCS Express Hub'}
-Origin Hub         : ${entity?.senderCity || 'Regional Distribution Hub'}
-Destination        : ${entity?.receiverCity || 'Destination Address'}
-Current Location   : ${entity?.currentLocation || 'In Transit'}
-Expected Delivery  : ${entity?.expectedDelivery || 'Standard SLA'}
-Chargeable Weight  : ${entity?.weightKg || 1} kg (₹${entity?.price || 0})`}
---------------------------------------------------------------------------------
-STATUTORY & SECURITY COMPLIANCE:
-- DPDP Act 2025    : End-to-End Cryptographic Audit Logging
-- Digital Seal     : ADCS-TRACKING-VERIFIED-SEAL
-- Verification URL : https://akuldravindigital.com/track?q=${encodeURIComponent(trackingId)}
-- Audit Hash       : SHA256-${trackingId.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-ACK-VALID
-================================================================================
-This is an authentic computer-generated acknowledgement receipt.
-Akul Dravin Digital Services Private Trust Network
-================================================================================`;
+    const auditDigest = `SHA256-${trackingId.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-ACK-VALID`;
 
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ADCS_Acknowledgement_${trackingId}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'Official Application / Consignment Tracking Acknowledgement',
+      documentType: 'TRACKING ACKNOWLEDGEMENT',
+      documentNumber: trackingId,
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: isApp
+        ? [
+            { label: 'Record Category', value: 'Citizen E-Governance / Digital Service Application' },
+            { label: 'Service Name', value: String(entity?.serviceName || 'Digital Service') },
+            { label: 'Applicant Name & Contact', value: `${entity?.applicantName || 'Citizen Applicant'} (${entity?.applicantPhone || 'Verified'})` },
+            { label: 'Current Workflow Status', value: String(entity?.status || 'Active / Processing') },
+            { label: 'Current SLA Stage', value: String(latestStage) },
+            { label: 'Submitted On', value: String(entity?.submittedAt || 'Recent') },
+            { label: 'Audit Digest', value: auditDigest },
+          ]
+        : [
+            { label: 'Record Category', value: 'ADCS Express Logistics Consignment' },
+            { label: 'Courier Service', value: String(entity?.serviceType || 'ADCS Express Hub') },
+            { label: 'Route', value: `${entity?.senderCity || 'Origin'} → ${entity?.receiverCity || 'Destination'}` },
+            { label: 'Current Location / Status', value: `${entity?.currentLocation || 'In Transit'} (${entity?.status || 'Booked'})` },
+            { label: 'Chargeable Weight', value: `${entity?.weightKg || 1} kg` },
+            { label: 'Expected Delivery', value: String(entity?.expectedDelivery || 'Standard SLA') },
+            { label: 'Audit Digest', value: auditDigest },
+          ],
+      amountSummary: {
+        total: Number(isApp ? entity?.feePaid || 0 : entity?.price || 0),
+        currency: '₹',
+        paymentStatus: (isApp ? entity?.feePaid > 0 : entity?.price > 0) ? 'PAID & VERIFIED' : 'PENDING',
+      },
+      notes: ['Issued under Akul Dravin Digital Services DPDP Act 2025 cryptographic audit logging.'],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?q=${encodeURIComponent(trackingId)}`,
+    });
 
-    showToast('Acknowledgement Downloaded', 'Official stamped receipt downloaded to your device.', 'success');
+    showToast('Acknowledgement Ready', 'Official ADCS tracking acknowledgement opened for print/PDF.', 'success');
     confetti({ particleCount: 50, spread: 60 });
   };
 
@@ -139,7 +134,7 @@ Akul Dravin Digital Services Private Trust Network
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 5rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -217,11 +212,11 @@ Akul Dravin Digital Services Private Trust Network
                 border: '2px solid #CBD5E1',
                 fontSize: '1rem',
                 fontWeight: 600,
-                color: '#0A192F',
+                color: '#061A36',
                 outline: 'none',
                 transition: 'border-color 0.2s',
               }}
-              onFocus={(e) => e.target.style.borderColor = '#1D4ED8'}
+              onFocus={(e) => e.target.style.borderColor = '#075ACB'}
               onBlur={(e) => e.target.style.borderColor = '#CBD5E1'}
             />
           </div>
@@ -255,7 +250,7 @@ Akul Dravin Digital Services Private Trust Network
                 padding: '0.3rem 0.8rem',
                 fontSize: '0.78rem',
                 fontWeight: 600,
-                color: '#1D4ED8',
+                color: '#075ACB',
                 cursor: 'pointer',
                 transition: 'all 0.15s ease',
               }}
@@ -269,7 +264,7 @@ Akul Dravin Digital Services Private Trust Network
       </div>
 
       {/* Results View */}
-      {searchedEntity ? (
+      {searchedEntity && searchedEntity.data ? (
         searchedEntity.type === 'application' ? (
           /* Application Timeline & Details */
           <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.9fr', gap: '2rem' }} className="responsive-grid">
@@ -284,10 +279,10 @@ Akul Dravin Digital Services Private Trust Network
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.75rem', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <div>
                   <span className="badge badge-navy" style={{ marginBottom: '0.4rem' }}>
-                    {searchedEntity.data.category.toUpperCase()} WORKFLOW
+                    {(searchedEntity.data?.category || 'SERVICE').toUpperCase()} WORKFLOW
                   </span>
-                  <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
-                    {searchedEntity.data.serviceName}
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
+                    {searchedEntity.data?.serviceName || 'Digital Service Application'}
                   </h2>
                 </div>
                 <span className={`badge ${
@@ -324,7 +319,7 @@ Akul Dravin Digital Services Private Trust Network
                         width: '32px',
                         height: '32px',
                         borderRadius: '50%',
-                        background: isDone ? '#10B981' : isCurrent ? '#1D4ED8' : '#F1F5F9',
+                        background: isDone ? '#10B981' : isCurrent ? '#075ACB' : '#F1F5F9',
                         color: isDone || isCurrent ? '#FFFFFF' : '#94A3B8',
                         border: isCurrent ? '3px solid #BFDBFE' : '2px solid #FFFFFF',
                         display: 'flex',
@@ -343,7 +338,7 @@ Akul Dravin Digital Services Private Trust Network
                         border: isCurrent ? '1.5px solid #93C5FD' : '1px solid #E2E8F0',
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-                          <h4 style={{ fontSize: '1.02rem', fontWeight: 700, color: '#0A192F', margin: 0 }}>
+                          <h4 style={{ fontSize: '1.02rem', fontWeight: 700, color: '#061A36', margin: 0 }}>
                             {language === 'hi' ? step.titleHi || step.title : step.title}
                           </h4>
                           <span style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 600 }}>
@@ -373,9 +368,9 @@ Akul Dravin Digital Services Private Trust Network
                 marginTop: '1rem',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <Sparkles size={22} color="#1D4ED8" />
+                  <Sparkles size={22} color="#075ACB" />
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0A192F' }}>Need Urgent Resolution?</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#061A36' }}>Need Urgent Resolution?</div>
                     <div style={{ fontSize: '0.78rem', color: '#475569' }}>Ask Quantum AI to expedite scrutiny or notify your officer.</div>
                   </div>
                 </div>
@@ -398,31 +393,31 @@ Akul Dravin Digital Services Private Trust Network
                 border: '1px solid #E2E8F0',
                 boxShadow: '0 4px 20px rgba(10, 25, 47, 0.04)',
               }}>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <FileText size={18} color="#1D4ED8" />
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <FileText size={18} color="#075ACB" />
                   <span>Dossier Overview</span>
                 </h3>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.88rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9' }}>
                     <span style={{ color: '#64748B' }}>Application Number:</span>
-                    <span style={{ fontWeight: 700, color: '#0A192F' }}>{searchedEntity.data.id}</span>
+                    <span style={{ fontWeight: 700, color: '#061A36' }}>{searchedEntity.data.id}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9' }}>
                     <span style={{ color: '#64748B' }}>Applicant Name:</span>
-                    <span style={{ fontWeight: 700, color: '#0A192F' }}>{searchedEntity.data.applicantName}</span>
+                    <span style={{ fontWeight: 700, color: '#061A36' }}>{searchedEntity.data.applicantName}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9' }}>
                     <span style={{ color: '#64748B' }}>Contact Phone:</span>
-                    <span style={{ fontWeight: 600, color: '#0A192F' }}>{searchedEntity.data.applicantPhone}</span>
+                    <span style={{ fontWeight: 600, color: '#061A36' }}>{searchedEntity.data.applicantPhone}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9' }}>
                     <span style={{ color: '#64748B' }}>Jurisdiction:</span>
-                    <span style={{ fontWeight: 600, color: '#0A192F' }}>{searchedEntity.data.city}, {searchedEntity.data.state}</span>
+                    <span style={{ fontWeight: 600, color: '#061A36' }}>{searchedEntity.data.city}, {searchedEntity.data.state}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9' }}>
                     <span style={{ color: '#64748B' }}>Assigned Executive:</span>
-                    <span style={{ fontWeight: 600, color: '#1D4ED8' }}>{searchedEntity.data.assignedTo || 'Senior Officer Queue'}</span>
+                    <span style={{ fontWeight: 600, color: '#075ACB' }}>{searchedEntity.data.assignedTo || 'Senior Officer Queue'}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9' }}>
                     <span style={{ color: '#64748B' }}>Fee Settled:</span>
@@ -499,8 +494,8 @@ Akul Dravin Digital Services Private Trust Network
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
-                  <Truck size={22} color="#1D4ED8" />
-                  <span style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0A192F' }}>
+                  <Truck size={22} color="#075ACB" />
+                  <span style={{ fontSize: '1.3rem', fontWeight: 800, color: '#061A36' }}>
                     Airway Bill #{searchedEntity.data.awb}
                   </span>
                 </div>
@@ -534,11 +529,11 @@ Akul Dravin Digital Services Private Trust Network
             }}>
               <div>
                 <div style={{ fontSize: '0.75rem', color: '#64748B' }}>ORIGIN HUB</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0A192F' }}>{searchedEntity.data.senderCity}</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#061A36' }}>{searchedEntity.data.senderCity}</div>
                 <div style={{ fontSize: '0.8rem', color: '#475569' }}>Sender: {searchedEntity.data.senderName}</div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#1D4ED8' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#075ACB' }}>
                 <div style={{ width: '60px', height: '2px', background: '#93C5FD' }} />
                 <Truck size={24} />
                 <div style={{ width: '60px', height: '2px', background: '#93C5FD' }} />
@@ -546,7 +541,7 @@ Akul Dravin Digital Services Private Trust Network
 
               <div>
                 <div style={{ fontSize: '0.75rem', color: '#64748B' }}>DESTINATION</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0A192F' }}>{searchedEntity.data.receiverCity}</div>
+                <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#061A36' }}>{searchedEntity.data.receiverCity}</div>
                 <div style={{ fontSize: '0.8rem', color: '#475569' }}>Receiver: {searchedEntity.data.receiverName}</div>
               </div>
             </div>
@@ -581,7 +576,7 @@ Akul Dravin Digital Services Private Trust Network
                     border: '1px solid #E2E8F0',
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontWeight: 700, color: '#0A192F' }}>{step.stage}</div>
+                      <div style={{ fontWeight: 700, color: '#061A36' }}>{step.stage}</div>
                       <div style={{ fontSize: '0.78rem', color: '#64748B' }}>{step.timestamp}</div>
                     </div>
                     <div style={{ fontSize: '0.82rem', color: '#475569', marginTop: '0.2rem' }}>
@@ -603,7 +598,7 @@ Akul Dravin Digital Services Private Trust Network
           border: '1px solid #E2E8F0',
         }}>
           <AlertCircle size={48} color="#D97706" style={{ margin: '0 auto 1rem' }} />
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.5rem' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36', marginBottom: '0.5rem' }}>
             No Record Found Matching "{searchQuery}"
           </h2>
           <p style={{ color: '#64748B', maxWidth: '480px', margin: '0 auto 2rem', fontSize: '0.9rem' }}>

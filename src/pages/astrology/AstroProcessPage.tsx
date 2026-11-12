@@ -88,7 +88,7 @@ export const AstroProcessPage: React.FC = () => {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', background: '#090E17', color: '#F8FAFC', paddingBottom: '80px' }}>
+    <div style={{ minHeight: '100vh', background: '#031126', color: '#F8FAFC', paddingBottom: '80px' }}>
       {/* Sticky Secondary Celestial Header */}
       <AstroHeaderNav />
 
@@ -96,7 +96,7 @@ export const AstroProcessPage: React.FC = () => {
       <section style={{
         position: 'relative',
         padding: '60px 16px 50px',
-        background: 'radial-gradient(ellipse at top, #1E1B4B 0%, #0F172A 60%, #090E17 100%)',
+        background: 'radial-gradient(ellipse at top, #1E1B4B 0%, #0F172A 60%, #031126 100%)',
         borderBottom: '1px solid rgba(245, 158, 11, 0.2)',
         textAlign: 'center'
       }}>
@@ -532,10 +532,10 @@ export const AstroProcessPage: React.FC = () => {
       <section style={{ maxWidth: '1240px', margin: '0 auto 70px', padding: '0 16px' }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#FDE68A', margin: '0 0 8px' }}>
-            पारंपरिक बनाम AD Digital वेदोक्त प्रक्रिया
+            पारंपरिक बनाम ADCS वेदोक्त प्रक्रिया
           </h2>
           <p style={{ fontSize: '14px', color: '#94A3B8' }}>
-            जानिए क्यों 1,80,000+ से अधिक जातक हमारे डिजिटल प्लेटफॉर्म पर विश्वास करते हैं
+            जानिए क्यों आधुनिक जातक पारदर्शी डिजिटल गणना और सत्यापित वैदिक मार्गदर्शन चुनते हैं
           </p>
         </div>
 
@@ -557,7 +557,7 @@ export const AstroProcessPage: React.FC = () => {
           }}>
             <div style={{ color: '#FDE68A' }}>सुविधा / मापदंड</div>
             <div style={{ color: '#F87171' }}>पारंपरिक व्यवस्था</div>
-            <div style={{ color: '#34D399' }}>AD Digital वैदिक प्लेटफॉर्म</div>
+            <div style={{ color: '#34D399' }}>ADCS वैदिक प्लेटफॉर्म</div>
           </div>
 
           {[

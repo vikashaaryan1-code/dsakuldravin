@@ -152,7 +152,7 @@ export const ConsultingPage: React.FC = () => {
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -202,10 +202,10 @@ export const ConsultingPage: React.FC = () => {
           >
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F' }}>{adv.name}</h3>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36' }}>{adv.name}</h3>
                 <span className="badge badge-green">Verified Fellow</span>
               </div>
-              <div style={{ fontSize: '0.88rem', color: '#1D4ED8', fontWeight: 600 }}>{adv.title}</div>
+              <div style={{ fontSize: '0.88rem', color: '#075ACB', fontWeight: 600 }}>{adv.title}</div>
               <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '0.3rem' }}>
                 Experience: <strong>{adv.exp}</strong> • Next Available Slot: <strong>{adv.slots}</strong>
               </div>
@@ -214,7 +214,7 @@ export const ConsultingPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Consultation Fee</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0A192F' }}>{adv.rate}</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#061A36' }}>{adv.rate}</div>
               </div>
 
               <button
@@ -261,7 +261,7 @@ export const ConsultingPage: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
                   <div>
                     <span className="badge badge-gold">SECURE CONSULTATION INTAKE</span>
-                    <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0A192F', margin: '0.3rem 0' }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#061A36', margin: '0.3rem 0' }}>
                       Book Session with {bookingAdvisor.name}
                     </h3>
                     <p style={{ fontSize: '0.82rem', color: '#64748B', margin: 0 }}>
@@ -325,7 +325,7 @@ export const ConsultingPage: React.FC = () => {
                           background: chosenMode === 'video' ? '#EFF6FF' : '#FFFFFF',
                           fontWeight: 700,
                           fontSize: '0.85rem',
-                          color: chosenMode === 'video' ? '#1D4ED8' : '#64748B',
+                          color: chosenMode === 'video' ? '#075ACB' : '#64748B',
                           cursor: 'pointer'
                         }}
                       >
@@ -347,7 +347,7 @@ export const ConsultingPage: React.FC = () => {
                           background: chosenMode === 'phone' ? '#EFF6FF' : '#FFFFFF',
                           fontWeight: 700,
                           fontSize: '0.85rem',
-                          color: chosenMode === 'phone' ? '#1D4ED8' : '#64748B',
+                          color: chosenMode === 'phone' ? '#075ACB' : '#64748B',
                           cursor: 'pointer'
                         }}
                       >
@@ -404,7 +404,7 @@ export const ConsultingPage: React.FC = () => {
                 }}>
                   <CheckCircle2 size={32} />
                 </div>
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0A192F', marginBottom: '0.5rem' }}>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#061A36', marginBottom: '0.5rem' }}>
                   Consultation Pass Issued
                 </h3>
                 <div style={{
@@ -417,11 +417,11 @@ export const ConsultingPage: React.FC = () => {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Meeting Pass:</span>
-                    <strong style={{ fontSize: '0.9rem', color: '#1D4ED8' }}>{confirmedPass.passId}</strong>
+                    <strong style={{ fontSize: '0.9rem', color: '#075ACB' }}>{confirmedPass.passId}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Advisor:</span>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0A192F' }}>{confirmedPass.advisorName}</span>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#061A36' }}>{confirmedPass.advisorName}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                     <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Tracking App ID:</span>
@@ -472,7 +472,7 @@ export const ConsultingPage: React.FC = () => {
       <div style={{ marginTop: '3.5rem' }}>
         <div style={{ marginBottom: '1.5rem' }}>
           <span className="badge badge-blue" style={{ marginBottom: '0.4rem' }}>DIRECT ASSISTED FILINGS</span>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36' }}>
             {language === 'hi' ? 'विशेषज्ञ कानूनी एवं वित्तीय सेवाएं' : 'CA, Tax & Legal Filing Services'}
           </h2>
         </div>
@@ -498,7 +498,7 @@ export const ConsultingPage: React.FC = () => {
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             AUTHORIZED STATUTORY TAX & PROFESSIONAL REGULATORY PORTALS
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>

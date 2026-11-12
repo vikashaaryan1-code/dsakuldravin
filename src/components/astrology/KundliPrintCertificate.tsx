@@ -1,7 +1,8 @@
 import React from 'react';
 import { KundliResult } from '../../types/astrology';
 import { VedicKundliChart } from './VedicKundliChart';
-import { Printer, X, Award, ShieldCheck, Download } from 'lucide-react';
+import { Award, Printer, X, ShieldCheck } from 'lucide-react';
+import { ADCSLogo, ADCSQrCode } from '../branding';
 
 interface KundliPrintCertificateProps {
   kundli: KundliResult;
@@ -103,17 +104,21 @@ export const KundliPrintCertificate: React.FC<KundliPrintCertificateProps> = ({
         <div style={{ position: 'absolute', bottom: '10px', left: '10px', fontSize: '20px', color: '#B45309' }}>ॐ</div>
         <div style={{ position: 'absolute', bottom: '10px', right: '10px', fontSize: '20px', color: '#B45309' }}>卐</div>
 
-        {/* Certificate Header */}
-        <div style={{ textAlign: 'center', borderBottom: '2px solid #D97706', paddingBottom: '16px', marginBottom: '24px' }}>
-          <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#B45309', marginBottom: '4px' }}>
-            ॥ श्री गणेशाय नमः ॥
+        {/* Certificate Header with Official ADCS Identity */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', borderBottom: '2px solid #D6A12B', paddingBottom: '14px', marginBottom: '22px' }}>
+          <ADCSLogo variant="certificate" height={64} />
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <div style={{ fontSize: '20px', fontWeight: 'bold', color: '#B45309', marginBottom: '2px' }}>
+              ॥ श्री गणेशाय नमः ॥
+            </div>
+            <h1 style={{ margin: '2px 0', fontSize: '22px', color: '#061A36', letterSpacing: '0.5px' }}>
+              AKUL DRAVIN VEDIC JYOTISH SANSTHAN
+            </h1>
+            <p style={{ margin: '2px 0 0', fontSize: '13px', color: '#334861', fontStyle: 'italic' }}>
+              प्रामाणिक जन्म लग्न चक्र एवं ग्रह दशा फलादेश प्रमाण-पत्र
+            </p>
           </div>
-          <h1 style={{ margin: '4px 0', fontSize: '26px', color: '#78350F', letterSpacing: '1px' }}>
-            अखिल भारतीय वैदिक ज्योतिष परिषद
-          </h1>
-          <p style={{ margin: '2px 0 0', fontSize: '14px', color: '#92400E', fontStyle: 'italic' }}>
-            प्रामाणिक जन्म लग्न चक्र एवं ग्रह दशा फलादेश प्रमाण-पत्र
-          </p>
+          <ADCSQrCode value={`https://ad-digital.in/astrology/certificate?native=${encodeURIComponent(kundli.input.fullName)}`} size={62} />
         </div>
 
         {/* Native Bio Details Grid */}
@@ -225,14 +230,14 @@ export const KundliPrintCertificate: React.FC<KundliPrintCertificateProps> = ({
         </div>
 
         {/* Certificate Footer with Seals */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '16px', borderTop: '2px solid #D97706' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: '16px', borderTop: '2px solid #D6A12B' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#047857', fontWeight: 600, fontSize: '13px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#047857', fontWeight: 700, fontSize: '13px' }}>
               <ShieldCheck size={18} />
-              प्रमाणित वैदिक चार्ट (ISO 9001:2026 मानकीकृत)
+              प्रामाणिक वैदिक कुंडली रिपोर्ट • AKUL DRAVIN DIGITAL SERVICES (ADCS)
             </div>
-            <div style={{ fontSize: '11px', color: '#78716C', marginTop: '2px' }}>
-              डिजिटल सत्यापन कोड: KUNDLI-VEDA-{Math.floor(100000 + Math.random() * 900000)}
+            <div style={{ fontSize: '11px', color: '#55677D', marginTop: '2px' }}>
+              डिजिटल सत्यापन कोड: KUNDLI-ADCS-{kundli.input.dob.replace(/-/g, '')}
             </div>
           </div>
 

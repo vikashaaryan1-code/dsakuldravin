@@ -60,7 +60,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
         <h3 style={{
           fontSize: '1.08rem',
           fontWeight: 700,
-          color: '#0A192F',
+          color: '#061A36',
           lineHeight: 1.35,
           marginBottom: '0.45rem',
         }}>
@@ -96,7 +96,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
             <span><strong>Timeline:</strong> {language === 'hi' ? service.timelineHi : service.timeline}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-            <FileText size={13} color="#1D4ED8" />
+            <FileText size={13} color="#075ACB" />
             <span><strong>Docs:</strong> {service.requiredDocs && Array.isArray(service.requiredDocs) && service.requiredDocs.length > 0 ? `${service.requiredDocs.slice(0, 2).join(', ')}...` : (language === 'hi' ? 'पहचान एवं पता प्रमाण' : 'Identity & Address Proof')}</span>
           </div>
         </div>
@@ -114,7 +114,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
         }}>
           <div>
             <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block' }}>Fee Breakdown:</span>
-            <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F' }}>
+            <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36' }}>
               {(() => {
                 const priceVal = Number(service.basePrice ?? (service as any).price ?? 0);
                 return priceVal === 0 ? 'Free Consultation' : `₹${priceVal.toLocaleString('en-IN')}`;
@@ -145,7 +145,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
               borderRadius: '8px',
               background: '#F1F5F9',
               border: '1px solid #CBD5E1',
-              color: '#0A192F',
+              color: '#061A36',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',

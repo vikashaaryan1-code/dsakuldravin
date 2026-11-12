@@ -121,7 +121,7 @@ export const InstructorPortal: React.FC = () => {
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #312E81 60%, #4338CA 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #312E81 60%, #4338CA 100%)',
         borderRadius: '24px',
         padding: '2.5rem',
         color: '#FFFFFF',

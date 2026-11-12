@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useApp } from '../../store/AppContext';
+import { ADCSLogo } from '../../components/branding';
+import { LOGIN_PANELS } from '../../config/governanceCatalog';
+import { LoginPanelKey } from '../../types';
 import { 
   ShieldCheck, 
   Lock, 
@@ -19,7 +22,7 @@ import {
 export const CSCConnectLoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { setCurrentRole, showToast } = useApp();
+  const { setCurrentRole, loginWithPanelCredentials, showToast } = useApp();
 
   // Extract OAuth parameters
   const responseType = searchParams.get('response_type') || 'code';
@@ -27,13 +30,37 @@ export const CSCConnectLoginPage: React.FC = () => {
   const redirectUri = searchParams.get('redirect_uri') || '/auth/callback';
   const stateParam = searchParams.get('state') || '89850';
 
-  const [username, setUsername] = useState('245089123456');
-  const [password, setPassword] = useState('VLE@DigitalSeva2026');
+  const [selectedTierPanel, setSelectedTierPanel] = useState<LoginPanelKey>('vle_rural');
+  const [username, setUsername] = useState('VLE-RUR-245089');
+  const [password, setPassword] = useState('RuralVle@2026');
   const [captchaInput, setCaptchaInput] = useState('');
   const [generatedCaptcha, setGeneratedCaptcha] = useState('');
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const tierPanels = LOGIN_PANELS.filter((p) =>
+    ['vle_rural', 'vle_district', 'vle_state', 'vle_main_head', 'admin'].includes(p.panelKey)
+  );
+  const activeTierDef = tierPanels.find((p) => p.panelKey === selectedTierPanel) || tierPanels[0];
+
+  const TIER_SAMPLE_PASSWORDS: Record<string, string> = {
+    vle_rural: 'RuralVle@2026',
+    vle_district: 'DistrictMgr@2026',
+    vle_state: 'StateHead@2026',
+    vle_main_head: 'MainHead@2026',
+    admin: 'SuperAdmin@2026',
+  };
+
+  const handleSelectTier = (panelKey: LoginPanelKey) => {
+    setSelectedTierPanel(panelKey);
+    setErrorMsg('');
+    const def = tierPanels.find((p) => p.panelKey === panelKey);
+    if (def) {
+      setUsername(def.sampleLoginId);
+      setPassword('');
+    }
+  };
 
   // Generate random captcha
   const refreshCaptcha = () => {
@@ -50,17 +77,18 @@ export const CSCConnectLoginPage: React.FC = () => {
     refreshCaptcha();
   }, []);
 
-  const handleLogin = async (e?: React.FormEvent, captchaOverride?: string) => {
+  const handleLogin = async (e?: React.FormEvent, captchaOverride?: string, passwordOverride?: string) => {
     if (e) e.preventDefault();
     setErrorMsg('');
 
     const effectiveCaptcha = captchaOverride !== undefined ? captchaOverride : captchaInput;
+    const effectivePassword = passwordOverride !== undefined ? passwordOverride : password;
 
     if (!username.trim()) {
-      setErrorMsg('Please enter your ADCS ID or Username.');
+      setErrorMsg('Please enter your ADCS Login ID or Username.');
       return;
     }
-    if (!password) {
+    if (!effectivePassword) {
       setErrorMsg('Please enter your Password.');
       return;
     }
@@ -70,16 +98,27 @@ export const CSCConnectLoginPage: React.FC = () => {
       return;
     }
 
-    setIsLoading(true);
+    // Legacy 12-digit rural VLE CSC ID bridge only allowed inside Rural VLE tier
+    const normalizedId = username.trim() === '245089123456' && selectedTierPanel === 'vle_rural'
+      ? 'VLE-RUR-245089'
+      : username.trim();
 
+    const authCheck = await loginWithPanelCredentials(selectedTierPanel, normalizedId, effectivePassword);
+    if (!authCheck.ok) {
+      setErrorMsg(authCheck.message || 'Strict Panel Isolation blocked this Login ID from the selected Digital Seva tier.');
+      refreshCaptcha();
+      return;
+    }
+
+    setIsLoading(true);
     try {
-      // Call backend OAuth authorization endpoint
       const res = await fetch('/api/csc/authorize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username,
-          password,
+          username: normalizedId,
+          password: effectivePassword,
+          panelKey: selectedTierPanel,
           clientId,
           redirectUri,
           state: stateParam
@@ -87,39 +126,35 @@ export const CSCConnectLoginPage: React.FC = () => {
       }).then(r => r.json());
 
       const authCode = res.code || 'csc_auth_' + Date.now();
-      showToast('ADCS Connect Verified', 'Single Sign-On authentication authorized. Redirecting to ADCS Portal...', 'success');
+      showToast(`${activeTierDef.designationLabel} Verified`, 'Single Sign-On authorized with strict tier isolation.', 'success');
 
-      // Emulate OAuth redirect to callback URI
       setTimeout(() => {
-        navigate(`/auth/callback?code=${encodeURIComponent(authCode)}&state=${encodeURIComponent(stateParam)}&redirect_to=${encodeURIComponent('/digitalseva')}`);
-      }, 700);
-
-    } catch (err: any) {
-      // Fallback local redirection
+        navigate(`/auth/callback?code=${encodeURIComponent(authCode)}&state=${encodeURIComponent(stateParam)}&redirect_to=${encodeURIComponent(activeTierDef.defaultRoute)}`);
+      }, 450);
+    } catch {
       const authCode = 'csc_code_fallback_' + Date.now();
-      navigate(`/auth/callback?code=${encodeURIComponent(authCode)}&state=${encodeURIComponent(stateParam)}&redirect_to=${encodeURIComponent('/digitalseva')}`);
+      navigate(`/auth/callback?code=${encodeURIComponent(authCode)}&state=${encodeURIComponent(stateParam)}&redirect_to=${encodeURIComponent(activeTierDef.defaultRoute)}`);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleOneClickVleLogin = () => {
-    setUsername('245089123456');
-    setPassword('VLE@DigitalSeva2026');
+    const samplePwd = TIER_SAMPLE_PASSWORDS[selectedTierPanel] || 'RuralVle@2026';
+    setUsername(activeTierDef.sampleLoginId);
+    setPassword(samplePwd);
     setCaptchaInput(generatedCaptcha);
-    handleLogin(undefined, generatedCaptcha);
+    handleLogin(undefined, generatedCaptcha, samplePwd);
   };
 
   return (
     <div style={{ minHeight: '100vh', background: '#F0F4F8', display: 'flex', flexDirection: 'column', fontFamily: 'Inter, system-ui, sans-serif' }}>
       {/* Top ADCS Government & Sovereign Strip */}
-      <header style={{ background: '#0F172A', color: '#FFFFFF', padding: '0.8rem 2rem', borderBottom: '3px solid #16A34A' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <header style={{ background: '#031126', color: '#FFFFFF', padding: '0.8rem 2rem', borderBottom: '3px solid #D6A12B' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <div style={{ width: '40px', height: '40px', background: '#16A34A', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, color: '#FFFFFF', fontSize: '1.2rem' }}>
-                ADCS
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <ADCSLogo variant="compact" theme="dark" height={40} />
               <div>
                 <div style={{ fontWeight: 800, fontSize: '1.05rem', letterSpacing: '0.02em' }}>ADCS CONNECT</div>
                 <div style={{ fontSize: '0.72rem', color: '#94A3B8' }}>Akul Dravin Digital Services Single Sign-On (SSO)</div>
@@ -127,18 +162,18 @@ export const CSCConnectLoginPage: React.FC = () => {
             </div>
             <span style={{ color: '#475569', fontSize: '1.2rem' }}>|</span>
             <div style={{ fontSize: '0.8rem', color: '#CBD5E1' }}>
-              Akul Dravin Digital Services • Unified Citizen & Enterprise Infrastructure
+              HAR KAAM DIGITAL • HAR SAMADHAAN EK JAGAH
             </div>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', fontSize: '0.82rem' }}>
             <Link to="/csc" style={{ color: '#E2E8F0', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <Building2 size={15} color="#16A34A" /> ADCS Sovereign Portal
+              <Building2 size={15} color="#0878F9" /> ADCS Sovereign Portal
             </Link>
             <Link to="/register-vle" style={{ color: '#E2E8F0', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-              <FileText size={15} color="#F59E0B" /> Partner Registration
+              <FileText size={15} color="#F3D477" /> Partner Registration
             </Link>
-            <span style={{ background: '#1E293B', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px solid #334155' }}>
+            <span style={{ background: '#061A36', padding: '0.3rem 0.6rem', borderRadius: '4px', border: '1px solid #334155' }}>
               OAuth 2.0 Auth Server
             </span>
           </div>
@@ -151,7 +186,7 @@ export const CSCConnectLoginPage: React.FC = () => {
           
           {/* 1-Click Fast Track Pill for Evaluators */}
           <div style={{
-            background: 'linear-gradient(135deg, #1E3A8A 0%, #172554 100%)',
+            background: 'linear-gradient(135deg, #061A36 0%, #172554 100%)',
             color: '#FFFFFF',
             padding: '0.85rem 1.25rem',
             borderRadius: '12px',
@@ -224,6 +259,46 @@ export const CSCConnectLoginPage: React.FC = () => {
                   {errorMsg}
                 </div>
               )}
+
+              {/* Digital Seva 5-Tier Hierarchy Selector */}
+              <div style={{ marginBottom: '1.15rem' }}>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#061A36', marginBottom: '0.45rem' }}>
+                  Select Digital Seva Tier / Designation Panel (Strictly Isolated)
+                </label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(84px, 1fr))', gap: '0.35rem' }}>
+                  {tierPanels.map((tp) => {
+                    const active = selectedTierPanel === tp.panelKey;
+                    const shortLabel =
+                      tp.panelKey === 'vle_rural' ? 'Rural VLE' :
+                      tp.panelKey === 'vle_district' ? 'District Mgr' :
+                      tp.panelKey === 'vle_state' ? 'State Head' :
+                      tp.panelKey === 'vle_main_head' ? 'Main Head' : 'Super Admin';
+                    return (
+                      <button
+                        key={tp.panelKey}
+                        type="button"
+                        onClick={() => handleSelectTier(tp.panelKey)}
+                        style={{
+                          padding: '0.42rem 0.35rem',
+                          borderRadius: '7px',
+                          fontSize: '0.71rem',
+                          fontWeight: 800,
+                          border: active ? `2px solid ${tp.accentColor}` : '1px solid #CBD5E1',
+                          background: active ? tp.accentColor : '#F8FAFC',
+                          color: active ? '#FFFFFF' : '#1E293B',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {shortLabel}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: '0.45rem', padding: '0.45rem 0.65rem', borderRadius: '6px', background: '#F1F5F9', fontSize: '0.73rem', color: '#334155', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.3rem' }}>
+                  <span>Dept: <strong>{activeTierDef.department}</strong></span>
+                  <span>ID: <code>{activeTierDef.sampleLoginId}</code></span>
+                </div>
+              </div>
 
               {/* Username / ADCS ID */}
               <div style={{ marginBottom: '1.25rem' }}>

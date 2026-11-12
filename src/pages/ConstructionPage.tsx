@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Hammer, 
   Calculator, 
@@ -88,36 +89,33 @@ export const ConstructionPage: React.FC = () => {
 
   const handleDownloadBoq = () => {
     if (!submittedQuote) return;
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — TURNKEY CONSTRUCTION BOQ ESTIMATE',
-      '========================================================================',
-      `BOQ Reference     : ${submittedQuote.appId}`,
-      `Date & Time       : ${new Date().toLocaleString('en-IN')}`,
-      `Client Name       : ${clientName} (${clientPhone})`,
-      `Site Location     : ${projectCity}`,
-      `Specification     : ${submittedQuote.grade} Finish (@ ₹${ratePerSqFt}/sq.ft)`,
-      `Total Built-Up    : ${submittedQuote.totalSqFt.toLocaleString('en-IN')} sq.ft (${submittedQuote.floors} Floors)`,
-      `Estimated Cost    : ₹${submittedQuote.totalCost.toLocaleString('en-IN')} (₹${(submittedQuote.totalCost / 100000).toFixed(2)} Lakhs)`,
-      `Estimated Steel   : ${steelTons} TMT Metric Tons`,
-      `Estimated Cement  : ${cementBags} Bags (50kg OPC/PPC)`,
-      `Target Duration   : ~${estimatedMonths} Months`,
-      `Track Progress    : https://akuldravindigital.com/track?id=${encodeURIComponent(submittedQuote.appId)}`,
-      '========================================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_BOQ_${submittedQuote.appId}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'Turnkey Architectural & Construction BOQ Estimate',
+      documentType: 'BOQ COST ESTIMATE',
+      documentNumber: submittedQuote.appId,
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: [
+        { label: 'Client Name & Phone', value: `${clientName} (${clientPhone})` },
+        { label: 'Project Location', value: projectCity },
+        { label: 'Specification & Finish', value: `${submittedQuote.grade} Finish (@ ₹${ratePerSqFt}/sq.ft)` },
+        { label: 'Built-Up Dimensions', value: `${submittedQuote.totalSqFt.toLocaleString('en-IN')} sq.ft (${submittedQuote.floors} Floors)` },
+        { label: 'Material Provisioning', value: `${steelTons} TMT Metric Tons • ${cementBags} Cement Bags` },
+        { label: 'Target Execution Horizon', value: `~${estimatedMonths} Months` },
+      ],
+      amountSummary: {
+        total: submittedQuote.totalCost,
+        currency: '₹',
+        paymentStatus: `INDICATIVE BOQ (${(submittedQuote.totalCost / 100000).toFixed(2)} LAKHS)`,
+      },
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?id=${encodeURIComponent(submittedQuote.appId)}`,
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -159,7 +157,7 @@ export const ConstructionPage: React.FC = () => {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <span className="badge badge-gold">INTERACTIVE COST ENGINE</span>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0A192F', marginTop: '0.4rem' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#061A36', marginTop: '0.4rem' }}>
             Instant Turnkey Construction & BOQ Estimator
           </h2>
           <p style={{ fontSize: '0.88rem', color: '#64748B' }}>
@@ -219,7 +217,7 @@ export const ConstructionPage: React.FC = () => {
                 step="50"
                 value={builtUpArea}
                 onChange={(e) => setBuiltUpArea(Number(e.target.value))}
-                style={{ width: '100%', accentColor: '#1D4ED8' }}
+                style={{ width: '100%', accentColor: '#075ACB' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#64748B' }}>
                 <span>500 sq.ft</span>
@@ -243,9 +241,9 @@ export const ConstructionPage: React.FC = () => {
                     style={{
                       padding: '0.65rem 0.4rem',
                       borderRadius: '10px',
-                      border: floors === f.count ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                      border: floors === f.count ? '2px solid #075ACB' : '1px solid #E2E8F0',
                       background: floors === f.count ? '#EFF6FF' : '#FFFFFF',
-                      color: floors === f.count ? '#1D4ED8' : '#475569',
+                      color: floors === f.count ? '#075ACB' : '#475569',
                       fontWeight: 700,
                       fontSize: '0.78rem',
                     }}
@@ -270,13 +268,13 @@ export const ConstructionPage: React.FC = () => {
                     style={{
                       padding: '0.85rem 0.65rem',
                       borderRadius: '12px',
-                      border: grade === g.grade ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                      border: grade === g.grade ? '2px solid #075ACB' : '1px solid #E2E8F0',
                       background: grade === g.grade ? '#EFF6FF' : '#FFFFFF',
                       textAlign: 'left',
                       transition: 'all 0.15s',
                     }}
                   >
-                    <div style={{ fontWeight: 800, fontSize: '0.92rem', color: grade === g.grade ? '#1D4ED8' : '#0A192F' }}>
+                    <div style={{ fontWeight: 800, fontSize: '0.92rem', color: grade === g.grade ? '#075ACB' : '#061A36' }}>
                       {g.grade}
                     </div>
                     <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#D97706' }}>{g.rate}</div>
@@ -289,7 +287,7 @@ export const ConstructionPage: React.FC = () => {
 
           {/* Results Box */}
           <div style={{
-            background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 100%)',
+            background: 'linear-gradient(135deg, #061A36 0%, #031126 100%)',
             borderRadius: '20px',
             padding: '2rem',
             color: '#FFFFFF',
@@ -379,7 +377,7 @@ export const ConstructionPage: React.FC = () => {
         padding: '2.5rem',
         border: '1px solid #E2E8F0',
       }}>
-        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.5rem', textAlign: 'center' }}>
+        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#061A36', marginBottom: '1.5rem', textAlign: 'center' }}>
           Milestone Escrow & Quality Assurance Workflow
         </h3>
 
@@ -393,8 +391,8 @@ export const ConstructionPage: React.FC = () => {
             { step: '06', title: 'Final QA & Handover', pct: '10%' },
           ].map(m => (
             <div key={m.step} style={{ background: '#FFFFFF', padding: '1.25rem', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
-              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#1D4ED8', marginBottom: '0.25rem' }}>{m.step}</div>
-              <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0A192F' }}>{m.title}</div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#075ACB', marginBottom: '0.25rem' }}>{m.step}</div>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#061A36' }}>{m.title}</div>
               <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 700, marginTop: '0.2rem' }}>Milestone Payout: {m.pct}</div>
             </div>
           ))}
@@ -415,7 +413,7 @@ export const ConstructionPage: React.FC = () => {
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             AUTHORIZED MUNICIPAL SANCTION, BIS BUILDING CODE & RERA PORTALS
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>

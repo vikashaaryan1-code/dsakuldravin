@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { 
-  ShieldCheck, 
-  Award, 
-  CheckCircle2, 
-  AlertTriangle, 
-  QrCode, 
-  Search, 
-  Download, 
+import {
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  Search,
+  Download,
   ArrowLeft,
-  Building
+  Printer,
 } from 'lucide-react';
+import { ADCSLogo, CertificateBranding } from '../components/branding';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 
 export const AcademyCertificateVerificationPage: React.FC = () => {
   const { certId: paramCertId } = useParams<{ certId: string }>();
@@ -115,28 +115,22 @@ export const AcademyCertificateVerificationPage: React.FC = () => {
 
   const handleDownloadSlip = () => {
     if (!certData) return;
-    const text = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — CREDENTIAL VERIFICATION SLIP',
-      '====================================================================',
-      `Certificate ID   : ${certData.certificateId}`,
-      `Recipient Name   : ${certData.studentName} (${certData.studentAadhaarMasked})`,
-      `Course Title     : ${certData.courseTitle} [${certData.courseCode}]`,
-      `Awarded Grade    : ${certData.grade}`,
-      `Issued Date      : ${certData.issuedDate}`,
-      `Issuing Entity   : ${certData.organization}`,
-      `Status           : ${certData.status} / ${certData.revocationStatus}`,
-      `SHA-256 Digest   : ${certData.sha256Proof}`,
-      '====================================================================',
-    ].join('\n');
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Credential_${certData.certificateId}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: `Academy Credential Verification — ${certData.certificateId}`,
+      documentType: 'CREDENTIAL VERIFICATION SLIP',
+      documentNumber: certData.certificateId,
+      issuedDate: certData.issuedDate,
+      verificationUrl: `https://ad-digital.in/verify-certificate/${certData.certificateId}`,
+      rows: [
+        { label: 'Recipient Name', value: `${certData.studentName} (${certData.studentAadhaarMasked})` },
+        { label: 'Course Track', value: `${certData.courseTitle} [${certData.courseCode}]` },
+        { label: 'Awarded Grade', value: certData.grade },
+        { label: 'Issuing Authority', value: `${certData.issuerName} — ${certData.issuerDesignation}` },
+        { label: 'Verification Status', value: `${certData.status} / ${certData.revocationStatus}` },
+        { label: 'SHA-256 Digest', value: certData.sha256Proof },
+      ],
+      notes: [`Issuer Legal Entity: ${certData.organization}. Original credential issue date preserved.`],
+    });
   };
 
   return (
@@ -161,14 +155,17 @@ export const AcademyCertificateVerificationPage: React.FC = () => {
 
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: '#DCFCE7', color: '#166534', padding: '0.35rem 0.85rem', borderRadius: '50px', fontSize: '0.78rem', fontWeight: 800, marginBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.85rem' }}>
+          <ADCSLogo variant="certificate" height={76} />
+        </div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'var(--adcs-success-bg)', color: 'var(--adcs-success)', border: '1px solid var(--adcs-success-border)', padding: '0.35rem 0.85rem', borderRadius: '50px', fontSize: '0.78rem', fontWeight: 800, marginBottom: '0.75rem' }}>
           <ShieldCheck size={16} /> OFFICIAL ADCS CREDENTIAL REGISTRY
         </div>
-        <h1 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)', fontWeight: 900, color: '#0F172A', margin: '0 0 0.5rem' }}>
+        <h1 style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)', fontWeight: 900, color: 'var(--adcs-text)', margin: '0 0 0.5rem' }}>
           Certificate Verification Desk
         </h1>
-        <p style={{ color: '#64748B', fontSize: '0.92rem', maxWidth: '580px', margin: '0 auto' }}>
-          Cryptographically verify genuine certificates issued by Akul Dravin Digital Services (ADCS) Academy.
+        <p style={{ color: 'var(--adcs-muted)', fontSize: '0.92rem', maxWidth: '580px', margin: '0 auto' }}>
+          Cryptographically verify genuine certificates issued by AKUL DRAVIN DIGITAL SERVICES (ADCS) Academy.
         </p>
       </div>
 
@@ -215,7 +212,7 @@ export const AcademyCertificateVerificationPage: React.FC = () => {
                 borderRadius: '6px',
                 border: '1px solid #CBD5E1',
                 background: '#F8FAFC',
-                color: '#1D4ED8',
+                color: '#075ACB',
                 fontWeight: 700,
                 cursor: 'pointer',
               }}
@@ -252,102 +249,32 @@ export const AcademyCertificateVerificationPage: React.FC = () => {
 
       {/* Verified Record Card */}
       {verified && certData && (
-        <div style={{ background: '#FFFFFF', borderRadius: '20px', border: '2px solid #10B981', padding: '2.5rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.05)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid #E2E8F0', paddingBottom: '1.5rem', marginBottom: '1.5rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <div style={{ background: '#DCFCE7', color: '#166534', padding: '0.75rem', borderRadius: '12px' }}>
-                <CheckCircle2 size={32} />
-              </div>
-              <div>
-                <span style={{ fontSize: '0.75rem', background: '#DCFCE7', color: '#166534', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 800 }}>
-                  AUTHENTIC & VALID
-                </span>
-                <h3 style={{ margin: '0.25rem 0 0', fontSize: '1.35rem', fontWeight: 800, color: '#0F172A' }}>
-                  {certData.studentName}
-                </h3>
-                <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
-                  Aadhaar Masked: {certData.studentAadhaarMasked}
-                </div>
-              </div>
-            </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <CertificateBranding
+            certificateId={certData.certificateId}
+            certificateTitle="ADCS Academy Verification Record"
+            recipientName={certData.studentName}
+            subtitleOrCourse={`${certData.courseTitle} (${certData.courseCode})`}
+            credentialDetail={`Aadhaar Masked: ${certData.studentAadhaarMasked} • Registry Status: ${certData.status} / ${certData.revocationStatus}.`}
+            gradeOrScore={certData.grade}
+            issueDate={certData.issuedDate}
+            issuerName={certData.issuerName}
+            issuerDesignation={certData.issuerDesignation}
+            organizationName={certData.organization}
+            documentHash={certData.sha256Proof}
+            verificationUrl={`https://ad-digital.in/verify-certificate/${certData.certificateId}`}
+          />
 
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Certificate Number</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1E293B' }}>{certData.certificateId}</div>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
-            <div>
-              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Certified Course</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>{certData.courseTitle}</div>
-              <div style={{ fontSize: '0.75rem', color: '#2563EB' }}>Code: {certData.courseCode}</div>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Awarded Grade</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#059669' }}>{certData.grade}</div>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Date of Issuance</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>{certData.issuedDate}</div>
-            </div>
-
-            <div>
-              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Issuing Authority</div>
-              <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>{certData.issuerName}</div>
-              <div style={{ fontSize: '0.75rem', color: '#64748B' }}>{certData.issuerDesignation}</div>
-            </div>
-          </div>
-
-          {/* Legal Transparency Footnote */}
-          <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '10px', padding: '1rem', fontSize: '0.78rem', color: '#475569', marginBottom: '1.5rem' }}>
-            <strong>Issuer Legal Entity:</strong> {certData.organization}. This certificate validates completion of private vocational curriculum and internal skill assessments.
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-            <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontFamily: 'monospace' }}>
-              SHA-256: {certData.sha256Proof.slice(0, 24)}...
+          <div className="adcs-no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', background: 'var(--adcs-surface)', border: '1px solid var(--adcs-border)', borderRadius: '12px', padding: '1rem 1.25rem' }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--adcs-muted)', fontFamily: 'var(--adcs-font-mono)' }}>
+              SHA-256 Digest: {certData.sha256Proof.slice(0, 28)}...
             </div>
             <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-              <button
-                type="button"
-                onClick={handleDownloadSlip}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.5rem 1.1rem',
-                  borderRadius: '6px',
-                  background: '#2563EB',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <Download size={14} /> Download Verification (.txt)
+              <button type="button" onClick={handleDownloadSlip} className="btn-primary">
+                <Download size={14} /> Export Verification Record
               </button>
-              <button
-                type="button"
-                onClick={() => window.print()}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.4rem',
-                  padding: '0.5rem 1.25rem',
-                  borderRadius: '6px',
-                  background: '#0F172A',
-                  color: '#FFFFFF',
-                  border: 'none',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                  cursor: 'pointer'
-                }}
-              >
-                <Download size={14} /> Print Verification Slip
+              <button type="button" onClick={() => window.print()} className="btn-navy">
+                <Printer size={14} /> Print / Save PDF
               </button>
             </div>
           </div>

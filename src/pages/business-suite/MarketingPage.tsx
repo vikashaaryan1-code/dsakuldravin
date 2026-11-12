@@ -90,7 +90,7 @@ export const MarketingPage: React.FC = () => {
         
         {/* Header Strip */}
         <div style={{
-          background: 'linear-gradient(135deg, #0A192F 0%, #151D33 50%, #4F46E5 100%)',
+          background: 'linear-gradient(135deg, #061A36 0%, #151D33 50%, #4F46E5 100%)',
           borderRadius: '24px',
           padding: '2.5rem',
           color: '#FFFFFF',
@@ -143,9 +143,9 @@ export const MarketingPage: React.FC = () => {
           <div className="card" style={{ padding: '1.5rem', borderRadius: '16px', background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748B', fontSize: '0.82rem', fontWeight: 600 }}>
               <span>ACTIVE CAMPAIGNS</span>
-              <Play size={18} color="#1D4ED8" />
+              <Play size={18} color="#075ACB" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0A192F', margin: '0.4rem 0' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#061A36', margin: '0.4rem 0' }}>
               {marketingCampaigns.filter(c => c.status === 'Active').length} Live
             </div>
             <div style={{ fontSize: '0.78rem', color: '#059669' }}>
@@ -205,7 +205,7 @@ export const MarketingPage: React.FC = () => {
                   borderRadius: '10px',
                   fontWeight: 700,
                   fontSize: '0.82rem',
-                  background: activeFilter === tab ? '#0A192F' : '#FFFFFF',
+                  background: activeFilter === tab ? '#061A36' : '#FFFFFF',
                   color: activeFilter === tab ? '#FFFFFF' : '#64748B',
                   border: '1px solid #E2E8F0',
                   cursor: 'pointer'
@@ -222,7 +222,7 @@ export const MarketingPage: React.FC = () => {
           {filteredCampaigns.map(camp => {
             const getChannelIcon = (ch: MarketingCampaign['channel']) => {
               if (ch === 'WhatsApp Business') return <MessageSquare size={18} color="#059669" />;
-              if (ch === 'Email') return <Mail size={18} color="#1D4ED8" />;
+              if (ch === 'Email') return <Mail size={18} color="#075ACB" />;
               if (ch === 'SMS') return <Smartphone size={18} color="#D97706" />;
               return <Bell size={18} color="#7C3AED" />;
             };
@@ -249,7 +249,7 @@ export const MarketingPage: React.FC = () => {
                         {getChannelIcon(camp.channel)}
                       </div>
                       <div>
-                        <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0A192F' }}>{camp.name}</div>
+                        <div style={{ fontWeight: 800, fontSize: '1rem', color: '#061A36' }}>{camp.name}</div>
                         <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{camp.channel} • {camp.audienceSegment}</div>
                       </div>
                     </div>
@@ -277,7 +277,7 @@ export const MarketingPage: React.FC = () => {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', textAlign: 'center', background: '#FAFAFA', borderRadius: '10px', padding: '0.75rem', border: '1px solid #E5E7EB' }}>
                     <div>
                       <div style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: 600 }}>AUDIENCE</div>
-                      <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0A192F' }}>{camp.targetCount.toLocaleString('en-IN')}</div>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#061A36' }}>{camp.targetCount.toLocaleString('en-IN')}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: 600 }}>DELIVERED</div>
@@ -285,7 +285,7 @@ export const MarketingPage: React.FC = () => {
                     </div>
                     <div>
                       <div style={{ fontSize: '0.68rem', color: '#64748B', fontWeight: 600 }}>CONVERTED</div>
-                      <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1D4ED8' }}>{camp.conversionCount.toLocaleString('en-IN')}</div>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#075ACB' }}>{camp.conversionCount.toLocaleString('en-IN')}</div>
                     </div>
                   </div>
                 </div>
@@ -339,7 +339,7 @@ export const MarketingPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <div>
                   <span className="badge badge-green">DPDP ACT 2025 COMPLIANT</span>
-                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0A192F', marginTop: '0.25rem' }}>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#061A36', marginTop: '0.25rem' }}>
                     TRAI DND & Purpose-Limitation Consent Registry
                   </h3>
                 </div>
@@ -352,7 +352,7 @@ export const MarketingPage: React.FC = () => {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem', marginBottom: '1.25rem' }}>
                 <div style={{ background: '#F8FAFC', padding: '0.85rem', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
                   <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Total Active Consents</div>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#1D4ED8' }}>1,84,210</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#075ACB' }}>1,84,210</div>
                 </div>
                 <div style={{ background: '#F8FAFC', padding: '0.85rem', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
                   <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Verified Opt-In Rate</div>
@@ -460,7 +460,7 @@ export const MarketingPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
                 <div>
                   <span className="badge badge-blue">{selectedAnalyticsCamp.channel}</span>
-                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0A192F', margin: '0.25rem 0' }}>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#061A36', margin: '0.25rem 0' }}>
                     {selectedAnalyticsCamp.name}
                   </h3>
                   <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
@@ -475,7 +475,7 @@ export const MarketingPage: React.FC = () => {
               {/* Conversion Funnel Breakdown */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 {[
-                  { step: '1. Dispatched Messages', count: (selectedAnalyticsCamp.deliveredCount || 5000).toLocaleString('en-IN'), pct: '100%', color: '#1D4ED8' },
+                  { step: '1. Dispatched Messages', count: (selectedAnalyticsCamp.deliveredCount || 5000).toLocaleString('en-IN'), pct: '100%', color: '#075ACB' },
                   { step: '2. Successfully Delivered', count: Math.round((selectedAnalyticsCamp.deliveredCount || 5000) * 0.994).toLocaleString('en-IN'), pct: '99.4%', color: '#2563EB' },
                   { step: '3. Read / Opened', count: Math.round((selectedAnalyticsCamp.deliveredCount || 5000) * 0.882).toLocaleString('en-IN'), pct: '88.2%', color: '#059669' },
                   { step: '4. Action Links Clicked (CTR)', count: Math.round((selectedAnalyticsCamp.deliveredCount || 5000) * 0.416).toLocaleString('en-IN'), pct: '41.6%', color: '#D97706' },
@@ -483,7 +483,7 @@ export const MarketingPage: React.FC = () => {
                 ].map((f, i) => (
                   <div key={i} style={{ background: '#F8FAFC', padding: '0.75rem 1rem', borderRadius: '10px', border: '1px solid #E2E8F0' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.25rem' }}>
-                      <span style={{ fontWeight: 700, color: '#0A192F' }}>{f.step}</span>
+                      <span style={{ fontWeight: 700, color: '#061A36' }}>{f.step}</span>
                       <strong style={{ color: f.color }}>{f.count} ({f.pct})</strong>
                     </div>
                     <div style={{ height: '6px', background: '#E2E8F0', borderRadius: '999px', overflow: 'hidden' }}>
@@ -497,7 +497,7 @@ export const MarketingPage: React.FC = () => {
               <div style={{ background: '#EFF6FF', borderRadius: '12px', padding: '1rem', border: '1px solid #BFDBFE', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <div>
                   <div style={{ fontSize: '0.78rem', color: '#1E40AF', fontWeight: 600 }}>ATTRIBUTED GMV REVENUE</div>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#1D4ED8' }}>₹78,400.00</div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#075ACB' }}>₹78,400.00</div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <div style={{ fontSize: '0.78rem', color: '#1E40AF', fontWeight: 600 }}>COST PER ACQUISITION (CPA)</div>
@@ -536,7 +536,7 @@ export const MarketingPage: React.FC = () => {
             padding: '1rem'
           }}>
             <div style={{ background: '#FFFFFF', borderRadius: '20px', maxWidth: '540px', width: '100%', padding: '2rem', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0A192F', marginBottom: '0.25rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#061A36', marginBottom: '0.25rem' }}>
                 Compose Automated Marketing Campaign
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748B', marginBottom: '1.25rem' }}>
@@ -570,10 +570,10 @@ export const MarketingPage: React.FC = () => {
                   <div className="form-group">
                     <label className="form-label">Audience Segment</label>
                     <select className="form-select" value={segment} onChange={(e) => setSegment(e.target.value as any)}>
-                      <option value="All Citizens">All Citizens (1,84,000+)</option>
-                      <option value="VLE Franchisees">VLE Franchisees (2,450+)</option>
-                      <option value="Pending Documents">Pending Documents (1,120+)</option>
-                      <option value="Tax Compliance Leads">Tax Compliance Leads (3,800+)</option>
+                      <option value="All Citizens">All Registered Citizens</option>
+                      <option value="VLE Franchisees">Active VLE & Kendra Partners</option>
+                      <option value="Pending Documents">Citizens with Pending Documents</option>
+                      <option value="Tax Compliance Leads">MSME & Tax Compliance Leads</option>
                     </select>
                   </div>
                 </div>

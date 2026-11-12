@@ -26,6 +26,9 @@ import {
 import confetti from 'canvas-confetti';
 import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
+import { DocumentHeader } from '../branding';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
+import { UTRPaymentGate, UTRPaymentSubmission } from '../common/UTRPaymentGate';
 
 interface PANApplicationEngineProps {
   onClose?: () => void;
@@ -175,8 +178,9 @@ export const PANApplicationEngine: React.FC<PANApplicationEngineProps> = ({ onCl
     }, 700);
   };
 
-  // Final Submit & Pay
-  const handleFinalSubmit = () => {
+  // Final Submit & Pay (Strictly gated behind UTR Number & Transaction ID)
+  const handleFinalSubmit = (proof: UTRPaymentSubmission) => {
+    setPaymentMode(proof.paymentMethod === 'bank_transfer' ? 'netbanking' : proof.paymentMethod === 'wallet' ? 'upi' : proof.paymentMethod);
     setIsSubmitting(true);
     setTimeout(() => {
       const generatedAppId = submitApplication({
@@ -189,6 +193,9 @@ export const PANApplicationEngine: React.FC<PANApplicationEngineProps> = ({ onCl
         city: cityTown,
         state: state,
         feePaid: cardType === 'physical_and_epan' ? 249 : 166,
+        utrNumber: proof.utrNumber,
+        transactionId: proof.transactionId,
+        paymentMode: proof.paymentMethod,
         documentsUploaded: [
           `POI: ${poiDoc}`,
           `POA: ${poaDoc}`,
@@ -197,7 +204,7 @@ export const PANApplicationEngine: React.FC<PANApplicationEngineProps> = ({ onCl
           signUploaded ? 'Signature_BlackInk.jpg' : 'Signature_Pending',
           digiLockerSuccess ? 'DigiLocker_PKI_Consent_Payload.xml' : 'Manual_Scans.pdf'
         ],
-        notes: `PAN Form ${formType} submitted via ${agency.toUpperCase()}. AO Code: ${areaCode}/${aoType}/${rangeCode}/${aoNo}. Card: ${cardType.toUpperCase()}.`,
+        notes: `PAN Form ${formType} submitted via ${agency.toUpperCase()}. UTR: ${proof.utrNumber} | TXN: ${proof.transactionId}. AO Code: ${areaCode}/${aoType}/${rangeCode}/${aoNo}. Card: ${cardType.toUpperCase()}.`,
       });
 
       const agencyRefCode = agency === 'utiitsl' 
@@ -233,42 +240,35 @@ export const PANApplicationEngine: React.FC<PANApplicationEngineProps> = ({ onCl
 
   const handleDownloadPDFReceipt = () => {
     if (!ackDetails) return;
-    const receiptContent = `
-================================================================================
-          GOVERNMENT OF INDIA • INCOME TAX DEPARTMENT
-     ACKNOWLEDGMENT RECEIPT FOR PAN APPLICATION (FORM 49A)
-================================================================================
-OFFICIAL TRACKING REF : ${ackDetails.agencyRef}
-APPLICATION ID        : ${ackDetails.appId}
-PROCESSED VIA         : ${ackDetails.agencyName}
-DATE OF SUBMISSION    : ${ackDetails.filingDate}
-FACILITATED BY        : ADCS Kendra Network (Akul Dravin Digital Services)
---------------------------------------------------------------------------------
-APPLICANT LEGAL NAME  : ${title} ${firstName} ${middleName} ${lastName}
-NAME ON PAN CARD      : ${nameOnCard}
-FATHER'S FULL NAME    : ${fatherFirstName} ${fatherMiddleName} ${fatherLastName}
-DATE OF BIRTH / GENDER: ${dob} (${gender})
-AADHAAR NUMBER        : XXXX-XXXX-${aadhaarNumber.slice(-4)}
-AO JURISDICTION CODE  : ${areaCode}/${aoType}/${rangeCode}/${aoNo}
-COMMUNICATION ADDRESS : ${flatDoorBlock}, ${roadStreetLane}, ${areaLocality}, ${cityTown}, ${state} - ${pinCode}
---------------------------------------------------------------------------------
-PAYMENT STATUS        : SUCCESS
-TOTAL AMOUNT PAID     : Rs. ${ackDetails.feePaid}.00 (via ${paymentMode.toUpperCase()})
-STATUTORY COMPLIANCE  : Rule 114, Income Tax Rules 1962 / DPDP Act 2025
-DISPATCH ESTIMATE     : Speed Post within 3-5 Working Days
-================================================================================
-Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
-    `.trim();
-
-    const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `PAN_Form49A_Receipt_${ackDetails.agencyRef}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'ADCS Assisted PAN Filing Acknowledgment Slip (Form 49A)',
+      documentType: 'ASSISTED SERVICE RECEIPT',
+      documentNumber: ackDetails.agencyRef,
+      issuedDate: ackDetails.filingDate,
+      rows: [
+        { label: 'Application ID', value: ackDetails.appId },
+        { label: 'Statutory Processing Gateway', value: `${ackDetails.agencyName} (NSDL / UTIITSL)` },
+        { label: 'Facilitating Center', value: 'ADCS Kendra Network (Akul Dravin Digital Services)' },
+        { label: 'Applicant Legal Name', value: `${title} ${firstName} ${middleName} ${lastName}`.replace(/\s+/g, ' ').trim() },
+        { label: 'Name Printed on PAN Card', value: nameOnCard },
+        { label: "Father's Full Name", value: `${fatherFirstName} ${fatherMiddleName} ${fatherLastName}`.replace(/\s+/g, ' ').trim() },
+        { label: 'Date of Birth / Gender', value: `${dob} (${gender})` },
+        { label: 'Masked Aadhaar', value: `XXXX-XXXX-${aadhaarNumber.slice(-4)}` },
+        { label: 'AO Jurisdiction Code', value: `${areaCode}/${aoType}/${rangeCode}/${aoNo}` },
+        { label: 'Communication Address', value: `${flatDoorBlock}, ${roadStreetLane}, ${areaLocality}, ${cityTown}, ${state} - ${pinCode}` },
+        { label: 'Estimated Card Dispatch', value: 'Speed Post within 3-5 Working Days' },
+      ],
+      amountSummary: {
+        total: Number(ackDetails.feePaid),
+        currency: '₹',
+        paymentStatus: `SUCCESS (${paymentMode.toUpperCase()})`,
+      },
+      notes: [
+        'Statutory authority remains solely with the Income Tax Department of India (Rule 114, Income Tax Rules 1962 / DPDP Act 2025).',
+        'This document is an ADCS assisted-filing acknowledgment receipt and not a government-issued PAN card.',
+      ],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?ref=${encodeURIComponent(ackDetails.agencyRef)}`,
+    });
   };
 
   const handleSaveToVault = async () => {
@@ -305,7 +305,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
     }}>
       {/* Top Banner & Title */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #1E3A8A 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #061A36 100%)',
         color: '#FFFFFF',
         padding: '1.25rem 1.5rem',
         display: 'flex',
@@ -331,7 +331,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.15rem' }}>
-              <span style={{ background: '#F59E0B', color: '#0A192F', fontSize: '0.68rem', fontWeight: 900, padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
+              <span style={{ background: '#F59E0B', color: '#061A36', fontSize: '0.68rem', fontWeight: 900, padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
                 CBDT / INCOME TAX DEPT
               </span>
               <span style={{ background: 'rgba(255,255,255,0.2)', fontSize: '0.68rem', fontWeight: 700, padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
@@ -377,8 +377,8 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
           onClick={() => setActiveTab('wizard')}
           style={{
             padding: '0.85rem 1.25rem',
-            borderBottom: activeTab === 'wizard' ? '3px solid #1D4ED8' : '3px solid transparent',
-            color: activeTab === 'wizard' ? '#1D4ED8' : '#64748B',
+            borderBottom: activeTab === 'wizard' ? '3px solid #075ACB' : '3px solid transparent',
+            color: activeTab === 'wizard' ? '#075ACB' : '#64748B',
             fontWeight: activeTab === 'wizard' ? 800 : 600,
             fontSize: '0.86rem',
             background: 'none',
@@ -397,8 +397,8 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
           onClick={() => setActiveTab('portals')}
           style={{
             padding: '0.85rem 1.25rem',
-            borderBottom: activeTab === 'portals' ? '3px solid #1D4ED8' : '3px solid transparent',
-            color: activeTab === 'portals' ? '#1D4ED8' : '#64748B',
+            borderBottom: activeTab === 'portals' ? '3px solid #075ACB' : '3px solid transparent',
+            color: activeTab === 'portals' ? '#075ACB' : '#64748B',
             fontWeight: activeTab === 'portals' ? 800 : 600,
             fontSize: '0.86rem',
             background: 'none',
@@ -417,8 +417,8 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
           onClick={() => setActiveTab('checklist')}
           style={{
             padding: '0.85rem 1.25rem',
-            borderBottom: activeTab === 'checklist' ? '3px solid #1D4ED8' : '3px solid transparent',
-            color: activeTab === 'checklist' ? '#1D4ED8' : '#64748B',
+            borderBottom: activeTab === 'checklist' ? '3px solid #075ACB' : '3px solid transparent',
+            color: activeTab === 'checklist' ? '#075ACB' : '#64748B',
             fontWeight: activeTab === 'checklist' ? 800 : 600,
             fontSize: '0.86rem',
             background: 'none',
@@ -469,7 +469,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                         padding: '0.5rem 0.25rem',
                         textAlign: 'center',
                         borderRadius: '8px',
-                        background: isCurrent ? '#1D4ED8' : isDone ? '#DCFCE7' : 'transparent',
+                        background: isCurrent ? '#075ACB' : isDone ? '#DCFCE7' : 'transparent',
                         color: isCurrent ? '#FFFFFF' : isDone ? '#166534' : '#64748B',
                         fontSize: '0.72rem',
                         fontWeight: 700,
@@ -491,7 +491,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
             {wizardStep === 1 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: '0 0 0.35rem' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.35rem' }}>
                     1. Select Application Pathway & Official Agency
                   </h3>
                   <p style={{ fontSize: '0.84rem', color: '#64748B', margin: 0 }}>
@@ -530,7 +530,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                       style={{
                         padding: '1.1rem',
                         borderRadius: '12px',
-                        border: agency === a.id ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                        border: agency === a.id ? '2px solid #075ACB' : '1px solid #E2E8F0',
                         background: agency === a.id ? '#EFF6FF' : '#F8FAFC',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease'
@@ -540,9 +540,9 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                         <span style={{ fontSize: '0.68rem', fontWeight: 800, background: a.badgeColor, color: '#FFFFFF', padding: '0.15rem 0.45rem', borderRadius: '4px' }}>
                           {a.badge}
                         </span>
-                        {agency === a.id && <CheckCircle2 size={16} color="#1D4ED8" />}
+                        {agency === a.id && <CheckCircle2 size={16} color="#075ACB" />}
                       </div>
-                      <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0A192F', marginBottom: '0.35rem' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#061A36', marginBottom: '0.35rem' }}>
                         {a.name}
                       </div>
                       <div style={{ fontSize: '0.78rem', color: '#64748B', lineHeight: 1.4 }}>
@@ -612,7 +612,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
             {wizardStep === 2 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: '0 0 0.35rem' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.35rem' }}>
                     2. Applicant Personal & Parent Details (Form 49A Section 1-6)
                   </h3>
                   <p style={{ fontSize: '0.84rem', color: '#64748B', margin: 0 }}>
@@ -709,7 +709,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
 
                 {/* Parents Details */}
                 <div style={{ background: '#F8FAFC', padding: '1rem', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0A192F', marginBottom: '0.75rem' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#061A36', marginBottom: '0.75rem' }}>
                     Father's & Mother's Statutory Information
                   </div>
 
@@ -756,7 +756,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
             {wizardStep === 3 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: '0 0 0.35rem' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.35rem' }}>
                     3. Communication Address & Contact Details
                   </h3>
                   <p style={{ fontSize: '0.84rem', color: '#64748B', margin: 0 }}>
@@ -872,7 +872,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
             {wizardStep === 4 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: '0 0 0.35rem' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.35rem' }}>
                     4. Statutory Aadhaar & Assessing Officer (AO) Code
                   </h3>
                   <p style={{ fontSize: '0.84rem', color: '#64748B', margin: 0 }}>
@@ -883,8 +883,8 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                 {/* Aadhaar Verification Box */}
                 <div style={{ background: '#F8FAFC', padding: '1.25rem', borderRadius: '14px', border: '1px solid #CBD5E1' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0A192F', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <ShieldCheck size={18} color="#1D4ED8" />
+                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#061A36', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <ShieldCheck size={18} color="#075ACB" />
                       <span>12-Digit Aadhaar Number (Verhoeff Dihedral D5 Check)</span>
                     </div>
                     <span style={{ fontSize: '0.72rem', background: '#DBEAFE', color: '#1E40AF', padding: '0.2rem 0.5rem', borderRadius: '4px', fontWeight: 700 }}>
@@ -949,7 +949,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                 {/* AO Code Finder */}
                 <div style={{ background: '#FFFFFF', padding: '1.25rem', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#0A192F' }}>
+                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#061A36' }}>
                       Assessing Officer (AO) Code Configuration
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem' }}>
@@ -1018,7 +1018,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
             {wizardStep === 5 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: '0 0 0.35rem' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.35rem' }}>
                     5. Mandatory Document Proofs & Dual Ingestion Engine
                   </h3>
                   <p style={{ fontSize: '0.84rem', color: '#64748B', margin: 0 }}>
@@ -1119,7 +1119,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                     gap: '0.65rem'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0A192F' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#061A36' }}>
                         Applicant Passport Photo
                       </div>
                       <span style={{ fontSize: '0.7rem', background: '#E2E8F0', color: '#475569', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
@@ -1135,7 +1135,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                       style={{
                         padding: '0.5rem',
                         borderRadius: '8px',
-                        background: photoUploaded ? '#10B981' : '#1D4ED8',
+                        background: photoUploaded ? '#10B981' : '#075ACB',
                         color: '#FFFFFF',
                         border: 'none',
                         fontWeight: 700,
@@ -1163,7 +1163,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                     gap: '0.65rem'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0A192F' }}>
+                      <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#061A36' }}>
                         Applicant Signature / Thumb Specimen
                       </div>
                       <span style={{ fontSize: '0.7rem', background: '#E2E8F0', color: '#475569', padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
@@ -1179,7 +1179,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                       style={{
                         padding: '0.5rem',
                         borderRadius: '8px',
-                        background: signUploaded ? '#10B981' : '#1D4ED8',
+                        background: signUploaded ? '#10B981' : '#075ACB',
                         color: '#FFFFFF',
                         border: 'none',
                         fontWeight: 700,
@@ -1212,7 +1212,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
             {wizardStep === 6 && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: '0 0 0.35rem' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.35rem' }}>
                     6. Scrutiny Summary & Transparent Fee Checkout
                   </h3>
                   <p style={{ fontSize: '0.84rem', color: '#64748B', margin: 0 }}>
@@ -1233,31 +1233,31 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                 }}>
                   <div>
                     <span style={{ color: '#64748B', display: 'block' }}>Applicant Legal Name:</span>
-                    <strong style={{ color: '#0A192F', fontSize: '0.9rem' }}>{title} {firstName} {middleName} {lastName}</strong>
+                    <strong style={{ color: '#061A36', fontSize: '0.9rem' }}>{title} {firstName} {middleName} {lastName}</strong>
                   </div>
                   <div>
                     <span style={{ color: '#64748B', display: 'block' }}>Name on PAN Card:</span>
-                    <strong style={{ color: '#0A192F', fontSize: '0.9rem' }}>{nameOnCard}</strong>
+                    <strong style={{ color: '#061A36', fontSize: '0.9rem' }}>{nameOnCard}</strong>
                   </div>
                   <div>
                     <span style={{ color: '#64748B', display: 'block' }}>Date of Birth / Gender:</span>
-                    <strong style={{ color: '#0A192F' }}>{dob} • {gender}</strong>
+                    <strong style={{ color: '#061A36' }}>{dob} • {gender}</strong>
                   </div>
                   <div>
                     <span style={{ color: '#64748B', display: 'block' }}>Father's Full Name:</span>
-                    <strong style={{ color: '#0A192F' }}>{fatherFirstName} {fatherMiddleName} {fatherLastName}</strong>
+                    <strong style={{ color: '#061A36' }}>{fatherFirstName} {fatherMiddleName} {fatherLastName}</strong>
                   </div>
                   <div>
                     <span style={{ color: '#64748B', display: 'block' }}>Aadhaar Number:</span>
-                    <strong style={{ color: '#0A192F', fontFamily: 'monospace' }}>XXXX-XXXX-{aadhaarNumber.slice(-4)}</strong>
+                    <strong style={{ color: '#061A36', fontFamily: 'monospace' }}>XXXX-XXXX-{aadhaarNumber.slice(-4)}</strong>
                   </div>
                   <div>
                     <span style={{ color: '#64748B', display: 'block' }}>AO Jurisdiction:</span>
-                    <strong style={{ color: '#0A192F' }}>{areaCode}/{aoType}/{rangeCode}/{aoNo} ({cityTown})</strong>
+                    <strong style={{ color: '#061A36' }}>{areaCode}/{aoType}/{rangeCode}/{aoNo} ({cityTown})</strong>
                   </div>
                   <div>
                     <span style={{ color: '#64748B', display: 'block' }}>Selected Agency:</span>
-                    <strong style={{ color: '#1D4ED8' }}>{agency.toUpperCase()}</strong>
+                    <strong style={{ color: '#075ACB' }}>{agency.toUpperCase()}</strong>
                   </div>
                   <div>
                     <span style={{ color: '#64748B', display: 'block' }}>Card Delivery:</span>
@@ -1275,7 +1275,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                   flexDirection: 'column',
                   gap: '0.65rem'
                 }}>
-                  <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0A192F', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.5rem' }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#061A36', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.5rem' }}>
                     TRANSPARENT FEE BREAKDOWN (CBDT & ADCS STANDARDS):
                   </div>
 
@@ -1302,7 +1302,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                     justifyContent: 'space-between',
                     fontSize: '1.1rem',
                     fontWeight: 900,
-                    color: '#0A192F',
+                    color: '#061A36',
                     borderTop: '2px solid #E2E8F0',
                     paddingTop: '0.75rem',
                     marginTop: '0.25rem'
@@ -1312,55 +1312,17 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                   </div>
                 </div>
 
-                {/* Payment Mode Selector */}
-                <div>
-                  <label className="form-label" style={{ fontWeight: 700 }}>Select Instant Payment Method *</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-                    {[
-                      { id: 'upi', name: 'Instant UPI & QR', sub: 'GPay, PhonePe, Paytm, BHIM' },
-                      { id: 'card', name: 'Debit / Credit Card', sub: 'RuPay, Visa, MasterCard' },
-                      { id: 'netbanking', name: 'Net Banking', sub: 'All Indian Banks' }
-                    ].map(p => (
-                      <div
-                        key={p.id}
-                        onClick={() => setPaymentMode(p.id as any)}
-                        style={{
-                          padding: '0.85rem',
-                          borderRadius: '10px',
-                          border: paymentMode === p.id ? '2px solid #16A34A' : '1px solid #CBD5E1',
-                          background: paymentMode === p.id ? '#F0FDF4' : '#FFFFFF',
-                          cursor: 'pointer',
-                          textAlign: 'center'
-                        }}
-                      >
-                        <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#0A192F' }}>{p.name}</div>
-                        <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{p.sub}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-                  <button onClick={() => setWizardStep(5)} className="btn-secondary">
-                    <ArrowLeft size={16} /> Back
-                  </button>
-                  <button
-                    onClick={handleFinalSubmit}
-                    disabled={isSubmitting}
-                    className="btn-primary btn-lg"
-                    style={{
-                      background: '#16A34A',
-                      borderColor: '#16A34A',
-                      padding: '0.85rem 2rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}
-                  >
-                    {isSubmitting ? <RefreshCw size={18} className="animate-spin" /> : <CreditCard size={18} />}
-                    <span>{isSubmitting ? 'Filing Application...' : `Pay ₹${totalPayable} & Issue Form 49A Slip`}</span>
-                  </button>
-                </div>
+                {/* Mandatory Pre-Filing UTR Number & Transaction ID Verification Gate */}
+                <UTRPaymentGate
+                  amount={totalPayable}
+                  serviceTitle={`PAN Form ${formType} (${agency.toUpperCase()})`}
+                  defaultMethod={paymentMode === 'netbanking' ? 'bank_transfer' : paymentMode}
+                  ctaLabel={`Verify UTR & Issue Form ${formType} Slip (₹${totalPayable})`}
+                  cancelLabel="Back to Documents"
+                  onCancel={() => setWizardStep(5)}
+                  isSubmitting={isSubmitting}
+                  onVerifiedSubmit={handleFinalSubmit}
+                />
               </div>
             )}
 
@@ -1403,41 +1365,16 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                 <div style={{
                   background: '#FFFFFF',
                   borderRadius: '16px',
-                  border: '2px solid #0A192F',
+                  border: '2px solid var(--adcs-navy, #061A36)',
                   padding: '1.75rem',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.06)'
+                  boxShadow: '0 10px 30px rgba(6, 26, 54, 0.08)'
                 }}>
-                  {/* Receipt Header */}
-                  <div style={{ borderBottom: '2px solid #0A192F', paddingBottom: '1rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <div style={{ fontSize: '0.74rem', fontWeight: 800, color: '#64748B', letterSpacing: '0.05em' }}>
-                        GOVERNMENT OF INDIA • INCOME TAX DEPARTMENT
-                      </div>
-                      <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0A192F' }}>
-                        ACKNOWLEDGMENT RECEIPT FOR PAN APPLICATION (FORM 49A)
-                      </div>
-                      <div style={{ fontSize: '0.78rem', color: '#475569' }}>
-                        Processed via: <strong>{ackDetails.agencyName}</strong> • Facilitated by ADCS Kendra Network
-                      </div>
-                    </div>
-
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{
-                        padding: '0.5rem 0.85rem',
-                        background: '#F1F5F9',
-                        borderRadius: '8px',
-                        border: '1px solid #CBD5E1',
-                        display: 'inline-block'
-                      }}>
-                        <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#64748B' }}>
-                          OFFICIAL TRACKING REF
-                        </div>
-                        <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#0A192F', fontFamily: 'monospace' }}>
-                          {ackDetails.agencyRef}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <DocumentHeader
+                    documentType="ADCS ASSISTED PAN FILING RECEIPT (FORM 49A)"
+                    documentNumber={ackDetails.agencyRef}
+                    issuedDate={ackDetails.filingDate}
+                    branchOrCenter={`Statutory Gateway: ${ackDetails.agencyName} (NSDL / UTIITSL) • ADCS Kendra`}
+                  />
 
                   {/* Receipt Key-Value Details */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', fontSize: '0.84rem', marginBottom: '1.5rem' }}>
@@ -1490,7 +1427,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                     border: '1px solid #CBD5E1',
                     marginBottom: '1rem'
                   }}>
-                    <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#0A192F', marginBottom: '0.5rem' }}>
+                    <div style={{ fontWeight: 800, fontSize: '0.82rem', color: '#061A36', marginBottom: '0.5rem' }}>
                       ESTIMATED SPEED POST DISPATCH TIMELINE:
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', fontSize: '0.74rem' }}>
@@ -1513,14 +1450,14 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                     marginBottom: '1rem'
                   }}>
                     <div style={{ background: '#FFFFFF', padding: '0.4rem', borderRadius: '8px', border: '1px solid #CBD5E1' }}>
-                      <QrCode size={48} color="#0A192F" />
+                      <QrCode size={48} color="#061A36" />
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.2rem' }}>
+                      <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#061A36', marginBottom: '0.2rem' }}>
                         CBDT DIGITAL INTEGRITY CIPHER & VERIFIABLE QR SEAL
                       </div>
                       <div style={{ fontSize: '0.74rem', color: '#64748B', lineHeight: 1.4 }}>
-                        Public digital verification token: <code style={{ color: '#1D4ED8', fontWeight: 700 }}>{ackDetails.agencyRef}</code>. Fully compliant with Rule 114 Income Tax Rules, 1962 and DPDP Act 2025.
+                        Public digital verification token: <code style={{ color: '#075ACB', fontWeight: 700 }}>{ackDetails.agencyRef}</code>. Fully compliant with Rule 114 Income Tax Rules, 1962 and DPDP Act 2025.
                       </div>
                     </div>
                   </div>
@@ -1576,7 +1513,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                         navigate(`/track?q=${ackDetails.agencyRef}`);
                       }}
                       className="btn-primary"
-                      style={{ background: '#1D4ED8', borderColor: '#1D4ED8', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                      style={{ background: '#075ACB', borderColor: '#075ACB', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                     >
                       <Search size={16} />
                       <span>Track Status Live ➔</span>
@@ -1608,9 +1545,9 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                     style={{
                       padding: '0.65rem 2rem',
                       fontWeight: 800,
-                      background: '#0A192F',
+                      background: '#061A36',
                       color: '#FFFFFF',
-                      borderColor: '#0A192F'
+                      borderColor: '#061A36'
                     }}
                   >
                     Done / Close Engine ✕
@@ -1625,7 +1562,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
         {activeTab === 'portals' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F', margin: '0 0 0.35rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.35rem' }}>
                 Direct Official CBDT Portals (UTIITSL & Protean NSDL)
               </h3>
               <p style={{ fontSize: '0.84rem', color: '#64748B', margin: 0 }}>
@@ -1654,7 +1591,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                     <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Coupon: U-XXXXXXXXX</span>
                   </div>
 
-                  <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0A192F', margin: '0 0 0.5rem' }}>
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.5rem' }}>
                     UTI Infrastructure Technology And Services Ltd (UTIITSL)
                   </h4>
                   <p style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.4, margin: '0 0 1rem' }}>
@@ -1740,7 +1677,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
                     <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Ack: 150XXXXXXXXXXXX</span>
                   </div>
 
-                  <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0A192F', margin: '0 0 0.5rem' }}>
+                  <h4 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.5rem' }}>
                     Protean eGov Technologies Limited (formerly NSDL e-Gov)
                   </h4>
                   <p style={{ fontSize: '0.8rem', color: '#475569', lineHeight: 1.4, margin: '0 0 1rem' }}>
@@ -1810,7 +1747,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
 
             {/* Quick Prefilled Copy Box */}
             <div style={{ background: '#F8FAFC', borderRadius: '12px', padding: '1rem', border: '1px solid #E2E8F0' }}>
-              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0A192F', marginBottom: '0.5rem' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#061A36', marginBottom: '0.5rem' }}>
                 Quick 1-Click Copy Data for Official Portal Filling
               </div>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
@@ -1846,7 +1783,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
         {activeTab === 'checklist' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F', margin: '0 0 0.35rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.35rem' }}>
                 Statutory Document Checklist & Technical Specifications
               </h3>
               <p style={{ fontSize: '0.84rem', color: '#64748B', margin: 0 }}>
@@ -1857,7 +1794,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
             {/* Document Matrix Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
               <div style={{ background: '#F8FAFC', borderRadius: '12px', padding: '1rem', border: '1px solid #E2E8F0' }}>
-                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#1E3A8A', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <div style={{ fontWeight: 800, fontSize: '0.9rem', color: '#061A36', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <UserCheck size={16} />
                   <span>Proof of Identity (POI)</span>
                 </div>
@@ -1909,7 +1846,7 @@ Generated securely by ADCS Sovereign Digital Services • https://akuldravin.com
 
             {/* Technical Cropping & Scanning Specifications */}
             <div style={{ background: '#FFFFFF', borderRadius: '14px', padding: '1.25rem', border: '2px solid #E2E8F0' }}>
-              <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0A192F', marginBottom: '0.75rem' }}>
+              <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#061A36', marginBottom: '0.75rem' }}>
                 Technical Upload Specifications for UTIITSL & Protean
               </div>
               <div style={{ overflowX: 'auto' }}>

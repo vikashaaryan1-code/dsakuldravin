@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
+import { ADCSLogo } from './../branding';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
+import { UTRPaymentGate, UTRPaymentSubmission } from './UTRPaymentGate';
 import { 
   X, 
   ShoppingCart, 
@@ -69,9 +72,9 @@ export const UnifiedCartModal: React.FC = () => {
     }
   };
 
-  const handleCheckout = async () => {
+  const handleCheckout = async (proof: UTRPaymentSubmission) => {
     if (cart.length === 0) return;
-    if (paymentMethod === 'wallet' && walletBalance < grandTotal) {
+    if (proof.paymentMethod === 'wallet' && walletBalance < grandTotal) {
       showToast(
         'Insufficient Wallet Balance',
         `Wallet balance is ₹${walletBalance.toLocaleString('en-IN')}, required ₹${grandTotal.toLocaleString('en-IN')}. Top up wallet or pay via UPI.`,
@@ -79,6 +82,7 @@ export const UnifiedCartModal: React.FC = () => {
       );
       return;
     }
+    setPaymentMethod(proof.paymentMethod === 'bank_transfer' ? 'netbanking' : proof.paymentMethod);
     setIsProcessing(true);
 
     try {
@@ -92,7 +96,7 @@ export const UnifiedCartModal: React.FC = () => {
 
       const orderId = orderRes?.order?.orderId || `order_ad_${Date.now()}`;
 
-      // 2. Submit applications
+      // 2. Submit applications with mandatory UTR Number & Transaction ID
       const appIds: string[] = [];
       cart.forEach(item => {
         const appId = submitApplication({
@@ -103,6 +107,10 @@ export const UnifiedCartModal: React.FC = () => {
           applicantName: 'Unified Checkout Customer',
           applicantEmail: 'customer@akuldravin.com',
           applicantPhone: '+91 98765 00000',
+          utrNumber: proof.utrNumber,
+          transactionId: proof.transactionId,
+          paymentMode: proof.paymentMethod,
+          notes: `Unified Cart Checkout • Payment: ${proof.paymentMethod.toUpperCase()} • UTR: ${proof.utrNumber} • TXN ID: ${proof.transactionId}`,
         });
         appIds.push(appId);
       });
@@ -110,7 +118,8 @@ export const UnifiedCartModal: React.FC = () => {
       // 3. Verify Payment with Payment Gateway
       const verifyRes = await apiClient.verifyPayment({
         orderId,
-        paymentMethod,
+        paymentId: `${proof.utrNumber}|${proof.transactionId}`,
+        paymentMethod: proof.paymentMethod,
         amount: grandTotal,
         items: cart
       });
@@ -118,7 +127,7 @@ export const UnifiedCartModal: React.FC = () => {
       const invNo = verifyRes?.transaction?.invoiceNumber || `INV-AD-2026-${Math.floor(10000 + Math.random() * 90000)}`;
       setTaxInvoiceNumber(invNo);
 
-      if (paymentMethod === 'wallet') {
+      if (proof.paymentMethod === 'wallet') {
         setWalletBalance(prev => Math.max(0, prev - grandTotal));
       }
 
@@ -134,8 +143,8 @@ export const UnifiedCartModal: React.FC = () => {
         origin: { y: 0.6 }
       });
 
-      logAudit(`Unified Payment Authorized (${appIds.length} items)`, `Invoice: ${invNo} • Total: ₹${grandTotal}`);
-      showToast('Payment Verified', `Tax Invoice ${invNo} generated successfully.`, 'success');
+      logAudit(`Unified Payment Authorized (${appIds.length} items)`, `Invoice: ${invNo} • UTR: ${proof.utrNumber} • TXN: ${proof.transactionId} • Total: ₹${grandTotal}`);
+      showToast('UTR & Payment Logged', `Tax Invoice ${invNo} generated (UTR: ${proof.utrNumber}).`, 'success');
     } catch (err) {
       console.error('Checkout error:', err);
       setIsProcessing(false);
@@ -176,19 +185,19 @@ export const UnifiedCartModal: React.FC = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '1.25rem 1.75rem',
-          borderBottom: '1px solid #E2E8F0',
-          background: 'linear-gradient(135deg, #0A192F 0%, #1E3A8A 100%)',
+          padding: '1.15rem 1.75rem',
+          borderBottom: '2px solid #D6A12B',
+          background: 'linear-gradient(135deg, #031126 0%, #061A36 65%, #075ACB 100%)',
           color: '#FFFFFF',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <ShoppingCart size={22} color="#F59E0B" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <ADCSLogo variant="compact" height={38} decorative />
             <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, letterSpacing: '-0.01em', color: '#FFFFFF' }}>
-                Unified Multi-Service Cart & Payment
+              <h3 style={{ fontSize: '1.12rem', fontWeight: 800, margin: 0, letterSpacing: '-0.01em', color: '#FFFFFF' }}>
+                ADCS Unified Checkout & Billing
               </h3>
-              <p style={{ fontSize: '0.78rem', color: '#93C5FD', margin: 0 }}>
-                Enterprise Checkout • Single Transaction for Citizen & Business Services
+              <p style={{ fontSize: '0.76rem', color: '#F3D477', margin: 0 }}>
+                AKUL DRAVIN DIGITAL SERVICES • Itemized GST Tax Receipt
               </p>
             </div>
           </div>
@@ -233,7 +242,7 @@ export const UnifiedCartModal: React.FC = () => {
               </div>
 
               <span className="badge badge-gold" style={{ marginBottom: '0.5rem' }}>PAYMENT VERIFIED & SETTLED</span>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
                 Payment & Applications Dispatched!
               </h3>
               <p style={{ color: '#475569', fontSize: '0.88rem', maxWidth: '460px', margin: '0 auto 1.25rem' }}>
@@ -258,15 +267,32 @@ export const UnifiedCartModal: React.FC = () => {
                     <div style={{ fontSize: '0.72rem', color: '#166534', fontWeight: 700 }}>GST TAX INVOICE NUMBER:</div>
                     <div style={{ fontWeight: 800, color: '#14532D' }}>{taxInvoiceNumber}</div>
                   </div>
-                  <button 
-                    onClick={() => showToast('Invoice Exported', `Digital GST receipt ${taxInvoiceNumber} downloaded.`, 'success')}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      printBrandedADCSDocument({
+                        title: 'ADCS GST Tax Invoice & Payment Receipt',
+                        documentType: 'TAX INVOICE',
+                        documentNumber: taxInvoiceNumber,
+                        rows: [
+                          { label: 'Application References', value: generatedAppIds.join(', ') || 'Direct Checkout' },
+                          { label: 'Payment Method', value: paymentMethod.toUpperCase() },
+                          { label: 'Billing Entity', value: 'AKUL DRAVIN DIGITAL SERVICES (GSTIN: 07AAAAA0000A1Z5)' },
+                        ],
+                        amountSummary: {
+                          total: grandTotal || 0,
+                          paymentStatus: 'SETTLED & VERIFIED',
+                        },
+                      });
+                      showToast('Receipt Opened', `Printable ADCS receipt ${taxInvoiceNumber} generated.`, 'success');
+                    }}
                     style={{
-                      background: '#15803D',
+                      background: '#075ACB',
                       color: '#FFFFFF',
                       border: 'none',
                       borderRadius: '8px',
-                      padding: '0.4rem 0.75rem',
-                      fontSize: '0.75rem',
+                      padding: '0.45rem 0.85rem',
+                      fontSize: '0.76rem',
                       fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
@@ -275,7 +301,7 @@ export const UnifiedCartModal: React.FC = () => {
                     }}
                   >
                     <Download size={13} />
-                    <span>Download Receipt</span>
+                    <span>Print / PDF Receipt</span>
                   </button>
                 </div>
               )}
@@ -300,7 +326,7 @@ export const UnifiedCartModal: React.FC = () => {
                       justifyContent: 'space-between',
                       fontSize: '0.88rem',
                       fontWeight: 600,
-                      color: '#0A192F',
+                      color: '#061A36',
                     }}>
                       <span>Service #{idx + 1}</span>
                       <span className="badge badge-blue">{id}</span>
@@ -343,7 +369,7 @@ export const UnifiedCartModal: React.FC = () => {
           ) : cart.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3.5rem 1rem', color: '#64748B' }}>
               <ShoppingCart size={48} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
-              <h4 style={{ fontWeight: 700, fontSize: '1.1rem', color: '#0A192F', marginBottom: '0.25rem' }}>
+              <h4 style={{ fontWeight: 700, fontSize: '1.1rem', color: '#061A36', marginBottom: '0.25rem' }}>
                 Your Unified Cart is Empty
               </h4>
               <p style={{ fontSize: '0.85rem' }}>
@@ -365,7 +391,7 @@ export const UnifiedCartModal: React.FC = () => {
                     background: '#FFFFFF',
                   }}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0A192F' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#061A36' }}>
                         {item.title}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: '#64748B', textTransform: 'capitalize' }}>
@@ -375,7 +401,7 @@ export const UnifiedCartModal: React.FC = () => {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontWeight: 700, color: '#0A192F' }}>
+                        <div style={{ fontWeight: 700, color: '#061A36' }}>
                           ₹{item.price.toLocaleString('en-IN')}
                         </div>
                         {item.govtFee > 0 && (
@@ -448,9 +474,9 @@ export const UnifiedCartModal: React.FC = () => {
                       style={{
                         padding: '0.65rem 0.5rem',
                         borderRadius: '10px',
-                        border: paymentMethod === m.id ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                        border: paymentMethod === m.id ? '2px solid #075ACB' : '1px solid #E2E8F0',
                         background: paymentMethod === m.id ? '#EFF6FF' : '#FFFFFF',
-                        color: paymentMethod === m.id ? '#1D4ED8' : '#475569',
+                        color: paymentMethod === m.id ? '#075ACB' : '#475569',
                         fontWeight: 600,
                         fontSize: '0.78rem',
                         display: 'flex',
@@ -490,20 +516,20 @@ export const UnifiedCartModal: React.FC = () => {
                       justifyContent: 'space-between'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <div style={{ width: '20px', height: '20px', background: '#0A192F', borderRadius: '4px' }} />
-                        <div style={{ width: '20px', height: '20px', background: '#0A192F', borderRadius: '4px' }} />
+                        <div style={{ width: '20px', height: '20px', background: '#061A36', borderRadius: '4px' }} />
+                        <div style={{ width: '20px', height: '20px', background: '#061A36', borderRadius: '4px' }} />
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <QrCode size={24} color="#1E3A8A" />
+                        <QrCode size={24} color="#061A36" />
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <div style={{ width: '20px', height: '20px', background: '#0A192F', borderRadius: '4px' }} />
+                        <div style={{ width: '20px', height: '20px', background: '#061A36', borderRadius: '4px' }} />
                         <div style={{ width: '10px', height: '10px', background: '#F59E0B', borderRadius: '2px' }} />
                       </div>
                     </div>
 
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#1E3A8A', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#061A36', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Smartphone size={14} />
                         <span>Scan with any UPI App</span>
                       </div>
@@ -576,22 +602,23 @@ export const UnifiedCartModal: React.FC = () => {
                   justifyContent: 'space-between',
                   fontWeight: 800,
                   fontSize: '1.15rem',
-                  color: '#0A192F',
+                  color: '#061A36',
                 }}>
                   <span>Unified Grand Total</span>
-                  <span style={{ color: '#1D4ED8' }}>₹{grandTotal.toLocaleString('en-IN')}</span>
+                  <span style={{ color: '#075ACB' }}>₹{grandTotal.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
-              {/* Checkout Action */}
-              <button
-                onClick={handleCheckout}
-                disabled={isProcessing}
-                className="btn-gold btn-lg"
-                style={{ width: '100%', fontWeight: 800 }}
-              >
-                {isProcessing ? 'Authorizing Unified Payment...' : `Pay ₹${grandTotal.toLocaleString('en-IN')} via ${paymentMethod.toUpperCase()} & Dispatch`}
-              </button>
+              {/* Mandatory Pre-Execution UTR Number & Transaction ID Payment Verification Gate */}
+              <UTRPaymentGate
+                amount={grandTotal}
+                serviceTitle={`Unified Cart Checkout (${cart.length} ${cart.length === 1 ? 'Service' : 'Services'})`}
+                defaultMethod={paymentMethod === 'netbanking' ? 'bank_transfer' : paymentMethod}
+                ctaLabel={`Verify UTR & Dispatch ${cart.length} Orders (₹${grandTotal.toLocaleString('en-IN')})`}
+                isSubmitting={isProcessing}
+                onVerifiedSubmit={handleCheckout}
+                showMethodSelector={true}
+              />
 
               <div style={{
                 display: 'flex',

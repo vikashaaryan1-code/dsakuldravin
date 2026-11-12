@@ -42,7 +42,7 @@ export const AstroHeaderNav: React.FC = () => {
 
   return (
     <div style={{
-      background: 'linear-gradient(90deg, #090E17 0%, #151D33 50%, #0B1120 100%)',
+      background: 'linear-gradient(90deg, #031126 0%, #151D33 50%, #0B1120 100%)',
       borderBottom: '1px solid rgba(245, 158, 11, 0.25)',
       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.4)',
       position: 'sticky',

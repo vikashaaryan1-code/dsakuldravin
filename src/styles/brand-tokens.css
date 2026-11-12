@@ -1,0 +1,116 @@
+/* =========================================================================
+ * ADCS OFFICIAL BRAND TOKENS — AKUL DRAVIN DIGITAL SERVICES
+ * Slogan: HAR KAAM DIGITAL • HAR SAMADHAAN EK JAGAH
+ * Single Source of Truth for Colors, Typography, Spacing, Radius & Elevation
+ * ========================================================================= */
+
+:root {
+  /* Primary Brand Palette */
+  --adcs-primary: #075ACB;
+  --adcs-primary-hover: #064BA8;
+  --adcs-primary-soft: rgba(7, 90, 203, 0.08);
+  --adcs-blue-light: #0878F9;
+
+  /* Navy Architecture */
+  --adcs-navy: #061A36;
+  --adcs-navy-deep: #031126;
+  --adcs-navy-elevated: #0C2850;
+
+  /* Metallic Gold Accents (Used purposefully; never low-contrast gold text on white) */
+  --adcs-gold: #D6A12B;
+  --adcs-gold-light: #F3D477;
+  --adcs-gold-dark: #946809;
+  --adcs-gold-soft: rgba(214, 161, 43, 0.12);
+
+  /* Light Surfaces & Neutrals */
+  --adcs-background: #F5F8FC;
+  --adcs-surface: #FFFFFF;
+  --adcs-surface-subtle: #EDF2F9;
+  --adcs-text: #14243A;
+  --adcs-text-secondary: #334861;
+  --adcs-muted: #55677D; /* WCAG 2.2 AA >= 4.5:1 on white and #F5F8FC */
+  --adcs-border: #DCE4EF;
+  --adcs-border-strong: #C2D0E3;
+
+  /* Semantic Status Colors (WCAG AA compliant) */
+  --adcs-success: #047857;
+  --adcs-success-bg: #ECFDF5;
+  --adcs-success-border: #A7F3D0;
+  --adcs-warning: #B45309;
+  --adcs-warning-bg: #FFFBEB;
+  --adcs-warning-border: #FDE68A;
+  --adcs-danger: #B91C1C;
+  --adcs-danger-bg: #FEF2F2;
+  --adcs-danger-border: #FECACA;
+  --adcs-info: #075ACB;
+  --adcs-info-bg: #EFF6FF;
+  --adcs-info-border: #BFDBFE;
+
+  /* Typography */
+  --adcs-font-sans: 'Plus Jakarta Sans', 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, sans-serif;
+  --adcs-font-display: 'Outfit', 'Plus Jakarta Sans', 'Noto Sans Devanagari', sans-serif;
+  --adcs-font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, monospace;
+
+  /* Spacing Scale */
+  --adcs-space-1: 0.25rem;  /* 4px */
+  --adcs-space-2: 0.5rem;   /* 8px */
+  --adcs-space-3: 0.75rem;  /* 12px */
+  --adcs-space-4: 1rem;     /* 16px */
+  --adcs-space-5: 1.25rem;  /* 20px */
+  --adcs-space-6: 1.5rem;   /* 24px */
+  --adcs-space-8: 2rem;     /* 32px */
+  --adcs-space-10: 2.5rem;  /* 40px */
+  --adcs-space-12: 3rem;    /* 48px */
+  --adcs-space-16: 4rem;    /* 64px */
+
+  /* Radii */
+  --adcs-radius-xs: 4px;
+  --adcs-radius-sm: 8px;
+  --adcs-radius-md: 12px;
+  --adcs-radius-lg: 16px;
+  --adcs-radius-xl: 22px;
+  --adcs-radius-full: 9999px;
+
+  /* Controlled Elevation (Subtle & Enterprise-Ready) */
+  --adcs-shadow-xs: 0 1px 2px rgba(6, 26, 54, 0.05);
+  --adcs-shadow-sm: 0 2px 6px rgba(6, 26, 54, 0.06);
+  --adcs-shadow-md: 0 6px 18px rgba(6, 26, 54, 0.08);
+  --adcs-shadow-lg: 0 12px 30px rgba(6, 26, 54, 0.12);
+  --adcs-shadow-xl: 0 20px 44px rgba(3, 17, 38, 0.16);
+  --adcs-focus-ring: 0 0 0 3px rgba(8, 120, 249, 0.35);
+
+  /* Transitions */
+  --adcs-transition-fast: 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --adcs-transition-base: 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Legacy Alias Tokens — keeps older modules synchronized with ADCS Identity */
+  --navy-dark: var(--adcs-navy);
+  --navy-accent: var(--adcs-navy-elevated);
+  --primary-navy: var(--adcs-navy);
+  --royal-blue: var(--adcs-primary);
+  --royal-light: var(--adcs-blue-light);
+  --gold-primary: var(--adcs-gold);
+  --gold-glow: var(--adcs-gold-light);
+  --bg-light: var(--adcs-background);
+  --bg-surface: var(--adcs-background);
+  --bg-card: var(--adcs-surface);
+  --bg-slate: var(--adcs-surface-subtle);
+  --text-main: var(--adcs-text);
+  --text-muted: var(--adcs-muted);
+  --text-light: #FFFFFF;
+  --border-color: var(--adcs-border);
+  --border-subtle: var(--adcs-border);
+  --border-glass: rgba(220, 228, 239, 0.72);
+  --border-highlight: rgba(7, 90, 203, 0.25);
+  --radius-sm: var(--adcs-radius-sm);
+  --radius-md: var(--adcs-radius-md);
+  --radius-lg: var(--adcs-radius-lg);
+  --radius-xl: var(--adcs-radius-xl);
+  --radius-full: var(--adcs-radius-full);
+  --shadow-sm: var(--adcs-shadow-sm);
+  --shadow-md: var(--adcs-shadow-md);
+  --shadow-lg: var(--adcs-shadow-lg);
+  --shadow-xl: var(--adcs-shadow-xl);
+  --font-sans: var(--adcs-font-sans);
+  --font-display: var(--adcs-font-display);
+}

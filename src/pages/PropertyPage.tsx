@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Building2, 
   MapPin, 
@@ -94,33 +95,28 @@ export const PropertyPage: React.FC = () => {
 
   const handleDownloadVisitSlip = () => {
     if (!bookedVisit) return;
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — VERIFIED PROPERTY SITE VISIT PASS',
-      '========================================================================',
-      `Visit Reference   : ${bookedVisit.appId}`,
-      `Visitor Name      : ${bookedVisit.visitorName}`,
-      `Contact Mobile    : ${bookedVisit.visitorPhone}`,
-      `Property Title    : ${bookedVisit.propertyTitle}`,
-      `Location          : ${bookedVisit.location}`,
-      `Listed Valuation  : ${bookedVisit.priceFormatted}`,
-      `Scheduled Date    : ${bookedVisit.visitDate}`,
-      `Track Status URL  : https://akuldravindigital.com/track?id=${encodeURIComponent(bookedVisit.appId)}`,
-      '========================================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Visit_Pass_${bookedVisit.appId}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'Verified Property Inspection & Site Visit Pass',
+      documentType: 'PROPERTY VISIT PASS',
+      documentNumber: bookedVisit.appId,
+      issuedDate: bookedVisit.visitDate,
+      rows: [
+        { label: 'Visitor Legal Name', value: bookedVisit.visitorName },
+        { label: 'Registered Mobile', value: bookedVisit.visitorPhone },
+        { label: 'Listed Property Title', value: bookedVisit.propertyTitle },
+        { label: 'Property Location', value: bookedVisit.location },
+        { label: 'Listed Valuation', value: bookedVisit.priceFormatted },
+        { label: 'Scheduled Inspection Date', value: bookedVisit.visitDate },
+      ],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?id=${encodeURIComponent(bookedVisit.appId)}`,
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -180,10 +176,10 @@ export const PropertyPage: React.FC = () => {
                 borderRadius: '8px',
                 fontWeight: 700,
                 fontSize: '0.85rem',
-                background: purposeFilter === btn.id ? '#1D4ED8' : '#F1F5F9',
+                background: purposeFilter === btn.id ? '#075ACB' : '#F1F5F9',
                 color: purposeFilter === btn.id ? '#FFFFFF' : '#475569',
                 border: '1px solid',
-                borderColor: purposeFilter === btn.id ? '#1D4ED8' : '#CBD5E1',
+                borderColor: purposeFilter === btn.id ? '#075ACB' : '#CBD5E1',
               }}
             >
               {btn.label}
@@ -239,7 +235,7 @@ export const PropertyPage: React.FC = () => {
               <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#059669' }}>
                 VERIFIED SITE VISIT CONFIRMED • {bookedVisit.appId}
               </div>
-              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0A192F' }}>
+              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#061A36' }}>
                 {bookedVisit.propertyTitle} ({bookedVisit.visitDate})
               </div>
               <div style={{ fontSize: '0.82rem', color: '#475569' }}>
@@ -288,6 +284,9 @@ export const PropertyPage: React.FC = () => {
                 <img
                   src={prop.image}
                   alt={prop.title}
+                  onError={(e) => {
+                    e.currentTarget.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='340'><rect width='600' height='340' fill='%23061A36'/><text x='300' y='175' fill='%23F3D477' font-family='sans-serif' font-size='20' text-anchor='middle'>ADCS VERIFIED PROPERTY</text></svg>";
+                  }}
                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
                 <div style={{
@@ -330,7 +329,7 @@ export const PropertyPage: React.FC = () => {
                   <span>{prop.location}, {prop.city}</span>
                 </div>
 
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.75rem', lineHeight: 1.35 }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#061A36', marginBottom: '0.75rem', lineHeight: 1.35 }}>
                   {prop.title}
                 </h3>
 
@@ -398,7 +397,7 @@ export const PropertyPage: React.FC = () => {
             maxWidth: '460px',
             padding: '1.75rem',
           }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
               Schedule Free Site Visit
             </h3>
             <p style={{ fontSize: '0.82rem', color: '#64748B', marginBottom: '1.25rem' }}>
@@ -473,7 +472,7 @@ export const PropertyPage: React.FC = () => {
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             AUTHORIZED RERA, BHULEKH & PROPERTY REGISTRATION PORTALS
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>

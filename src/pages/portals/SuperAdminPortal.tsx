@@ -28,7 +28,10 @@ import {
   Palette,
   RefreshCw
 } from 'lucide-react';
-import { ServiceItem, ApplicationStatus } from '../../types';
+import { ServiceItem, ApplicationStatus, AuthUserAccount, CommissionRule, DepartmentName, DigitalSevaTier, LoginPanelKey, PermissionFlag } from '../../types';
+import { ADCSLogo, BrandHeader, CertificateBranding, DocumentHeader } from '../../components/branding';
+import { ADCS_LOGO_ASSETS, ADCS_APPROVED_SIGNATORIES, ADCS_COLORS } from '../../config/brandAssets';
+import { ALL_PERMISSION_FLAGS, LOGIN_PANELS } from '../../config/governanceCatalog';
 
 export const SuperAdminPortal: React.FC = () => {
   const { 
@@ -44,20 +47,64 @@ export const SuperAdminPortal: React.FC = () => {
     apiProviders,
     toggleApiProviderMode,
     whiteLabelConfig,
-    updateWhiteLabelConfig
+    updateWhiteLabelConfig,
+    publishWhiteLabelConfig,
+    brandAuditLog,
+    utrPayments,
+    verifyUtrPayment,
+    userAccounts,
+    updateUserAccountAccess,
+    createManagedAccount,
+    commissionRules,
+    updateCommissionRule,
+    aiControlConfig,
+    updateAiControlConfig,
+    serviceBanners,
+    saveServiceBanner,
+    pricingPlans,
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'service-builder' | 'applications' | 'security' | 'rbac' | 'branches' | 'gateway-audit' | 'api-studio' | 'whitelabel'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'utr-verify' | 'access-hierarchy' | 'commissions' | 'ai-command' | 'service-builder' | 'applications' | 'security' | 'rbac' | 'branches' | 'gateway-audit' | 'api-studio' | 'whitelabel'>('overview');
   const [appSearch, setAppSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
 
-  // White label form local state
+  // Provisioning form state for new isolated portal credential
+  const [newAccName, setNewAccName] = useState('');
+  const [newAccId, setNewAccId] = useState('');
+  const [newAccPassword, setNewAccPassword] = useState('Secure@2026');
+  const [newAccPanel, setNewAccPanel] = useState<LoginPanelKey>('vle_rural');
+  const [newAccDept, setNewAccDept] = useState('Rural Digital Seva Kendra');
+  const [newAccDesignation, setNewAccDesignation] = useState('Rural VLE / Panchayat Operator');
+
+  // Inline Commission draft edits keyed by rule ID
+  const [commEdits, setCommEdits] = useState<Record<string, Partial<CommissionRule>>>({});
+
+  // Inline Banner Editor draft
+  const [bannerTitle, setBannerTitle] = useState('');
+  const [bannerSubtitle, setBannerSubtitle] = useState('');
+  const [bannerBadge, setBannerBadge] = useState('NEW CAMPAIGN');
+  const [bannerSector, setBannerSector] = useState('government');
+  const [bannerRoute, setBannerRoute] = useState('/services');
+
+  // Enterprise Brand Management local form state
   const [wlBrandName, setWlBrandName] = useState(whiteLabelConfig.brandName);
   const [wlTagline, setWlTagline] = useState(whiteLabelConfig.tagline);
   const [wlPrimaryColor, setWlPrimaryColor] = useState(whiteLabelConfig.primaryColor);
   const [wlAccentColor, setWlAccentColor] = useState(whiteLabelConfig.accentColor);
+  const [wlNavyColor, setWlNavyColor] = useState(whiteLabelConfig.navyColor || ADCS_COLORS.deepNavy);
   const [wlDomain, setWlDomain] = useState(whiteLabelConfig.customDomain);
   const [wlInvoiceHeader, setWlInvoiceHeader] = useState(whiteLabelConfig.invoiceHeader);
+  const [wlFooterText, setWlFooterText] = useState(whiteLabelConfig.footerText || 'AKUL DRAVIN DIGITAL SERVICES (ADCS) • HAR KAAM DIGITAL • HAR SAMADHAAN EK JAGAH');
+  const [wlSupportPhone, setWlSupportPhone] = useState(whiteLabelConfig.supportPhone);
+  const [wlSupportEmail, setWlSupportEmail] = useState(whiteLabelConfig.supportEmail);
+  const [wlSignatoryName, setWlSignatoryName] = useState(whiteLabelConfig.approvedSignatoryName || ADCS_APPROVED_SIGNATORIES[0].name);
+  const [wlSignatoryRole, setWlSignatoryRole] = useState(whiteLabelConfig.approvedSignatoryDesignation || ADCS_APPROVED_SIGNATORIES[0].designation);
+  const [wlLogoVariantUrl, setWlLogoVariantUrl] = useState(whiteLabelConfig.certificateLogoUrl || ADCS_LOGO_ASSETS.certificate);
+  const [wlCertTemplate, setWlCertTemplate] = useState<'classic-navy-gold' | 'executive-royal' | 'minimal-enterprise'>(whiteLabelConfig.certificateTemplateStyle || 'classic-navy-gold');
+  const [wlLetterTemplate, setWlLetterTemplate] = useState<'corporate-navy' | 'royal-accent'>(whiteLabelConfig.letterheadTemplateStyle || 'corporate-navy');
+  const [wlInvoiceTemplate, setWlInvoiceTemplate] = useState<'gst-standard' | 'compact-thermal'>(whiteLabelConfig.invoiceTemplateStyle || 'gst-standard');
+  const [brandPreviewTab, setBrandPreviewTab] = useState<'portal' | 'certificate' | 'document'>('portal');
+  const [draftApprovedPreview, setDraftApprovedPreview] = useState(false);
 
   // Live Gateway & Transaction Ledger State
   const [gatewayHealth, setGatewayHealth] = useState<any>(null);
@@ -184,7 +231,7 @@ export const SuperAdminPortal: React.FC = () => {
         
         {/* Top Header Banner */}
         <div style={{
-          background: 'linear-gradient(135deg, #0A192F 0%, #1E3A8A 50%, #0F172A 100%)',
+          background: 'linear-gradient(135deg, #061A36 0%, #061A36 50%, #0F172A 100%)',
           borderRadius: 'var(--radius-xl)',
           padding: '2rem 2.5rem',
           color: '#fff',
@@ -231,9 +278,9 @@ export const SuperAdminPortal: React.FC = () => {
               </div>
             </div>
             <div>
-              <div style={{ fontSize: '0.75rem', color: '#94A3B8', textTransform: 'uppercase' }}>Security Engine</div>
-              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#F59E0B' }}>
-                ISO 27001 Active
+              <div style={{ fontSize: '0.75rem', color: '#94A3B8', textTransform: 'uppercase' }}>Governance Engine</div>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: '#F3D477' }}>
+                RBAC + Audit Trail Active
               </div>
             </div>
           </div>
@@ -250,11 +297,15 @@ export const SuperAdminPortal: React.FC = () => {
         }}>
           {[
             { id: 'overview', label: 'Ecosystem Analytics', icon: Activity },
+            { id: 'utr-verify', label: `UTR & Txn Verification (${utrPayments.filter(u => u.paymentStatus === 'UTR_SUBMITTED').length})`, icon: ShieldCheck },
+            { id: 'access-hierarchy', label: `Access Control & Seva Tiers (${userAccounts.length})`, icon: Key },
+            { id: 'commissions', label: 'Admin Commission Matrix', icon: DollarSign },
+            { id: 'ai-command', label: 'QUANTUM AI & Banners', icon: Sparkles },
             { id: 'service-builder', label: '⚡ Zero-Code Service Engine', icon: PlusCircle },
             { id: 'applications', label: 'Citizen Applications', icon: FileText },
             { id: 'gateway-audit', label: 'API Gateway & Ledger', icon: Server },
             { id: 'api-studio', label: 'API Integration Studio', icon: Cpu },
-            { id: 'whitelabel', label: 'White-Label & Branding', icon: Palette },
+            { id: 'whitelabel', label: 'Brand Management & White-Label', icon: Palette },
             { id: 'security', label: 'Security & Audit Vault', icon: Lock },
             { id: 'rbac', label: 'Roles & Permissions Matrix', icon: Users },
             { id: 'branches', label: 'Pan-India Branches', icon: Globe }
@@ -1116,7 +1167,7 @@ export const SuperAdminPortal: React.FC = () => {
                   {apiProviders.map((p) => (
                     <tr key={p.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
                       <td style={{ padding: '1rem' }}>
-                        <div style={{ fontWeight: 800, color: '#0A192F' }}>{p.name}</div>
+                        <div style={{ fontWeight: 800, color: '#061A36' }}>{p.name}</div>
                         <div style={{ fontSize: '0.72rem', color: '#64748B', fontFamily: 'monospace' }}>{p.baseUrl}</div>
                       </td>
                       <td style={{ padding: '1rem' }}>
@@ -1148,150 +1199,687 @@ export const SuperAdminPortal: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 8: WHITE-LABEL & TENANT BRANDING */}
+        {/* TAB 8: ENTERPRISE BRAND MANAGEMENT & WHITE-LABEL GOVERNANCE */}
         {activeTab === 'whitelabel' && (
-          <div className="glass-card" style={{ padding: '1.75rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div className="glass-card" style={{ padding: '1.75rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--adcs-border)', paddingBottom: '1rem' }}>
               <div>
-                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary-navy)', margin: 0 }}>
-                  White-Label Multi-Tenant SaaS & Regional Brand Customizer
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <span className="badge-gold">VERSION v{whiteLabelConfig.version || 1}.0 • {whiteLabelConfig.approvalStatus || 'PUBLISHED'}</span>
+                  <span className="badge-blue">RBAC PROTECTED GOVERNANCE</span>
+                </div>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--adcs-text)', margin: 0 }}>
+                  ADCS Enterprise Brand Management & Template Governance
                 </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: '4px 0 0' }}>
-                  Deploy custom enterprise domain, logos, corporate colors, and invoice headers across subordinate partner hubs
+                <p style={{ color: 'var(--adcs-muted)', fontSize: '0.85rem', margin: '4px 0 0' }}>
+                  Manage official logos, palette tokens, certificate/letterhead/invoice templates, signatories, and approval workflow.
                 </p>
               </div>
 
-              <button
-                onClick={() => {
-                  updateWhiteLabelConfig({
-                    brandName: wlBrandName,
-                    tagline: wlTagline,
-                    primaryColor: wlPrimaryColor,
-                    accentColor: wlAccentColor,
-                    customDomain: wlDomain,
-                    invoiceHeader: wlInvoiceHeader
-                  });
-                }}
-                className="btn btn-primary"
-                style={{ gap: '0.4rem', fontWeight: 800 }}
-              >
-                <Save size={16} /> Save Tenant Settings
-              </button>
+              <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    updateWhiteLabelConfig({
+                      brandName: wlBrandName,
+                      tagline: wlTagline,
+                      primaryColor: wlPrimaryColor,
+                      accentColor: wlAccentColor,
+                      navyColor: wlNavyColor,
+                      customDomain: wlDomain,
+                      invoiceHeader: wlInvoiceHeader,
+                      footerText: wlFooterText,
+                      supportPhone: wlSupportPhone,
+                      supportEmail: wlSupportEmail,
+                      approvedSignatoryName: wlSignatoryName,
+                      approvedSignatoryDesignation: wlSignatoryRole,
+                      certificateLogoUrl: wlLogoVariantUrl,
+                      certificateTemplateStyle: wlCertTemplate,
+                      letterheadTemplateStyle: wlLetterTemplate,
+                      invoiceTemplateStyle: wlInvoiceTemplate,
+                      approvalStatus: 'PENDING_APPROVAL',
+                    });
+                    setDraftApprovedPreview(true);
+                  }}
+                  className="btn-secondary"
+                >
+                  <Eye size={15} /> Save Draft & Review Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!draftApprovedPreview) {
+                      setDraftApprovedPreview(true);
+                    }
+                    await publishWhiteLabelConfig({
+                      brandName: wlBrandName,
+                      tagline: wlTagline,
+                      primaryColor: wlPrimaryColor,
+                      accentColor: wlAccentColor,
+                      navyColor: wlNavyColor,
+                      customDomain: wlDomain,
+                      invoiceHeader: wlInvoiceHeader,
+                      footerText: wlFooterText,
+                      supportPhone: wlSupportPhone,
+                      supportEmail: wlSupportEmail,
+                      approvedSignatoryName: wlSignatoryName,
+                      approvedSignatoryDesignation: wlSignatoryRole,
+                      certificateLogoUrl: wlLogoVariantUrl,
+                      certificateTemplateStyle: wlCertTemplate,
+                      letterheadTemplateStyle: wlLetterTemplate,
+                      invoiceTemplateStyle: wlInvoiceTemplate,
+                    }, 'Super Admin Controller');
+                    logAudit('BRAND_PUBLISHED', `Published ADCS brand config for ${wlBrandName}`);
+                  }}
+                  className="btn-primary"
+                >
+                  <Save size={15} /> Approve & Publish Live
+                </button>
+              </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr', gap: '2rem', alignItems: 'start' }}>
-              {/* Form Controls */}
-              <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '16px', border: '1px solid #E2E8F0' }}>
-                <div className="form-group">
-                  <label className="form-label">Brand / Platform Name</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={wlBrandName}
-                    onChange={(e) => setWlBrandName(e.target.value)}
-                  />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.75rem', alignItems: 'start' }}>
+              {/* Left Column: Controls */}
+              <div style={{ background: 'var(--adcs-background)', padding: '1.35rem', borderRadius: '14px', border: '1px solid var(--adcs-border)', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <strong style={{ fontSize: '0.92rem', color: 'var(--adcs-text)' }}>1. Brand Identity & Master Assets</strong>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWlBrandName('AKUL DRAVIN DIGITAL SERVICES');
+                      setWlTagline('HAR KAAM DIGITAL • HAR SAMADHAAN EK JAGAH');
+                      setWlPrimaryColor(ADCS_COLORS.royalBlue);
+                      setWlNavyColor(ADCS_COLORS.deepNavy);
+                      setWlAccentColor(ADCS_COLORS.metallicGold);
+                      setWlLogoVariantUrl(ADCS_LOGO_ASSETS.certificate);
+                    }}
+                    style={{ fontSize: '0.75rem', fontWeight: 700, color: '#075ACB' }}
+                  >
+                    Reset to Official ADCS Tokens
+                  </button>
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Brand Tagline / Slogan</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={wlTagline}
-                    onChange={(e) => setWlTagline(e.target.value)}
-                  />
+                  <label className="form-label">Active Logo Asset Variant</label>
+                  <select className="form-select" value={wlLogoVariantUrl} onChange={(e) => setWlLogoVariantUrl(e.target.value)}>
+                    <option value={ADCS_LOGO_ASSETS.certificate}>Certificate & Print Logo (Light Background)</option>
+                    <option value={ADCS_LOGO_ASSETS.light}>Full Master Transparent (Light Background)</option>
+                    <option value={ADCS_LOGO_ASSETS.dark}>Full Master Dark-Optimized (#061A36 Surfaces)</option>
+                    <option value={ADCS_LOGO_ASSETS.header}>Header Compact Wordmark</option>
+                    <option value={ADCS_LOGO_ASSETS.emblem}>AD Compact Emblem Crop</option>
+                  </select>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Official Organization Name</label>
+                  <input type="text" className="form-input" value={wlBrandName} onChange={(e) => setWlBrandName(e.target.value)} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Official Tagline / Slogan</label>
+                  <input type="text" className="form-input" value={wlTagline} onChange={(e) => setWlTagline(e.target.value)} />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.65rem' }}>
                   <div className="form-group">
-                    <label className="form-label">Primary Brand Color</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      <input
-                        type="color"
-                        value={wlPrimaryColor}
-                        onChange={(e) => setWlPrimaryColor(e.target.value)}
-                        style={{ width: '40px', height: '40px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                      />
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={wlPrimaryColor}
-                        onChange={(e) => setWlPrimaryColor(e.target.value)}
-                      />
-                    </div>
+                    <label className="form-label">Royal Primary</label>
+                    <input type="color" value={wlPrimaryColor} onChange={(e) => setWlPrimaryColor(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', cursor: 'pointer' }} />
                   </div>
-
                   <div className="form-group">
-                    <label className="form-label">Accent Highlight Color</label>
-                    <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                      <input
-                        type="color"
-                        value={wlAccentColor}
-                        onChange={(e) => setWlAccentColor(e.target.value)}
-                        style={{ width: '40px', height: '40px', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
-                      />
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={wlAccentColor}
-                        onChange={(e) => setWlAccentColor(e.target.value)}
-                      />
-                    </div>
+                    <label className="form-label">Deep Navy</label>
+                    <input type="color" value={wlNavyColor} onChange={(e) => setWlNavyColor(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', cursor: 'pointer' }} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Metallic Gold</label>
+                    <input type="color" value={wlAccentColor} onChange={(e) => setWlAccentColor(e.target.value)} style={{ width: '100%', height: '38px', borderRadius: '6px', cursor: 'pointer' }} />
                   </div>
                 </div>
 
-                <div className="form-group">
-                  <label className="form-label">Custom White-Label Domain (CNAME)</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={wlDomain}
-                    onChange={(e) => setWlDomain(e.target.value)}
-                  />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Helpline Phone</label>
+                    <input type="text" className="form-input" value={wlSupportPhone} onChange={(e) => setWlSupportPhone(e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Support Email</label>
+                    <input type="email" className="form-input" value={wlSupportEmail} onChange={(e) => setWlSupportEmail(e.target.value)} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Approved Signatory</label>
+                    <select
+                      className="form-select"
+                      value={wlSignatoryName}
+                      onChange={(e) => {
+                        const match = ADCS_APPROVED_SIGNATORIES.find((s) => s.name === e.target.value);
+                        setWlSignatoryName(e.target.value);
+                        if (match) setWlSignatoryRole(match.designation);
+                      }}
+                    >
+                      {ADCS_APPROVED_SIGNATORIES.map((sig) => (
+                        <option key={sig.id} value={sig.name}>{sig.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Certificate Template</label>
+                    <select className="form-select" value={wlCertTemplate} onChange={(e) => setWlCertTemplate(e.target.value as any)}>
+                      <option value="classic-navy-gold">Classic Deep Navy & Gold</option>
+                      <option value="executive-royal">Executive Royal Blue</option>
+                      <option value="minimal-enterprise">Minimal Enterprise Seal</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Letterhead Template</label>
+                    <select className="form-select" value={wlLetterTemplate} onChange={(e) => setWlLetterTemplate(e.target.value as any)}>
+                      <option value="corporate-navy">Corporate Navy Letterhead</option>
+                      <option value="royal-accent">Royal Accent Strip</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Invoice Template</label>
+                    <select className="form-select" value={wlInvoiceTemplate} onChange={(e) => setWlInvoiceTemplate(e.target.value as any)}>
+                      <option value="gst-standard">A4 GST Tax Invoice</option>
+                      <option value="compact-thermal">Compact Thermal POS</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">GST Tax Invoice Header Text</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={wlInvoiceHeader}
-                    onChange={(e) => setWlInvoiceHeader(e.target.value)}
-                  />
+                  <label className="form-label">Custom White-Label Domain</label>
+                  <input type="text" className="form-input" value={wlDomain} onChange={(e) => setWlDomain(e.target.value)} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">GST Invoice & Document Footer Text</label>
+                  <input type="text" className="form-input" value={wlInvoiceHeader} onChange={(e) => setWlInvoiceHeader(e.target.value)} />
+                  <input type="text" className="form-input" style={{ marginTop: '0.45rem' }} value={wlFooterText} onChange={(e) => setWlFooterText(e.target.value)} />
                 </div>
               </div>
 
-              {/* Live Preview Card */}
-              <div style={{ background: '#0A192F', borderRadius: '20px', padding: '2rem', color: '#FFFFFF', border: `2px solid ${wlAccentColor}` }}>
-                <div style={{ fontSize: '0.75rem', color: wlAccentColor, fontWeight: 800, textTransform: 'uppercase', marginBottom: '0.5rem' }}>
-                  LIVE TENANT PREVIEW
+              {/* Right Column: Live Multi-Surface Preview & Audit Trail */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {[
+                    { id: 'portal', label: 'Portal Header Preview' },
+                    { id: 'certificate', label: 'Certificate Template Preview' },
+                    { id: 'document', label: 'Invoice / Letterhead Header' },
+                  ].map((t) => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setBrandPreviewTab(t.id as any)}
+                      className={brandPreviewTab === t.id ? 'btn-primary' : 'btn-secondary'}
+                      style={{ minHeight: '36px', fontSize: '0.78rem' }}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
                 </div>
-                <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#FFFFFF', margin: '0 0 0.25rem' }}>
-                  {wlBrandName}
-                </h2>
-                <p style={{ color: '#CBD5E1', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
-                  {wlTagline}
-                </p>
 
-                <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: '12px', padding: '1rem', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.5rem' }}>
-                  <div>Domain: <span style={{ fontFamily: 'monospace', color: '#93C5FD' }}>https://{wlDomain}</span></div>
-                  <div>Invoice: <span style={{ color: '#FDE68A' }}>{wlInvoiceHeader}</span></div>
+                {brandPreviewTab === 'portal' && (
+                  <div style={{ background: wlNavyColor, borderRadius: '16px', padding: '1.5rem', color: '#FFFFFF', border: `2px solid ${wlAccentColor}` }}>
+                    <BrandHeader title={wlBrandName} subtitle={wlTagline} theme="dark" />
+                    <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                      <ADCSLogo variant="dark" theme="dark" height={96} />
+                      <div style={{ flex: 1, minWidth: '200px' }}>
+                        <div style={{ fontSize: '0.74rem', color: wlAccentColor, fontWeight: 800 }}>ACTIVE TEMPLATE PROFILE</div>
+                        <div style={{ fontSize: '0.84rem', color: '#DCE7F5', marginTop: '4px' }}>Domain: https://{wlDomain}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#CBD5E1', marginTop: '2px' }}>Signatory: {wlSignatoryName}</div>
+                        <button
+                          type="button"
+                          style={{ marginTop: '0.9rem', padding: '0.55rem 1rem', borderRadius: '8px', background: wlPrimaryColor, color: '#FFFFFF', fontWeight: 700 }}
+                        >
+                          Primary Action Token ({wlPrimaryColor})
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {brandPreviewTab === 'certificate' && (
+                  <div style={{ transform: 'scale(0.92)', transformOrigin: 'top center' }}>
+                    <CertificateBranding
+                      certificateId="ADCS-PREVIEW-2026-001"
+                      certificateTitle="Sample Approved Credential"
+                      recipientName="Aarav Kumar"
+                      subtitleOrCourse={`Template: ${wlCertTemplate}`}
+                      credentialDetail="Sample certificate preview validating approved logo asset, gold framing, QR code, and designated signatory before publishing live."
+                      issueDate="2026-11-12"
+                      issuerName={wlSignatoryName}
+                      issuerDesignation={wlSignatoryRole}
+                      organizationName={wlBrandName}
+                      logoUrl={wlLogoVariantUrl}
+                      footerText={wlFooterText}
+                    />
+                  </div>
+                )}
+
+                {brandPreviewTab === 'document' && (
+                  <div style={{ background: '#FFFFFF', borderRadius: '14px', padding: '1.25rem', border: '1px solid #DCE4EF', color: '#061A36' }}>
+                    <DocumentHeader
+                      documentType={wlInvoiceTemplate === 'compact-thermal' ? 'PAYMENT RECEIPT' : 'TAX INVOICE'}
+                      documentNumber="INV-ADCS-PREVIEW-01"
+                      issuedDate="2026-11-12"
+                      brandName={wlBrandName}
+                      tagline={wlTagline}
+                      supportPhone={wlSupportPhone}
+                      supportEmail={wlSupportEmail}
+                      logoUrl={wlLogoVariantUrl}
+                      branchOrCenter={`Letterhead Style: ${wlLetterTemplate}`}
+                    />
+                    <div style={{ fontSize: '0.78rem', color: '#55677D' }}>Footer: {wlFooterText}</div>
+                  </div>
+                )}
+
+                {/* Brand Change Governance & Audit Log */}
+                <div style={{ background: 'var(--adcs-background)', border: '1px solid var(--adcs-border)', borderRadius: '12px', padding: '1rem' }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.84rem', color: 'var(--adcs-text)', marginBottom: '0.5rem' }}>
+                    Brand Configuration Publish & Audit History
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', maxHeight: '200px', overflowY: 'auto' }}>
+                    {brandAuditLog.map((entry) => (
+                      <div key={entry.id} style={{ padding: '0.5rem 0.65rem', background: 'var(--adcs-surface)', borderRadius: '8px', border: '1px solid var(--adcs-border)', fontSize: '0.76rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: 'var(--adcs-text)' }}>
+                          <span>v{entry.version}.0 • {entry.action}</span>
+                          <span style={{ color: '#075ACB' }}>{entry.actor}</span>
+                        </div>
+                        <div style={{ color: 'var(--adcs-muted)', marginTop: '2px' }}>{entry.summary}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
 
-                <button
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '10px',
-                    background: wlPrimaryColor,
-                    color: '#FFFFFF',
-                    fontWeight: 800,
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Action Button Preview
+        {/* TAB: UTR & TRANSACTION ID VERIFICATION DESK */}
+        {activeTab === 'utr-verify' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div className="glass-card" style={{ padding: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
+                    UTR Number &amp; Transaction ID Verification Queue ({utrPayments.length})
+                  </h2>
+                  <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0.2rem 0 0' }}>
+                    Verify bank settlement proof before authorizing service fulfillment &amp; commission payouts.
+                  </p>
+                </div>
+                <span className="badge badge-blue">
+                  AI Scrutiny: {aiControlConfig.autoUtrScrutinyEnabled ? 'Active' : 'Manual Mode'}
+                </span>
+              </div>
+              {utrPayments.length === 0 ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#64748B', fontSize: '0.88rem', background: '#F8FAFC', borderRadius: '12px' }}>
+                  No UTR payment proofs queued yet. Any customer or operator payment on Service Checkout, Cart, PAN 49A, or Pricing Plans automatically registers here.
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr style={{ background: '#F8FAFC', color: '#475569', textAlign: 'left', borderBottom: '1px solid #E2E8F0' }}>
+                        <th style={{ padding: '0.65rem' }}>Order / Service</th>
+                        <th style={{ padding: '0.65rem' }}>UTR Number</th>
+                        <th style={{ padding: '0.65rem' }}>Transaction ID</th>
+                        <th style={{ padding: '0.65rem' }}>Amount / Mode</th>
+                        <th style={{ padding: '0.65rem' }}>AI Screening</th>
+                        <th style={{ padding: '0.65rem' }}>Status</th>
+                        <th style={{ padding: '0.65rem', textAlign: 'right' }}>Admin Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {utrPayments.map((u) => (
+                        <tr key={u.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                          <td style={{ padding: '0.65rem' }}>
+                            <div style={{ fontWeight: 700, color: '#061A36' }}>{u.serviceTitle}</div>
+                            <div style={{ fontSize: '0.72rem', color: '#64748B' }}>{u.applicantName} • {u.orderId}</div>
+                          </td>
+                          <td style={{ padding: '0.65rem', fontFamily: 'monospace', fontWeight: 700 }}>{u.utrNumber}</td>
+                          <td style={{ padding: '0.65rem', fontFamily: 'monospace', fontWeight: 700 }}>{u.transactionId}</td>
+                          <td style={{ padding: '0.65rem' }}>₹{u.amountPaid.toLocaleString('en-IN')} ({u.paymentMethod.toUpperCase()})</td>
+                          <td style={{ padding: '0.65rem' }}>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: u.aiRiskFlag === 'REVIEW_REQUIRED' ? '#B45309' : '#047857' }}>
+                              {u.aiRiskFlag}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.65rem' }}>
+                            <span className={u.paymentStatus === 'VERIFIED' ? 'badge badge-green' : u.paymentStatus === 'REJECTED' ? 'badge badge-gold' : 'badge badge-blue'}>
+                              {u.paymentStatus}
+                            </span>
+                          </td>
+                          <td style={{ padding: '0.65rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                            <button
+                              type="button"
+                              onClick={() => verifyUtrPayment(u.id, 'VERIFIED')}
+                              className="btn-primary btn-sm"
+                              style={{ marginRight: '0.35rem', background: '#047857' }}
+                            >
+                              Verify UTR
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => verifyUtrPayment(u.id, 'REJECTED')}
+                              className="btn-secondary btn-sm"
+                            >
+                              Reject
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB: ACCESS CONTROL, DIGITAL SEVA 5-TIER & DEPARTMENTS */}
+        {activeTab === 'access-hierarchy' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            {/* Provision New Isolated Credential */}
+            <div className="glass-card" style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.75rem' }}>
+                Provision Role-Locked Credential (Strict Panel Isolation)
+              </h3>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const panelDef = LOGIN_PANELS.find((p) => p.panelKey === newAccPanel) || LOGIN_PANELS[0];
+                  if (!newAccName.trim() || !newAccId.trim()) return;
+                  createManagedAccount({
+                    loginId: newAccId.trim().toUpperCase(),
+                    password: newAccPassword || 'Secure@2026',
+                    name: newAccName.trim(),
+                    role: panelDef.role,
+                    panelKey: panelDef.panelKey,
+                    digitalSevaTier: panelDef.tier as DigitalSevaTier,
+                    designation: newAccDesignation.trim() || panelDef.designationLabel,
+                    department: (newAccDept.trim() || panelDef.department) as DepartmentName,
+                    regionCode: 'IN-PAN-2026',
+                    status: 'Active',
+                    permissions: ['view_services', 'process_applications', 'view_commissions'],
+                    walletBalance: 5000,
+                  });
+                  setNewAccName('');
+                  setNewAccId('');
+                }}
+                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '0.65rem', alignItems: 'end' }}
+              >
+                <div>
+                  <label style={{ fontSize: '0.72rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Full Name *</label>
+                  <input required value={newAccName} onChange={(e) => setNewAccName(e.target.value)} placeholder="Officer / VLE Name" style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.8rem' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.72rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Login ID *</label>
+                  <input required value={newAccId} onChange={(e) => setNewAccId(e.target.value)} placeholder="e.g. DST-MGR-2099" style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.8rem' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.72rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Locked Panel *</label>
+                  <select
+                    value={newAccPanel}
+                    onChange={(e) => {
+                      const k = e.target.value as LoginPanelKey;
+                      setNewAccPanel(k);
+                      const def = LOGIN_PANELS.find((p) => p.panelKey === k);
+                      if (def) {
+                        setNewAccDept(def.department);
+                        setNewAccDesignation(def.designationLabel);
+                      }
+                    }}
+                    style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.8rem' }}
+                  >
+                    {LOGIN_PANELS.map((p) => (
+                      <option key={p.panelKey} value={p.panelKey}>{p.title}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.72rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Designation</label>
+                  <input value={newAccDesignation} onChange={(e) => setNewAccDesignation(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.8rem' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.72rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Department</label>
+                  <input value={newAccDept} onChange={(e) => setNewAccDept(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.8rem' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.72rem', fontWeight: 700, display: 'block', marginBottom: '0.2rem' }}>Password</label>
+                  <input value={newAccPassword} onChange={(e) => setNewAccPassword(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.8rem' }} />
+                </div>
+                <button type="submit" className="btn-primary btn-sm" style={{ padding: '0.55rem 0.9rem' }}>
+                  + Create Locked ID
                 </button>
+              </form>
+            </div>
+
+            {/* Interactive RBAC Permissions & Designation Table */}
+            <div className="glass-card" style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.75rem' }}>
+                Super Admin Access Control Matrix — Designations, Departments &amp; Feature Flags
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {userAccounts.map((acc: AuthUserAccount) => (
+                  <div key={acc.id} style={{ padding: '0.9rem', borderRadius: '12px', border: '1px solid #DCE4EF', background: acc.status === 'Suspended' ? '#FEF2F2' : '#FFFFFF' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.6rem' }}>
+                      <div>
+                        <strong style={{ color: '#061A36', fontSize: '0.92rem' }}>{acc.name}</strong>{' '}
+                        <code style={{ background: '#EFF6FF', color: '#075ACB', padding: '0.12rem 0.45rem', borderRadius: '5px', fontWeight: 700, fontSize: '0.76rem' }}>{acc.loginId}</code>{' '}
+                        <span className="badge badge-gold" style={{ fontSize: '0.68rem' }}>Panel: {acc.panelKey}</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: '0.76rem', color: '#475569' }}>
+                          {acc.designation} • <strong>{acc.department}</strong>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => updateUserAccountAccess(acc.id, { status: acc.status === 'Active' ? 'Suspended' : 'Active' })}
+                          className="btn-secondary btn-sm"
+                          style={{ color: acc.status === 'Active' ? '#DC2626' : '#047857' }}
+                        >
+                          {acc.status === 'Active' ? 'Suspend Access' : 'Restore Active'}
+                        </button>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.45rem' }}>
+                      {ALL_PERMISSION_FLAGS.map((flag) => {
+                        const granted = acc.permissions.includes(flag.key);
+                        return (
+                          <label
+                            key={flag.key}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.3rem',
+                              padding: '0.25rem 0.5rem',
+                              borderRadius: '6px',
+                              border: granted ? '1px solid #075ACB' : '1px solid #E2E8F0',
+                              background: granted ? '#EFF6FF' : '#F8FAFC',
+                              fontSize: '0.72rem',
+                              fontWeight: granted ? 700 : 500,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={granted}
+                              onChange={() => {
+                                const nextPerms: PermissionFlag[] = granted
+                                  ? acc.permissions.filter((p) => p !== flag.key)
+                                  : [...acc.permissions, flag.key];
+                                updateUserAccountAccess(acc.id, { permissions: nextPerms });
+                              }}
+                            />
+                            <span>{flag.label}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: ADMIN-ONLY COMMISSION MATRIX */}
+        {activeTab === 'commissions' && (
+          <div className="glass-card" style={{ padding: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
+                  Admin-Exclusive Commission &amp; Hierarchy Slab Control
+                </h2>
+                <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0.2rem 0 0' }}>
+                  Super Admin sets commissions for Rural VLE, District Manager, State Head, Main Head, Distributor, Franchise &amp; Affiliate. Non-admin portals remain strictly read-only.
+                </p>
+              </div>
+              <span className="badge badge-gold">ADMIN EXCLUSIVE WRITE AUTHORITY</span>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+                <thead>
+                  <tr style={{ background: '#F8FAFC', color: '#475569', textAlign: 'left', borderBottom: '1px solid #E2E8F0' }}>
+                    <th style={{ padding: '0.55rem' }}>Service Vertical</th>
+                    <th style={{ padding: '0.55rem' }}>Rural VLE %</th>
+                    <th style={{ padding: '0.55rem' }}>District Mgr %</th>
+                    <th style={{ padding: '0.55rem' }}>State Head %</th>
+                    <th style={{ padding: '0.55rem' }}>Main Head %</th>
+                    <th style={{ padding: '0.55rem' }}>Distributor %</th>
+                    <th style={{ padding: '0.55rem' }}>Franchise %</th>
+                    <th style={{ padding: '0.55rem' }}>Flat Bonus ₹</th>
+                    <th style={{ padding: '0.55rem', textAlign: 'right' }}>Save</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {commissionRules.map((rule) => {
+                    const draft = commEdits[rule.id] || {};
+                    const val = (k: keyof CommissionRule) => Number(draft[k] ?? rule[k]);
+                    return (
+                      <tr key={rule.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                        <td style={{ padding: '0.55rem', fontWeight: 700, color: '#061A36' }}>{rule.serviceTitle}</td>
+                        {(['ruralVlePct', 'districtMgrPct', 'stateHeadPct', 'mainHeadPct', 'distributorPct', 'franchisePct', 'flatBonusInr'] as const).map((field) => (
+                          <td key={field} style={{ padding: '0.45rem' }}>
+                            <input
+                              type="number"
+                              min={0}
+                              step="0.5"
+                              value={val(field)}
+                              onChange={(e) =>
+                                setCommEdits((prev) => ({
+                                  ...prev,
+                                  [rule.id]: { ...prev[rule.id], [field]: Number(e.target.value) },
+                                }))
+                              }
+                              style={{ width: '66px', padding: '0.32rem 0.4rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontWeight: 700 }}
+                            />
+                          </td>
+                        ))}
+                        <td style={{ padding: '0.45rem', textAlign: 'right' }}>
+                          <button
+                            type="button"
+                            className="btn-primary btn-sm"
+                            onClick={() => updateCommissionRule(rule.id, draft)}
+                          >
+                            Save Slab
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: QUANTUM AI SYSTEM ORCHESTRATOR & BANNER MANAGER */}
+        {activeTab === 'ai-command' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.25rem' }}>
+            <div className="glass-card" style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.85rem' }}>
+                QUANTUM AI Ecosystem Governance Controls
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                {(
+                  [
+                    { key: 'autonomousRoutingEnabled', label: 'Autonomous Service Queue Routing', desc: 'Routes citizen applications to District/Rural operators automatically' },
+                    { key: 'autoUtrScrutinyEnabled', label: 'AI UTR & Transaction Duplicate Screening', desc: 'Flags anomalous or reused UTR references before fulfillment' },
+                    { key: 'crossPanelIntrusionGuard', label: 'Cross-Panel Login Intrusion Shield', desc: 'Blocks VLE / Retailer logins attempting higher hierarchy panels' },
+                    { key: 'commissionAnomalyGuard', label: 'Admin Commission Anomaly Guard', desc: 'Monitors payout ratios & protects commission tables' },
+                    { key: 'slaEscalationEnabled', label: 'AI SLA Escalation Watchdog', desc: 'Escalates delayed district orders to State / Main Head' },
+                    { key: 'bilingualAiConcierge', label: 'Bilingual EN/HI QUANTUM AI Assistant', desc: 'Active guidance across Homepage & all 16 sector workflows' },
+                  ] as const
+                ).map((item) => {
+                  const enabled = aiControlConfig[item.key];
+                  return (
+                    <div key={item.key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem', borderRadius: '10px', border: '1px solid #DCE4EF', background: enabled ? '#EFF6FF' : '#F8FAFC' }}>
+                      <div>
+                        <div style={{ fontWeight: 800, fontSize: '0.84rem', color: '#061A36' }}>{item.label}</div>
+                        <div style={{ fontSize: '0.73rem', color: '#64748B' }}>{item.desc}</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => updateAiControlConfig({ [item.key]: !enabled })}
+                        className={enabled ? 'btn-primary btn-sm' : 'btn-secondary btn-sm'}
+                      >
+                        {enabled ? 'ACTIVE' : 'PAUSED'}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="glass-card" style={{ padding: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0 0 0.85rem' }}>
+                Multi-Service Campaign Banners ({serviceBanners.length} Live)
+              </h3>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!bannerTitle.trim()) return;
+                  saveServiceBanner({
+                    id: `banner-${Date.now()}`,
+                    sectorKey: bannerSector,
+                    title: bannerTitle.trim(),
+                    titleHi: bannerTitle.trim(),
+                    subtitle: bannerSubtitle.trim() || 'Instant assisted digital fulfillment with mandatory UTR verification.',
+                    subtitleHi: bannerSubtitle.trim() || 'तुरंत डिजिटल सेवा सहायता।',
+                    badge: bannerBadge.trim() || 'CAMPAIGN',
+                    ctaLabel: 'Open Sector',
+                    targetRoute: bannerRoute.trim() || '/services',
+                    themeVariant: 'navy',
+                  });
+                  setBannerTitle('');
+                  setBannerSubtitle('');
+                }}
+                style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem', marginBottom: '1rem' }}
+              >
+                <input value={bannerTitle} onChange={(e) => setBannerTitle(e.target.value)} placeholder="New Multi-Service Banner Headline *" required style={{ padding: '0.5rem 0.65rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.82rem' }} />
+                <input value={bannerSubtitle} onChange={(e) => setBannerSubtitle(e.target.value)} placeholder="Campaign Subtitle / Service Scope" style={{ padding: '0.5rem 0.65rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.82rem' }} />
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.45rem' }}>
+                  <input value={bannerBadge} onChange={(e) => setBannerBadge(e.target.value)} placeholder="Badge" style={{ padding: '0.45rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.78rem' }} />
+                  <input value={bannerSector} onChange={(e) => setBannerSector(e.target.value)} placeholder="Sector (e.g. pricing)" style={{ padding: '0.45rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.78rem' }} />
+                  <input value={bannerRoute} onChange={(e) => setBannerRoute(e.target.value)} placeholder="/route" style={{ padding: '0.45rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.78rem' }} />
+                </div>
+                <button type="submit" className="btn-primary btn-sm">
+                  + Publish Campaign Banner
+                </button>
+              </form>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', maxHeight: '240px', overflowY: 'auto' }}>
+                {serviceBanners.map((b) => (
+                  <div key={b.id} style={{ padding: '0.55rem 0.75rem', borderRadius: '8px', background: '#F8FAFC', border: '1px solid #E2E8F0', fontSize: '0.76rem' }}>
+                    <div style={{ fontWeight: 800, color: '#061A36' }}>[{b.badge}] {b.title}</div>
+                    <div style={{ color: '#64748B' }}>Sector: <code>{b.sectorKey}</code> • Route: <code>{b.targetRoute}</code></div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

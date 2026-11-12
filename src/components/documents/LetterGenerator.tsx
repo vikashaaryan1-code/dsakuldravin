@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
-import { 
-  FileText, 
-  Printer, 
-  Download, 
-  Copy, 
-  Check, 
-  Sparkles, 
-  Building2, 
-  ShieldCheck, 
-  RefreshCw,
-  Edit3
+import {
+  Printer,
+  Download,
+  Copy,
+  Check,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
+import { DocumentHeader, BrandWatermark, BrandFooter } from '../branding';
+import { ADCS_BRAND_IDENTITY } from '../../config/brandAssets';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 
 export const LetterGenerator: React.FC = () => {
   const { showToast } = useApp();
@@ -82,49 +79,21 @@ export const LetterGenerator: React.FC = () => {
   };
 
   const handleDownloadLetter = () => {
-    const fullText = `
-================================================================================
-          AKUL DRAVIN DIGITAL SERVICES PRIVATE LIMITED (ADCS)
-           CIN: U72900BR2026PTC098412 • GSTIN: 10AAAAA0000A1Z5
-================================================================================
-Ref: ${letterRef}                                         Date: ${letterDate}
-
-To,
-${recipientName}
-${recipientAddress}
-
-Subject: ${subjectLine}
-
-${salutation}
-
-${bodyContent}
-
-Yours sincerely,
-For Akul Dravin Digital Services Private Limited
-
-${signatoryName}
-${signatoryRole}
-Corporate Seal & Authorized Signatory
-================================================================================
-Generated via ADCS Document Studio • Verify: https://akuldravindigital.com/verify-doc
-    `.trim();
-
-    const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `Letter_${letterRef.replace(/\//g, '_')}_${recipientName.replace(/\s+/g, '_')}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Letter Downloaded', `Letter saved to device.`, 'success');
-
-    confetti({
-      particleCount: 70,
-      spread: 50,
-      origin: { y: 0.6 }
+    printBrandedADCSDocument({
+      title: subjectLine,
+      documentType: 'OFFICIAL LETTERHEAD',
+      documentNumber: letterRef,
+      issuedDate: letterDate,
+      rows: [
+        { label: 'Recipient', value: `${recipientName} — ${recipientAddress}` },
+        { label: 'Salutation', value: salutation },
+        { label: 'Letter Content', value: bodyContent },
+        { label: 'Authorized Signatory', value: `${signatoryName} (${signatoryRole})` },
+      ],
+      notes: [`Issued under corporate authority of ${ADCS_BRAND_IDENTITY.legalName}.`],
     });
+    showToast('Branded Letter Ready', `Opened A4 print-ready ADCS letterhead for ${recipientName}.`, 'success');
+    confetti({ particleCount: 55, spread: 45, origin: { y: 0.6 } });
   };
 
   const handleCopyText = () => {
@@ -213,7 +182,7 @@ Generated via ADCS Document Studio • Verify: https://akuldravindigital.com/ver
           flexDirection: 'column',
           gap: '1.1rem'
         }}>
-          <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0A192F', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.5rem' }}>
+          <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#061A36', borderBottom: '1px solid #E2E8F0', paddingBottom: '0.5rem' }}>
             1. Select Template & Fill Details
           </div>
 
@@ -371,53 +340,31 @@ Generated via ADCS Document Studio • Verify: https://akuldravindigital.com/ver
           </div>
 
           {/* Letter Sheet */}
-          <div style={{
-            background: '#FFFFFF',
-            borderRadius: '16px',
-            border: '1px solid #CBD5E1',
-            padding: '3rem 2.5rem',
-            minHeight: '680px',
-            boxShadow: '0 10px 35px rgba(0,0,0,0.06)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            fontFamily: 'serif'
-          }}>
-            <div>
-              {/* Optional Corporate Letterhead Header */}
+          <div
+            id="printable-letter-area"
+            className="adcs-print-sheet"
+            style={{
+              position: 'relative',
+              background: '#FFFFFF',
+              borderRadius: '12px',
+              border: '2px solid #061A36',
+              padding: '2.5rem',
+              minHeight: '720px',
+              boxShadow: 'var(--adcs-shadow-lg)',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              overflow: 'hidden',
+            }}
+          >
+            <BrandWatermark opacity={0.035} />
+            <div style={{ position: 'relative', zIndex: 1 }}>
               {showLetterhead && (
-                <div style={{
-                  borderBottom: '2.5px solid #0A192F',
-                  paddingBottom: '1.25rem',
-                  marginBottom: '1.5rem',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start'
-                }}>
-                  <div>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 900, color: '#0A192F', fontFamily: 'sans-serif' }}>
-                      AKUL DRAVIN DIGITAL SERVICES PRIVATE LIMITED
-                    </div>
-                    <div style={{ fontSize: '0.74rem', color: '#64748B', fontFamily: 'sans-serif', marginTop: '0.2rem' }}>
-                      CIN: U72900BR2026PTC098412 • GSTIN: 10AAAAA0000A1Z5 • ISO 9001:2015 Certified
-                    </div>
-                    <div style={{ fontSize: '0.72rem', color: '#475569', fontFamily: 'sans-serif' }}>
-                      Corporate Headquarters: Fraser Road, Lodipur, Patna, Bihar - 800001
-                    </div>
-                  </div>
-
-                  <div style={{ textAlign: 'right', fontFamily: 'sans-serif' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0284C7' }}>
-                      www.akuldravin.com
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748B' }}>
-                      support@akuldravin.com
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: '#64748B' }}>
-                      Toll-Free: 1800-890-AKUL
-                    </div>
-                  </div>
-                </div>
+                <DocumentHeader
+                  documentType="OFFICIAL LETTERHEAD"
+                  documentNumber={letterRef}
+                  issuedDate={letterDate}
+                />
               )}
 
               {/* Reference & Date Line */}
@@ -438,10 +385,10 @@ Generated via ADCS Document Studio • Verify: https://akuldravindigital.com/ver
                 background: '#F8FAFC',
                 padding: '0.65rem 0.85rem',
                 borderRadius: '6px',
-                borderLeft: '4px solid #0A192F',
+                borderLeft: '4px solid #061A36',
                 fontSize: '0.92rem',
                 fontWeight: 800,
-                color: '#0A192F',
+                color: '#061A36',
                 marginBottom: '1.5rem',
                 fontFamily: 'sans-serif'
               }}>
@@ -459,38 +406,38 @@ Generated via ADCS Document Studio • Verify: https://akuldravindigital.com/ver
               </div>
             </div>
 
-            {/* Signature Block */}
-            <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '1.25rem', marginTop: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', fontFamily: 'sans-serif' }}>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
-                  This official document is issued under corporate authority.
+            {/* Signature Block & Official ADCS BrandFooter */}
+            <div style={{ position: 'relative', zIndex: 1, marginTop: '2rem' }}>
+              <div style={{ borderTop: '1px solid #DCE4EF', paddingTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '1rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.76rem', color: '#55677D', fontWeight: 600 }}>
+                    Official correspondence issued under authorized {ADCS_BRAND_IDENTITY.shortName} governance.
+                  </div>
+                  <div style={{ fontSize: '0.7rem', color: '#075ACB', fontFamily: 'var(--adcs-font-mono)', marginTop: '2px' }}>
+                    Verification Ref: ADCS-DOC-{letterRef.replace(/\//g, '-')}
+                  </div>
                 </div>
-                <div style={{ fontSize: '0.7rem', color: '#94A3B8' }}>
-                  Verification token: SHA256-RECORD-{letterRef.replace(/\//g, '')}
-                </div>
-              </div>
 
-              <div style={{ textAlign: 'center', width: '220px' }}>
-                <div style={{
-                  fontFamily: 'cursive',
-                  fontSize: '1.4rem',
-                  color: '#0F172A',
-                  fontWeight: 700,
-                  transform: 'rotate(-3deg)',
-                  marginBottom: '0.25rem'
-                }}>
-                  {signatoryName}
-                </div>
-                <div style={{ borderTop: '1.5px solid #0A192F', paddingTop: '0.35rem', fontSize: '0.82rem', fontWeight: 800, color: '#0A192F' }}>
-                  {signatoryName}
-                </div>
-                <div style={{ fontSize: '0.72rem', color: '#475569' }}>
-                  {signatoryRole}
-                </div>
-                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#0284C7', marginTop: '0.15rem' }}>
-                  Akul Dravin Digital Services Pvt Ltd
+                <div style={{ textAlign: 'center', width: '220px' }}>
+                  <div style={{
+                    fontFamily: 'Georgia, serif',
+                    fontStyle: 'italic',
+                    fontSize: '1.3rem',
+                    color: '#075ACB',
+                    fontWeight: 700,
+                    marginBottom: '0.2rem'
+                  }}>
+                    {signatoryName}
+                  </div>
+                  <div style={{ borderTop: '1.5px solid #061A36', paddingTop: '0.35rem', fontSize: '0.82rem', fontWeight: 800, color: '#061A36' }}>
+                    {signatoryName}
+                  </div>
+                  <div style={{ fontSize: '0.72rem', color: '#55677D' }}>
+                    {signatoryRole}
+                  </div>
                 </div>
               </div>
+              <BrandFooter theme="light" />
             </div>
           </div>
         </div>

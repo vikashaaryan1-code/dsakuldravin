@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { apiClient } from '../services/apiClient';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   ShieldCheck, 
   Video, 
@@ -109,35 +110,32 @@ export const CCTVPage: React.FC = () => {
 
   const handleDownloadQuote = () => {
     const ref = surveyPass?.appId || `QT-${Date.now().toString().slice(-6)}`;
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — ITEMIZED CCTV & SECURITY QUOTATION',
-      '========================================================================',
-      `Quotation Ref     : ${ref}`,
-      `Date              : ${new Date().toLocaleString('en-IN')}`,
-      `Client / Site     : ${siteContactName} (${siteContactPhone}) • ${siteCity}`,
-      `Camera Package    : ${cameraCount}x ${cameraType} @ ₹${cameraUnitPrice} each = ₹${(cameraCount * cameraUnitPrice).toLocaleString('en-IN')}`,
-      `NVR / DVR Recorder: ₹${nvrPrice.toLocaleString('en-IN')}`,
-      `Surveillance HDD  : ₹${hddPrice.toLocaleString('en-IN')} (${storageDays} Days Retention)`,
-      `Cabling & SMPS    : ₹${cablingAndPsu.toLocaleString('en-IN')}`,
-      `Installation Fee  : ₹${installationLabour.toLocaleString('en-IN')}`,
-      `1-Year AMC Plan   : ₹${amcCost.toLocaleString('en-IN')}`,
-      `TOTAL ESTIMATE    : ₹${totalEstimate.toLocaleString('en-IN')}`,
-      '========================================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_CCTV_Quote_${ref}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'Itemized ADCS CCTV & Physical Security Commercial Quotation',
+      documentType: 'COMMERCIAL QUOTATION',
+      documentNumber: ref,
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: [
+        { label: 'Client / Premise', value: `${siteContactName} (${siteContactPhone}) • ${siteCity}` },
+        { label: 'Camera Array', value: `${cameraCount}x ${cameraType} @ ₹${cameraUnitPrice} = ₹${(cameraCount * cameraUnitPrice).toLocaleString('en-IN')}` },
+        { label: 'NVR / DVR Recorder', value: `₹${nvrPrice.toLocaleString('en-IN')}` },
+        { label: 'Surveillance Storage', value: `₹${hddPrice.toLocaleString('en-IN')} (${storageDays} Days Retention)` },
+        { label: 'Cabling & Power SMPS', value: `₹${cablingAndPsu.toLocaleString('en-IN')}` },
+        { label: 'Installation & 1-Yr AMC', value: `₹${installationLabour.toLocaleString('en-IN')} + AMC ₹${amcCost.toLocaleString('en-IN')}` },
+      ],
+      amountSummary: {
+        total: totalEstimate,
+        currency: '₹',
+        paymentStatus: 'VALID FOR 15 DAYS',
+      },
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -179,7 +177,7 @@ export const CCTVPage: React.FC = () => {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <span className="badge badge-gold">DYNAMIC QUOTATION BUILDER</span>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0A192F', marginTop: '0.4rem' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#061A36', marginTop: '0.4rem' }}>
             Build Your Custom Surveillance Package
           </h2>
           <p style={{ fontSize: '0.88rem', color: '#64748B' }}>
@@ -206,9 +204,9 @@ export const CCTVPage: React.FC = () => {
                     style={{
                       padding: '0.75rem 0.5rem',
                       borderRadius: '10px',
-                      border: cameraCount === count ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                      border: cameraCount === count ? '2px solid #075ACB' : '1px solid #E2E8F0',
                       background: cameraCount === count ? '#EFF6FF' : '#FFFFFF',
-                      color: cameraCount === count ? '#1D4ED8' : '#475569',
+                      color: cameraCount === count ? '#075ACB' : '#475569',
                       fontWeight: 700,
                       fontSize: '0.88rem',
                     }}
@@ -234,13 +232,13 @@ export const CCTVPage: React.FC = () => {
                     style={{
                       padding: '0.85rem 0.65rem',
                       borderRadius: '12px',
-                      border: cameraType === c.type ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                      border: cameraType === c.type ? '2px solid #075ACB' : '1px solid #E2E8F0',
                       background: cameraType === c.type ? '#EFF6FF' : '#FFFFFF',
                       textAlign: 'left',
                       transition: 'all 0.15s',
                     }}
                   >
-                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: cameraType === c.type ? '#1D4ED8' : '#0A192F' }}>
+                    <div style={{ fontWeight: 800, fontSize: '0.9rem', color: cameraType === c.type ? '#075ACB' : '#061A36' }}>
                       {c.type}
                     </div>
                     <div style={{ fontSize: '0.7rem', color: '#64748B', marginTop: '0.2rem' }}>{c.desc}</div>
@@ -265,9 +263,9 @@ export const CCTVPage: React.FC = () => {
                     style={{
                       padding: '0.65rem 0.5rem',
                       borderRadius: '10px',
-                      border: storageDays === s.days ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                      border: storageDays === s.days ? '2px solid #075ACB' : '1px solid #E2E8F0',
                       background: storageDays === s.days ? '#EFF6FF' : '#FFFFFF',
-                      color: storageDays === s.days ? '#1D4ED8' : '#475569',
+                      color: storageDays === s.days ? '#075ACB' : '#475569',
                       fontSize: '0.78rem',
                       fontWeight: 700,
                     }}
@@ -290,7 +288,7 @@ export const CCTVPage: React.FC = () => {
               border: '1px solid #E2E8F0',
             }}>
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0A192F' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#061A36' }}>
                   Include 1-Year Comprehensive AMC
                 </div>
                 <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
@@ -301,7 +299,7 @@ export const CCTVPage: React.FC = () => {
                 type="checkbox"
                 checked={includeAMC}
                 onChange={(e) => setIncludeAMC(e.target.checked)}
-                style={{ width: '18px', height: '18px', accentColor: '#1D4ED8' }}
+                style={{ width: '18px', height: '18px', accentColor: '#075ACB' }}
               />
             </div>
 
@@ -342,7 +340,7 @@ export const CCTVPage: React.FC = () => {
 
           {/* Quotation Summary Card */}
           <div style={{
-            background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 100%)',
+            background: 'linear-gradient(135deg, #061A36 0%, #031126 100%)',
             borderRadius: '20px',
             padding: '2rem',
             color: '#FFFFFF',
@@ -444,7 +442,7 @@ export const CCTVPage: React.FC = () => {
                 gap: '0.4rem'
               }}
             >
-              <Download size={14} /> Download Itemized Quote (.TXT)
+              <Download size={14} /> Print / Download Itemized Quote (PDF)
             </button>
 
             {surveyPass && (

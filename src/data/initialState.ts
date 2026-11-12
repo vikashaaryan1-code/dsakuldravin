@@ -372,7 +372,7 @@ export const initialProperties: PropertyItem[] = [
     areaSqFt: 1650,
     bhk: '3 BHK',
     furnishing: 'Semi-Furnished',
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80',
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='340' viewBox='0 0 600 340'><defs><linearGradient id='g1' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%23061A36'/><stop offset='100%25' stop-color='%23075ACB'/></linearGradient></defs><rect width='600' height='340' fill='url(%23g1)'/><rect x='70' y='110' width='130' height='190' fill='%230B2A57' stroke='%23D6A12B' stroke-width='2'/><rect x='220' y='75' width='150' height='225' fill='%23082043' stroke='%23F3D477' stroke-width='2'/><rect x='390' y='135' width='140' height='165' fill='%230B2A57' stroke='%23D6A12B' stroke-width='2'/><text x='300' y='45' fill='%23F3D477' font-family='sans-serif' font-size='18' font-weight='bold' text-anchor='middle'>ADCS VERIFIED RESIDENTIAL</text></svg>",
     isVerified: true,
   },
   {
@@ -386,7 +386,7 @@ export const initialProperties: PropertyItem[] = [
     city: 'Patna',
     areaSqFt: 1200,
     furnishing: 'Bare Shell',
-    image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=600&auto=format&fit=crop&q=80',
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='340' viewBox='0 0 600 340'><defs><linearGradient id='g2' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%23031126'/><stop offset='100%25' stop-color='%23064BA8'/></linearGradient></defs><rect width='600' height='340' fill='url(%23g2)'/><rect x='95' y='85' width='410' height='215' rx='8' fill='%230B2A57' stroke='%23F3D477' stroke-width='2'/><rect x='130' y='125' width='100' height='140' fill='%230878F9' fill-opacity='0.35'/><rect x='250' y='125' width='100' height='140' fill='%230878F9' fill-opacity='0.35'/><rect x='370' y='125' width='100' height='140' fill='%230878F9' fill-opacity='0.35'/><text x='300' y='52' fill='%23F3D477' font-family='sans-serif' font-size='18' font-weight='bold' text-anchor='middle'>ADCS COMMERCIAL PLAZA</text></svg>",
     isVerified: true,
   },
   {
@@ -399,7 +399,7 @@ export const initialProperties: PropertyItem[] = [
     location: 'Bihta Satellite Smart City Highway',
     city: 'Patna',
     areaSqFt: 1800,
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&auto=format&fit=crop&q=80',
+    image: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='340' viewBox='0 0 600 340'><defs><linearGradient id='g3' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%23061A36'/><stop offset='100%25' stop-color='%23047857'/></linearGradient></defs><rect width='600' height='340' fill='url(%23g3)'/><polygon points='80,260 300,150 520,260 300,310' fill='%23D6A12B' fill-opacity='0.28' stroke='%23F3D477' stroke-width='2'/><text x='300' y='55' fill='%23F3D477' font-family='sans-serif' font-size='18' font-weight='bold' text-anchor='middle'>RERA APPROVED SMART PLOT</text></svg>",
     isVerified: true,
   }
 ];

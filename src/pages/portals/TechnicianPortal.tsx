@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   Wrench, 
   MapPin, 
@@ -156,36 +157,33 @@ export const TechnicianPortal: React.FC = () => {
   };
 
   const handleDownloadWarrantyCertificate = (cert: NonNullable<typeof lastWarrantyCert>) => {
-    const text = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — FIELD INSTALLATION & WARRANTY CERTIFICATE',
-      '================================================================================',
-      `Certificate ID : ${cert.certId}`,
-      `Work Order     : ${cert.jobId}`,
-      `Technician     : ${technician.name} (${technician.techId})`,
-      `Client         : ${cert.customerName}`,
-      `Service        : ${cert.serviceType}`,
-      `Total Billed   : INR ${cert.amount.toFixed(2)} (Incl. 18% GST)`,
-      `Completed At   : ${cert.completedAt}`,
-      'Warranty       : 12-Month ADCS On-Site Hardware & Calibration Warranty',
-      'Ledger Sync    : Posted to Double-Entry Ledger (1010 Dr / 4071 + 2010 Cr)',
-      '================================================================================',
-    ].join('\n');
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Warranty_Certificate_${cert.jobId}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'Field Installation & 12-Month Hardware Calibration Warranty Certificate',
+      documentType: 'WARRANTY CERTIFICATE',
+      documentNumber: cert.certId,
+      issuedDate: cert.completedAt,
+      rows: [
+        { label: 'Work Order ID', value: cert.jobId },
+        { label: 'Assigned Engineer / Technician', value: `${technician.name} (${technician.techId})` },
+        { label: 'Customer / Premises', value: cert.customerName },
+        { label: 'Service & Installation Scope', value: cert.serviceType },
+        { label: 'Warranty Coverage', value: '12-Month ADCS On-Site Hardware & Calibration Warranty' },
+        { label: 'Double-Entry Ledger Sync', value: 'Posted (1010 Operating Dr / 4071 + 2010 Cr)' },
+      ],
+      amountSummary: {
+        total: cert.amount,
+        currency: '₹',
+        paymentStatus: 'SETTLED (INCL. 18% GST)',
+      },
+      notes: ['Valid at all authorized ADCS Service & Field Engineering Centers.'],
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #115E59 60%, #0D9488 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #115E59 60%, #0D9488 100%)',
         borderRadius: '24px',
         padding: '2.5rem',
         color: '#FFFFFF',
@@ -254,7 +252,7 @@ export const TechnicianPortal: React.FC = () => {
             style={{ gap: '0.35rem' }}
           >
             <Download size={14} />
-            <span>Download Warranty Cert (.txt)</span>
+            <span>Print / PDF Warranty Cert</span>
           </button>
         </div>
       )}

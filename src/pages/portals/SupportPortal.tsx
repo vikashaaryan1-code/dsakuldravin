@@ -92,7 +92,7 @@ export const SupportPortal: React.FC = () => {
         
         {/* Header */}
         <div style={{
-          background: 'linear-gradient(135deg, #0A192F 0%, #151D33 50%, #B91C1C 100%)',
+          background: 'linear-gradient(135deg, #061A36 0%, #151D33 50%, #B91C1C 100%)',
           borderRadius: '24px',
           padding: '2.5rem',
           color: '#FFFFFF',
@@ -145,9 +145,9 @@ export const SupportPortal: React.FC = () => {
           <div className="card" style={{ padding: '1.5rem', borderRadius: '16px', background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748B', fontSize: '0.82rem', fontWeight: 600 }}>
               <span>ACTIVE UNRESOLVED TICKETS</span>
-              <MessageSquare size={18} color="#1D4ED8" />
+              <MessageSquare size={18} color="#075ACB" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0A192F', margin: '0.4rem 0' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#061A36', margin: '0.4rem 0' }}>
               {openTicketsCount} Incidents
             </div>
             <div style={{ fontSize: '0.78rem', color: '#059669' }}>
@@ -221,7 +221,7 @@ export const SupportPortal: React.FC = () => {
                       borderRadius: '8px',
                       fontSize: '0.75rem',
                       fontWeight: 700,
-                      background: filterStatus === tab ? '#0A192F' : '#F1F5F9',
+                      background: filterStatus === tab ? '#061A36' : '#F1F5F9',
                       color: filterStatus === tab ? '#FFFFFF' : '#64748B',
                       border: 'none',
                       cursor: 'pointer',
@@ -245,13 +245,13 @@ export const SupportPortal: React.FC = () => {
                       padding: '1.25rem',
                       borderBottom: '1px solid #F1F5F9',
                       background: isSelected ? '#EFF6FF' : '#FFFFFF',
-                      borderLeft: isSelected ? '4px solid #1D4ED8' : '4px solid transparent',
+                      borderLeft: isSelected ? '4px solid #075ACB' : '4px solid transparent',
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <span style={{ fontWeight: 800, fontSize: '0.85rem', color: isSelected ? '#1D4ED8' : '#0A192F' }}>
+                      <span style={{ fontWeight: 800, fontSize: '0.85rem', color: isSelected ? '#075ACB' : '#061A36' }}>
                         {ticket.id}
                       </span>
                       <span className={`badge ${ticket.priority === 'Critical SLA' ? 'badge-red' : ticket.priority === 'High' ? 'badge-gold' : 'badge-gray'}`} style={{ fontSize: '0.7rem' }}>
@@ -289,7 +289,7 @@ export const SupportPortal: React.FC = () => {
               <div style={{ padding: '1.5rem', borderBottom: '1px solid #E2E8F0', background: '#F8FAFC', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
-                    <span style={{ fontWeight: 900, fontSize: '1.15rem', color: '#0A192F' }}>{activeTicket.id}: {activeTicket.subject}</span>
+                    <span style={{ fontWeight: 900, fontSize: '1.15rem', color: '#061A36' }}>{activeTicket.id}: {activeTicket.subject}</span>
                     <span className="badge badge-blue">{activeTicket.serviceCategory}</span>
                   </div>
                   <div style={{ fontSize: '0.8rem', color: '#64748B' }}>
@@ -322,8 +322,8 @@ export const SupportPortal: React.FC = () => {
                       style={{
                         alignSelf: isAgent ? 'flex-end' : 'flex-start',
                         maxWidth: '75%',
-                        background: isAgent ? '#1D4ED8' : '#FFFFFF',
-                        color: isAgent ? '#FFFFFF' : '#0A192F',
+                        background: isAgent ? '#075ACB' : '#FFFFFF',
+                        color: isAgent ? '#FFFFFF' : '#061A36',
                         borderRadius: '16px',
                         padding: '1rem',
                         boxShadow: '0 2px 10px rgba(10, 25, 47, 0.05)',
@@ -377,7 +377,7 @@ export const SupportPortal: React.FC = () => {
             padding: '1rem'
           }}>
             <div style={{ background: '#FFFFFF', borderRadius: '20px', maxWidth: '520px', width: '100%', padding: '2rem', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0A192F', marginBottom: '0.25rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#061A36', marginBottom: '0.25rem' }}>
                 Raise Citizen Support Incident
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748B', marginBottom: '1.25rem' }}>
@@ -494,7 +494,7 @@ export const SupportPortal: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <div>
                   <span className="badge badge-navy">GOVERNANCE & VLE FILING COMPLIANCE</span>
-                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0A192F', marginTop: '0.25rem' }}>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#061A36', marginTop: '0.25rem' }}>
                     Standard Operating Procedures (SOPs) Repository
                   </h3>
                 </div>
@@ -580,7 +580,7 @@ export const SupportPortal: React.FC = () => {
                 ].filter(s => s.title.toLowerCase().includes(sopFilter.toLowerCase()) || s.circular.toLowerCase().includes(sopFilter.toLowerCase())).map((sop, idx) => (
                   <div key={idx} style={{ background: '#F8FAFC', borderRadius: '14px', padding: '1.25rem', border: '1px solid #E2E8F0' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.4rem' }}>
-                      <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
+                      <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
                         {sop.title}
                       </h4>
                       <button
@@ -590,7 +590,7 @@ export const SupportPortal: React.FC = () => {
                           showToast('SOP Copied', 'SOP checklist copied to clipboard.', 'success');
                           setTimeout(() => setCopiedSopIndex(null), 2000);
                         }}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#1D4ED8', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 700 }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#075ACB', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', fontWeight: 700 }}
                       >
                         {copiedSopIndex === idx ? <Check size={14} /> : <Copy size={14} />}
                         <span>{copiedSopIndex === idx ? 'Copied' : 'Copy SOP'}</span>

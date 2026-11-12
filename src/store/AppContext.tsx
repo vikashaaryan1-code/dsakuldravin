@@ -22,8 +22,26 @@ import {
   DistributorDownline,
   AffiliateReferral,
   ApiConnectorProvider,
-  WhiteLabelConfig
+  WhiteLabelConfig,
+  BrandAuditEntry,
+  AuthUserAccount,
+  UTRPaymentProof,
+  PricingPlanItem,
+  CommissionRule,
+  AISystemControlConfig,
+  ServiceBannerItem,
+  LoginPanelKey,
+  PermissionFlag,
+  DigitalSevaTier
 } from '../types';
+import {
+  DEFAULT_AI_CONTROL_CONFIG,
+  DEFAULT_COMMISSION_RULES,
+  DEFAULT_PRICING_PLANS,
+  DEFAULT_USER_ACCOUNTS,
+  LOGIN_PANELS,
+  SERVICE_BANNERS
+} from '../config/governanceCatalog';
 import { initialServicesCatalog } from '../data/servicesData';
 import { 
   initialApplications, 
@@ -163,9 +181,53 @@ interface AppContextType {
   toggleApiProviderMode: (providerId: string) => void;
   updateApiProviderStatus: (providerId: string, status: ApiConnectorProvider['status']) => void;
 
-  // White-Label Multi-Tenant SaaS
+  // Enterprise Brand Management & Theme
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+  setTheme: (theme: 'light' | 'dark') => void;
   whiteLabelConfig: WhiteLabelConfig;
   updateWhiteLabelConfig: (config: Partial<WhiteLabelConfig>) => void;
+  publishWhiteLabelConfig: (config: Partial<WhiteLabelConfig>, actor?: string) => Promise<void>;
+  brandAuditLog: BrandAuditEntry[];
+
+  // Strict Role-Locked Security, Digital Seva Tiers & Admin RBAC
+  userAccounts: AuthUserAccount[];
+  authenticatedUser: AuthUserAccount | null;
+  isAuthenticated: boolean;
+  activeDigitalSevaTier: DigitalSevaTier;
+  requestedAuthPanel: LoginPanelKey;
+  setRequestedAuthPanel: (panel: LoginPanelKey) => void;
+  loginWithPanelCredentials: (
+    panelKey: LoginPanelKey,
+    loginId: string,
+    password: string
+  ) => Promise<{ ok: boolean; message: string; redirectTo?: string; user?: AuthUserAccount }>;
+  logoutSession: () => void;
+  hasPermission: (perm: PermissionFlag) => boolean;
+  updateUserAccountAccess: (accountId: string, patch: Partial<AuthUserAccount>) => void;
+  createManagedAccount: (account: Omit<AuthUserAccount, 'id'>) => void;
+
+  // Mandatory Payment -> UTR + Transaction ID Gate & Verification
+  utrPayments: UTRPaymentProof[];
+  submitUtrPayment: (proof: Omit<UTRPaymentProof, 'id' | 'paidAt' | 'paymentStatus' | 'aiRiskFlag'>) => UTRPaymentProof;
+  verifyUtrPayment: (paymentId: string, status: 'VERIFIED' | 'REJECTED', notes?: string) => void;
+
+  // Multi-Tier Pricing Plans
+  pricingPlans: PricingPlanItem[];
+  activeUserPlanId: string;
+  activatePlanWithUtr: (planId: string, utrNumber: string, transactionId: string, paymentMethod: 'upi' | 'bank_transfer' | 'card' | 'wallet') => void;
+
+  // Admin-Only Commission Controls
+  commissionRules: CommissionRule[];
+  updateCommissionRule: (ruleId: string, patch: Partial<CommissionRule>) => boolean;
+
+  // Autonomous QUANTUM AI System Governance
+  aiControlConfig: AISystemControlConfig;
+  updateAiControlConfig: (patch: Partial<AISystemControlConfig>) => boolean;
+
+  // Multi-Service Promotional Banners
+  serviceBanners: ServiceBannerItem[];
+  saveServiceBanner: (banner: ServiceBannerItem) => void;
 }
 
 export const defaultAppContextValue: AppContextType = {
@@ -243,8 +305,42 @@ export const defaultAppContextValue: AppContextType = {
   apiProviders: initialApiProviders,
   toggleApiProviderMode: () => {},
   updateApiProviderStatus: () => {},
+  theme: 'light',
+  toggleTheme: () => {},
+  setTheme: () => {},
   whiteLabelConfig: initialWhiteLabelConfig,
   updateWhiteLabelConfig: () => {},
+  publishWhiteLabelConfig: async () => {},
+  brandAuditLog: [],
+  userAccounts: DEFAULT_USER_ACCOUNTS,
+  authenticatedUser: null,
+  isAuthenticated: false,
+  activeDigitalSevaTier: 'none',
+  requestedAuthPanel: 'customer',
+  setRequestedAuthPanel: () => {},
+  loginWithPanelCredentials: async () => ({ ok: false, message: 'Unavailable' }),
+  logoutSession: () => {},
+  hasPermission: () => false,
+  updateUserAccountAccess: () => {},
+  createManagedAccount: () => {},
+  utrPayments: [],
+  submitUtrPayment: (p) => ({
+    ...p,
+    id: `UTR-${Date.now()}`,
+    paidAt: new Date().toISOString(),
+    paymentStatus: 'UTR_SUBMITTED',
+    aiRiskFlag: 'LOW_RISK',
+  }),
+  verifyUtrPayment: () => {},
+  pricingPlans: DEFAULT_PRICING_PLANS,
+  activeUserPlanId: 'plan-citizen-free',
+  activatePlanWithUtr: () => {},
+  commissionRules: DEFAULT_COMMISSION_RULES,
+  updateCommissionRule: () => false,
+  aiControlConfig: DEFAULT_AI_CONTROL_CONFIG,
+  updateAiControlConfig: () => false,
+  serviceBanners: SERVICE_BANNERS,
+  saveServiceBanner: () => {},
 };
 
 const AppContext = createContext<AppContextType>(defaultAppContextValue);
@@ -320,13 +416,115 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [documents, setDocuments] = useState<DocumentItem[]>(initialCustomerDocuments);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(initialAuditLogs);
 
-  // Enterprise Subsystems
+  // Strict Role-Locked Accounts, Digital Seva Hierarchy & Governance State
+  const [userAccounts, setUserAccounts] = useState<AuthUserAccount[]>(() => {
+    try {
+      const saved = localStorage.getItem('adcs_user_accounts');
+      return saved ? JSON.parse(saved) : DEFAULT_USER_ACCOUNTS;
+    } catch {
+      return DEFAULT_USER_ACCOUNTS;
+    }
+  });
+  const [authenticatedUser, setAuthenticatedUser] = useState<AuthUserAccount | null>(() => {
+    try {
+      const saved = localStorage.getItem('adcs_auth_user');
+      return saved ? JSON.parse(saved) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [activeDigitalSevaTier, setActiveDigitalSevaTier] = useState<DigitalSevaTier>(() => {
+    return (localStorage.getItem('adcs_seva_tier') as DigitalSevaTier) || 'none';
+  });
+  const [requestedAuthPanel, setRequestedAuthPanel] = useState<LoginPanelKey>('customer');
+
+  // Mandatory UTR + Transaction ID Ledger
+  const [utrPayments, setUtrPayments] = useState<UTRPaymentProof[]>(() => {
+    try {
+      const saved = localStorage.getItem('adcs_utr_payments');
+      return saved ? JSON.parse(saved) : [
+        {
+          id: 'UTR-REC-1001',
+          orderId: 'AD-APP-8942',
+          utrNumber: '431209845123',
+          transactionId: 'TXN-ADCS-89420',
+          paymentMethod: 'upi',
+          amountPaid: 107,
+          serviceTitle: 'New PAN Card (Form 49A)',
+          applicantName: 'Rahul Sharma',
+          applicantPhone: '+91 98765 43210',
+          paidAt: '2026-11-11T11:20:00.000Z',
+          paymentStatus: 'VERIFIED',
+          verifiedBy: 'Dr. Akul Dravin (Super Admin)',
+          verifiedAt: '2026-11-11T11:25:00.000Z',
+          aiRiskFlag: 'VERIFIED_MATCH',
+        },
+      ];
+    } catch {
+      return [];
+    }
+  });
+
+  // Multi-Tier Pricing Plans, Admin-Only Commissions, AI Governance & Multi-Service Banners
+  const [pricingPlans] = useState<PricingPlanItem[]>(DEFAULT_PRICING_PLANS);
+  const [activeUserPlanId, setActiveUserPlanId] = useState<string>(() => {
+    return localStorage.getItem('adcs_active_plan_id') || 'plan-citizen-free';
+  });
+  const [commissionRules, setCommissionRules] = useState<CommissionRule[]>(() => {
+    try {
+      const saved = localStorage.getItem('adcs_commission_rules');
+      return saved ? JSON.parse(saved) : DEFAULT_COMMISSION_RULES;
+    } catch {
+      return DEFAULT_COMMISSION_RULES;
+    }
+  });
+  const [aiControlConfig, setAiControlConfig] = useState<AISystemControlConfig>(() => {
+    try {
+      const saved = localStorage.getItem('adcs_ai_control');
+      return saved ? JSON.parse(saved) : DEFAULT_AI_CONTROL_CONFIG;
+    } catch {
+      return DEFAULT_AI_CONTROL_CONFIG;
+    }
+  });
+  const [serviceBanners, setServiceBanners] = useState<ServiceBannerItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('adcs_service_banners');
+      return saved ? JSON.parse(saved) : SERVICE_BANNERS;
+    } catch {
+      return SERVICE_BANNERS;
+    }
+  });
+
+  // Enterprise Subsystems & Theme
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('adcs_theme');
+    return saved === 'dark' ? 'dark' : 'light';
+  });
+  const toggleTheme = () => setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
+
   const [whiteLabelConfig, setWhiteLabelConfig] = useState<WhiteLabelConfig>(() => {
     try {
       const saved = localStorage.getItem('ad_whitelabel_config');
-      return saved ? JSON.parse(saved) : initialWhiteLabelConfig;
+      return saved ? { ...initialWhiteLabelConfig, ...JSON.parse(saved) } : initialWhiteLabelConfig;
     } catch (e) {
       return initialWhiteLabelConfig;
+    }
+  });
+  const [brandAuditLog, setBrandAuditLog] = useState<BrandAuditEntry[]>(() => {
+    try {
+      const saved = localStorage.getItem('adcs_brand_audit_log');
+      return saved ? JSON.parse(saved) : [
+        {
+          id: 'br-aud-1',
+          timestamp: '2026-04-01T10:00:00Z',
+          actor: 'Super Admin Controller',
+          action: 'BRAND_PUBLISHED',
+          summary: 'Published Official ADCS Master Brand System v1.0 (#075ACB / #061A36 / #D6A12B)',
+          version: 1
+        }
+      ];
+    } catch {
+      return [];
     }
   });
   const [doubleEntryJournals, setDoubleEntryJournals] = useState<DoubleEntryJournal[]>(initialDoubleEntryJournals);
@@ -359,6 +557,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('ad_language', language);
   }, [language]);
+
+  useEffect(() => {
+    localStorage.setItem('adcs_theme', theme);
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+  }, [theme]);
 
   useEffect(() => {
     localStorage.setItem('ad_current_role', currentRole);
@@ -414,10 +619,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
         if (appsRes.status === 'fulfilled' && appsRes.value?.applications?.length) {
           setApplications(prev => {
-            const serverApps = appsRes.value!.applications;
-            const existingIds = new Set(serverApps.map((a: any) => a.id));
-            const uniqueLocal = prev.filter(a => !existingIds.has(a.id));
-            return [...serverApps, ...uniqueLocal];
+            const seen = new Set<string>();
+            const dedupedServer = appsRes.value!.applications.filter((a: any) => {
+              if (!a?.id || seen.has(a.id)) return false;
+              seen.add(a.id);
+              return true;
+            });
+            const uniqueLocal = prev.filter(a => a?.id && !seen.has(a.id));
+            return [...dedupedServer, ...uniqueLocal];
           });
         }
 
@@ -544,16 +753,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: 'Submitted',
       submittedAt: new Date().toLocaleString(),
       updatedAt: new Date().toLocaleString(),
-      assignedTo: 'Regional Hub Executive',
+      assignedTo: aiControlConfig.autonomousRoutingEnabled
+        ? `QUANTUM AI Routed • ${appData.assignedTo || 'Regional Hub Executive'}`
+        : (appData.assignedTo || 'Regional Hub Executive'),
       feePaid: appData.feePaid || 0,
+      utrNumber: appData.utrNumber,
+      transactionId: appData.transactionId,
+      paymentStatus: appData.utrNumber ? (appData.paymentStatus || 'UTR_SUBMITTED') : undefined,
+      paymentMode: appData.paymentMode,
+      aiRoutingNote: aiControlConfig.autonomousRoutingEnabled
+        ? 'AI Routing + UTR Screening Active'
+        : undefined,
       documentsUploaded: appData.documentsUploaded || ['Uploaded_Document_1.pdf'],
       notes: appData.notes || 'Initial submission verified by Quantum Document AI.',
       trackingSteps: [
         {
-          title: 'Application Created',
-          titleHi: 'आवेदन दर्ज हुआ',
-          description: 'Application received and token assigned.',
-          descriptionHi: 'आवेदन प्राप्त हुआ एवं टोकन आवंटित हुआ।',
+          title: appData.utrNumber ? `Payment Proof Logged (UTR: ${appData.utrNumber})` : 'Application Created',
+          titleHi: appData.utrNumber ? `भुगतान यूटीआर दर्ज (${appData.utrNumber})` : 'आवेदन दर्ज हुआ',
+          description: appData.utrNumber
+            ? `Transaction ${appData.transactionId || 'TXN'} logged for verification before execution.`
+            : 'Application received and token assigned.',
+          descriptionHi: 'आवेदन एवं भुगतान विवरण प्राप्त हुआ एवं टोकन आवंटित हुआ।',
           date: 'Just now',
           isCompleted: true,
           isCurrent: true,
@@ -589,7 +809,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setApplications(prev => [newApp, ...prev]);
-    logAudit(`Application Generated: ${newId}`, `Service: ${newApp.serviceName}`);
+    if (newApp.utrNumber && newApp.transactionId) {
+      const paymentEntry: UTRPaymentProof = {
+        id: `UTR-REC-${Date.now()}`,
+        orderId: newId,
+        utrNumber: newApp.utrNumber,
+        transactionId: newApp.transactionId,
+        paymentMethod: (newApp.paymentMode as UTRPaymentProof['paymentMethod']) || 'upi',
+        amountPaid: newApp.feePaid || 0,
+        serviceTitle: newApp.serviceName,
+        applicantName: newApp.applicantName,
+        applicantPhone: newApp.applicantPhone,
+        paidAt: new Date().toISOString(),
+        paymentStatus: newApp.paymentStatus || 'UTR_SUBMITTED',
+        aiRiskFlag: aiControlConfig.autoUtrScrutinyEnabled && newApp.utrNumber.length >= 10 ? 'LOW_RISK' : 'REVIEW_REQUIRED',
+      };
+      setUtrPayments(prev => {
+        const next = [paymentEntry, ...prev].slice(0, 100);
+        try { localStorage.setItem('adcs_utr_payments', JSON.stringify(next)); } catch {}
+        return next;
+      });
+    }
+    logAudit(`Application Generated: ${newId}`, `Service: ${newApp.serviceName}${newApp.utrNumber ? ` (UTR: ${newApp.utrNumber})` : ''}`);
     showToast('Application Submitted!', `Your tracking ID is ${newId}. Check Live Tracking.`, 'success');
 
     // Asynchronously dispatch to Backend API Gateway
@@ -599,6 +840,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       serviceName: newApp.serviceName,
       customerName: newApp.applicantName,
       phone: newApp.applicantPhone,
+      utrNumber: newApp.utrNumber,
+      transactionId: newApp.transactionId,
       notes: newApp.notes
     }).catch(() => {});
 
@@ -932,14 +1175,313 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setApiProviders(prev => prev.map(p => p.id === providerId ? { ...p, status } : p));
   };
 
-  // White Label
+  // White Label / Enterprise Brand Management
   const updateWhiteLabelConfig = (config: Partial<WhiteLabelConfig>) => {
     setWhiteLabelConfig(prev => {
-      const updated = { ...prev, ...config };
+      const updated: WhiteLabelConfig = { ...prev, ...config };
       localStorage.setItem('ad_whitelabel_config', JSON.stringify(updated));
       return updated;
     });
-    showToast('Branding Settings Saved', 'White-label customization updated across all tenant portals.', 'success');
+    showToast('Brand Configuration Updated', 'ADCS brand settings saved locally.', 'success');
+  };
+
+  const publishWhiteLabelConfig = async (config: Partial<WhiteLabelConfig>, actor = 'Super Admin') => {
+    const nextVersion = (whiteLabelConfig.version || 1) + 1;
+    const timestamp = new Date().toISOString();
+    const published: WhiteLabelConfig = {
+      ...whiteLabelConfig,
+      ...config,
+      approvalStatus: 'PUBLISHED',
+      version: nextVersion,
+      lastPublishedAt: timestamp,
+      lastPublishedBy: actor,
+    };
+    setWhiteLabelConfig(published);
+    localStorage.setItem('ad_whitelabel_config', JSON.stringify(published));
+
+    const entry: BrandAuditEntry = {
+      id: `br-aud-${Date.now()}`,
+      timestamp,
+      actor,
+      action: 'BRAND_PUBLISHED',
+      summary: `Published Brand Configuration v${nextVersion} (${published.brandName})`,
+      version: nextVersion,
+    };
+    setBrandAuditLog(prev => {
+      const nextLog = [entry, ...prev].slice(0, 50);
+      localStorage.setItem('adcs_brand_audit_log', JSON.stringify(nextLog));
+      return nextLog;
+    });
+
+    try {
+      await fetch('/api/admin/whitelabel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...published, actor }),
+      });
+    } catch {
+      // Offline / frontend-only safe fallback
+    }
+    showToast('Brand Configuration Published', `Live across portals & templates (v${nextVersion}.0).`, 'success');
+  };
+
+  // Strict Role-Locked Login Authentication (Blocks Cross-Panel Login)
+  const loginWithPanelCredentials = async (
+    panelKey: LoginPanelKey,
+    loginId: string,
+    password: string
+  ): Promise<{ ok: boolean; message: string; redirectTo?: string; user?: AuthUserAccount }> => {
+    const normalizedId = loginId.trim().toUpperCase();
+    const targetPanel = LOGIN_PANELS.find((p) => p.panelKey === panelKey);
+
+    if (!normalizedId || !password) {
+      return { ok: false, message: 'Login ID and Password are required.' };
+    }
+
+    const foundAccount = userAccounts.find(
+      (acc) => acc.loginId.toUpperCase() === normalizedId
+    );
+
+    if (!foundAccount || foundAccount.password !== password) {
+      logAudit(`Failed Panel Login Attempt (${normalizedId})`, `Panel: ${panelKey}`, 'Blocked');
+      return { ok: false, message: 'Invalid Login ID or Password. Please verify credentials.' };
+    }
+
+    if (foundAccount.status === 'Suspended') {
+      logAudit(`Suspended Account Login Blocked (${normalizedId})`, `Panel: ${panelKey}`, 'Blocked');
+      return { ok: false, message: 'Account suspended by Super Admin. Contact Governance Desk.' };
+    }
+
+    // Strict Single-Panel Lock Enforcement
+    if (foundAccount.panelKey !== panelKey) {
+      const ownedPanel = LOGIN_PANELS.find((p) => p.panelKey === foundAccount.panelKey);
+      const errMsg = `Access Denied: Account "${foundAccount.loginId}" is strictly bound to "${ownedPanel?.title || foundAccount.panelKey}" (${foundAccount.designation}) and cannot log into "${targetPanel?.title || panelKey}".`;
+      logAudit(`Cross-Panel Intrusion Blocked (${normalizedId})`, `Tried ${panelKey}, Owned ${foundAccount.panelKey}`, 'Blocked');
+      return { ok: false, message: errMsg };
+    }
+
+    // Optional Backend Synchronization (non-blocking if offline)
+    try {
+      await fetch('/api/auth/panel-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ panelKey, loginId: foundAccount.loginId, password }),
+      });
+    } catch {}
+
+    setAuthenticatedUser(foundAccount);
+    setCurrentRole(foundAccount.role);
+    setActiveDigitalSevaTier(foundAccount.digitalSevaTier);
+    setWalletBalance(foundAccount.walletBalance);
+    try {
+      localStorage.setItem('adcs_auth_user', JSON.stringify(foundAccount));
+      localStorage.setItem('adcs_seva_tier', foundAccount.digitalSevaTier);
+    } catch {}
+
+    logAudit(`Authenticated (${foundAccount.designation})`, `Panel: ${targetPanel?.title || panelKey}`);
+    showToast('Authenticated Successfully', `${foundAccount.name} • ${foundAccount.department}`, 'success');
+    return {
+      ok: true,
+      message: 'Authenticated cleanly',
+      redirectTo: targetPanel?.defaultRoute || '/',
+      user: foundAccount,
+    };
+  };
+
+  const logoutSession = () => {
+    setAuthenticatedUser(null);
+    setCurrentRole('customer');
+    setActiveDigitalSevaTier('none');
+    try {
+      localStorage.removeItem('adcs_auth_user');
+      localStorage.setItem('adcs_seva_tier', 'none');
+    } catch {}
+    showToast('Signed Out', 'Secure workspace session terminated.', 'info');
+  };
+
+  const hasPermission = (perm: PermissionFlag): boolean => {
+    if (currentRole === 'admin') return true;
+    if (authenticatedUser) {
+      return authenticatedUser.permissions.includes(perm);
+    }
+    return perm === 'view_services' || perm === 'export_reports';
+  };
+
+  const updateUserAccountAccess = (accountId: string, patch: Partial<AuthUserAccount>) => {
+    if (currentRole !== 'admin') {
+      showToast('Admin Only', 'Only Super Admin can alter user roles, designations, or access.', 'error');
+      return;
+    }
+    setUserAccounts((prev) => {
+      const next = prev.map((u) => (u.id === accountId ? { ...u, ...patch } : u));
+      try { localStorage.setItem('adcs_user_accounts', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    if (authenticatedUser?.id === accountId) {
+      const updated = { ...authenticatedUser, ...patch };
+      setAuthenticatedUser(updated);
+      try { localStorage.setItem('adcs_auth_user', JSON.stringify(updated)); } catch {}
+    }
+    logAudit(`Admin Updated Access Control (${accountId})`, `Fields: ${Object.keys(patch).join(', ')}`);
+    showToast('Access Matrix Updated', 'Permissions, designation, or department saved.', 'success');
+  };
+
+  const createManagedAccount = (account: Omit<AuthUserAccount, 'id'>) => {
+    if (currentRole !== 'admin') {
+      showToast('Admin Only', 'Only Super Admin can provision new portal credentials.', 'error');
+      return;
+    }
+    const created: AuthUserAccount = { ...account, id: `acc-${Date.now()}` };
+    setUserAccounts((prev) => {
+      const next = [created, ...prev];
+      try { localStorage.setItem('adcs_user_accounts', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    logAudit(`Provisioned Credentials (${created.loginId})`, `Panel: ${created.panelKey} • Dept: ${created.department}`);
+    showToast('Account Provisioned', `${created.loginId} created and strictly locked to ${created.designation}.`, 'success');
+  };
+
+  const submitUtrPayment = (
+    proof: Omit<UTRPaymentProof, 'id' | 'paidAt' | 'paymentStatus' | 'aiRiskFlag'>
+  ): UTRPaymentProof => {
+    const duplicate = utrPayments.some((u) => u.utrNumber === proof.utrNumber.toUpperCase());
+    const entry: UTRPaymentProof = {
+      ...proof,
+      id: `UTR-${Date.now()}`,
+      utrNumber: proof.utrNumber.toUpperCase(),
+      transactionId: proof.transactionId.toUpperCase(),
+      paidAt: new Date().toISOString(),
+      paymentStatus: 'UTR_SUBMITTED',
+      aiRiskFlag: duplicate ? 'REVIEW_REQUIRED' : proof.utrNumber.length >= 10 ? 'LOW_RISK' : 'REVIEW_REQUIRED',
+    };
+    setUtrPayments((prev) => {
+      const next = [entry, ...prev].slice(0, 100);
+      try { localStorage.setItem('adcs_utr_payments', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    logAudit(`UTR Submitted (${entry.utrNumber})`, `Txn: ${entry.transactionId} • ₹${entry.amountPaid}`);
+    return entry;
+  };
+
+  const verifyUtrPayment = (paymentId: string, status: 'VERIFIED' | 'REJECTED', notes?: string) => {
+    if (!hasPermission('verify_utr_payments') && currentRole !== 'admin') {
+      showToast('Permission Required', 'UTR verification requires Admin or authorized Finance permission.', 'error');
+      return;
+    }
+    const target = utrPayments.find((u) => u.id === paymentId);
+    setUtrPayments((prev) => {
+      const next = prev.map((u) =>
+        u.id === paymentId
+          ? {
+              ...u,
+              paymentStatus: status,
+              verifiedBy: authenticatedUser?.name || 'Super Admin',
+              verifiedAt: new Date().toISOString(),
+              aiRiskFlag: status === 'VERIFIED' ? ('VERIFIED_MATCH' as const) : ('REVIEW_REQUIRED' as const),
+            }
+          : u
+      );
+      try { localStorage.setItem('adcs_utr_payments', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    if (target) {
+      setApplications((prev) =>
+        prev.map((a) =>
+          a.id === target.orderId
+            ? {
+                ...a,
+                paymentStatus: status,
+                status: status === 'VERIFIED' ? 'In Processing' : 'Rejected',
+                notes: notes || `UTR ${target.utrNumber} ${status} by ${authenticatedUser?.name || 'Super Admin'}.`,
+              }
+            : a
+        )
+      );
+    }
+    logAudit(`UTR ${status}: ${target?.utrNumber || paymentId}`, `Order: ${target?.orderId || 'Direct'}`, status === 'VERIFIED' ? 'Success' : 'Warning');
+    showToast(`UTR ${status}`, `${target?.utrNumber || paymentId} marked as ${status}.`, status === 'VERIFIED' ? 'success' : 'warning');
+  };
+
+  const activatePlanWithUtr = (
+    planId: string,
+    utrNumber: string,
+    transactionId: string,
+    paymentMethod: 'upi' | 'bank_transfer' | 'card' | 'wallet'
+  ) => {
+    const plan = pricingPlans.find((p) => p.id === planId);
+    if (!plan) return;
+    submitUtrPayment({
+      orderId: `PLAN-${planId}-${Date.now()}`,
+      utrNumber,
+      transactionId,
+      paymentMethod,
+      amountPaid: plan.priceMonthly,
+      serviceTitle: `Subscription Activation: ${plan.name}`,
+      applicantName: authenticatedUser?.name || 'ADCS Member',
+    });
+    setActiveUserPlanId(planId);
+    try { localStorage.setItem('adcs_active_plan_id', planId); } catch {}
+    showToast('Plan Proof Submitted', `${plan.name} activated pending UTR confirmation (${utrNumber}).`, 'success');
+  };
+
+  const updateCommissionRule = (ruleId: string, patch: Partial<CommissionRule>): boolean => {
+    if (currentRole !== 'admin') {
+      logAudit(`Unauthorized Commission Edit Blocked`, `Role: ${currentRole}`, 'Blocked');
+      showToast('Access Denied', 'Only Super Admin can configure or modify commissions.', 'error');
+      return false;
+    }
+    setCommissionRules((prev) => {
+      const next = prev.map((r) =>
+        r.id === ruleId
+          ? {
+              ...r,
+              ...patch,
+              updatedAt: new Date().toISOString(),
+              updatedBy: authenticatedUser?.name || 'Dr. Akul Dravin (Super Admin)',
+            }
+          : r
+      );
+      try { localStorage.setItem('adcs_commission_rules', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    logAudit(`Admin Updated Commission Rule (${ruleId})`, `Fields: ${Object.keys(patch).join(', ')}`);
+    showToast('Commission Slab Updated', 'Saved securely by Super Admin across all portals.', 'success');
+    return true;
+  };
+
+  const updateAiControlConfig = (patch: Partial<AISystemControlConfig>): boolean => {
+    if (currentRole !== 'admin') {
+      logAudit(`Unauthorized AI Control Toggle Blocked`, `Role: ${currentRole}`, 'Blocked');
+      showToast('Admin Only', 'Only Super Admin can alter QUANTUM AI autonomous system controls.', 'error');
+      return false;
+    }
+    setAiControlConfig((prev) => {
+      const next: AISystemControlConfig = {
+        ...prev,
+        ...patch,
+        lastSyncedAt: new Date().toISOString(),
+        lastModifiedBy: authenticatedUser?.name || 'Super Admin',
+      };
+      try { localStorage.setItem('adcs_ai_control', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    logAudit(`QUANTUM AI Governance Updated`, `Controls: ${Object.keys(patch).join(', ')}`);
+    showToast('AI System Controls Updated', 'Autonomous orchestration policy synchronized.', 'success');
+    return true;
+  };
+
+  const saveServiceBanner = (banner: ServiceBannerItem) => {
+    if (currentRole !== 'admin' && !hasPermission('manage_banners')) {
+      showToast('Access Denied', 'Only Super Admin or Banner Managers can edit campaign banners.', 'error');
+      return;
+    }
+    setServiceBanners((prev) => {
+      const exists = prev.some((b) => b.id === banner.id);
+      const next = exists ? prev.map((b) => (b.id === banner.id ? banner : b)) : [banner, ...prev];
+      try { localStorage.setItem('adcs_service_banners', JSON.stringify(next)); } catch {}
+      return next;
+    });
+    showToast('Banner Saved', `"${banner.title}" updated across campaign strips.`, 'success');
   };
 
   const openApplyModal = (service: ServiceItem) => {
@@ -1024,8 +1566,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         apiProviders,
         toggleApiProviderMode,
         updateApiProviderStatus,
+        theme,
+        toggleTheme,
+        setTheme,
         whiteLabelConfig,
         updateWhiteLabelConfig,
+        publishWhiteLabelConfig,
+        brandAuditLog,
+        userAccounts,
+        authenticatedUser,
+        isAuthenticated: Boolean(authenticatedUser),
+        activeDigitalSevaTier,
+        requestedAuthPanel,
+        setRequestedAuthPanel,
+        loginWithPanelCredentials,
+        logoutSession,
+        hasPermission,
+        updateUserAccountAccess,
+        createManagedAccount,
+        utrPayments,
+        submitUtrPayment,
+        verifyUtrPayment,
+        pricingPlans,
+        activeUserPlanId,
+        activatePlanWithUtr,
+        commissionRules,
+        updateCommissionRule,
+        aiControlConfig,
+        updateAiControlConfig,
+        serviceBanners,
+        saveServiceBanner,
       }}
     >
       {children}

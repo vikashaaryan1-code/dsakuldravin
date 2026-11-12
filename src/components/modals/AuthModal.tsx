@@ -1,352 +1,446 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../../store/AppContext';
-import { 
-  X, 
-  User, 
-  Store, 
-  Monitor, 
-  Building, 
-  UserCheck, 
-  Briefcase, 
-  ShieldAlert, 
-  Lock, 
-  Phone, 
-  CheckCircle2, 
-  Sparkles, 
+import {
+  X,
+  Lock,
+  UserCheck,
+  ShieldAlert,
+  ShieldCheck,
   ArrowRight,
-  ShieldCheck
+  Eye,
+  EyeOff,
+  Building2,
+  KeyRound,
+  LogOut,
+  CheckCircle2,
 } from 'lucide-react';
-import { UserRole } from '../../types';
 import confetti from 'canvas-confetti';
+import { ADCSLogo } from '../branding';
+import { LOGIN_PANELS, DEFAULT_USER_ACCOUNTS } from '../../config/governanceCatalog';
+import { LoginPanelKey } from '../../types';
 
 export const AuthModal: React.FC = () => {
-  const { 
-    isAuthModalOpen, 
-    setIsAuthModalOpen, 
-    currentRole, 
-    setCurrentRole, 
-    showToast, 
-    logAudit,
-    language 
+  const {
+    isAuthModalOpen,
+    setIsAuthModalOpen,
+    requestedAuthPanel,
+    setRequestedAuthPanel,
+    authenticatedUser,
+    loginWithPanelCredentials,
+    logoutSession,
+    showToast,
   } = useApp();
 
-  const [authMode, setAuthMode] = useState<'otp' | 'roles'>('otp');
-  const [isLogin, setIsLogin] = useState(true);
-  const [phoneNumber, setPhoneNumber] = useState('9876543210');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [isVerifying, setIsVerifying] = useState(false);
+  const [selectedPanel, setSelectedPanel] = useState<LoginPanelKey>(requestedAuthPanel || 'customer');
+  const [loginId, setLoginId] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showDemoHints, setShowDemoHints] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (requestedAuthPanel) {
+      setSelectedPanel(requestedAuthPanel);
+      setErrorMsg(null);
+    }
+  }, [requestedAuthPanel, isAuthModalOpen]);
 
   if (!isAuthModalOpen) return null;
 
-  const handleSendOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!phoneNumber) return;
-    setOtpSent(true);
-    setOtpCode('7729'); // Simulated pre-fill or hint
-    showToast('OTP Transmitted', `Security verification code sent to +91 ${phoneNumber}. (Test Code: 7729)`, 'info');
+  const activePanelMeta = LOGIN_PANELS.find((p) => p.panelKey === selectedPanel) || LOGIN_PANELS[0];
+  const sampleAccForPanel = DEFAULT_USER_ACCOUNTS.find((a) => a.panelKey === selectedPanel);
+
+  const handlePanelSelect = (panelKey: LoginPanelKey) => {
+    setSelectedPanel(panelKey);
+    setRequestedAuthPanel(panelKey);
+    setErrorMsg(null);
   };
 
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsVerifying(true);
-
-    setTimeout(() => {
-      setIsVerifying(false);
-      setIsAuthModalOpen(false);
-      showToast('Authentication Successful', 'Welcome to Akul Dravin Digital Services Ecosystem.', 'success');
-      logAudit('User Login OTP', `Phone: +91 ${phoneNumber}`);
-      confetti({ particleCount: 60, spread: 50 });
-      navigate('/customer/dashboard');
-    }, 600);
+  const handleFillSampleCredentials = () => {
+    if (sampleAccForPanel) {
+      setLoginId(sampleAccForPanel.loginId);
+      setPassword(sampleAccForPanel.password);
+      setErrorMsg(null);
+    }
   };
 
-  const handleQuickRoleSwitch = (role: UserRole, path: string) => {
-    setCurrentRole(role);
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setIsLoading(true);
+    const result = await loginWithPanelCredentials(selectedPanel, loginId, password);
+    setIsLoading(false);
+
+    if (!result.ok) {
+      setErrorMsg(result.message);
+      showToast('Authentication Blocked', result.message, 'error');
+      return;
+    }
+
     setIsAuthModalOpen(false);
-    showToast('Role Switched', `Logged into ${role.toUpperCase()} Workspace.`, 'success');
-    logAudit(`Role Switched to ${role}`, 'Auth Modal');
-    confetti({ particleCount: 50, spread: 45 });
-    navigate(path);
+    setLoginId('');
+    setPassword('');
+    confetti({ particleCount: 55, spread: 45 });
+    if (result.redirectTo) {
+      navigate(result.redirectTo);
+    }
   };
 
   return (
-    <div style={{
-      position: 'fixed',
-      inset: 0,
-      background: 'rgba(10, 25, 47, 0.72)',
-      backdropFilter: 'blur(8px)',
-      WebkitBackdropFilter: 'blur(8px)',
-      zIndex: 9999,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '1rem',
-      animation: 'fadeIn 0.2s ease-out',
-    }}>
-      <div style={{
-        background: '#FFFFFF',
-        borderRadius: '24px',
-        maxWidth: '520px',
-        width: '100%',
-        boxShadow: '0 25px 60px rgba(10, 25, 47, 0.25)',
-        border: '1px solid #E2E8F0',
-        overflow: 'hidden',
-        position: 'relative',
-      }}>
-        {/* Header Bar */}
-        <div style={{
-          background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
-          padding: '1.75rem 2rem',
-          color: '#FFFFFF',
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="ADCS Strict Panel Authentication Gateway"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: 'rgba(3, 17, 38, 0.82)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        zIndex: 9999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '1rem',
+      }}
+    >
+      <div
+        style={{
+          background: 'var(--adcs-surface)',
+          color: 'var(--adcs-text)',
+          borderRadius: '20px',
+          maxWidth: '720px',
+          width: '100%',
+          maxHeight: '92vh',
+          overflowY: 'auto',
+          boxShadow: 'var(--adcs-shadow-xl)',
+          border: '1px solid var(--adcs-border)',
           position: 'relative',
-        }}>
+        }}
+      >
+        {/* Header Bar in Deep Navy + Gold */}
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #031126 0%, #061A36 65%, #075ACB 100%)',
+            padding: '1.35rem 1.6rem',
+            color: '#FFFFFF',
+            position: 'relative',
+            borderBottom: '2px solid #D6A12B',
+          }}
+        >
           <button
+            type="button"
             onClick={() => setIsAuthModalOpen(false)}
+            aria-label="Close login modal"
             style={{
               position: 'absolute',
-              right: '1.5rem',
-              top: '1.5rem',
-              background: 'rgba(255,255,255,0.15)',
-              border: 'none',
+              right: '1.15rem',
+              top: '1.15rem',
+              background: 'rgba(255,255,255,0.14)',
               borderRadius: '50%',
-              width: '32px',
-              height: '32px',
+              width: '34px',
+              height: '34px',
               color: '#FFFFFF',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: 'pointer',
             }}
           >
             <X size={16} />
           </button>
 
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            background: 'rgba(245, 158, 11, 0.2)',
-            border: '1px solid #F59E0B',
-            borderRadius: '9999px',
-            padding: '0.2rem 0.65rem',
-            fontSize: '0.72rem',
-            fontWeight: 700,
-            color: '#F59E0B',
-            marginBottom: '0.5rem',
-          }}>
-            <ShieldCheck size={12} />
-            <span>SECURE CITIZEN & ENTERPRISE GATEWAY</span>
-          </div>
-
-          <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#FFFFFF', margin: '0 0 0.3rem' }}>
-            {authMode === 'otp' 
-              ? (isLogin ? 'Sign In to Your Account' : 'Create Unified Citizen Account') 
-              : 'Enterprise Role Workspaces'}
-          </h2>
-          <p style={{ fontSize: '0.84rem', color: '#CBD5E1', margin: 0 }}>
-            {authMode === 'otp'
-              ? 'One Phone Number. Instant Biometric & SMS OTP Access.'
-              : 'Select a pre-configured role to inspect specialized operating portals.'}
-          </p>
-
-          {/* Mode Switcher */}
-          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1.25rem' }}>
-            <button
-              type="button"
-              onClick={() => setAuthMode('otp')}
-              style={{
-                flex: 1,
-                padding: '0.4rem',
-                borderRadius: '8px',
-                border: 'none',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                background: authMode === 'otp' ? '#FFFFFF' : 'rgba(255,255,255,0.1)',
-                color: authMode === 'otp' ? '#0A192F' : '#E2E8F0',
-              }}
-            >
-              Citizen / Business Login
-            </button>
-            <button
-              type="button"
-              onClick={() => setAuthMode('roles')}
-              style={{
-                flex: 1,
-                padding: '0.4rem',
-                borderRadius: '8px',
-                border: 'none',
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                background: authMode === 'roles' ? '#FFFFFF' : 'rgba(255,255,255,0.1)',
-                color: authMode === 'roles' ? '#0A192F' : '#E2E8F0',
-              }}
-            >
-              Direct Role Portals (Dev)
-            </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+            <ADCSLogo variant="login" theme="dark" height={54} />
+            <div>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  background: 'rgba(214, 161, 43, 0.2)',
+                  border: '1px solid #F3D477',
+                  borderRadius: '999px',
+                  padding: '0.16rem 0.6rem',
+                  fontSize: '0.68rem',
+                  fontWeight: 700,
+                  color: '#F3D477',
+                  marginBottom: '0.25rem',
+                }}
+              >
+                <ShieldCheck size={12} />
+                <span>ROLE-ISOLATED SECURE LOGIN PANEL</span>
+              </div>
+              <h2 style={{ fontSize: '1.22rem', fontWeight: 900, color: '#FFFFFF', margin: 0 }}>
+                {activePanelMeta.title}
+              </h2>
+              <div style={{ fontSize: '0.76rem', color: '#CBD5E1', marginTop: '2px' }}>
+                Department: <strong style={{ color: '#F3D477' }}>{activePanelMeta.department}</strong> • Designation: {activePanelMeta.designationLabel}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Modal Body */}
-        <div style={{ padding: '2rem' }}>
-          {authMode === 'otp' ? (
-            <div>
-              {!otpSent ? (
-                <form onSubmit={handleSendOtp} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0A192F', marginBottom: '0.4rem' }}>
-                      Registered Mobile Number
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', fontWeight: 700, color: '#64748B', fontSize: '0.9rem' }}>
-                        +91
-                      </span>
-                      <input
-                        type="tel"
-                        required
-                        maxLength={10}
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                        placeholder="98765 43210"
-                        style={{
-                          width: '100%',
-                          padding: '0.8rem 1rem 0.8rem 3.5rem',
-                          borderRadius: '10px',
-                          border: '1.5px solid #CBD5E1',
-                          fontSize: '1rem',
-                          fontWeight: 700,
-                          color: '#0A192F',
-                          outline: 'none',
-                        }}
-                      />
-                    </div>
-                  </div>
+        {/* Active Signed-In Session Banner */}
+        {authenticatedUser && (
+          <div
+            style={{
+              background: '#ECFDF5',
+              borderBottom: '1px solid #A7F3D0',
+              padding: '0.75rem 1.5rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.65rem',
+              fontSize: '0.8rem',
+              color: '#065F46',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+              <CheckCircle2 size={16} color="#047857" />
+              <span>
+                Signed in as <strong>{authenticatedUser.name}</strong> ({authenticatedUser.loginId}) • {authenticatedUser.designation}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={logoutSession}
+              style={{
+                padding: '0.3rem 0.65rem',
+                borderRadius: '6px',
+                background: '#FFFFFF',
+                border: '1px solid #047857',
+                color: '#047857',
+                fontWeight: 700,
+                fontSize: '0.74rem',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+              }}
+            >
+              <LogOut size={12} />
+              <span>Sign Out</span>
+            </button>
+          </div>
+        )}
 
-                  <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}>
-                    <span>Send Secure 4-Digit OTP</span>
-                    <ArrowRight size={16} />
-                  </button>
-                </form>
-              ) : (
-                <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                  <div style={{
-                    background: '#EFF6FF',
-                    borderRadius: '10px',
-                    padding: '0.75rem 1rem',
-                    border: '1px solid #BFDBFE',
-                    fontSize: '0.82rem',
-                    color: '#1D4ED8',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                  }}>
-                    <span>OTP sent to +91 {phoneNumber}</span>
-                    <button
-                      type="button"
-                      onClick={() => setOtpSent(false)}
-                      style={{ background: 'none', border: 'none', color: '#1D4ED8', fontWeight: 700, cursor: 'pointer' }}
-                    >
-                      Change
-                    </button>
-                  </div>
-
-                  <div>
-                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#0A192F', marginBottom: '0.4rem' }}>
-                      Enter 4-Digit Security OTP (Test: 7729)
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={4}
-                      value={otpCode}
-                      onChange={(e) => setOtpCode(e.target.value)}
-                      placeholder="7729"
-                      style={{
-                        width: '100%',
-                        padding: '0.85rem',
-                        borderRadius: '10px',
-                        border: '1.5px solid #CBD5E1',
-                        textAlign: 'center',
-                        letterSpacing: '8px',
-                        fontSize: '1.5rem',
-                        fontWeight: 900,
-                        color: '#0A192F',
-                        outline: 'none',
-                      }}
-                    />
-                  </div>
-
+        {/* Body */}
+        <div style={{ padding: '1.35rem 1.6rem', display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+          {/* Digital Seva 5-Tier Hierarchy Strip */}
+          <div>
+            <div style={{ fontSize: '0.74rem', fontWeight: 800, color: 'var(--adcs-muted)', marginBottom: '0.45rem', textTransform: 'uppercase' }}>
+              Digital Seva 5-Level Hierarchy & Management Panels
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(128px, 1fr))', gap: '0.45rem' }}>
+              {LOGIN_PANELS.filter((p) =>
+                ['vle_rural', 'vle_district', 'vle_state', 'vle_main_head', 'admin'].includes(p.panelKey)
+              ).map((p) => {
+                const isSel = selectedPanel === p.panelKey;
+                return (
                   <button
-                    type="submit"
-                    className="btn-primary"
-                    disabled={isVerifying}
-                    style={{ width: '100%', justifyContent: 'center', padding: '0.85rem' }}
+                    key={p.panelKey}
+                    type="button"
+                    onClick={() => handlePanelSelect(p.panelKey)}
+                    style={{
+                      padding: '0.5rem 0.55rem',
+                      borderRadius: '8px',
+                      border: isSel ? `2px solid ${p.accentColor}` : '1px solid var(--adcs-border)',
+                      background: isSel ? 'var(--adcs-primary-soft)' : 'var(--adcs-background)',
+                      color: isSel ? '#075ACB' : 'var(--adcs-text)',
+                      textAlign: 'left',
+                      fontSize: '0.74rem',
+                      fontWeight: 700,
+                    }}
                   >
-                    {isVerifying ? 'Verifying Credentials...' : 'Verify OTP & Access Account'}
+                    <div style={{ fontSize: '0.64rem', color: p.accentColor, fontWeight: 800 }}>
+                      {p.tier === 'super_admin' ? 'SUPER ADMIN' : p.tier.replace('_', ' ').toUpperCase()}
+                    </div>
+                    <div style={{ marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {p.designationLabel.split('/')[0].trim()}
+                    </div>
                   </button>
-                </form>
-              )}
+                );
+              })}
+            </div>
+          </div>
 
-              <div style={{ marginTop: '1.5rem', textAlign: 'center', fontSize: '0.84rem', color: '#64748B' }}>
-                {isLogin ? "Don't have a profile yet? " : "Already registered? "}
-                <button
-                  type="button"
-                  onClick={() => setIsLogin(!isLogin)}
-                  style={{ background: 'none', border: 'none', color: '#1D4ED8', fontWeight: 700, cursor: 'pointer' }}
-                >
-                  {isLogin ? 'Register New Citizen ID' : 'Sign In'}
-                </button>
+          {/* Portal Selector Dropdown for All 17 Panels */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '0.9rem', alignItems: 'end' }}>
+            <div>
+              <label className="form-label" htmlFor="panel-select" style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem' }}>
+                Select Login Panel (Strict Role Isolation)
+              </label>
+              <select
+                id="panel-select"
+                className="form-select"
+                value={selectedPanel}
+                onChange={(e) => handlePanelSelect(e.target.value as LoginPanelKey)}
+              >
+                {LOGIN_PANELS.map((p) => (
+                  <option key={p.panelKey} value={p.panelKey}>
+                    {p.title} ({p.department})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div
+              style={{
+                background: 'var(--adcs-background)',
+                border: '1px solid var(--adcs-border)',
+                borderRadius: '8px',
+                padding: '0.55rem 0.85rem',
+                fontSize: '0.76rem',
+                color: 'var(--adcs-text-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+              }}
+            >
+              <Building2 size={15} color="#075ACB" style={{ flexShrink: 0 }} />
+              <div>
+                <strong>Strict Lock:</strong> Only <em>{activePanelMeta.designationLabel}</em> IDs authenticate here.
               </div>
             </div>
-          ) : (
-            /* Direct Role Portals Switcher */
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
-              {[
-                { role: 'customer', label: 'Verified Citizen', icon: <User size={16} />, path: '/customer/dashboard', color: '#1D4ED8' },
-                { role: 'vle', label: 'VLE Center Operator', icon: <Store size={16} />, path: '/center/dashboard', color: '#059669' },
-                { role: 'cafe_operator', label: 'Cyber Café Desk', icon: <Monitor size={16} />, path: '/cyber-cafe/operator', color: '#7C3AED' },
-                { role: 'franchise', label: 'Franchise Partner', icon: <Building size={16} />, path: '/franchise/dashboard', color: '#D97706' },
-                { role: 'employee', label: 'Service Executive', icon: <UserCheck size={16} />, path: '/employee/dashboard', color: '#2563EB' },
-                { role: 'partner', label: 'Certified Partner', icon: <Briefcase size={16} />, path: '/partner/dashboard', color: '#0891B2' },
-                { role: 'admin', label: 'Super Administrator', icon: <ShieldAlert size={16} />, path: '/admin/dashboard', color: '#DC2626' },
-              ].map((item) => (
-                <button
-                  key={item.role}
-                  type="button"
-                  onClick={() => handleQuickRoleSwitch(item.role as UserRole, item.path)}
-                  style={{
-                    padding: '0.85rem',
-                    borderRadius: '12px',
-                    border: '1px solid #E2E8F0',
-                    background: currentRole === item.role ? '#EFF6FF' : '#F8FAFC',
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.6rem',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#F1F5F9';
-                    e.currentTarget.style.borderColor = '#CBD5E1';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = currentRole === item.role ? '#EFF6FF' : '#F8FAFC';
-                    e.currentTarget.style.borderColor = '#E2E8F0';
-                  }}
-                >
-                  <div style={{ color: item.color }}>{item.icon}</div>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0A192F' }}>{item.label}</div>
-                    <div style={{ fontSize: '0.72rem', color: '#64748B' }}>Access Console →</div>
-                  </div>
-                </button>
-              ))}
+          </div>
+
+          {/* Login Form */}
+          <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.85rem' }}>
+              <div>
+                <label className="form-label" htmlFor="panel-login-id" style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem' }}>
+                  Secure Login ID * (लॉगिन आईडी)
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="panel-login-id"
+                    type="text"
+                    required
+                    className="form-input"
+                    value={loginId}
+                    onChange={(e) => {
+                      setLoginId(e.target.value);
+                      setErrorMsg(null);
+                    }}
+                    placeholder={`e.g. ${activePanelMeta.sampleLoginId}`}
+                    style={{ fontFamily: 'var(--adcs-font-mono)', fontWeight: 700, paddingLeft: '2.2rem' }}
+                  />
+                  <UserCheck size={15} color="#075ACB" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label" htmlFor="panel-password" style={{ display: 'block', marginBottom: '0.3rem', fontSize: '0.8rem' }}>
+                  Password * (पासवर्ड)
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="panel-password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    className="form-input"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setErrorMsg(null);
+                    }}
+                    placeholder="Enter panel password"
+                    style={{ paddingLeft: '2.2rem', paddingRight: '2.4rem' }}
+                  />
+                  <Lock size={15} color="#075ACB" style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)' }} />
+                  <button
+                    type="button"
+                    aria-label="Toggle password visibility"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    style={{ position: 'absolute', right: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--adcs-muted)' }}
+                  >
+                    {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                  </button>
+                </div>
+              </div>
             </div>
-          )}
+
+            {errorMsg && (
+              <div
+                role="alert"
+                style={{
+                  background: '#FEF2F2',
+                  border: '1px solid #FECACA',
+                  color: '#B91C1C',
+                  padding: '0.75rem 0.9rem',
+                  borderRadius: '10px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <ShieldAlert size={18} style={{ flexShrink: 0 }} />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="btn-primary"
+                style={{ flex: '2 1 220px' }}
+              >
+                <KeyRound size={16} />
+                <span>{isLoading ? 'Verifying Credentials...' : `Authenticate & Enter ${activePanelMeta.designationLabel.split('/')[0].trim()}`}</span>
+                <ArrowRight size={15} />
+              </button>
+
+              {sampleAccForPanel && (
+                <button
+                  type="button"
+                  onClick={handleFillSampleCredentials}
+                  className="btn-secondary"
+                  style={{ flex: '1 1 160px', fontSize: '0.78rem' }}
+                  title="Fill verified panel credentials for testing"
+                >
+                  Fill {sampleAccForPanel.loginId}
+                </button>
+              )}
+            </div>
+          </form>
+
+          {/* Expandable Reference Panel Credential Directory for Admin / QA Verification */}
+          <div style={{ borderTop: '1px solid var(--adcs-border)', paddingTop: '0.75rem' }}>
+            <button
+              type="button"
+              onClick={() => setShowDemoHints((p) => !p)}
+              style={{ fontSize: '0.76rem', fontWeight: 700, color: '#075ACB', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              <span>{showDemoHints ? 'Hide Panel Credential Reference ▲' : 'View Panel Credential IDs & Isolation Rules ▼'}</span>
+            </button>
+            {showDemoHints && (
+              <div style={{ marginTop: '0.55rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '0.45rem', maxHeight: '150px', overflowY: 'auto' }}>
+                {DEFAULT_USER_ACCOUNTS.map((acc) => (
+                  <div
+                    key={acc.id}
+                    style={{
+                      background: 'var(--adcs-background)',
+                      border: '1px solid var(--adcs-border)',
+                      borderRadius: '8px',
+                      padding: '0.45rem 0.6rem',
+                      fontSize: '0.72rem',
+                    }}
+                  >
+                    <div style={{ fontWeight: 800, color: 'var(--adcs-text)' }}>{acc.designation}</div>
+                    <div style={{ fontFamily: 'var(--adcs-font-mono)', color: '#075ACB' }}>
+                      ID: {acc.loginId} | PW: {acc.password}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

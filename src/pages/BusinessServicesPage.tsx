@@ -63,7 +63,7 @@ export const BusinessServicesPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -98,7 +98,7 @@ export const BusinessServicesPage: React.FC = () => {
       <div style={{ marginBottom: '4rem' }}>
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <span className="badge badge-gold">INCORPORATION MATRIX</span>
-          <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#0A192F', marginTop: '0.4rem' }}>
+          <h2 style={{ fontSize: '2rem', fontWeight: 800, color: '#061A36', marginTop: '0.4rem' }}>
             Choose Your Business Entity Structure
           </h2>
           <p style={{ fontSize: '0.9rem', color: '#64748B', maxWidth: '580px', margin: '0.4rem auto 0' }}>
@@ -114,7 +114,7 @@ export const BusinessServicesPage: React.FC = () => {
                 background: '#FFFFFF',
                 borderRadius: '18px',
                 padding: '1.75rem',
-                border: tier.isPopular ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                border: tier.isPopular ? '2px solid #075ACB' : '1px solid #E2E8F0',
                 boxShadow: tier.isPopular ? '0 12px 30px rgba(29, 78, 216, 0.12)' : '0 4px 16px rgba(0,0,0,0.04)',
                 position: 'relative',
                 display: 'flex',
@@ -129,7 +129,7 @@ export const BusinessServicesPage: React.FC = () => {
               )}
 
               <div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
                   {tier.name}
                 </h3>
                 <div style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '1.25rem' }}>
@@ -137,7 +137,7 @@ export const BusinessServicesPage: React.FC = () => {
                 </div>
 
                 <div style={{ marginBottom: '1.25rem' }}>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0A192F' }}>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 900, color: '#061A36' }}>
                     {tier.price}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>
@@ -176,7 +176,7 @@ export const BusinessServicesPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <div>
             <span className="badge badge-blue">ALL BUSINESS VERTICALS</span>
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0A192F', marginTop: '0.25rem' }}>
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: '#061A36', marginTop: '0.25rem' }}>
               Full-Stack Business Setup & Filings
             </h2>
           </div>
@@ -203,7 +203,7 @@ export const BusinessServicesPage: React.FC = () => {
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             AUTHORIZED CORPORATE, TAX & FOOD LICENSE PORTALS (MCA V3 / GSTN / FSSAI / UDYAM)
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>

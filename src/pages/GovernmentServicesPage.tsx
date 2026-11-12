@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { ServiceCard } from '../components/cards/ServiceCard';
 import { STATE_EDISTRICT_PORTALS } from '../data/officialPortalRegistry';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Landmark, 
   ShieldCheck, 
@@ -41,8 +42,8 @@ export const GovernmentServicesPage: React.FC = () => {
     }
     if (citizenProfile === 'worker') {
       list.push(
-        { label: '✓ E-Shram Accident Cover (₹2,00,000 बीमा)', bg: '#1E3A8A', color: '#93C5FD' },
-        { label: '✓ PM Shram Yogi Maandhan (₹3,000/माह पेंशन)', bg: '#1E3A8A', color: '#93C5FD' }
+        { label: '✓ E-Shram Accident Cover (₹2,00,000 बीमा)', bg: '#061A36', color: '#93C5FD' },
+        { label: '✓ PM Shram Yogi Maandhan (₹3,000/माह पेंशन)', bg: '#061A36', color: '#93C5FD' }
       );
     }
     if (citizenProfile === 'women') {
@@ -75,8 +76,8 @@ export const GovernmentServicesPage: React.FC = () => {
       );
     } else {
       list.push(
-        { label: '✓ NPS Sovereign Tier-I Tax Deduction (80CCD)', bg: '#1E3A8A', color: '#BFDBFE' },
-        { label: '✓ Passport & Fast-Track PAN Compliance', bg: '#1E3A8A', color: '#BFDBFE' }
+        { label: '✓ NPS Sovereign Tier-I Tax Deduction (80CCD)', bg: '#061A36', color: '#BFDBFE' },
+        { label: '✓ Passport & Fast-Track PAN Compliance', bg: '#061A36', color: '#BFDBFE' }
       );
     }
     list.push({ label: '✓ DigiLocker सुरक्षित डिजिटल दस्तावेज वॉल्ट', bg: '#374151', color: '#E5E7EB' });
@@ -85,33 +86,29 @@ export const GovernmentServicesPage: React.FC = () => {
 
   const handleDownloadEligibilityChecklist = () => {
     const schemes = getMatchedSchemes();
-    const text = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — CITIZEN WELFARE ELIGIBILITY BRIEF',
-      '========================================================================',
-      `Generated Date   : ${new Date().toISOString().split('T')[0]}`,
-      `Citizen Profile  : ${citizenProfile.toUpperCase()}`,
-      `Income Bracket   : ${incomeRange.toUpperCase()}`,
-      '',
-      'RECOMMENDED WELFARE & STATUTORY SCHEMES:',
-      ...schemes.map((s, idx) => `  ${idx + 1}. ${s.label.replace(/^✓\s*/, '')}`),
-      '',
-      'REQUIRED STANDARD KYC DOCUMENTS:',
-      '  - Aadhaar Card (linked to active mobile for OTP verification)',
-      '  - State Income / Caste / Domicile Certificate (via State e-District)',
-      '  - Bank Account Passbook + IFSC for DBT transfers',
-      '========================================================================',
-      'Note: ADCS provides assisted form facilitation only. Final eligibility and',
-      'DBT disbursements rest solely with competent Central/State authorities.',
-    ].join('\n');
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Welfare_Checklist_${citizenProfile}_${incomeRange}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'Citizen Welfare & Statutory Scheme Eligibility Brief',
+      documentType: 'WELFARE ELIGIBILITY BRIEF',
+      documentNumber: `WEL-${citizenProfile.toUpperCase()}`,
+      issuedDate: new Date().toLocaleDateString('en-IN'),
+      rows: [
+        { label: 'Citizen Profile Selected', value: citizenProfile.toUpperCase() },
+        { label: 'Annual Income Bracket', value: incomeRange.toUpperCase() },
+        ...schemes.map((s, idx) => ({
+          label: `Matched Scheme ${idx + 1}`,
+          value: s.label.replace(/^✓\s*/, ''),
+        })),
+        {
+          label: 'Standard KYC Checklist',
+          value: 'Aadhaar Card (Mobile Linked) • State Income/Caste/Domicile Certificate • Bank Passbook + IFSC',
+        },
+      ],
+      notes: [
+        'ADCS provides assisted application facilitation only. Final welfare eligibility and DBT disbursement rest solely with competent Central/State authorities.',
+      ],
+    });
     logAudit('Citizen Welfare Checklist Generated', `Profile: ${citizenProfile} • Bracket: ${incomeRange}`, 'Success');
-    showToast('Eligibility Checklist Ready', `Downloaded ADCS_Welfare_Checklist_${citizenProfile}_${incomeRange}.txt`, 'success');
+    showToast('Eligibility Brief Ready', 'Citizen Welfare Eligibility Brief opened in branded ADCS Print/PDF format.', 'success');
   };
 
   const govtServices = services.filter(s => s.category === 'government');
@@ -154,7 +151,7 @@ export const GovernmentServicesPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -220,14 +217,14 @@ export const GovernmentServicesPage: React.FC = () => {
         border: '1px solid #E2E8F0',
         fontSize: '0.82rem'
       }}>
-        <span style={{ fontWeight: 800, color: '#0A192F', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+        <span style={{ fontWeight: 800, color: '#061A36', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
           <Sparkles size={16} color="#F59E0B" />
           <span>Direct Access Engines:</span>
         </span>
         <Link
           to="/pan"
           style={{
-            background: '#1D4ED8',
+            background: '#075ACB',
             color: '#FFFFFF',
             padding: '0.35rem 0.75rem',
             borderRadius: '6px',
@@ -321,9 +318,9 @@ export const GovernmentServicesPage: React.FC = () => {
                 borderRadius: '10px',
                 fontWeight: 600,
                 fontSize: '0.85rem',
-                background: selectedSubCat === tab.id ? '#1D4ED8' : '#FFFFFF',
+                background: selectedSubCat === tab.id ? '#075ACB' : '#FFFFFF',
                 color: selectedSubCat === tab.id ? '#FFFFFF' : '#475569',
-                border: selectedSubCat === tab.id ? '1px solid #1D4ED8' : '1px solid #CBD5E1',
+                border: selectedSubCat === tab.id ? '1px solid #075ACB' : '1px solid #CBD5E1',
                 boxShadow: selectedSubCat === tab.id ? '0 4px 12px rgba(29, 78, 216, 0.25)' : 'none',
                 transition: 'all 0.15s ease',
               }}
@@ -356,7 +353,7 @@ export const GovernmentServicesPage: React.FC = () => {
 
       {/* INTERACTIVE CITIZEN SCHEME & SUBSIDY RECOMMENDER */}
       <div style={{
-        background: 'linear-gradient(135deg, #090E17 0%, #111C30 100%)',
+        background: 'linear-gradient(135deg, #031126 0%, #111C30 100%)',
         borderRadius: '20px',
         padding: '2rem',
         marginBottom: '2.5rem',
@@ -366,7 +363,7 @@ export const GovernmentServicesPage: React.FC = () => {
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
           <div style={{ background: '#F59E0B', padding: '0.5rem', borderRadius: '10px' }}>
-            <Sparkles size={22} color="#0A192F" />
+            <Sparkles size={22} color="#061A36" />
           </div>
           <div>
             <h3 style={{ fontSize: '1.2rem', fontWeight: 800, margin: 0, color: '#FFFFFF' }}>
@@ -448,7 +445,7 @@ export const GovernmentServicesPage: React.FC = () => {
                 alignItems: 'center',
                 gap: '0.4rem',
                 background: '#F59E0B',
-                color: '#0A192F',
+                color: '#061A36',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '0.4rem 0.85rem',
@@ -457,7 +454,7 @@ export const GovernmentServicesPage: React.FC = () => {
                 cursor: 'pointer'
               }}
             >
-              <Download size={13} /> Download Eligibility Checklist (.txt)
+              <Download size={13} /> Print / Download Eligibility Brief (PDF)
             </button>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
@@ -496,7 +493,7 @@ export const GovernmentServicesPage: React.FC = () => {
           textAlign: 'center',
           marginBottom: '3rem'
         }}>
-          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0A192F', marginBottom: '0.4rem' }}>
+          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#061A36', marginBottom: '0.4rem' }}>
             No matching citizen services found
           </div>
           <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1rem' }}>
@@ -511,7 +508,7 @@ export const GovernmentServicesPage: React.FC = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.4rem',
-              background: '#1D4ED8',
+              background: '#075ACB',
               color: '#FFFFFF',
               border: 'none',
               borderRadius: '8px',
@@ -538,7 +535,7 @@ export const GovernmentServicesPage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
           <div>
             <span className="badge badge-blue" style={{ marginBottom: '0.4rem' }}>STATUTORY TRANSPARENCY DIRECTORY</span>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F' }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36' }}>
               {language === 'hi' ? 'अधिकृत सरकारी एवं राज्य ई-डिस्ट्रिक्ट पोर्टल लिंक' : 'Authorized National & State e-District Official Portals'}
             </h3>
           </div>
@@ -580,10 +577,10 @@ export const GovernmentServicesPage: React.FC = () => {
               }}
             >
               <div>
-                <div style={{ fontWeight: 700, fontSize: '0.86rem', color: '#0A192F' }}>{portal.name}</div>
+                <div style={{ fontWeight: 700, fontSize: '0.86rem', color: '#061A36' }}>{portal.name}</div>
                 <div style={{ fontSize: '0.73rem', color: '#64748B' }}>{portal.desc}</div>
               </div>
-              <ExternalLink size={15} color="#1D4ED8" />
+              <ExternalLink size={15} color="#075ACB" />
             </a>
           ))}
         </div>
@@ -605,7 +602,7 @@ export const GovernmentServicesPage: React.FC = () => {
                   gap: '0.3rem',
                   fontSize: '0.76rem',
                   fontWeight: 600,
-                  color: '#1D4ED8',
+                  color: '#075ACB',
                   background: '#EFF6FF',
                   border: '1px solid #BFDBFE',
                   padding: '0.3rem 0.65rem',
@@ -628,7 +625,7 @@ export const GovernmentServicesPage: React.FC = () => {
         padding: '2.5rem',
         border: '1px solid #E2E8F0',
       }}>
-        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.5rem', textAlign: 'center' }}>
+        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#061A36', marginBottom: '1.5rem', textAlign: 'center' }}>
           Standard Citizen Assistance Lifecycle
         </h3>
         <div style={{
@@ -644,7 +641,7 @@ export const GovernmentServicesPage: React.FC = () => {
           ].map((item, idx) => (
             <div key={idx} style={{ background: '#FFFFFF', padding: '1.25rem', borderRadius: '14px', border: '1px solid #E2E8F0' }}>
               <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#F59E0B', marginBottom: '0.4rem' }}>{item.step}</div>
-              <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#0A192F', marginBottom: '0.25rem' }}>{item.title}</div>
+              <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#061A36', marginBottom: '0.25rem' }}>{item.title}</div>
               <p style={{ fontSize: '0.82rem', color: '#64748B', lineHeight: 1.45 }}>{item.desc}</p>
             </div>
           ))}

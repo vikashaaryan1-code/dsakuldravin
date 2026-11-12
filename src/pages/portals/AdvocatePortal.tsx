@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   Scale, 
   Calendar, 
@@ -108,35 +109,30 @@ export const AdvocatePortal: React.FC = () => {
   };
 
   const handleDownloadCaseSummary = (apt: (typeof appointments)[number]) => {
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — BAR COUNCIL RULE 36 CONFIDENTIAL CONSULTATION MEMO',
-      '======================================================================================',
-      `Case Reference : ${apt.id}`,
-      `Advocate       : ${advocateProfile.name} (${advocateProfile.barCouncilNumber})`,
-      `Client         : ${apt.clientName} (${apt.clientPhone})`,
-      `Matter Category: ${apt.category}`,
-      `Session Slot   : ${apt.scheduledDate} (${apt.scheduledTime})`,
-      `Status         : ${apt.status}`,
-      `Verified Docs  : ${apt.documents.join(', ')}`,
-      `Case Notes     : ${apt.notes}`,
-      '======================================================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Legal_Memo_${apt.id}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'Bar Council Rule 36 Confidential Legal Consultation Memo',
+      documentType: 'CONFIDENTIAL LEGAL MEMO',
+      documentNumber: apt.id,
+      issuedDate: `${apt.scheduledDate} (${apt.scheduledTime})`,
+      rows: [
+        { label: 'Consulting Advocate', value: `${advocateProfile.name} (${advocateProfile.barCouncilNumber})` },
+        { label: 'Client Name & Contact', value: `${apt.clientName} (${apt.clientPhone})` },
+        { label: 'Matter Category', value: apt.category },
+        { label: 'Consultation Status', value: apt.status },
+        { label: 'Reviewed Documents', value: apt.documents.join(', ') },
+        { label: 'Counsel Remarks / Summary', value: apt.notes },
+      ],
+      notes: [
+        'Prepared under privileged client-counsel confidentiality and Bar Council of India Rule 36 norms.',
+      ],
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Header Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #1E1B4B 60%, #312E81 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #1E1B4B 60%, #312E81 100%)',
         borderRadius: '24px',
         padding: '2.5rem',
         color: '#FFFFFF',
@@ -189,7 +185,7 @@ export const AdvocatePortal: React.FC = () => {
         alignItems: 'flex-start',
         gap: '0.75rem',
         fontSize: '0.82rem',
-        color: '#1E3A8A'
+        color: '#061A36'
       }}>
         <AlertCircle size={18} style={{ color: '#2563EB', flexShrink: 0, marginTop: '2px' }} />
         <div>
@@ -434,13 +430,13 @@ export const AdvocatePortal: React.FC = () => {
                           borderRadius: '6px',
                           background: '#EFF6FF',
                           border: '1px solid #BFDBFE',
-                          color: '#1D4ED8',
+                          color: '#075ACB',
                           fontSize: '0.75rem',
                           fontWeight: 700,
                           cursor: 'pointer',
                         }}
                       >
-                        <Download size={12} /> Memo (.txt)
+                        <Download size={12} /> Case Memo (PDF)
                       </button>
                     </div>
                   )}

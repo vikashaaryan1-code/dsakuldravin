@@ -171,7 +171,7 @@ createSimplePDF(
       heading: "2. RESPONSIVE DESIGN & ACCESSIBILITY (a11y)",
       lines: [
         "Breakpoints Tested: Mobile (375px), Tablet (768px), Desktop (1240px, 1536px)",
-        "Color Palette: Cosmic Navy (#090E17), Saffron Gold (#F59E0B), Emerald (#10B981)",
+        "Color Palette: Deep Navy (#061A36), Royal Blue (#075ACB), Metallic Gold (#D6A12B)",
         "Image Alt Text: Descriptive Vedic alt tags on all charts, gems, and astrologers",
         "Keyboard Navigation: Full tab focus, ARIA attributes, semantic H1-H3 hierarchy"
       ]

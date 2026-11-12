@@ -57,7 +57,7 @@ export const NotificationToaster: React.FC = () => {
           >
             <div style={{ marginTop: '0.1rem' }}>{icon}</div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0A192F', lineHeight: 1.2 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#061A36', lineHeight: 1.2 }}>
                 {toast.title}
               </div>
               <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '0.2rem', lineHeight: 1.35 }}>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Monitor, 
   Printer, 
@@ -127,31 +128,33 @@ export const CyberCafePage: React.FC = () => {
   };
 
   const handleDownloadCafeBill = (receipt: { ref: string; customerName: string; particulars: string; amount: number }) => {
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — CYBER CAFE POS TAX BILL',
-      '==============================================================',
-      `Bill Reference : ${receipt.ref}`,
-      `Date & Time    : ${new Date().toLocaleString('en-IN')}`,
-      `Customer Name  : ${receipt.customerName}`,
-      `Service Item   : ${receipt.particulars}`,
-      `Total Charged  : ₹${receipt.amount} (Incl. 18% GST)`,
-      'Ledger Sync    : Posted to Double-Entry General Ledger',
-      '==============================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Cafe_Bill_${receipt.ref}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const baseAmt = Number((receipt.amount / 1.18).toFixed(2));
+    const gstAmt = Number((receipt.amount - baseAmt).toFixed(2));
+    printBrandedADCSDocument({
+      title: 'ADCS Cyber Cafe & Document Production POS Bill',
+      documentType: 'CYBER CAFE TAX BILL',
+      documentNumber: receipt.ref,
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: [
+        { label: 'Customer Name', value: receipt.customerName },
+        { label: 'Service Item / Scope', value: receipt.particulars },
+        { label: 'General Ledger Sync', value: 'Posted to Double-Entry General Ledger' },
+      ],
+      amountSummary: {
+        subtotal: baseAmt,
+        tax: gstAmt,
+        total: receipt.amount,
+        currency: '₹',
+        paymentStatus: 'SETTLED (INCL. 18% GST)',
+      },
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Hero Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1E3A8A 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #061A36 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -207,7 +210,7 @@ export const CyberCafePage: React.FC = () => {
         marginBottom: '3rem',
       }}>
         {[
-          { title: 'Dedicated PC Workstation', rate: '₹40 / hour', desc: 'Gigabit fiber connection, scanner access, webcam for video interviews.', icon: <Monitor size={22} color="#1D4ED8" /> },
+          { title: 'Dedicated PC Workstation', rate: '₹40 / hour', desc: 'Gigabit fiber connection, scanner access, webcam for video interviews.', icon: <Monitor size={22} color="#075ACB" /> },
           { title: 'Color Laser Print & Xerox', rate: '₹10 / page', desc: 'Crisp vibrant output for project reports, certificates, and ID cards.', icon: <Printer size={22} color="#059669" /> },
           { title: 'Competitive Exam Filling', rate: '₹99 / form', desc: 'SSC, UPSC, Railway, Bank PO, admit card download & photo resizing.', icon: <FileText size={22} color="#D97706" /> },
           { title: 'Lamination & Binding', rate: '₹25 / doc', desc: 'Glossy thermal lamination and plastic spiral comb binding for booklets.', icon: <CheckCircle2 size={22} color="#7C3AED" /> },
@@ -219,7 +222,7 @@ export const CyberCafePage: React.FC = () => {
               </div>
               <span className="badge badge-gold">{item.rate}</span>
             </div>
-            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#0A192F', marginBottom: '0.35rem' }}>{item.title}</h3>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, color: '#061A36', marginBottom: '0.35rem' }}>{item.title}</h3>
             <p style={{ fontSize: '0.82rem', color: '#64748B', lineHeight: 1.45 }}>{item.desc}</p>
           </div>
         ))}
@@ -237,7 +240,7 @@ export const CyberCafePage: React.FC = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36' }}>
                 Live Workstation Terminal Grid
               </h2>
               <span className="badge badge-green">Real-Time Seat Map</span>
@@ -287,7 +290,7 @@ export const CyberCafePage: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Monitor size={18} color={isAvail ? '#059669' : '#DC2626'} />
-                      <span style={{ fontWeight: 800, fontSize: '1rem', color: '#0A192F' }}>{pc.id}</span>
+                      <span style={{ fontWeight: 800, fontSize: '1rem', color: '#061A36' }}>{pc.id}</span>
                     </div>
                     <span className={`badge ${isAvail ? 'badge-green' : isInUse ? 'badge-red' : 'badge-gray'}`}>
                       {pc.status.toUpperCase()}
@@ -310,7 +313,7 @@ export const CyberCafePage: React.FC = () => {
                       flexDirection: 'column',
                       gap: '0.25rem',
                     }}>
-                      <div style={{ fontWeight: 700, color: '#0A192F' }}>{pc.currentSession.customerName}</div>
+                      <div style={{ fontWeight: 700, color: '#061A36' }}>{pc.currentSession.customerName}</div>
                       <div style={{ color: '#475569' }}>Task: {pc.currentSession.activeTask}</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: '#DC2626', fontWeight: 600 }}>
                         <span>Elapsed: {pc.currentSession.elapsedMinutes} mins</span>
@@ -374,8 +377,8 @@ export const CyberCafePage: React.FC = () => {
           border: '1px solid #E2E8F0',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-            <Printer size={22} color="#1D4ED8" />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F' }}>
+            <Printer size={22} color="#075ACB" />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36' }}>
               Instant Print / Scan / Xerox Dispatch Counter
             </h3>
           </div>
@@ -444,7 +447,7 @@ export const CyberCafePage: React.FC = () => {
           }}>
             <div>
               <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Total Counter Charge:</span>
-              <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0A192F' }}>
+              <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#061A36' }}>
                 ₹{calculatedPrintCost}
               </div>
             </div>
@@ -467,7 +470,7 @@ export const CyberCafePage: React.FC = () => {
           padding: '2rem',
           border: '1px solid #E2E8F0',
         }}>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', marginBottom: '1rem' }}>
             Active Print & Scan Queue
           </h3>
 
@@ -487,7 +490,7 @@ export const CyberCafePage: React.FC = () => {
                 <div style={{ fontWeight: 800, color: '#059669' }}>
                   POS BILL GENERATED • {lastCafeReceipt.ref}
                 </div>
-                <div style={{ color: '#0A192F' }}>
+                <div style={{ color: '#061A36' }}>
                   {lastCafeReceipt.customerName} — ₹{lastCafeReceipt.amount} (Ledger Synced)
                 </div>
               </div>
@@ -517,7 +520,7 @@ export const CyberCafePage: React.FC = () => {
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0A192F' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#061A36' }}>
                     {job.customerName}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
@@ -525,7 +528,7 @@ export const CyberCafePage: React.FC = () => {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontWeight: 700, color: '#1D4ED8' }}>₹{job.totalCost}</div>
+                  <div style={{ fontWeight: 700, color: '#075ACB' }}>₹{job.totalCost}</div>
                   <span className="badge badge-green" style={{ fontSize: '0.68rem' }}>{job.status}</span>
                 </div>
               </div>
@@ -548,7 +551,7 @@ export const CyberCafePage: React.FC = () => {
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             AUTHORIZED EXAMINATION & SCHOLARSHIP PORTALS (ZERO-BYPASS HANDOFF)
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>
@@ -598,7 +601,7 @@ export const CyberCafePage: React.FC = () => {
             padding: '1.75rem',
             boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
           }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36', marginBottom: '0.5rem' }}>
               Start Session on {selectedPc}
             </h3>
             <p style={{ fontSize: '0.82rem', color: '#64748B', marginBottom: '1.25rem' }}>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Coins, 
   Calculator, 
@@ -107,35 +108,36 @@ export const FinanceLoansPage: React.FC = () => {
 
   const handleDownloadLoanSheet = () => {
     if (!submittedLoanApp) return;
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — ASSISTED LOAN ELIGIBILITY DOSSIER',
-      '========================================================================',
-      `Tracking Reference   : ${submittedLoanApp.appId}`,
-      `Date & Time          : ${new Date().toLocaleString('en-IN')}`,
-      `Applicant Name       : ${applicantName}`,
-      `Mobile / PAN         : ${applicantPhone} / ${applicantPan.toUpperCase()}`,
-      `Product / Lender     : ${submittedLoanApp.loanType} (${submittedLoanApp.bankName})`,
-      `Requested Principal  : ₹${submittedLoanApp.amount.toLocaleString('en-IN')}`,
-      `Tenure & Indicative  : ${submittedLoanApp.tenureYears} Years @ ${interestRate}% p.a.`,
-      `Computed Monthly EMI : ₹${submittedLoanApp.emi.toLocaleString('en-IN')}`,
-      `Affordability Check  : ${isEmiAffordable ? 'WITHIN 50% FOIR LIMIT' : 'HIGH FOIR - CO-APPLICANT ADVISED'}`,
-      `Track Application    : https://akuldravindigital.com/track?id=${encodeURIComponent(submittedLoanApp.appId)}`,
-      '========================================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Loan_Dossier_${submittedLoanApp.appId}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'Assisted Credit & Loan Eligibility Summary Dossier',
+      documentType: 'ASSISTED LOAN DOSSIER',
+      documentNumber: submittedLoanApp.appId,
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: [
+        { label: 'Applicant Legal Name', value: applicantName },
+        { label: 'Contact Mobile / Masked PAN', value: `${applicantPhone} / ${applicantPan.toUpperCase()}` },
+        { label: 'Loan Product & Lending Partner', value: `${submittedLoanApp.loanType} (${submittedLoanApp.bankName})` },
+        { label: 'Tenure & Indicative Rate', value: `${submittedLoanApp.tenureYears} Years @ ${interestRate}% p.a.` },
+        { label: 'Computed Monthly EMI', value: `₹${submittedLoanApp.emi.toLocaleString('en-IN')}` },
+        { label: 'FOIR Assessment', value: isEmiAffordable ? 'WITHIN 50% FOIR GUIDELINE' : 'HIGH FOIR - CO-APPLICANT ADVISED' },
+      ],
+      amountSummary: {
+        total: submittedLoanApp.amount,
+        currency: '₹',
+        paymentStatus: 'PRELIMINARY ASSESSMENT REGISTERED',
+      },
+      notes: [
+        'ADCS acts solely as a digital credit facilitation desk. Final sanction rests exclusively with the regulated bank/NBFC lender.',
+      ],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?id=${encodeURIComponent(submittedLoanApp.appId)}`,
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -196,7 +198,7 @@ export const FinanceLoansPage: React.FC = () => {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <span className="badge badge-gold">PRECISION EMI & FOIR ENGINE</span>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0A192F', marginTop: '0.4rem' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#061A36', marginTop: '0.4rem' }}>
             Interactive Loan & EMI Calculator
           </h2>
         </div>
@@ -282,7 +284,7 @@ export const FinanceLoansPage: React.FC = () => {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span className="form-label">Loan Amount Required:</span>
-                <span style={{ fontWeight: 800, color: '#1D4ED8', fontSize: '1.1rem' }}>
+                <span style={{ fontWeight: 800, color: '#075ACB', fontSize: '1.1rem' }}>
                   ₹{(loanAmount / 100000).toFixed(1)} Lakhs
                 </span>
               </div>
@@ -293,7 +295,7 @@ export const FinanceLoansPage: React.FC = () => {
                 step="50000"
                 value={loanAmount}
                 onChange={(e) => setLoanAmount(Number(e.target.value))}
-                style={{ width: '100%', accentColor: '#1D4ED8' }}
+                style={{ width: '100%', accentColor: '#075ACB' }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: '#64748B' }}>
                 <span>₹50,000</span>
@@ -330,7 +332,7 @@ export const FinanceLoansPage: React.FC = () => {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span className="form-label">Repayment Tenure:</span>
-                <span style={{ fontWeight: 800, color: '#0A192F', fontSize: '1.1rem' }}>
+                <span style={{ fontWeight: 800, color: '#061A36', fontSize: '1.1rem' }}>
                   {tenureYears} Years ({totalMonths} Months)
                 </span>
               </div>
@@ -353,7 +355,7 @@ export const FinanceLoansPage: React.FC = () => {
 
           {/* Results Display Card */}
           <div style={{
-            background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 100%)',
+            background: 'linear-gradient(135deg, #061A36 0%, #031126 100%)',
             borderRadius: '20px',
             padding: '2rem',
             color: '#FFFFFF',
@@ -440,7 +442,7 @@ export const FinanceLoansPage: React.FC = () => {
               <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase' }}>
                 ASSISTED LOAN DOSSIER REGISTERED • {submittedLoanApp.appId}
               </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: '0.15rem 0' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: '0.15rem 0' }}>
                 {submittedLoanApp.loanType} via {submittedLoanApp.bankName}
               </h3>
               <div style={{ fontSize: '0.84rem', color: '#475569' }}>
@@ -471,7 +473,7 @@ export const FinanceLoansPage: React.FC = () => {
 
       {/* MULTI-BANK COMPARISON TABLE */}
       <div>
-        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
+        <h3 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#061A36', marginBottom: '1.25rem' }}>
           Compare Partner Lenders & Rates
         </h3>
 
@@ -493,8 +495,8 @@ export const FinanceLoansPage: React.FC = () => {
             >
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                  <Building size={18} color="#1D4ED8" />
-                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0A192F' }}>{item.bank}</span>
+                  <Building size={18} color="#075ACB" />
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#061A36' }}>{item.bank}</span>
                   <span className="badge badge-blue">{item.tag}</span>
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
@@ -535,7 +537,7 @@ export const FinanceLoansPage: React.FC = () => {
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             OFFICIAL GOVERNMENT CREDIT & RBI REGULATORY PORTALS
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>

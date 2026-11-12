@@ -108,7 +108,7 @@ export const WebsiteITPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -148,7 +148,7 @@ export const WebsiteITPage: React.FC = () => {
         border: '1px solid #E2E8F0',
         marginBottom: '3rem',
       }}>
-        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.75rem' }}>
+        <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', marginBottom: '0.75rem' }}>
           Search Custom Business Domain (.in / .com / .org)
         </h3>
         <div style={{ display: 'flex', gap: '0.75rem', maxWidth: '680px', flexWrap: 'wrap' }}>
@@ -163,7 +163,7 @@ export const WebsiteITPage: React.FC = () => {
             borderRadius: '10px',
             border: '1px solid #CBD5E1',
           }}>
-            <Globe size={18} color="#1D4ED8" />
+            <Globe size={18} color="#075ACB" />
             <input
               type="text"
               value={domainSearch}
@@ -181,7 +181,7 @@ export const WebsiteITPage: React.FC = () => {
                 setDomainTld(e.target.value as any);
                 setCheckedDomain(null);
               }}
-              style={{ border: 'none', background: '#EFF6FF', color: '#1D4ED8', fontWeight: 800, fontSize: '0.85rem', borderRadius: '6px', padding: '0.25rem 0.5rem' }}
+              style={{ border: 'none', background: '#EFF6FF', color: '#075ACB', fontWeight: 800, fontSize: '0.85rem', borderRadius: '6px', padding: '0.25rem 0.5rem' }}
             >
               <option value=".in">.in (₹599)</option>
               <option value=".co.in">.co.in (₹499)</option>
@@ -232,7 +232,7 @@ export const WebsiteITPage: React.FC = () => {
               background: '#FFFFFF',
               borderRadius: '20px',
               padding: '2rem',
-              border: pkg.isPopular ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+              border: pkg.isPopular ? '2px solid #075ACB' : '1px solid #E2E8F0',
               boxShadow: pkg.isPopular ? '0 12px 30px rgba(29, 78, 216, 0.12)' : '0 4px 16px rgba(0,0,0,0.04)',
               display: 'flex',
               flexDirection: 'column',
@@ -247,11 +247,11 @@ export const WebsiteITPage: React.FC = () => {
             )}
 
             <div>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36', marginBottom: '0.5rem' }}>
                 {pkg.title}
               </h3>
               <div style={{ marginBottom: '1.25rem' }}>
-                <span style={{ fontSize: '2rem', fontWeight: 900, color: '#0A192F' }}>
+                <span style={{ fontSize: '2rem', fontWeight: 900, color: '#061A36' }}>
                   ₹{pkg.price.toLocaleString('en-IN')}
                 </span>
                 <span style={{ fontSize: '0.75rem', color: '#64748B', marginLeft: '0.35rem' }}>
@@ -285,7 +285,7 @@ export const WebsiteITPage: React.FC = () => {
       <div style={{ marginTop: '2rem' }}>
         <div style={{ marginBottom: '1.5rem' }}>
           <span className="badge badge-gold" style={{ marginBottom: '0.4rem' }}>CATALOG SERVICES</span>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F' }}>
+          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36' }}>
             {language === 'hi' ? 'क्लाउड एवं सॉफ्टवेयर सेवाएं' : 'Custom Cloud, Hosting & SaaS Services'}
           </h2>
         </div>
@@ -311,7 +311,7 @@ export const WebsiteITPage: React.FC = () => {
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             AUTHORIZED .IN REGISTRY, ICANN WHOIS & CERT-IN PORTALS
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>

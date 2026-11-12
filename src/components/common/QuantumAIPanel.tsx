@@ -272,7 +272,7 @@ export const QuantumAIPanel: React.FC = () => {
     }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         padding: '1rem 1.25rem',
         color: '#FFFFFF',
         display: 'flex',
@@ -322,7 +322,7 @@ export const QuantumAIPanel: React.FC = () => {
 
       {/* Agent Filter Selector */}
       <div style={{
-        background: '#071324',
+        background: '#031126',
         padding: '0.4rem 0.8rem',
         display: 'flex',
         gap: '0.35rem',
@@ -380,7 +380,7 @@ export const QuantumAIPanel: React.FC = () => {
                   fontWeight: 600,
                   marginLeft: '0.2rem',
                 }}>
-                  <Bot size={13} color="#1D4ED8" />
+                  <Bot size={13} color="#075ACB" />
                   <span>{msg.agentName}</span>
                   {msg.governanceLevel && (
                     <span style={{
@@ -389,7 +389,7 @@ export const QuantumAIPanel: React.FC = () => {
                       padding: '0.1rem 0.35rem',
                       borderRadius: '4px',
                       background: msg.governanceLevel === 'RECOMMEND' ? '#FEF3C7' : '#EFF6FF',
-                      color: msg.governanceLevel === 'RECOMMEND' ? '#B45309' : '#1D4ED8',
+                      color: msg.governanceLevel === 'RECOMMEND' ? '#B45309' : '#075ACB',
                       border: '1px solid rgba(0,0,0,0.06)',
                     }}>
                       {msg.governanceLevel}
@@ -402,7 +402,7 @@ export const QuantumAIPanel: React.FC = () => {
                 maxWidth: '86%',
                 padding: '0.75rem 0.95rem',
                 borderRadius: isAI ? '14px 14px 14px 4px' : '14px 14px 4px 14px',
-                background: isAI ? '#FFFFFF' : 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)',
+                background: isAI ? '#FFFFFF' : 'linear-gradient(135deg, #075ACB 0%, #2563EB 100%)',
                 color: isAI ? '#0F172A' : '#FFFFFF',
                 fontSize: '0.88rem',
                 lineHeight: 1.45,
@@ -421,7 +421,7 @@ export const QuantumAIPanel: React.FC = () => {
                       gap: '0.4rem',
                       padding: '0.4rem 0.75rem',
                       background: '#EFF6FF',
-                      color: '#1D4ED8',
+                      color: '#075ACB',
                       borderRadius: '8px',
                       fontWeight: 700,
                       fontSize: '0.8rem',
@@ -444,7 +444,7 @@ export const QuantumAIPanel: React.FC = () => {
 
         {isTyping && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#64748B', fontSize: '0.78rem' }}>
-            <Bot size={14} color="#1D4ED8" />
+            <Bot size={14} color="#075ACB" />
             <span>Quantum multi-agent reasoning...</span>
           </div>
         )}
@@ -510,7 +510,7 @@ export const QuantumAIPanel: React.FC = () => {
             width: '40px',
             height: '40px',
             borderRadius: '10px',
-            background: 'linear-gradient(135deg, #1D4ED8 0%, #2563EB 100%)',
+            background: 'linear-gradient(135deg, #075ACB 0%, #2563EB 100%)',
             color: '#FFFFFF',
             display: 'flex',
             alignItems: 'center',

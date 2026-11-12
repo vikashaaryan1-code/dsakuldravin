@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { apiClient } from '../services/apiClient';
+import { ADCSLogo } from '../components/branding';
+import { LOGIN_PANELS } from '../config/governanceCatalog';
+import { LoginPanelKey } from '../types';
 import { 
   Building2, 
   MapPin, 
@@ -34,7 +37,7 @@ export const AboutPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '3rem 1.5rem 5rem' }}>
       <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', marginBottom: '3.5rem' }}>
         <span className="badge badge-gold" style={{ marginBottom: '0.75rem' }}>ABOUT OUR MISSION</span>
-        <h1 style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3rem)', fontWeight: 900, color: '#0A192F', marginBottom: '1rem' }}>
+        <h1 style={{ fontSize: 'clamp(2.2rem, 3.5vw, 3rem)', fontWeight: 900, color: '#061A36', marginBottom: '1rem' }}>
           AKUL DRAVIN DIGITAL SERVICES
         </h1>
         <p style={{ fontSize: '1.1rem', color: '#475569', lineHeight: 1.6 }}>
@@ -55,7 +58,7 @@ export const AboutPage: React.FC = () => {
         lineHeight: 1.7,
         color: '#334155',
       }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0A192F', marginBottom: '1rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#061A36', marginBottom: '1rem' }}>
           Democratizing Digital Services for Every Citizen & Enterprise
         </h2>
         <p style={{ marginBottom: '1.25rem' }}>
@@ -71,19 +74,19 @@ export const AboutPage: React.FC = () => {
           gap: '1.5rem',
           marginTop: '2.5rem',
           paddingTop: '2rem',
-          borderTop: '1px solid #E2E8F0',
+          borderTop: '1px solid #DCE4EF',
         }}>
           <div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#1D4ED8' }}>2,450+</div>
-            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 600 }}>Operational Branches</div>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#075ACB' }}>16 Sectors</div>
+            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 600 }}>Unified Service Architecture</div>
           </div>
           <div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#D97706' }}>1.8M+</div>
-            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 600 }}>Happy Citizens & Businesses</div>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#B8860B' }}>Single Identity</div>
+            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 600 }}>Role-Aware Citizen & Kendra Portal</div>
           </div>
           <div>
-            <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#059669' }}>99.4%</div>
-            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 600 }}>SLA Commitment Met</div>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#059669' }}>Live Ledger</div>
+            <div style={{ fontSize: '0.85rem', color: '#64748B', fontWeight: 600 }}>Cryptographic Tracking & Auditability</div>
           </div>
         </div>
       </div>
@@ -143,7 +146,7 @@ export const ContactPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '3rem 1.5rem 5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <span className="badge badge-blue">WE ARE HERE TO HELP</span>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0A192F', marginTop: '0.5rem' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#061A36', marginTop: '0.5rem' }}>
           Connect with Akul Dravin Support
         </h1>
         <p style={{ fontSize: '0.95rem', color: '#64748B' }}>
@@ -162,8 +165,8 @@ export const ContactPage: React.FC = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '18px', border: '1px solid #E2E8F0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
-              <Phone size={20} color="#1D4ED8" />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0A192F' }}>Toll-Free Helpline</h3>
+              <Phone size={20} color="#075ACB" />
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#061A36' }}>Toll-Free Helpline</h3>
             </div>
             <p style={{ fontSize: '0.88rem', color: '#475569' }}>1800-890-AKUL (2585) / +91 612 2500 890</p>
             <div style={{ fontSize: '0.75rem', color: '#059669', marginTop: '0.2rem' }}>Available 08:00 AM - 10:00 PM (All 7 Days)</div>
@@ -172,7 +175,7 @@ export const ContactPage: React.FC = () => {
           <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '18px', border: '1px solid #E2E8F0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
               <Mail size={20} color="#D97706" />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0A192F' }}>Email Communications</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#061A36' }}>Email Communications</h3>
             </div>
             <p style={{ fontSize: '0.88rem', color: '#475569' }}>General: support@akuldravin.com</p>
             <p style={{ fontSize: '0.88rem', color: '#475569' }}>Franchise: franchise@akuldravin.com</p>
@@ -181,7 +184,7 @@ export const ContactPage: React.FC = () => {
           <div style={{ background: '#FFFFFF', padding: '1.5rem', borderRadius: '18px', border: '1px solid #E2E8F0' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.5rem' }}>
               <MapPin size={20} color="#7C3AED" />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0A192F' }}>Corporate Headquarters</h3>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#061A36' }}>Corporate Headquarters</h3>
             </div>
             <p style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.5 }}>
               Akul Dravin Digital Towers, Bailey Road Commercial Zone, Saguna More, Patna, Bihar - 800001
@@ -197,7 +200,7 @@ export const ContactPage: React.FC = () => {
           border: '1px solid #E2E8F0',
           boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
         }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '1.25rem' }}>
             Send Us an Instant Message
           </h3>
 
@@ -287,7 +290,7 @@ export const LocationsPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '3rem 1.5rem 5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <span className="badge badge-gold">BRANCH NETWORK</span>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0A192F', marginTop: '0.5rem' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#061A36', marginTop: '0.5rem' }}>
           Pan-India Digital Center Locator
         </h1>
         <p style={{ fontSize: '0.95rem', color: '#64748B' }}>
@@ -314,7 +317,7 @@ export const LocationsPage: React.FC = () => {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
                 <MapPin size={18} color="#D97706" />
-                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0A192F' }}>{b.city}</h3>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#061A36' }}>{b.city}</h3>
                 <span className="badge badge-green">{b.status}</span>
               </div>
               <p style={{ fontSize: '0.85rem', color: '#475569' }}>{b.address}</p>
@@ -345,7 +348,7 @@ export const TrackPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '3rem 1.5rem 5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
         <span className="badge badge-gold">LIVE AUDITABLE MILESTONES</span>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0A192F', marginTop: '0.5rem' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#061A36', marginTop: '0.5rem' }}>
           Universal Application & Shipment Tracking
         </h1>
         <p style={{ fontSize: '0.95rem', color: '#64748B' }}>
@@ -402,7 +405,7 @@ export const TrackPage: React.FC = () => {
                 setActiveTrackerQuery('AD-APP-9102');
                 setIsTrackerOpen(true);
               }}
-              style={{ color: '#1D4ED8', fontWeight: 700, textDecoration: 'underline' }}
+              style={{ color: '#075ACB', fontWeight: 700, textDecoration: 'underline' }}
             >
               AD-APP-9102 (PAN Card)
             </button>
@@ -475,7 +478,7 @@ export const SupportPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '3rem 1.5rem 5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <span className="badge badge-blue">HELP & CITIZEN CARE</span>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0A192F', marginTop: '0.5rem' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#061A36', marginTop: '0.5rem' }}>
           Customer Support & SLA Helpdesk
         </h1>
         <p style={{ fontSize: '0.95rem', color: '#64748B' }}>
@@ -491,7 +494,7 @@ export const SupportPage: React.FC = () => {
         margin: '0 auto 3rem'
       }}>
         <div className="glass-card" style={{ padding: '2rem' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0A192F', marginBottom: '0.5rem' }}>Instant Quantum AI Assistance</h3>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#061A36', marginBottom: '0.5rem' }}>Instant Quantum AI Assistance</h3>
           <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.25rem' }}>
             Instant answers in Hindi or English for service requirements, document checklists, and application status.
           </p>
@@ -501,7 +504,7 @@ export const SupportPage: React.FC = () => {
         </div>
 
         <div className="glass-card" style={{ padding: '2rem' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0A192F', marginBottom: '0.5rem' }}>Submit Formal Ticket</h3>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#061A36', marginBottom: '0.5rem' }}>Submit Formal Ticket</h3>
           <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.25rem' }}>
             Escalate an SLA delay or transaction discrepancy to our Level 2 operations resolution committee.
           </p>
@@ -511,7 +514,7 @@ export const SupportPage: React.FC = () => {
         </div>
 
         <div className="glass-card" style={{ padding: '2rem' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#0A192F', marginBottom: '0.5rem' }}>Franchise Desk</h3>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#061A36', marginBottom: '0.5rem' }}>Franchise Desk</h3>
           <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.25rem' }}>
             Dedicated support for VLE digital center operators and hardware/terminal technicians.
           </p>
@@ -549,7 +552,7 @@ export const SupportPage: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <div>
                     <span className="badge badge-blue">OFFICIAL SLA ESCALATION</span>
-                    <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0A192F', marginTop: '0.35rem' }}>
+                    <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#061A36', marginTop: '0.35rem' }}>
                       Register Formal Support Ticket
                     </h3>
                   </div>
@@ -675,7 +678,7 @@ export const SupportPage: React.FC = () => {
                 }}>
                   <CheckCircle2 size={32} />
                 </div>
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0A192F', marginBottom: '0.5rem' }}>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#061A36', marginBottom: '0.5rem' }}>
                   Grievance Ticket Successfully Logged
                 </h3>
                 <div style={{
@@ -688,7 +691,7 @@ export const SupportPage: React.FC = () => {
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
                     <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Ticket Token:</span>
-                    <strong style={{ fontSize: '0.9rem', color: '#1D4ED8' }}>{createdTicket.id}</strong>
+                    <strong style={{ fontSize: '0.9rem', color: '#075ACB' }}>{createdTicket.id}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
                     <span style={{ fontSize: '0.8rem', color: '#64748B' }}>Assigned Priority:</span>
@@ -743,7 +746,7 @@ export const FaqPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '3rem 1.5rem 5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <span className="badge badge-gold">FREQUENTLY ASKED QUESTIONS</span>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0A192F', marginTop: '0.5rem' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#061A36', marginTop: '0.5rem' }}>
           Got Questions? We Have Answers.
         </h1>
         <p style={{ fontSize: '0.95rem', color: '#64748B' }}>
@@ -861,7 +864,7 @@ export const BlogPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '3rem 1.5rem 5rem' }}>
       <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
         <span className="badge badge-blue">INSIGHTS & REGULATORY UPDATES</span>
-        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0A192F', marginTop: '0.5rem' }}>
+        <h1 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#061A36', marginTop: '0.5rem' }}>
           Akul Dravin Knowledge Hub & Blog
         </h1>
         <p style={{ fontSize: '0.95rem', color: '#64748B' }}>
@@ -922,7 +925,7 @@ export const BlogPage: React.FC = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
               <div>
                 <span className="badge badge-blue" style={{ marginBottom: '0.5rem' }}>{selectedPost.tag}</span>
-                <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#0A192F', lineHeight: 1.3, margin: '0.25rem 0' }}>
+                <h2 style={{ fontSize: '1.45rem', fontWeight: 900, color: '#061A36', lineHeight: 1.3, margin: '0.25rem 0' }}>
                   {selectedPost.title}
                 </h2>
                 <div style={{ fontSize: '0.82rem', color: '#64748B', marginTop: '0.35rem' }}>
@@ -953,7 +956,7 @@ export const BlogPage: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2rem' }}>
               {selectedPost.sections.map((sec, idx) => (
                 <div key={idx}>
-                  <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.4rem' }}>
+                  <h4 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#061A36', marginBottom: '0.4rem' }}>
                     {sec.heading}
                   </h4>
                   <p style={{ fontSize: '0.88rem', color: '#475569', lineHeight: 1.6, margin: 0 }}>
@@ -998,79 +1001,201 @@ export const BlogPage: React.FC = () => {
 };
 
 export const AuthPage: React.FC = () => {
-  const { currentRole, setCurrentRole, showToast } = useApp();
+  const { loginWithPanelCredentials, authenticatedUser, logoutSession, showToast } = useApp();
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
+  const [selectedPanel, setSelectedPanel] = useState<LoginPanelKey>('vle_rural');
+  const [loginId, setLoginId] = useState('VLE-RUR-245089');
+  const [password, setPassword] = useState('RuralVle@2026');
+  const [regName, setRegName] = useState('');
+  const [regMobile, setRegMobile] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleAuth = (e: React.FormEvent) => {
+  const activePanelDef = LOGIN_PANELS.find((p) => p.panelKey === selectedPanel) || LOGIN_PANELS[0];
+
+  const handlePanelSelect = (panelKey: LoginPanelKey) => {
+    setSelectedPanel(panelKey);
+    setAuthError('');
+    const def = LOGIN_PANELS.find((p) => p.panelKey === panelKey);
+    if (def) {
+      setLoginId(def.sampleLoginId);
+      setPassword('');
+    }
+  };
+
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!otpSent) {
-      setOtpSent(true);
-      showToast('OTP Dispatched', `One-time password OTP 7729 dispatched to ${phone}!`, 'info');
-    } else {
-      showToast('Authenticated', 'Authentication successful! Welcome to Akul Dravin Digital Services.', 'success');
+    setAuthError('');
+
+    if (!isLogin) {
+      if (!regName.trim() || !regMobile.trim() || regPassword.length < 6) {
+        setAuthError('Provide full name, mobile number, and minimum 6-character password.');
+        return;
+      }
+      showToast(
+        'Citizen Request Submitted',
+        `Retailer/Citizen onboarding request for ${regName} (${regMobile}) queued for Super Admin provisioning. Standard demo Retailer ID: RET-2026-101 / Retailer@2026.`,
+        'success'
+      );
+      setSelectedPanel('customer');
+      setLoginId('RET-2026-101');
+      setPassword('Retailer@2026');
+      setIsLogin(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const res = await loginWithPanelCredentials(selectedPanel, loginId, password);
+      if (!res.ok) {
+        setAuthError(res.message || 'Authentication failed.');
+        return;
+      }
+      navigate(res.redirectTo || activePanelDef.defaultRoute);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="container-wide" style={{ padding: '4rem 1.5rem 6rem', display: 'flex', justifyContent: 'center' }}>
-      <div className="glass-card" style={{ maxWidth: '440px', width: '100%', padding: '2.5rem', background: '#fff' }}>
-        <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-          <span className="badge badge-gold" style={{ marginBottom: '0.5rem' }}>SECTION 49 SECURE ACCESS</span>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--primary-navy)', margin: 0 }}>
-            {isLogin ? 'Citizen & Business Login' : 'Create Unified Account'}
+    <div className="container-wide" style={{ padding: '2.5rem 1.5rem 5rem', display: 'flex', justifyContent: 'center' }}>
+      <div className="glass-card" style={{ maxWidth: '640px', width: '100%', padding: '2rem', background: 'var(--adcs-surface, #fff)', border: '1px solid var(--adcs-border, #DCE4EF)' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.35rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
+            <ADCSLogo variant="login" theme="light" height={64} />
+          </div>
+          <span className="badge badge-gold" style={{ marginBottom: '0.45rem' }}>ROLE-ISOLATED SECURE GATEWAY • 17 DEDICATED PANELS</span>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 900, color: 'var(--adcs-navy, #061A36)', margin: 0 }}>
+            {isLogin ? activePanelDef.title : 'Create Locked Citizen Account'}
           </h2>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0' }}>
-            One Account. One Identity. Universal Access.
+          <p style={{ fontSize: '0.82rem', color: 'var(--adcs-muted, #64748B)', margin: '4px 0 0' }}>
+            Department: <strong>{activePanelDef.department}</strong> • Designation: <strong>{activePanelDef.designationLabel}</strong>
           </p>
         </div>
 
-        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div>
-            <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>
-              Mobile Number (Aadhaar / SMS OTP)
-            </label>
-            <input
-              type="tel"
-              required
-              placeholder="+91 98765 43210"
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)' }}
-            />
-          </div>
-
-          {otpSent && (
-            <div>
-              <label style={{ fontSize: '0.85rem', fontWeight: 600, display: 'block', marginBottom: '0.3rem' }}>
-                Enter 4-Digit Security OTP
-              </label>
-              <input
-                type="text"
-                required
-                maxLength={4}
-                placeholder="7729"
-                value={otp}
-                onChange={e => setOtp(e.target.value)}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-color)', letterSpacing: '4px', textAlign: 'center', fontSize: '1.2rem', fontWeight: 800 }}
-              />
+        {authenticatedUser && (
+          <div style={{ marginBottom: '1rem', padding: '0.75rem 1rem', borderRadius: '10px', background: '#ECFDF5', border: '1px solid #A7F3D0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div style={{ fontSize: '0.82rem', color: '#065F46' }}>
+              Signed in as <strong>{authenticatedUser.name}</strong> ({authenticatedUser.designation} • <code>{authenticatedUser.loginId}</code>)
             </div>
+            <button type="button" className="btn btn-sm" onClick={logoutSession} style={{ background: '#fff', border: '1px solid #6EE7B7', color: '#047857' }}>
+              Sign Out
+            </button>
+          </div>
+        )}
+
+        {isLogin && (
+          <div style={{ marginBottom: '1.15rem' }}>
+            <label style={{ fontSize: '0.76rem', fontWeight: 800, color: 'var(--adcs-navy, #061A36)', display: 'block', marginBottom: '0.45rem' }}>
+              1. Digital Seva 5-Tier Command Panels & Enterprise Portals
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(112px, 1fr))', gap: '0.4rem', marginBottom: '0.6rem' }}>
+              {(['vle_rural', 'vle_district', 'vle_state', 'vle_main_head', 'admin'] as LoginPanelKey[]).map((key) => {
+                const p = LOGIN_PANELS.find((x) => x.panelKey === key)!;
+                const active = selectedPanel === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => handlePanelSelect(key)}
+                    style={{
+                      padding: '0.45rem 0.5rem',
+                      borderRadius: '8px',
+                      fontSize: '0.72rem',
+                      fontWeight: 800,
+                      border: active ? `2px solid ${p.accentColor}` : '1px solid var(--adcs-border, #DCE4EF)',
+                      background: active ? p.accentColor : 'var(--adcs-background, #F5F8FC)',
+                      color: active ? '#fff' : 'var(--adcs-text, #14243A)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {key === 'vle_rural' ? 'Rural VLE' : key === 'vle_district' ? 'District Mgr' : key === 'vle_state' ? 'State Head' : key === 'vle_main_head' ? 'Main Head' : 'Super Admin'}
+                  </button>
+                );
+              })}
+            </div>
+            <select
+              value={selectedPanel}
+              onChange={(e) => handlePanelSelect(e.target.value as LoginPanelKey)}
+              style={{ width: '100%', padding: '0.62rem 0.75rem', borderRadius: '8px', border: '1px solid var(--adcs-border, #DCE4EF)', fontSize: '0.84rem', fontWeight: 700 }}
+            >
+              {LOGIN_PANELS.map((p) => (
+                <option key={p.panelKey} value={p.panelKey}>
+                  {p.title} ({p.department})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {authError && (
+          <div style={{ marginBottom: '1rem', padding: '0.7rem 0.9rem', borderRadius: '8px', background: '#FEF2F2', border: '1px solid #FCA5A5', color: '#991B1B', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <AlertCircle size={16} /> <span>{authError}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '0.95rem' }}>
+          {isLogin ? (
+            <>
+              <div>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>
+                  Panel-Locked Login ID ({activePanelDef.designationLabel})
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={loginId}
+                  onChange={(e) => setLoginId(e.target.value)}
+                  placeholder={activePanelDef.sampleLoginId}
+                  style={{ width: '100%', padding: '0.72rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--adcs-border, #DCE4EF)' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>
+                  Secure Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter panel password"
+                  style={{ width: '100%', padding: '0.72rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--adcs-border, #DCE4EF)' }}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Full Name</label>
+                <input type="text" required value={regName} onChange={(e) => setRegName(e.target.value)} placeholder="Citizen / Retailer Name" style={{ width: '100%', padding: '0.72rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--adcs-border, #DCE4EF)' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Mobile Number</label>
+                <input type="tel" required value={regMobile} onChange={(e) => setRegMobile(e.target.value)} placeholder="+91 98765 43210" style={{ width: '100%', padding: '0.72rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--adcs-border, #DCE4EF)' }} />
+              </div>
+              <div>
+                <label style={{ fontSize: '0.82rem', fontWeight: 700, display: 'block', marginBottom: '0.3rem' }}>Create Password</label>
+                <input type="password" required value={regPassword} onChange={(e) => setRegPassword(e.target.value)} placeholder="Minimum 6 characters" style={{ width: '100%', padding: '0.72rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--adcs-border, #DCE4EF)' }} />
+              </div>
+            </>
           )}
 
-          <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem' }}>
-            {otpSent ? 'Verify OTP & Enter Ecosystem' : 'Transmit Secure OTP'}
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.8rem', marginTop: '0.25rem' }}>
+            {isLogin ? `Verify & Enter ${activePanelDef.title}` : 'Register Retailer / Citizen Credential'}
           </button>
         </form>
 
-        <div style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          {isLogin ? "Don't have an account? " : "Already have an account? "}
+        <div style={{ textAlign: 'center', marginTop: '1.25rem', fontSize: '0.84rem', color: 'var(--text-muted)' }}>
+          {isLogin ? "New Retailer / Citizen? " : "Already have a panel credential? "}
           <button
-            onClick={() => { setIsLogin(!isLogin); setOtpSent(false); }}
+            type="button"
+            onClick={() => { setIsLogin(!isLogin); setAuthError(''); }}
             style={{ color: 'var(--primary-blue)', fontWeight: 700, background: 'none', border: 'none', cursor: 'pointer' }}
           >
-            {isLogin ? 'Register Citizen ID' : 'Sign In'}
+            {isLogin ? 'Register Citizen ID' : 'Back to Strict Panel Login'}
           </button>
         </div>
       </div>

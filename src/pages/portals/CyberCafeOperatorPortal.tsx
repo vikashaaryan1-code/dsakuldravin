@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   Monitor, 
   Printer, 
@@ -75,27 +76,27 @@ export const CyberCafeOperatorPortal: React.FC = () => {
   };
 
   const downloadReceiptTxt = (receipt: NonNullable<typeof lastCashReceipt>) => {
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — CYBER CAFE POS CASH BILL',
-      '================================================================',
-      `Receipt Ref  : ${receipt.ref}`,
-      `Date & Time  : ${receipt.timestamp}`,
-      `Customer     : ${receipt.customerName}`,
-      `Terminal/Job : ${receipt.stationOrJob}`,
-      `Particulars  : ${receipt.detail}`,
-      `Total Cash   : INR ${receipt.amount.toFixed(2)} (Incl. 18% GST)`,
-      'Ledger Sync  : Balanced Double-Entry Posted (1001 Dr / 4061 + 2010 Cr)',
-      '================================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Cafe_Cash_Bill_${receipt.ref}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const baseAmt = Number((receipt.amount / 1.18).toFixed(2));
+    const gstAmt = Number((receipt.amount - baseAmt).toFixed(2));
+    printBrandedADCSDocument({
+      title: 'ADCS Cyber Cafe POS Cash Receipt & Job Slip',
+      documentType: 'POS CASH RECEIPT',
+      documentNumber: receipt.ref,
+      issuedDate: receipt.timestamp,
+      rows: [
+        { label: 'Customer Name', value: receipt.customerName },
+        { label: 'Terminal / Print Job', value: receipt.stationOrJob },
+        { label: 'Service Particulars', value: receipt.detail },
+        { label: 'Double-Entry Ledger', value: 'Posted (1001 Cash Dr / 4061 + 2010 Cr)' },
+      ],
+      amountSummary: {
+        subtotal: baseAmt,
+        tax: gstAmt,
+        total: receipt.amount,
+        currency: '₹',
+        paymentStatus: 'CASH SETTLED (INCL. 18% GST)',
+      },
+    });
   };
 
   const handleLaunchSession = () => {
@@ -156,7 +157,7 @@ export const CyberCafeOperatorPortal: React.FC = () => {
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '2.5rem',
         color: '#FFFFFF',
@@ -218,7 +219,7 @@ export const CyberCafeOperatorPortal: React.FC = () => {
               style={{ gap: '0.35rem' }}
             >
               <Download size={14} />
-              <span>Download POS Bill (.txt)</span>
+              <span>Print / PDF POS Bill</span>
             </button>
             <button
               onClick={() => setLastCashReceipt(null)}
@@ -308,7 +309,7 @@ export const CyberCafeOperatorPortal: React.FC = () => {
         border: '1px solid #E2E8F0',
         marginBottom: '3rem',
       }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.5rem' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '1.5rem' }}>
           Active Floor Workstation Matrix (PC-01 to PC-08)
         </h3>
 
@@ -339,7 +340,7 @@ export const CyberCafeOperatorPortal: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       <Monitor size={18} color={isAvail ? '#059669' : '#DC2626'} />
-                      <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0A192F' }}>{pc.id}</span>
+                      <span style={{ fontWeight: 800, fontSize: '1.05rem', color: '#061A36' }}>{pc.id}</span>
                     </div>
                     <span className={`badge ${isAvail ? 'badge-green' : isInUse ? 'badge-red' : 'badge-gray'}`}>
                       {pc.status.toUpperCase()}
@@ -360,7 +361,7 @@ export const CyberCafeOperatorPortal: React.FC = () => {
                       flexDirection: 'column',
                       gap: '0.25rem',
                     }}>
-                      <div style={{ fontWeight: 800, color: '#0A192F' }}>{pc.currentSession.customerName}</div>
+                      <div style={{ fontWeight: 800, color: '#061A36' }}>{pc.currentSession.customerName}</div>
                       <div style={{ color: '#475569' }}>Task: {pc.currentSession.activeTask}</div>
                       <div style={{ display: 'flex', justifyContent: 'space-between', color: '#DC2626', fontWeight: 700, marginTop: '0.2rem' }}>
                         <span>Logged In: {pc.currentSession.startTime}</span>
@@ -426,7 +427,7 @@ export const CyberCafeOperatorPortal: React.FC = () => {
         border: '1px solid #E2E8F0',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '0.75rem' }}>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F' }}>
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36' }}>
             Daily Print & Xerox Production Queue
           </h3>
           <span className="badge badge-blue">Toner Remaining: 84%</span>
@@ -519,7 +520,7 @@ export const CyberCafeOperatorPortal: React.FC = () => {
               }}
             >
               <div>
-                <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0A192F' }}>
+                <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#061A36' }}>
                   {job.id} • {job.customerName}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
@@ -529,7 +530,7 @@ export const CyberCafeOperatorPortal: React.FC = () => {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0A192F' }}>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#061A36' }}>
                     ₹{job.totalCost}
                   </div>
                   <span className="badge badge-green">{job.status}</span>

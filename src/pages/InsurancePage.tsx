@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { apiClient } from '../services/apiClient';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { ServiceCard } from '../components/cards/ServiceCard';
 import { 
   Shield, 
@@ -130,36 +131,36 @@ export const InsurancePage: React.FC = () => {
   };
 
   const handleDownloadPolicy = (pol: any) => {
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — INSURANCE PROPOSAL & SCHEDULE COPY',
-      '========================================================================',
-      `Policy Proposal Ref : ${pol.policyNumber}`,
-      `Date of Issue       : ${new Date().toLocaleString('en-IN')}`,
-      `Proposer Name       : ${pol.proposerName}`,
-      `Contact Mobile      : ${pol.proposerPhone}`,
-      pol.vehicleRegNo ? `Vehicle Reg. No     : ${pol.vehicleRegNo}` : null,
-      `Underwriter         : ${pol.insurer}`,
-      `Plan Name           : ${pol.plan}`,
-      `Sum Insured         : ${pol.sumInsured}`,
-      `Total Premium Paid  : ₹${pol.premium.toLocaleString('en-IN')} (Incl. 18% GST)`,
-      `Vault Status        : Archived in ADCS Citizen Document Vault`,
-      'Disclosure          : Solicited through IRDAI-licensed partner network.',
-      '========================================================================',
-    ].filter(Boolean).join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Policy_${pol.policyNumber}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const baseAmt = Number((pol.premium / 1.18).toFixed(2));
+    const gstAmt = Number((pol.premium - baseAmt).toFixed(2));
+    printBrandedADCSDocument({
+      title: 'ADCS Assisted Insurance Proposal & Payment Summary',
+      documentType: 'INSURANCE PROPOSAL SLIP',
+      documentNumber: String(pol.policyNumber),
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: [
+        { label: 'Proposer Name & Mobile', value: `${pol.proposerName} (${pol.proposerPhone})` },
+        ...(pol.vehicleRegNo ? [{ label: 'Vehicle Registration No', value: String(pol.vehicleRegNo) }] : []),
+        { label: 'Underwriting Insurer', value: String(pol.insurer) },
+        { label: 'Coverage Plan & Sum Insured', value: `${pol.plan} • Sum Insured ${pol.sumInsured}` },
+        { label: 'Citizen Vault Status', value: 'Archived in ADCS Citizen Document Vault' },
+      ],
+      amountSummary: {
+        subtotal: baseAmt,
+        tax: gstAmt,
+        total: Number(pol.premium),
+        currency: '₹',
+        paymentStatus: 'SOLICITED VIA LICENSED PARTNER NETWORK',
+      },
+      notes: ['Statutory policy contract is issued solely by the named IRDAI-licensed underwriter; ADCS branding applies only to this facilitation slip.'],
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -231,10 +232,10 @@ export const InsurancePage: React.FC = () => {
               borderRadius: '12px',
               fontWeight: 700,
               fontSize: '0.85rem',
-              background: activeType === t.id ? '#1D4ED8' : '#FFFFFF',
+              background: activeType === t.id ? '#075ACB' : '#FFFFFF',
               color: activeType === t.id ? '#FFFFFF' : '#475569',
               border: '1px solid',
-              borderColor: activeType === t.id ? '#1D4ED8' : '#CBD5E1',
+              borderColor: activeType === t.id ? '#075ACB' : '#CBD5E1',
               transition: 'all 0.15s',
             }}
           >
@@ -342,7 +343,7 @@ export const InsurancePage: React.FC = () => {
             <CheckCircle2 size={36} />
           </div>
 
-          <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+          <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
             Policy Issued & Secured!
           </h3>
           <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.5rem' }}>
@@ -363,7 +364,7 @@ export const InsurancePage: React.FC = () => {
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#64748B' }}>Policy Number:</span>
-              <span style={{ fontWeight: 800, color: '#1D4ED8' }}>{issuedPolicy.policyNumber}</span>
+              <span style={{ fontWeight: 800, color: '#075ACB' }}>{issuedPolicy.policyNumber}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#64748B' }}>Underwriter:</span>
@@ -375,7 +376,7 @@ export const InsurancePage: React.FC = () => {
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ color: '#64748B' }}>Annual Premium Paid:</span>
-              <span style={{ fontWeight: 800, color: '#0A192F' }}>₹{issuedPolicy.premium.toLocaleString('en-IN')}</span>
+              <span style={{ fontWeight: 800, color: '#061A36' }}>₹{issuedPolicy.premium.toLocaleString('en-IN')}</span>
             </div>
           </div>
 
@@ -398,7 +399,7 @@ export const InsurancePage: React.FC = () => {
         </div>
       ) : (
         <div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '1.25rem' }}>
             {currentCategoryData.title}
           </h3>
 
@@ -421,10 +422,10 @@ export const InsurancePage: React.FC = () => {
               >
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                    <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0A192F' }}>{q.insurer}</span>
+                    <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#061A36' }}>{q.insurer}</span>
                     <span className="badge badge-gold">{q.tag}</span>
                   </div>
-                  <div style={{ fontSize: '0.88rem', color: '#1D4ED8', fontWeight: 600 }}>
+                  <div style={{ fontSize: '0.88rem', color: '#075ACB', fontWeight: 600 }}>
                     {q.plan}
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '0.25rem' }}>
@@ -435,7 +436,7 @@ export const InsurancePage: React.FC = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Annual Premium</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0A192F' }}>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#061A36' }}>
                       ₹{q.premium.toLocaleString('en-IN')}
                     </div>
                     <div style={{ fontSize: '0.68rem', color: '#059669' }}>Includes 18% GST</div>
@@ -459,7 +460,7 @@ export const InsurancePage: React.FC = () => {
           <div>
             <div style={{ marginBottom: '1.25rem' }}>
               <span className="badge badge-blue" style={{ marginBottom: '0.4rem' }}>ASSISTED ADVISORY & POLICY DISPATCH</span>
-              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36' }}>
                 {language === 'hi' ? 'बीमा सहायता एवं क्लेम सपोर्ट' : 'Insurance Policy & Claims Assistance'}
               </h2>
             </div>
@@ -487,7 +488,7 @@ export const InsurancePage: React.FC = () => {
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             AUTHORIZED IRDAI & STATUTORY INSURANCE PORTALS
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>

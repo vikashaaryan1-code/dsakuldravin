@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   Store, 
   Wallet, 
@@ -51,30 +52,28 @@ export const DigitalCenterPortal: React.FC = () => {
   const [branchTotals, setBranchTotals] = useState({ tokens: 14, grossCash: 8450, netComm: 1850 });
 
   const handleDownloadCounterReceipt = (receipt: NonNullable<typeof lastReceipt>) => {
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — VLE COUNTER CASH RECEIPT',
-      '==============================================================',
-      `Application Token : ${receipt.appId}`,
-      `Branch Code       : AD-PAT-04 (Patna Center #104)`,
-      `Date & Time       : ${receipt.timestamp}`,
-      `Citizen Name      : ${receipt.customerName}`,
-      `Citizen Mobile    : ${receipt.customerPhone}`,
-      `Service Availed   : ${receipt.serviceTitle}`,
-      '--------------------------------------------------------------',
-      `Cash Collected    : Rs. ${receipt.cashCollected.toLocaleString('en-IN')}`,
-      `VLE Comm Share    : Rs. ${receipt.commission.toLocaleString('en-IN')}`,
-      `Platform Settlement: Rs. ${(receipt.cashCollected - receipt.commission).toLocaleString('en-IN')}`,
-      '==============================================================',
-      'Track anytime at: https://akuldravindigital.com/track',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Counter_Receipt_${receipt.appId}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    showToast('Receipt Downloaded', `Saved ADCS_Counter_Receipt_${receipt.appId}.txt`, 'success');
+    printBrandedADCSDocument({
+      title: 'ADCS Kendra / VLE Walk-In Counter Receipt',
+      documentType: 'COUNTER RECEIPT',
+      documentNumber: receipt.appId,
+      issuedDate: receipt.timestamp,
+      rows: [
+        { label: 'Kendra Center Code', value: 'AD-PAT-04 (ADCS Authorized Kendra)' },
+        { label: 'Citizen Name', value: receipt.customerName },
+        { label: 'Citizen Mobile', value: receipt.customerPhone },
+        { label: 'Service Facilitated', value: receipt.serviceTitle },
+        { label: 'VLE Commission Share', value: `₹${receipt.commission.toLocaleString('en-IN')}` },
+        { label: 'Platform Settlement', value: `₹${(receipt.cashCollected - receipt.commission).toLocaleString('en-IN')}` },
+      ],
+      amountSummary: {
+        total: receipt.cashCollected,
+        currency: '₹',
+        paymentStatus: 'COUNTER CASH COLLECTED',
+      },
+      notes: ['Track your ADCS service token anytime at the ADCS Application Tracker portal.'],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?ref=${encodeURIComponent(receipt.appId)}`,
+    });
+    showToast('Counter Receipt Ready', `ADCS Counter Receipt #${receipt.appId} opened for print/PDF.`, 'success');
   };
 
   const handleWalkInSubmit = (e: React.FormEvent) => {
@@ -159,7 +158,7 @@ export const DigitalCenterPortal: React.FC = () => {
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* VLE Center Header Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '2.5rem',
         color: '#FFFFFF',
@@ -258,8 +257,8 @@ export const DigitalCenterPortal: React.FC = () => {
           boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-            <UserPlus size={20} color="#1D4ED8" />
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F' }}>
+            <UserPlus size={20} color="#075ACB" />
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36' }}>
               Walk-in Citizen Registration POS
             </h3>
           </div>
@@ -383,7 +382,7 @@ export const DigitalCenterPortal: React.FC = () => {
                   cursor: 'pointer'
                 }}
               >
-                <Download size={14} /> Download Counter Receipt (.txt)
+                <Download size={14} /> Print / PDF Counter Receipt
               </button>
             </div>
           )}
@@ -397,18 +396,18 @@ export const DigitalCenterPortal: React.FC = () => {
             padding: '1.75rem',
             border: '1px solid #E2E8F0',
           }}>
-            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0A192F', marginBottom: '1rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#061A36', marginBottom: '1rem' }}>
               Today's Branch Performance
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
                 <span style={{ color: '#64748B' }}>Walk-in Tokens Served:</span>
-                <span style={{ fontWeight: 800, color: '#0A192F' }}>{branchTotals.tokens} Citizens</span>
+                <span style={{ fontWeight: 800, color: '#061A36' }}>{branchTotals.tokens} Citizens</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
                 <span style={{ color: '#64748B' }}>Gross Cash Collected:</span>
-                <span style={{ fontWeight: 800, color: '#0A192F' }}>₹{branchTotals.grossCash.toLocaleString('en-IN')}</span>
+                <span style={{ fontWeight: 800, color: '#061A36' }}>₹{branchTotals.grossCash.toLocaleString('en-IN')}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
                 <span style={{ color: '#64748B' }}>Today's Net Commission:</span>
@@ -416,11 +415,11 @@ export const DigitalCenterPortal: React.FC = () => {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', borderTop: '1px solid #E2E8F0', paddingTop: '0.5rem' }}>
                 <span style={{ color: '#64748B' }}>Cash in Register:</span>
-                <span style={{ fontWeight: 800, color: '#1D4ED8' }}>₹{(branchTotals.grossCash - branchTotals.netComm).toLocaleString('en-IN')}</span>
+                <span style={{ fontWeight: 800, color: '#075ACB' }}>₹{(branchTotals.grossCash - branchTotals.netComm).toLocaleString('en-IN')}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748B' }}>
                 <span>Live Platform Applications:</span>
-                <span style={{ fontWeight: 700, color: '#0A192F' }}>{applications.length} Tracked</span>
+                <span style={{ fontWeight: 700, color: '#061A36' }}>{applications.length} Tracked</span>
               </div>
             </div>
           </div>

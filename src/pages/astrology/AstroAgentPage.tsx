@@ -110,7 +110,7 @@ export const AstroAgentPage: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#090E17', color: '#F8FAFC', paddingBottom: '80px' }}>
+    <div style={{ minHeight: '100vh', background: '#031126', color: '#F8FAFC', paddingBottom: '80px' }}>
       {/* Sticky Secondary Celestial Header */}
       <AstroHeaderNav />
 
@@ -118,7 +118,7 @@ export const AstroAgentPage: React.FC = () => {
       <section style={{
         position: 'relative',
         padding: '50px 16px 40px',
-        background: 'radial-gradient(ellipse at top, #1E1B4B 0%, #0F172A 60%, #090E17 100%)',
+        background: 'radial-gradient(ellipse at top, #1E1B4B 0%, #0F172A 60%, #031126 100%)',
         borderBottom: '1px solid rgba(245, 158, 11, 0.2)'
       }}>
         <div style={{ maxWidth: '1240px', margin: '0 auto' }}>

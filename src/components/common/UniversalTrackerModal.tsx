@@ -112,7 +112,7 @@ export const UniversalTrackerModal: React.FC = () => {
               height: '38px',
               borderRadius: '10px',
               background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
-              color: '#0A192F',
+              color: '#061A36',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -120,7 +120,7 @@ export const UniversalTrackerModal: React.FC = () => {
               <Compass size={20} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36' }}>
                 Universal Application & Order Tracker
               </h3>
               <p style={{ fontSize: '0.75rem', color: '#64748B' }}>
@@ -168,7 +168,7 @@ export const UniversalTrackerModal: React.FC = () => {
                 outline: 'none',
                 fontSize: '0.9rem',
                 fontWeight: 600,
-                color: '#0A192F',
+                color: '#061A36',
               }}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch(inputQuery)}
             />
@@ -206,7 +206,7 @@ export const UniversalTrackerModal: React.FC = () => {
                 borderRadius: '6px',
                 background: '#FFFFFF',
                 border: '1px solid #E2E8F0',
-                color: '#1D4ED8',
+                color: '#075ACB',
                 fontWeight: 600,
               }}
             >
@@ -239,7 +239,7 @@ export const UniversalTrackerModal: React.FC = () => {
           {!searchedEntity ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#64748B' }}>
               <AlertCircle size={40} color="#CBD5E1" style={{ margin: '0 auto 1rem' }} />
-              <h4 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#0A192F', marginBottom: '0.25rem' }}>
+              <h4 style={{ fontWeight: 700, fontSize: '1.05rem', color: '#061A36', marginBottom: '0.25rem' }}>
                 No Application or Order Found
               </h4>
               <p style={{ fontSize: '0.85rem' }}>
@@ -261,21 +261,21 @@ export const UniversalTrackerModal: React.FC = () => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                          <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F' }}>
+                          <span style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36' }}>
                             {app.id}
                           </span>
                           <span className={`badge ${app.status === 'Completed' ? 'badge-green' : 'badge-blue'}`}>
                             {app.status}
                           </span>
                         </div>
-                        <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#1D4ED8' }}>
+                        <h4 style={{ fontSize: '1rem', fontWeight: 700, color: '#075ACB' }}>
                           {app.serviceName}
                         </h4>
                       </div>
 
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Submitted on</div>
-                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#0A192F' }}>{app.submittedAt}</div>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 600, color: '#061A36' }}>{app.submittedAt}</div>
                       </div>
                     </div>
 
@@ -290,22 +290,22 @@ export const UniversalTrackerModal: React.FC = () => {
                     }}>
                       <div>
                         <div style={{ color: '#64748B' }}>Applicant Name:</div>
-                        <div style={{ fontWeight: 600, color: '#0A192F' }}>{app.applicantName}</div>
+                        <div style={{ fontWeight: 600, color: '#061A36' }}>{app.applicantName}</div>
                       </div>
                       <div>
                         <div style={{ color: '#64748B' }}>Assigned Officer:</div>
-                        <div style={{ fontWeight: 600, color: '#0A192F' }}>{app.assignedTo || 'Regional Queue'}</div>
+                        <div style={{ fontWeight: 600, color: '#061A36' }}>{app.assignedTo || 'Regional Queue'}</div>
                       </div>
                       <div>
                         <div style={{ color: '#64748B' }}>Location / Branch:</div>
-                        <div style={{ fontWeight: 600, color: '#0A192F' }}>{app.city}, {app.state}</div>
+                        <div style={{ fontWeight: 600, color: '#061A36' }}>{app.city}, {app.state}</div>
                       </div>
                     </div>
                   </div>
 
                   {/* Visual Milestone Timeline */}
                   <div>
-                    <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0A192F', marginBottom: '1rem' }}>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#061A36', marginBottom: '1rem' }}>
                       Live Progress Lifecycle
                     </h4>
 
@@ -319,7 +319,7 @@ export const UniversalTrackerModal: React.FC = () => {
                                 width: '28px',
                                 height: '28px',
                                 borderRadius: '50%',
-                                background: step.isCompleted ? '#059669' : step.isCurrent ? '#1D4ED8' : '#E2E8F0',
+                                background: step.isCompleted ? '#059669' : step.isCurrent ? '#075ACB' : '#E2E8F0',
                                 color: '#FFFFFF',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -342,7 +342,7 @@ export const UniversalTrackerModal: React.FC = () => {
 
                             <div style={{ paddingBottom: '1.25rem', flex: 1 }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: step.isCurrent ? '#1D4ED8' : '#0A192F' }}>
+                                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: step.isCurrent ? '#075ACB' : '#061A36' }}>
                                   {step.title}
                                 </div>
                                 <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 500 }}>
@@ -377,7 +377,7 @@ export const UniversalTrackerModal: React.FC = () => {
                   }}>
                     <div>
                       <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#B45309' }}>COURIER AWB TRACKING</div>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F' }}>{shp.awb}</div>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36' }}>{shp.awb}</div>
                       <div style={{ fontSize: '0.85rem', color: '#475569', marginTop: '0.2rem' }}>
                         From {shp.senderCity} ➔ To {shp.receiverCity} ({shp.serviceType})
                       </div>
@@ -412,7 +412,7 @@ export const UniversalTrackerModal: React.FC = () => {
                           )}
                         </div>
                         <div style={{ paddingBottom: '1rem', flex: 1 }}>
-                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0A192F' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#061A36' }}>
                             {item.stage}
                           </div>
                           <div style={{ fontSize: '0.78rem', color: '#64748B' }}>

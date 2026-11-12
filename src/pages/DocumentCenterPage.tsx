@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { CertificateStudio } from '../components/documents/CertificateStudio';
 import { LetterGenerator } from '../components/documents/LetterGenerator';
 import { 
@@ -43,32 +44,27 @@ export const DocumentCenterPage: React.FC = () => {
   const [activeTool, setActiveTool] = useState<'ocr' | 'merge' | 'compress' | 'resume' | null>(null);
 
   const handleDownloadDoc = (doc: any) => {
-    const content = `================================================================================
-AKUL DRAVIN DIGITAL SERVICES (ADCS)
-SECURE CITIZEN DOCUMENT ARCHIVE - VERIFIED RECORD
-================================================================================
-Document UID    : ${doc.id}
-File Name       : ${doc.name}
-Category        : ${doc.category}
-File Size       : ${doc.size}
-Upload Date     : ${doc.uploadDate}
-OCR Match Score : ${doc.ocrConfidence}%
-DPDP Act 2025   : Encrypted at rest (AES-256) under Purpose Limitation
-Cryptographic ID: SHA256-${String(doc.id || 'VAULT').replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(-8)}-${doc.ocrConfidence || 99}-ADCS-RECORD
-Verification URL: https://akuldravindigital.com/verify-doc/${doc.id}
-================================================================================
-This certified digital copy is authenticated against institutional registries.
-================================================================================`;
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${doc.name.replace(/\.[^/.]+$/, '').replace(/\s+/g, '_')}_Verified.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Download Completed', `${doc.name} verified copy saved to your device.`, 'success');
+    const digest = `SHA256-${String(doc.id || 'VAULT').replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(-8)}-${doc.ocrConfidence || 99}-ADCS-RECORD`;
+    printBrandedADCSDocument({
+      title: 'ADCS Secure Citizen Document Vault — Verified Coversheet',
+      documentType: 'VAULT ARCHIVE RECORD',
+      documentNumber: String(doc.id || 'VAULT-DOC'),
+      issuedDate: String(doc.uploadDate || new Date().toLocaleDateString('en-IN')),
+      rows: [
+        { label: 'Archived File Name', value: String(doc.name || 'Document') },
+        { label: 'Document Category', value: String(doc.category || 'General') },
+        { label: 'Stored File Size', value: String(doc.size || 'N/A') },
+        { label: 'OCR Check Confidence', value: `${doc.ocrConfidence || 99}% Match` },
+        { label: 'Cryptographic Digest', value: digest },
+        { label: 'Privacy Governance', value: 'DPDP Act 2025 Purpose-Limited Vault Storage' },
+      ],
+      notes: [
+        'This ADCS coversheet attests vault storage and checksum integrity only.',
+        'Statutory documents (Aadhaar, PAN, Passport, etc.) remain original records of their respective government issuers without modification.',
+      ],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/verify-doc/${encodeURIComponent(String(doc.id || ''))}`,
+    });
+    showToast('Verified Record Ready', `${doc.name} ADCS coversheet opened for print/PDF.`, 'success');
   };
 
   const handleShareDoc = (doc: any) => {
@@ -175,7 +171,7 @@ This certified digital copy is authenticated against institutional registries.
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -248,9 +244,9 @@ This certified digital copy is authenticated against institutional registries.
               display: 'flex',
               alignItems: 'center',
               gap: '0.5rem',
-              background: mainSection === tab.id ? '#0A192F' : '#FFFFFF',
+              background: mainSection === tab.id ? '#061A36' : '#FFFFFF',
               color: mainSection === tab.id ? '#FFFFFF' : '#475569',
-              border: mainSection === tab.id ? '1px solid #0A192F' : '1px solid #CBD5E1',
+              border: mainSection === tab.id ? '1px solid #061A36' : '1px solid #CBD5E1',
               cursor: 'pointer',
               whiteSpace: 'nowrap',
               transition: 'all 0.15s ease'
@@ -275,13 +271,13 @@ This certified digital copy is authenticated against institutional registries.
       {/* 4. UNIVERSAL UTILITY TOOLS VIEW */}
       {(mainSection === 'utilities' || (mainSection === 'vault' && activeTool !== null)) && (
         <div style={{ marginBottom: '3.5rem' }}>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '1.25rem' }}>
             Universal Document Processing Tools
           </h3>
 
           <div className="grid-4" style={{ gap: '1rem' }}>
             {[
-              { id: 'ocr' as const, title: 'Quantum AI OCR Extractor', desc: 'Extract clean Unicode text from photos, PDFs & Aadhaar cards.', icon: <ScanLine size={20} color="#1D4ED8" /> },
+              { id: 'ocr' as const, title: 'Quantum AI OCR Extractor', desc: 'Extract clean Unicode text from photos, PDFs & Aadhaar cards.', icon: <ScanLine size={20} color="#075ACB" /> },
               { id: 'merge' as const, title: 'PDF Merge & Splitter', desc: 'Combine multiple marksheets or deed pages into one PDF.', icon: <Split size={20} color="#059669" /> },
               { id: 'compress' as const, title: 'Smart PDF Compressor', desc: 'Reduce file size below 200KB for government job portals.', icon: <Minimize2 size={20} color="#D97706" /> },
               { id: 'resume' as const, title: 'Resume & Biodata Maker', desc: 'ATS-friendly professional CV templates with instant PDF export.', icon: <FileCode size={20} color="#7C3AED" /> },
@@ -307,10 +303,10 @@ This certified digital copy is authenticated against institutional registries.
                   <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {tool.icon}
                   </div>
-                  <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0A192F' }}>{tool.title}</h4>
+                  <h4 style={{ fontSize: '0.92rem', fontWeight: 700, color: '#061A36' }}>{tool.title}</h4>
                 </div>
                 <p style={{ fontSize: '0.78rem', color: '#64748B', lineHeight: 1.4, margin: 0 }}>{tool.desc}</p>
-                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1D4ED8', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#075ACB', marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                   <span>Launch Interactive Tool →</span>
                 </div>
               </div>
@@ -338,7 +334,7 @@ This certified digital copy is authenticated against institutional registries.
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#0A192F' }}>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, color: '#061A36' }}>
                 Encrypted Customer Document Vault
               </h2>
               <span className="badge badge-green">AES-256 Active</span>
@@ -381,10 +377,10 @@ This certified digital copy is authenticated against institutional registries.
                 borderRadius: '8px',
                 fontSize: '0.82rem',
                 fontWeight: 600,
-                background: selectedCategory === cat ? '#1D4ED8' : '#F1F5F9',
+                background: selectedCategory === cat ? '#075ACB' : '#F1F5F9',
                 color: selectedCategory === cat ? '#FFFFFF' : '#475569',
                 border: '1px solid',
-                borderColor: selectedCategory === cat ? '#1D4ED8' : '#E2E8F0',
+                borderColor: selectedCategory === cat ? '#075ACB' : '#E2E8F0',
               }}
             >
               {cat}
@@ -419,7 +415,7 @@ This certified digital copy is authenticated against institutional registries.
                     height: '36px',
                     borderRadius: '8px',
                     background: '#EFF6FF',
-                    color: '#1D4ED8',
+                    color: '#075ACB',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -431,7 +427,7 @@ This certified digital copy is authenticated against institutional registries.
                   </span>
                 </div>
 
-                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#0A192F', wordBreak: 'break-word', marginBottom: '0.25rem' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.92rem', color: '#061A36', wordBreak: 'break-word', marginBottom: '0.25rem' }}>
                   {doc.name}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
@@ -452,7 +448,7 @@ This certified digital copy is authenticated against institutional registries.
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.3rem',
-                    color: '#1D4ED8',
+                    color: '#075ACB',
                     fontSize: '0.78rem',
                     fontWeight: 600,
                   }}
@@ -511,7 +507,7 @@ This certified digital copy is authenticated against institutional registries.
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
               <div>
                 <span className="badge badge-blue">STUDIO ENGINE ACTIVE</span>
-                <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0A192F', marginTop: '0.3rem' }}>
+                <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#061A36', marginTop: '0.3rem' }}>
                   {activeTool === 'ocr' && 'Quantum AI OCR Extractor & Validator'}
                   {activeTool === 'merge' && 'PDF Document Merge & Page Re-order Studio'}
                   {activeTool === 'compress' && 'Smart PDF Compressor for Sarkari Portals'}
@@ -545,7 +541,7 @@ This certified digital copy is authenticated against institutional registries.
                         background: ocrSample === s ? '#EFF6FF' : '#FFFFFF',
                         fontWeight: 700,
                         fontSize: '0.8rem',
-                        color: ocrSample === s ? '#1D4ED8' : '#64748B',
+                        color: ocrSample === s ? '#075ACB' : '#64748B',
                         cursor: 'pointer'
                       }}
                     >
@@ -650,7 +646,7 @@ This certified digital copy is authenticated against institutional registries.
                       fontSize: '0.85rem'
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ fontWeight: 800, color: '#1D4ED8' }}>#{i + 1}</span>
+                        <span style={{ fontWeight: 800, color: '#075ACB' }}>#{i + 1}</span>
                         <span>{f}</span>
                       </div>
                       <button
@@ -701,8 +697,8 @@ This certified digital copy is authenticated against institutional registries.
 
                 <div style={{ background: '#F8FAFC', padding: '1.25rem', borderRadius: '14px', border: '1px solid #E2E8F0', marginBottom: '1.25rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0A192F' }}>Target Maximum File Size:</span>
-                    <strong style={{ fontSize: '1rem', color: '#1D4ED8' }}>{compressTargetKb} KB</strong>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#061A36' }}>Target Maximum File Size:</span>
+                    <strong style={{ fontSize: '1rem', color: '#075ACB' }}>{compressTargetKb} KB</strong>
                   </div>
                   <input
                     type="range"
@@ -895,7 +891,7 @@ This certified digital copy is authenticated against institutional registries.
             padding: '1.75rem',
             boxShadow: '0 20px 50px rgba(0,0,0,0.2)',
           }}>
-            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36', marginBottom: '0.5rem' }}>
               Upload Document to Vault
             </h3>
             <p style={{ fontSize: '0.82rem', color: '#64748B', marginBottom: '1.25rem' }}>
@@ -951,7 +947,7 @@ This certified digital copy is authenticated against institutional registries.
                 background: '#EFF6FF',
                 padding: '0.65rem',
                 borderRadius: '8px',
-                color: '#1D4ED8',
+                color: '#075ACB',
                 fontSize: '0.8rem',
                 display: 'flex',
                 alignItems: 'center',

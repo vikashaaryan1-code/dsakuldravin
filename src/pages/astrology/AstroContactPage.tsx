@@ -28,7 +28,7 @@ export const AstroContactPage: React.FC = () => {
   };
 
   return (
-    <div style={{ background: '#090E17', color: '#F8FAFC', minHeight: '100vh', paddingBottom: '80px' }}>
+    <div style={{ background: '#031126', color: '#F8FAFC', minHeight: '100vh', paddingBottom: '80px' }}>
       <AstroHeaderNav />
 
       {/* Hero Banner */}

@@ -1,41 +1,45 @@
-# Multi-stage Dockerfile for AKUL DRAVIN DIGITAL SERVICES & VEDIC ASTROLOGY
-# Stage 1: Build Frontend Assets
+# Production Full-Stack Dockerfile for AKUL DRAVIN DIGITAL SERVICES (ADCS)
+# Single-container Node + Express API Gateway + Compiled React SPA (Ideal for Coolify Subdomains)
+
+# Stage 1: Build Frontend & PDFs
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies with frozen lockfile
 COPY package*.json ./
 RUN npm ci
 
-# Copy all source files
 COPY . .
 
-# Run automated tests before building
-RUN node scripts/run_tests.mjs
-
-# Build production bundle
+# Typecheck & Build Vite Production Bundle
 RUN npm run build
 
-# Generate Acrobat PDF certificates
-RUN node scripts/generate_acrobat_pdf.cjs
+# Generate Official Acrobat PDFs and include inside dist/
+RUN node scripts/generate_acrobat_pdf.cjs && \
+    cp -f Vedic_Janam_Kundli_Certificate.pdf dist/ && \
+    cp -f AD_DIGITAL_Website_Audit_Deployment_Report.pdf dist/
 
-# Stage 2: Serve with Production-Grade Nginx
-FROM nginx:alpine
+# Stage 2: Production Runtime (Express serves /dist SPA + /api/* on Port 5000)
+FROM node:20-alpine AS runner
 
-# Remove default nginx static assets
-RUN rm -rf /usr/share/nginx/html/*
+WORKDIR /app
 
-# Copy build artifacts from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY --from=builder /app/Vedic_Janam_Kundli_Certificate.pdf /usr/share/nginx/html/
-COPY --from=builder /app/AD_DIGITAL_Website_Audit_Deployment_Report.pdf /usr/share/nginx/html/
+ENV NODE_ENV=production
+ENV PORT=5000
 
-# Copy custom high-performance Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY package*.json ./
+RUN npm ci --omit=dev
 
-# Expose HTTP port
-EXPOSE 80
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/Vedic_Janam_Kundli_Certificate.pdf ./
+COPY --from=builder /app/AD_DIGITAL_Website_Audit_Deployment_Report.pdf ./
+COPY server ./server
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+RUN mkdir -p /app/server/data/vault
+
+EXPOSE 5000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 5000) + '/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+
+CMD ["node", "server/server.mjs"]

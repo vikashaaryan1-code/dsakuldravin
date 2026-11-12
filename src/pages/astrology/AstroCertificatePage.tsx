@@ -3,22 +3,22 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { AstroHeaderNav } from '../../components/astrology/AstroHeaderNav';
 import { VedicKundliChart } from '../../components/astrology/VedicKundliChart';
 import { calculateJanamKundli } from '../../utils/astrologyCalculators';
-import { 
-  Award, 
-  Search, 
-  Printer, 
-  Download, 
-  Share2, 
-  ShieldCheck, 
-  QrCode, 
-  CheckCircle2, 
-  Sparkles, 
-  Calendar, 
-  Clock, 
-  MapPin, 
+import { ADCSLogo, ADCSQrCode } from '../../components/branding';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
+import {
+  Award,
+  Search,
+  Printer,
+  Download,
+  ShieldCheck,
+  CheckCircle2,
+  Sparkles,
+  Calendar,
+  Clock,
+  MapPin,
   FileText,
   ExternalLink,
-  Info
+  Info,
 } from 'lucide-react';
 
 export const AstroCertificatePage: React.FC = () => {
@@ -79,7 +79,7 @@ export const AstroCertificatePage: React.FC = () => {
     treatment: '100% प्राकृतिक अप्रशोधित (Unheated & Untreated)',
     beneficPlanet: 'सूर्य देव (Surya / Sun)',
     suitableRashi: 'सिंह राशि (Leo) एवं मेष लग्न',
-    testingLab: 'गवर्नमेंट रजिस्टर्ड जेमोलॉजिकल रिसर्च लेबोरेटरी (ISO 9001:2015)',
+    testingLab: 'गवर्नमेंट रजिस्टर्ड जेमोलॉजिकल रिसर्च लेबोरेटरी',
     issuedDate: '22 सितम्बर 2026'
   };
 
@@ -94,14 +94,14 @@ export const AstroCertificatePage: React.FC = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: '#090E17', color: '#F8FAFC', paddingBottom: '80px' }}>
+    <div style={{ minHeight: '100vh', background: '#031126', color: '#F8FAFC', paddingBottom: '80px' }}>
       {/* Sticky Secondary Celestial Header */}
       <AstroHeaderNav />
 
       {/* Verification Header */}
       <section style={{
         padding: '40px 16px 30px',
-        background: 'radial-gradient(ellipse at top, #1E1B4B 0%, #0F172A 60%, #090E17 100%)',
+        background: 'radial-gradient(ellipse at top, #1E1B4B 0%, #0F172A 60%, #031126 100%)',
         borderBottom: '1px solid rgba(245, 158, 11, 0.2)'
       }}>
         <div style={{ maxWidth: '960px', margin: '0 auto', textAlign: 'center' }}>
@@ -252,11 +252,27 @@ export const AstroCertificatePage: React.FC = () => {
           </button>
 
           <button
-            onClick={() => alert('डिजिटल पीडीएफ प्रमाण पत्र डाउनलोड हो रहा है...')}
+            type="button"
+            onClick={() =>
+              printBrandedADCSDocument({
+                title: activeCertType === 'kundli' ? 'प्रामाणिक जन्म चक्र प्रमाण-पत्र (Certified Horoscope)' : 'रत्न शुद्धता एवं प्रामाणिकता प्रमाण-पत्र (Gemstone Lab Certificate)',
+                documentType: activeCertType === 'kundli' ? 'ASTROLOGY CERTIFICATE' : 'GEMSTONE LAB REPORT',
+                documentNumber: activeCertType === 'kundli' ? sampleKundliData.certId : sampleGemData.certId,
+                issuedDate: '2026-09-22',
+                verificationUrl: `https://ad-digital.in/astrology/certificate?id=${encodeURIComponent(activeCertType === 'kundli' ? sampleKundliData.certId : sampleGemData.certId)}`,
+                rows: [
+                  { label: 'Certificate Holder / Native', value: sampleKundliData.holderName },
+                  { label: 'Certificate Serial', value: activeCertType === 'kundli' ? sampleKundliData.certId : sampleGemData.certId },
+                  { label: 'Issued Organization', value: 'AKUL DRAVIN DIGITAL SERVICES — Vedic Research Desk' },
+                  { label: 'Verification Code', value: 'SHA-256: 8F4A-91BC' },
+                ],
+                notes: ['Official ADCS printed horoscope/gemstone report.'],
+              })
+            }
             style={{
-              background: 'rgba(245, 158, 11, 0.15)',
-              color: '#FDE68A',
-              border: '1px solid rgba(245, 158, 11, 0.4)',
+              background: 'rgba(214, 161, 43, 0.2)',
+              color: '#F3D477',
+              border: '1px solid rgba(243, 212, 119, 0.5)',
               borderRadius: '10px',
               padding: '10px 16px',
               fontWeight: 700,
@@ -286,29 +302,33 @@ export const AstroCertificatePage: React.FC = () => {
           position: 'relative',
           fontFamily: 'serif'
         }}>
-          {/* Top Sanskrit Sacred Invocation */}
-          <div style={{ textAlign: 'center', borderBottom: '2px solid #8B2500', paddingBottom: '16px', marginBottom: '24px' }}>
-            <div style={{ fontSize: '24px', color: '#8B2500', fontWeight: 900, letterSpacing: '2px' }}>
-              卐 || श्री गणेशाय नमः || ॐ
-            </div>
-            <h2 style={{ fontSize: '28px', color: '#8B2500', margin: '8px 0 2px', fontWeight: 900, textTransform: 'uppercase' }}>
-              {activeCertType === 'kundli' ? 'अखिल भारतीय वैदिक ज्योतिष शोध संस्थान' : 'गवर्नमेंट रजिस्टर्ड जेमोलॉजिकल रिसर्च लैबोरेटरी'}
-            </h2>
-            <div style={{ fontSize: '13px', color: '#78350F', fontWeight: 600 }}>
-              (AKUL DRAVIN DIGITAL SERVICES • राष्ट्रीय वेदोक्त प्रमाणन केंद्र)
-            </div>
-            <div style={{
-              display: 'inline-block',
-              background: '#8B2500',
-              color: '#FFFDF9',
-              padding: '4px 20px',
-              borderRadius: '4px',
-              fontSize: '14px',
-              fontWeight: 800,
-              marginTop: '10px',
-              letterSpacing: '1px'
-            }}>
-              {activeCertType === 'kundli' ? '★ प्रामाणिक जन्म चक्र प्रमाण-पत्र (CERTIFIED HOROSCOPE) ★' : '★ रत्न शुद्धता एवं प्रामाणिकता प्रमाण-पत्र (GEMSTONE CERTIFICATE) ★'}
+          {/* Top Sacred Invocation + Official ADCS Logo */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', borderBottom: '2px solid #8B2500', paddingBottom: '16px', marginBottom: '24px' }}>
+            <ADCSLogo variant="certificate" height={64} />
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: '20px', color: '#8B2500', fontWeight: 900, letterSpacing: '1.5px' }}>
+                卐 || श्री गणेशाय नमः || ॐ
+              </div>
+              <h2 style={{ fontSize: '24px', color: '#061A36', margin: '6px 0 2px', fontWeight: 900, textTransform: 'uppercase' }}>
+                {activeCertType === 'kundli' ? 'अखिल भारतीय वैदिक ज्योतिष शोध संस्थान' : 'जेमोलॉजिकल रिसर्च एवं टेस्टिंग लैबोरेटरी'}
+              </h2>
+              <div style={{ fontSize: '12px', color: '#55677D', fontWeight: 700 }}>
+                AKUL DRAVIN DIGITAL SERVICES (ADCS) • वैदिक प्रमाणन केंद्र
+              </div>
+              <div style={{
+                display: 'inline-block',
+                background: '#061A36',
+                color: '#F3D477',
+                padding: '4px 18px',
+                borderRadius: '4px',
+                fontSize: '13px',
+                fontWeight: 800,
+                marginTop: '8px',
+                letterSpacing: '0.5px',
+                border: '1px solid #D6A12B'
+              }}>
+                {activeCertType === 'kundli' ? '★ प्रामाणिक जन्म चक्र प्रमाण-पत्र (CERTIFIED HOROSCOPE) ★' : '★ रत्न शुद्धता एवं प्रामाणिकता प्रमाण-पत्र (GEMSTONE CERTIFICATE) ★'}
+              </div>
             </div>
           </div>
 
@@ -440,44 +460,32 @@ export const AstroCertificatePage: React.FC = () => {
           }}>
             {/* Verification QR Code */}
             <div style={{ textAlign: 'center' }}>
-              <div style={{
-                width: '72px',
-                height: '72px',
-                background: '#FFFFFF',
-                border: '2px solid #8B2500',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 6px'
-              }}>
-                <QrCode size={56} color="#8B2500" />
-              </div>
-              <div style={{ fontSize: '10px', color: '#78350F', fontWeight: 700 }}>
-                डिजिटल सत्यापन क्यूआर
-              </div>
+              <ADCSQrCode
+                value={`https://ad-digital.in/astrology/certificate?id=${encodeURIComponent(activeCertType === 'kundli' ? sampleKundliData.certId : sampleGemData.certId)}`}
+                size={68}
+                label="डिजिटल सत्यापन क्यूआर"
+              />
             </div>
 
             {/* Official Seal Watermark */}
             <div style={{
-              width: '90px',
-              height: '90px',
+              width: '96px',
+              height: '96px',
               borderRadius: '50%',
-              border: '3px double #8B2500',
+              border: '3px double #061A36',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#8B2500',
+              color: '#061A36',
               fontSize: '10px',
               fontWeight: 800,
               textAlign: 'center',
-              transform: 'rotate(-10deg)',
-              background: 'rgba(139, 37, 0, 0.05)'
+              background: 'rgba(214, 161, 43, 0.08)',
+              padding: '4px',
             }}>
-              <span>★ मुहर ★</span>
-              <span style={{ fontSize: '9px' }}>AD DIGITAL</span>
-              <span style={{ fontSize: '8px' }}>वैदिक संस्थान</span>
+              <ADCSLogo variant="compact" height={34} decorative />
+              <span style={{ fontSize: '8.5px', marginTop: '2px' }}>ADCS AUTHORIZED</span>
             </div>
 
             {/* Authorized Signature */}

@@ -295,7 +295,7 @@ export const QuantumAIPage: React.FC = () => {
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 5rem' }}>
       {/* Header */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -406,9 +406,9 @@ export const QuantumAIPage: React.FC = () => {
                     fontWeight: 700,
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
-                    border: activeAgent === agent.name ? '1px solid #1D4ED8' : '1px solid #E2E8F0',
+                    border: activeAgent === agent.name ? '1px solid #075ACB' : '1px solid #E2E8F0',
                     background: activeAgent === agent.name ? '#EFF6FF' : '#FFFFFF',
-                    color: activeAgent === agent.name ? '#1D4ED8' : '#64748B',
+                    color: activeAgent === agent.name ? '#075ACB' : '#64748B',
                   }}
                 >
                   {agent.icon}
@@ -448,7 +448,7 @@ export const QuantumAIPage: React.FC = () => {
                   width: '36px',
                   height: '36px',
                   borderRadius: '10px',
-                  background: msg.sender === 'user' ? '#1D4ED8' : '#0A192F',
+                  background: msg.sender === 'user' ? '#075ACB' : '#061A36',
                   color: '#FFFFFF',
                   display: 'flex',
                   alignItems: 'center',
@@ -462,8 +462,8 @@ export const QuantumAIPage: React.FC = () => {
                 {/* Message Bubble */}
                 <div style={{
                   maxWidth: '80%',
-                  background: msg.sender === 'user' ? '#1D4ED8' : '#FFFFFF',
-                  color: msg.sender === 'user' ? '#FFFFFF' : '#0A192F',
+                  background: msg.sender === 'user' ? '#075ACB' : '#FFFFFF',
+                  color: msg.sender === 'user' ? '#FFFFFF' : '#061A36',
                   padding: '1rem 1.25rem',
                   borderRadius: msg.sender === 'user' ? '18px 4px 18px 18px' : '4px 18px 18px 18px',
                   border: msg.sender === 'user' ? 'none' : '1px solid #E2E8F0',
@@ -482,7 +482,7 @@ export const QuantumAIPage: React.FC = () => {
                       borderBottom: '1px solid #F1F5F9',
                       fontSize: '0.74rem',
                     }}>
-                      <span style={{ fontWeight: 700, color: '#1D4ED8' }}>
+                      <span style={{ fontWeight: 700, color: '#075ACB' }}>
                         {msg.agentName || 'Quantum AI'}
                       </span>
                       {msg.governanceLevel && (
@@ -496,7 +496,7 @@ export const QuantumAIPage: React.FC = () => {
                                       msg.governanceLevel === 'APPROVAL REQUIRED' ? '#FEE2E2' : '#EFF6FF',
                           color: msg.governanceLevel === 'EXECUTE' ? '#15803D' :
                                  msg.governanceLevel === 'DRAFT' ? '#B45309' :
-                                 msg.governanceLevel === 'APPROVAL REQUIRED' ? '#B91C1C' : '#1D4ED8',
+                                 msg.governanceLevel === 'APPROVAL REQUIRED' ? '#B91C1C' : '#075ACB',
                         }}>
                           [{msg.governanceLevel}]
                         </span>
@@ -515,7 +515,7 @@ export const QuantumAIPage: React.FC = () => {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '0.4rem',
-                        background: 'linear-gradient(135deg, #0A192F 0%, #1D4ED8 100%)',
+                        background: 'linear-gradient(135deg, #061A36 0%, #075ACB 100%)',
                         color: '#FFFFFF',
                         border: 'none',
                         padding: '0.5rem 0.95rem',
@@ -547,7 +547,7 @@ export const QuantumAIPage: React.FC = () => {
 
             {isTyping && (
               <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center' }}>
-                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#0A192F', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#061A36', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Bot size={18} color="#F59E0B" />
                 </div>
                 <div style={{ background: '#FFFFFF', padding: '0.75rem 1.25rem', borderRadius: '14px', border: '1px solid #E2E8F0', fontSize: '0.84rem', color: '#64748B' }}>
@@ -580,7 +580,7 @@ export const QuantumAIPage: React.FC = () => {
                   padding: '0.3rem 0.75rem',
                   fontSize: '0.76rem',
                   fontWeight: 600,
-                  color: '#1D4ED8',
+                  color: '#075ACB',
                   cursor: 'pointer',
                   flexShrink: 0,
                 }}
@@ -635,7 +635,7 @@ export const QuantumAIPage: React.FC = () => {
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
               <ShieldCheck size={20} color="#10B981" />
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
                 Autonomous AI Governance
               </h3>
             </div>
@@ -646,7 +646,7 @@ export const QuantumAIPage: React.FC = () => {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.78rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0.6rem', background: '#F8FAFC', borderRadius: '6px' }}>
-                <span style={{ fontWeight: 700, color: '#1D4ED8' }}>[READ]</span>
+                <span style={{ fontWeight: 700, color: '#075ACB' }}>[READ]</span>
                 <span style={{ color: '#64748B' }}>Telemetry, Status, Document Rules</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.4rem 0.6rem', background: '#F8FAFC', borderRadius: '6px' }}>
@@ -676,7 +676,7 @@ export const QuantumAIPage: React.FC = () => {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Lock size={18} color="#D97706" />
-                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
                   Live Audit Ledger
                 </h3>
               </div>
@@ -696,7 +696,7 @@ export const QuantumAIPage: React.FC = () => {
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
-                    <span style={{ fontWeight: 700, color: '#0A192F' }}>{item.agent}</span>
+                    <span style={{ fontWeight: 700, color: '#061A36' }}>{item.agent}</span>
                     <span style={{ fontSize: '0.7rem', color: '#64748B' }}>{item.time}</span>
                   </div>
                   <div style={{ color: '#475569', fontSize: '0.78rem', marginBottom: '0.4rem' }}>

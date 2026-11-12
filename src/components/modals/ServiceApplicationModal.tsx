@@ -4,6 +4,8 @@ import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
 import { PANApplicationEngine } from '../pan/PANApplicationEngine';
 import { resolveOfficialPortal, STATE_EDISTRICT_PORTALS } from '../../data/officialPortalRegistry';
+import { DocumentHeader } from '../branding';
+import { UTRPaymentGate, UTRPaymentSubmission } from '../common/UTRPaymentGate';
 import { 
   X, 
   CheckCircle2, 
@@ -48,6 +50,7 @@ export const ServiceApplicationModal: React.FC = () => {
   const [isDigiLockerFetching, setIsDigiLockerFetching] = useState(false);
   const [ocrScore, setOcrScore] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'wallet'>('upi');
+  const [submittedProof, setSubmittedProof] = useState<UTRPaymentSubmission | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedAppId, setGeneratedAppId] = useState<string | null>(null);
   const [showPrintSlip, setShowPrintSlip] = useState(false);
@@ -206,7 +209,9 @@ export const ServiceApplicationModal: React.FC = () => {
     }, 700);
   };
 
-  const handleConfirmAndPay = () => {
+  const handleConfirmAndPay = (proof: UTRPaymentSubmission) => {
+    setSubmittedProof(proof);
+    setPaymentMethod(proof.paymentMethod === 'bank_transfer' ? 'upi' : proof.paymentMethod);
     setIsSubmitting(true);
     setTimeout(() => {
       const customSummary = (service.customFields || [])
@@ -222,8 +227,11 @@ export const ServiceApplicationModal: React.FC = () => {
         city,
         state,
         feePaid: totalAmount,
+        utrNumber: proof.utrNumber,
+        transactionId: proof.transactionId,
+        paymentMode: proof.paymentMethod,
         documentsUploaded: uploadedFiles.length > 0 ? uploadedFiles : ['Aadhaar_Document_Verified.pdf'],
-        notes: `Application initiated online. Payment mode: ${paymentMethod.toUpperCase()}. OCR score: ${ocrScore || 98}%.${customSummary ? ` Intake Data: [${customSummary}]` : ''}`,
+        notes: `Application initiated online. Payment mode: ${proof.paymentMethod.toUpperCase()} • UTR: ${proof.utrNumber} • TXN ID: ${proof.transactionId}. OCR score: ${ocrScore || 98}%.${customSummary ? ` Intake Data: [${customSummary}]` : ''}`,
       });
 
       setGeneratedAppId(newId);
@@ -235,7 +243,7 @@ export const ServiceApplicationModal: React.FC = () => {
         spread: 70,
         origin: { y: 0.6 }
       });
-    }, 1000);
+    }, 850);
   };
 
   return (
@@ -284,7 +292,7 @@ export const ServiceApplicationModal: React.FC = () => {
               <span className="badge badge-blue">{service.category.toUpperCase()}</span>
               {service.badge && <span className="badge badge-gold">{service.badge}</span>}
             </div>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36' }}>
               {language === 'hi' ? service.titleHi : service.title}
             </h3>
           </div>
@@ -335,8 +343,8 @@ export const ServiceApplicationModal: React.FC = () => {
                     flex: 1,
                     padding: '0.65rem 0.5rem',
                     textAlign: 'center',
-                    borderBottom: isActive ? '3px solid #1D4ED8' : '3px solid transparent',
-                    color: isActive ? '#1D4ED8' : isPast ? '#059669' : '#94A3B8',
+                    borderBottom: isActive ? '3px solid #075ACB' : '3px solid transparent',
+                    color: isActive ? '#075ACB' : isPast ? '#059669' : '#94A3B8',
                     background: isActive ? '#EFF6FF' : 'transparent',
                     display: 'flex',
                     alignItems: 'center',
@@ -365,7 +373,7 @@ export const ServiceApplicationModal: React.FC = () => {
                 fontSize: '0.82rem',
                 color: '#475569',
               }}>
-                <div style={{ fontWeight: 700, color: '#0A192F', marginBottom: '0.2rem' }}>
+                <div style={{ fontWeight: 700, color: '#061A36', marginBottom: '0.2rem' }}>
                   Service SLA Commitment:
                 </div>
                 Estimated processing timeline: <strong>{service.timeline}</strong>. Guaranteed expert assistance with regular SMS and in-app alerts.
@@ -442,7 +450,7 @@ export const ServiceApplicationModal: React.FC = () => {
                   flexDirection: 'column',
                   gap: '0.75rem',
                 }}>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0A192F' }}>
+                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#061A36' }}>
                     SERVICE-SPECIFIC INTAKE FIELDS ({service.customFields.length})
                   </div>
                   {service.customFields.map(field => (
@@ -481,7 +489,7 @@ export const ServiceApplicationModal: React.FC = () => {
                   borderRadius: '12px',
                   padding: '0.85rem 1rem',
                   fontSize: '0.78rem',
-                  color: '#1E3A8A',
+                  color: '#061A36',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '0.35rem',
@@ -498,7 +506,7 @@ export const ServiceApplicationModal: React.FC = () => {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
-                        color: '#1D4ED8',
+                        color: '#075ACB',
                         fontWeight: 700,
                         textDecoration: 'underline',
                       }}
@@ -556,7 +564,7 @@ export const ServiceApplicationModal: React.FC = () => {
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               <div>
-                <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
                   Required Document Uploads
                 </h4>
                 <p style={{ fontSize: '0.82rem', color: '#64748B' }}>
@@ -574,8 +582,8 @@ export const ServiceApplicationModal: React.FC = () => {
                 gap: '0.65rem'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0A192F', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <ShieldCheck size={16} color="#1D4ED8" />
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#061A36', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <ShieldCheck size={16} color="#075ACB" />
                     <span>Real-Time Verhoeff & Statutory ID Checksum</span>
                   </div>
                   <span className="badge badge-blue" style={{ fontSize: '0.68rem' }}>AI Powered</span>
@@ -656,7 +664,7 @@ export const ServiceApplicationModal: React.FC = () => {
                           {isUploaded ? <CheckCircle2 size={18} /> : <FileText size={18} />}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#0A192F' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#061A36' }}>
                             {doc}
                           </div>
                           <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
@@ -673,7 +681,7 @@ export const ServiceApplicationModal: React.FC = () => {
                           style={{
                             padding: '0.4rem 0.7rem',
                             borderRadius: '8px',
-                            background: isUploaded ? '#10B981' : '#1D4ED8',
+                            background: isUploaded ? '#10B981' : '#075ACB',
                             color: '#FFFFFF',
                             fontWeight: 600,
                             fontSize: '0.76rem',
@@ -729,7 +737,7 @@ export const ServiceApplicationModal: React.FC = () => {
                   alignItems: 'center',
                   gap: '0.5rem',
                   fontSize: '0.82rem',
-                  color: '#1D4ED8',
+                  color: '#075ACB',
                 }}>
                   <Sparkles size={16} className="animate-pulse-glow" />
                   <span>Quantum AI Scanning: Checking tamper signatures & OCR name consistency...</span>
@@ -786,7 +794,7 @@ export const ServiceApplicationModal: React.FC = () => {
                 gap: '0.65rem',
                 fontSize: '0.88rem',
               }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
                   TRANSPARENT PRICING BREAKDOWN:
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#475569' }}>
@@ -810,65 +818,24 @@ export const ServiceApplicationModal: React.FC = () => {
                   justifyContent: 'space-between',
                   fontSize: '1.15rem',
                   fontWeight: 800,
-                  color: '#0A192F',
+                  color: '#061A36',
                 }}>
                   <span>Final Total to Pay</span>
-                  <span style={{ color: '#1D4ED8' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
+                  <span style={{ color: '#075ACB' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
-              {/* Payment Gateway choice */}
-              <div>
-                <label className="form-label" style={{ marginBottom: '0.5rem' }}>
-                  Select Payment Method:
-                </label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.75rem' }}>
-                  {[
-                    { id: 'upi', label: 'Instant UPI / QR', icon: <QrCode size={18} /> },
-                    { id: 'card', label: 'Debit / Credit Card', icon: <CreditCard size={18} /> },
-                    { id: 'wallet', label: 'AD Wallet Balance', icon: <Sparkles size={18} /> },
-                  ].map(m => (
-                    <button
-                      key={m.id}
-                      onClick={() => setPaymentMethod(m.id as any)}
-                      style={{
-                        padding: '0.85rem 0.65rem',
-                        borderRadius: '12px',
-                        border: paymentMethod === m.id ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
-                        background: paymentMethod === m.id ? '#EFF6FF' : '#FFFFFF',
-                        color: paymentMethod === m.id ? '#1D4ED8' : '#475569',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '0.35rem',
-                      }}
-                    >
-                      {m.icon}
-                      <span>{m.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                <button
-                  onClick={() => setStep(2)}
-                  className="btn-secondary"
-                  style={{ flex: 1 }}
-                >
-                  Back
-                </button>
-                <button
-                  onClick={handleConfirmAndPay}
-                  disabled={isSubmitting}
-                  className="btn-gold btn-lg"
-                  style={{ flex: 2, fontWeight: 800 }}
-                >
-                  {isSubmitting ? 'Processing Payment...' : `Pay ₹${totalAmount.toLocaleString('en-IN')} & Generate Token`}
-                </button>
-              </div>
+              {/* Mandatory Pre-Processing UTR Number & Transaction ID Gate */}
+              <UTRPaymentGate
+                amount={totalAmount}
+                serviceTitle={service.title}
+                defaultMethod={paymentMethod}
+                ctaLabel={`Verify UTR & Submit Application (₹${totalAmount.toLocaleString('en-IN')})`}
+                cancelLabel="Back"
+                onCancel={() => setStep(2)}
+                isSubmitting={isSubmitting}
+                onVerifiedSubmit={handleConfirmAndPay}
+              />
             </div>
           )}
 
@@ -889,7 +856,7 @@ export const ServiceApplicationModal: React.FC = () => {
                 <CheckCircle2 size={36} />
               </div>
 
-              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.25rem' }}>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
                 Application Generated Successfully!
               </h3>
               <p style={{ fontSize: '0.88rem', color: '#64748B', marginBottom: '1.5rem' }}>
@@ -908,27 +875,12 @@ export const ServiceApplicationModal: React.FC = () => {
                   color: '#0F172A',
                   boxShadow: '0 8px 24px rgba(0,0,0,0.08)'
                 }}>
-                  <div style={{ borderBottom: '2px solid #0B3B60', paddingBottom: '0.75rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div style={{ fontSize: '0.95rem', fontWeight: 900, color: '#0B3B60', letterSpacing: '0.04em' }}>
-                        AKUL DRAVIN DIGITAL SERVICES (ADCS)
-                      </div>
-                      <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 600 }}>
-                        Akul Dravin Digital Services • ADCS Sovereign Citizen Network
-                      </div>
-                    </div>
-                    <div style={{
-                      background: '#EFF6FF',
-                      border: '1px solid #BFDBFE',
-                      padding: '0.25rem 0.6rem',
-                      borderRadius: '6px',
-                      fontSize: '0.72rem',
-                      fontWeight: 800,
-                      color: '#1D4ED8'
-                    }}>
-                      OFFICIAL RECEIPT
-                    </div>
-                  </div>
+                  <DocumentHeader
+                    documentType="APPLICATION RECEIPT"
+                    documentNumber={generatedAppId}
+                    issuedDate={new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                    branchOrCenter="ADCS Kendra Assistance Desk"
+                  />
 
                   <div style={{ background: '#F8FAFC', padding: '0.75rem 1rem', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '1rem', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.6rem', fontSize: '0.8rem' }}>
                     <div>
@@ -963,6 +915,11 @@ export const ServiceApplicationModal: React.FC = () => {
                       <span style={{ color: '#64748B', display: 'block', fontSize: '0.7rem' }}>FEE PAID / भुगतान राशि:</span>
                       <strong style={{ color: '#16A34A' }}>₹{totalAmount.toLocaleString('en-IN')} ({paymentMethod.toUpperCase()})</strong>
                     </div>
+                    {submittedProof && (
+                      <div style={{ gridColumn: '1 / -1', background: '#ECFDF5', padding: '0.45rem 0.65rem', borderRadius: '6px', border: '1px solid #A7F3D0', fontSize: '0.76rem', color: '#065F46' }}>
+                        <strong>Verified Payment Proof:</strong> UTR <code>{submittedProof.utrNumber}</code> • TXN ID <code>{submittedProof.transactionId}</code>
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px dashed #CBD5E1', paddingTop: '0.75rem', fontSize: '0.75rem', color: '#64748B' }}>
@@ -1022,10 +979,10 @@ export const ServiceApplicationModal: React.FC = () => {
                   display: 'inline-block',
                   minWidth: '280px',
                 }}>
-                  <div style={{ fontSize: '0.75rem', color: '#1D4ED8', fontWeight: 700, textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '0.75rem', color: '#075ACB', fontWeight: 700, textTransform: 'uppercase' }}>
                     YOUR UNIQUE APPLICATION TOKEN
                   </div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0A192F', letterSpacing: '0.05em' }}>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#061A36', letterSpacing: '0.05em' }}>
                     {generatedAppId}
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '0.25rem' }}>
@@ -1077,7 +1034,7 @@ export const ServiceApplicationModal: React.FC = () => {
                       onClick={handleCopyPrefillSummary}
                       style={{
                         background: '#FFFFFF',
-                        color: '#0A192F',
+                        color: '#061A36',
                         border: '1px solid #CBD5E1',
                         padding: '0.45rem 0.85rem',
                         borderRadius: '8px',

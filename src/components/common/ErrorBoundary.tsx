@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { ADCSLogo } from '../branding';
 
 interface Props {
   children: ReactNode;
@@ -22,6 +23,21 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Unhandled Application Error caught by ErrorBoundary:', error, errorInfo);
+    const msg = error?.message || '';
+    const isDynamicChunkErr =
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Importing a module script failed') ||
+      msg.includes('Loading chunk') ||
+      msg.includes('dynamically imported module');
+    if (isDynamicChunkErr && typeof window !== 'undefined') {
+      try {
+        const lastReload = Number(sessionStorage.getItem('adcs_eb_chunk_reload') || '0');
+        if (Date.now() - lastReload > 15000) {
+          sessionStorage.setItem('adcs_eb_chunk_reload', String(Date.now()));
+          window.location.reload();
+        }
+      } catch {}
+    }
   }
 
   public render() {
@@ -32,21 +48,24 @@ export class ErrorBoundary extends Component<Props, State> {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#0A192F',
+          background: 'linear-gradient(155deg, #031126 0%, #061A36 100%)',
           color: '#FFFFFF',
           padding: '2rem',
-          fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif"
+          fontFamily: 'var(--adcs-font-sans, "Plus Jakarta Sans", system-ui, sans-serif)'
         }}>
           <div style={{
             maxWidth: '560px',
             width: '100%',
             background: 'rgba(255, 255, 255, 0.05)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(214, 161, 43, 0.3)',
             borderRadius: '24px',
             padding: '2.5rem',
             textAlign: 'center',
             boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5)'
           }}>
+            <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
+              <ADCSLogo variant="compact" theme="dark" height={52} />
+            </div>
             <div style={{
               width: '64px',
               height: '64px',

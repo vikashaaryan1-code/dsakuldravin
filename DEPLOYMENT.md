@@ -61,13 +61,27 @@ npm run build
 
 ---
 
-## ⚡ Coolify & VPS 1-Click Deployment
+## ⚡ Coolify Subdomain 1-Click Deployment
 
-Coolify पर डिप्लॉय करने के लिए:
-1. अपने Coolify डैशबोर्ड में **New Resource -> Application -> Git Repository (Private or Public)** का चयन करें।
-2. Build Pack: **Docker Compose** चुनें (`docker-compose.yml`)।
-3. Environment Variables में `.env.example` के आधार पर अपनी कुंजियाँ (`RAZORPAY_KEY_ID`, `META_WHATSAPP_ACCESS_TOKEN`, `JWT_SECRET`, आदि) जोड़ें।
-4. **Deploy** पर क्लिक करें। Nginx पोर्ट 80 पर वेब ट्रैफिक संभालेगा और स्वचालित रूप से `/api/` को Node.js गेटवे (पोर्ट 5000) पर रिवर्स-प्रॉक्सी करेगा।
+Coolify पर अपने किसी भी Subdomain (जैसे `https://portal.yourdomain.com` या `https://adcs.yourdomain.com`) पर डिप्लॉय करने के लिए:
+1. **DNS Setup:** अपने Domain Registrar / Cloudflare में सबडोमेन (`portal`) के लिए एक **A Record** बनाएँ जो आपके Coolify VPS के Public IP पर पॉइंट करे। (Cloudflare Proxy ON हो तो SSL मोड **Full / Full (Strict)** रखें)।
+2. **Coolify Application बनाएँ:** Coolify Dashboard → **Projects** → **+ Add New Resource** → **Public / Private Repository** (अपना Git repo URL व branch चुनें)।
+3. **Build Pack चुनें (तीनों विकल्प समर्थित हैं):**
+   - **Recommended — Build Pack: `Dockerfile`**:
+     - `Dockerfile` फ्रंटएंड (`npm run build` → `dist/`) बिल्ड करता है और एक ही कंटेनर में Express (`server/server.mjs`) द्वारा `/` (SPA) व `/api/*` दोनों सर्व करता है।
+     - **Ports Exposes:** `5000` सेट करें।
+   - **विकल्प 2 — Build Pack: `Nixpacks`**:
+     - **Install Command:** `npm ci`
+     - **Build Command:** `npm run build`
+     - **Start Command:** `npm start`
+     - **Ports Exposes:** `5000`
+   - **विकल्प 3 — Build Pack: `Docker Compose`** (`docker-compose.yml` उपयोग करता है, बिना होस्ट पोर्ट कन्फ्लिक्ट के `expose: ["5000"]` और परसिस्टेंट वॉल्यूम `adcs_data:/app/server/data` के साथ)।
+4. **Subdomain Configure करें:** Coolify App Settings → **General → Domains** में `https://portal.yourdomain.com` डालें और **Generate Domain / Save** करें (Coolify Traefik स्वचालित Let's Encrypt HTTPS SSL प्रमाणपत्र जारी करेगा)।
+5. **Healthcheck & Persistent Storage:**
+   - **Healthcheck:** Enabled, Path: `/api/health`, Port: `5000`.
+   - **Persistent Storage (Volume):** Source `/app/server/data` माउंट करें ताकि एप्लिकेशन, यूज़र अकाउंट्स, UTR पेमेंट्स और दस्तावेज़ री-डिप्लॉय के बाद भी सुरक्षित रहें।
+6. **Environment Variables:** `NODE_ENV=production`, `PORT=5000`, `JWT_SECRET=<strong-random-secret>` और वैकल्पिक गेटवे कुंजियाँ (`.env.example` देखें) जोड़ें।
+7. **Deploy** पर क्लिक करें! आपका पूरा प्लेटफ़ॉर्म (`https://portal.yourdomain.com` और `https://portal.yourdomain.com/api/health`) एक ही सबडोमेन पर लाइव हो जाएगा।
 
 ---
 

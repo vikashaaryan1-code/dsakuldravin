@@ -10,15 +10,33 @@ import {
 
 export const initialWhiteLabelConfig: WhiteLabelConfig = {
   brandName: 'AKUL DRAVIN DIGITAL SERVICES',
-  tagline: 'One Platform. Every Service.',
+  shortName: 'ADCS',
+  tagline: 'HAR KAAM DIGITAL • HAR SAMADHAAN EK JAGAH',
   taglineHi: 'हर काम डिजिटल • हर समाधान एक जगह',
-  primaryColor: '#1D4ED8',
-  accentColor: '#F59E0B',
+  logoUrl: '/branding/adcs-logo-light.png',
+  darkLogoUrl: '/branding/adcs-logo-dark.png',
+  emblemUrl: '/branding/adcs-logo-emblem.png',
+  certificateLogoUrl: '/branding/adcs-logo-certificate.png',
+  primaryColor: '#075ACB',
+  accentColor: '#D6A12B',
+  navyColor: '#061A36',
   customDomain: 'cloud.akuldravin.com',
   supportPhone: '+91 98765 43210',
   supportEmail: 'contact@akuldravin.com',
-  invoiceHeader: 'AKUL DRAVIN GROUP OF ENTERPRISES • GSTIN: 07AAAAA0000A1Z5',
-  gstin: '07AAAAA0000A1Z5'
+  registeredAddress: 'Corporate Digital Tower, Sector 62, Noida / Delhi NCR - 201309',
+  invoiceHeader: 'AKUL DRAVIN DIGITAL SERVICES (AKUL DRAVIN GROUP) • GSTIN: 07AAAAA0000A1Z5',
+  footerText: 'AKUL DRAVIN DIGITAL SERVICES (ADCS) • HAR KAAM DIGITAL • HAR SAMADHAAN EK JAGAH',
+  gstin: '07AAAAA0000A1Z5',
+  approvedSignatoryName: 'Dr. Akul Dravin',
+  approvedSignatoryDesignation: 'Managing Director & Authorized Signatory',
+  certificateTemplateStyle: 'classic-navy-gold',
+  letterheadTemplateStyle: 'corporate-navy',
+  invoiceTemplateStyle: 'gst-standard',
+  watermarkEnabled: true,
+  approvalStatus: 'PUBLISHED',
+  version: 1,
+  lastPublishedAt: '2026-04-01T10:00:00Z',
+  lastPublishedBy: 'Super Admin Controller'
 };
 
 export const initialDoubleEntryJournals: DoubleEntryJournal[] = [

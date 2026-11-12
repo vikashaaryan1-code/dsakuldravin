@@ -20,6 +20,8 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useApp } from '../../store/AppContext';
+import { ADCSLogo } from '../../components/branding';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 
 export const CSCMainPortalPage: React.FC = () => {
   const navigate = useNavigate();
@@ -84,27 +86,23 @@ export const CSCMainPortalPage: React.FC = () => {
 
   const handleDownloadVleSlip = () => {
     if (!regResult) return;
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — VLE PARTNER ONBOARDING ACKNOWLEDGEMENT',
-      '==============================================================================',
-      `Reference No   : ${regResult.refNumber}`,
-      `TEC Certificate: ${tecNumber}`,
-      `Applicant Name : ${vleName}`,
-      `Mobile         : ${vleMobile}`,
-      `Location       : ${centerAddress}, ${vleDistrict}, ${vleState}`,
-      `Current Stage  : ${regResult.stage}`,
-      `Submitted At   : ${regResult.submittedAt}`,
-      '==============================================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_VLE_Onboarding_${regResult.refNumber}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'ADCS VLE / Kendra Partner Onboarding Acknowledgement',
+      documentType: 'VLE ONBOARDING SLIP',
+      documentNumber: String(regResult.refNumber || 'VLE-REG'),
+      issuedDate: String(regResult.submittedAt || new Date().toLocaleDateString('en-IN')),
+      rows: [
+        { label: 'TEC Certificate Number', value: tecNumber },
+        { label: 'Applicant Name', value: vleName },
+        { label: 'Registered Mobile', value: vleMobile },
+        { label: 'Kendra Location', value: `${centerAddress}, ${vleDistrict}, ${vleState}` },
+        { label: 'Verification Stage', value: String(regResult.stage || 'Under Verification') },
+      ],
+      notes: [
+        'Akul Dravin Digital Services Operations Desk verifies new Kendra premises and TEC credentials prior to activation.',
+      ],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?ref=${encodeURIComponent(String(regResult.refNumber || ''))}`,
+    });
   };
 
   return (
@@ -113,14 +111,12 @@ export const CSCMainPortalPage: React.FC = () => {
       <div style={{ height: '4px', background: 'linear-gradient(to right, #FF9933 33%, #FFFFFF 33%, #FFFFFF 66%, #138808 66%)' }} />
 
       {/* 2. Official ADCS Header */}
-      <header style={{ background: '#FFFFFF', borderBottom: '1px solid #E2E8F0', padding: '0.8rem 2rem' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-            <div style={{ width: '48px', height: '48px', background: '#16A34A', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FFFFFF', fontWeight: 900, fontSize: '1.3rem' }}>
-              ADCS
-            </div>
+      <header style={{ background: '#FFFFFF', borderBottom: '1px solid #DCE4EF', padding: '0.8rem 2rem' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.1rem' }}>
+            <ADCSLogo variant="compact" theme="light" height={48} />
             <div>
-              <div style={{ fontWeight: 800, fontSize: '1.25rem', color: '#0F172A', letterSpacing: '0.01em' }}>
+              <div style={{ fontWeight: 800, fontSize: '1.2rem', color: '#061A36', letterSpacing: '0.01em' }}>
                 AKUL DRAVIN DIGITAL SERVICES
               </div>
               <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
@@ -133,7 +129,7 @@ export const CSCMainPortalPage: React.FC = () => {
             <button
               onClick={() => navigate('/connect/csc')}
               style={{
-                background: '#16A34A',
+                background: '#075ACB',
                 color: '#FFFFFF',
                 border: 'none',
                 padding: '0.55rem 1.25rem',
@@ -144,7 +140,7 @@ export const CSCMainPortalPage: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)'
+                boxShadow: '0 4px 12px rgba(7, 90, 203, 0.22)'
               }}
             >
               ADCS Connect Login ➔
@@ -153,7 +149,7 @@ export const CSCMainPortalPage: React.FC = () => {
             <button
               onClick={() => navigate('/digitalseva')}
               style={{
-                background: '#0F172A',
+                background: '#061A36',
                 color: '#FFFFFF',
                 border: 'none',
                 padding: '0.55rem 1.25rem',
@@ -170,7 +166,7 @@ export const CSCMainPortalPage: React.FC = () => {
       </header>
 
       {/* 3. Sub-Navigation */}
-      <nav style={{ background: '#0F172A', color: '#FFFFFF', padding: '0 2rem' }}>
+      <nav style={{ background: '#061A36', color: '#FFFFFF', padding: '0 2rem' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', gap: '1rem' }}>
           {[
             { id: 'overview', label: 'Ecosystem Overview' },
@@ -206,7 +202,7 @@ export const CSCMainPortalPage: React.FC = () => {
           <div>
             {/* Hero Banner */}
             <div style={{
-              background: 'linear-gradient(135deg, #0A192F 0%, #172554 60%, #16A34A 100%)',
+              background: 'linear-gradient(135deg, #061A36 0%, #172554 60%, #16A34A 100%)',
               color: '#FFFFFF',
               borderRadius: '20px',
               padding: '3rem 2.5rem',
@@ -388,7 +384,7 @@ export const CSCMainPortalPage: React.FC = () => {
                         cursor: 'pointer'
                       }}
                     >
-                      Download Onboarding Slip (.txt)
+                      Print / Download Onboarding Slip (PDF)
                     </button>
                     <button
                       onClick={() => navigate('/connect/csc')}

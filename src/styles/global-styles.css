@@ -1,0 +1,155 @@
+/* =========================================================================
+ * ADCS GLOBAL STYLES — RESET, TYPOGRAPHY, SCROLLBAR, A11Y & PRINT RULES
+ * ========================================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--adcs-font-sans);
+  background-color: var(--adcs-background);
+  color: var(--adcs-text);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--adcs-background);
+  color: var(--adcs-text);
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--adcs-font-display);
+  font-weight: 700;
+  color: var(--adcs-text);
+  line-height: 1.24;
+  letter-spacing: -0.02em;
+}
+
+a {
+  color: var(--adcs-primary);
+  text-decoration: none;
+  transition: color var(--adcs-transition-fast);
+}
+
+a:hover {
+  color: var(--adcs-primary-hover);
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  transition:
+    background-color var(--adcs-transition-fast),
+    border-color var(--adcs-transition-fast),
+    color var(--adcs-transition-fast),
+    box-shadow var(--adcs-transition-fast),
+    transform var(--adcs-transition-fast);
+}
+
+input, select, textarea {
+  font-family: inherit;
+}
+
+/* WCAG 2.2 AA Accessible Keyboard Focus Ring */
+:focus-visible {
+  outline: 2px solid var(--adcs-blue-light);
+  outline-offset: 2px;
+  box-shadow: var(--adcs-focus-ring);
+}
+
+/* Skip to main content link for screen readers / keyboard navigation */
+.adcs-skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 9999;
+  padding: 0.75rem 1.25rem;
+  background: var(--adcs-navy);
+  color: #FFFFFF;
+  font-weight: 700;
+  border-radius: 0 0 8px 0;
+}
+
+.adcs-skip-link:focus {
+  left: 0;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--adcs-surface-subtle);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #B8C7DC;
+  border-radius: var(--adcs-radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #8CA2C0;
+}
+
+/* Respect Reduced Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Enterprise Print & PDF Export Standards */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: #FFFFFF !important;
+    color: #061A36 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .adcs-no-print,
+  header,
+  footer,
+  nav,
+  .mobile-bottom-nav,
+  .role-switcher-bar {
+    display: none !important;
+  }
+
+  .adcs-print-sheet,
+  #printable-certificate-area,
+  #printable-letter-area,
+  #printable-kundli-sheet,
+  #printable-receipt-area {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    background: #FFFFFF !important;
+    page-break-inside: avoid;
+  }
+}

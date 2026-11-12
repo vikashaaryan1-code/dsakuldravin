@@ -362,7 +362,7 @@ export const AstroProcessSection: React.FC = () => {
               <Lock size={14} color="#F59E0B" /> एसएसएल 256-बिट सुरक्षित
             </span>
             <span style={{ color: '#A7F3D0' }}>
-              संतुष्टि दर: 99.4%
+              पारदर्शी एवं सटीक गणना
             </span>
           </div>
         </div>

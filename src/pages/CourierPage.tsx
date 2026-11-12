@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../store/AppContext';
 import { apiClient } from '../services/apiClient';
+import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
   Truck, 
   Package, 
@@ -103,33 +104,36 @@ export const CourierPage: React.FC = () => {
   };
 
   const handleDownloadWaybill = (awbCode: string, fromCity: string, toCity: string, mode: string, weight: number, total: number) => {
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — SHIPPING WAYBILL & TAX RECEIPT',
-      '========================================================================',
-      `AWB / Consignment No : ${awbCode}`,
-      `Date & Time          : ${new Date().toLocaleString('en-IN')}`,
-      `Sender               : ${senderName} (${fromCity} - ${senderPincode})`,
-      `Consignee            : ${receiverName} (${toCity} - ${receiverPincode})`,
-      `Service Mode         : ${mode}`,
-      `Chargeable Weight    : ${weight} kg (Volumetric: ${volumetricWeight} kg | Scale: ${weightKg} kg)`,
-      `Total Freight Paid   : ₹${total} (Incl. 18% GST)`,
-      `Live Track URL       : https://akuldravindigital.com/track?id=${encodeURIComponent(awbCode)}`,
-      '========================================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Waybill_${awbCode}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const baseAmt = Number((total / 1.18).toFixed(2));
+    const gstAmt = Number((total - baseAmt).toFixed(2));
+    printBrandedADCSDocument({
+      title: 'ADCS Express Logistics Air Waybill & Freight Receipt',
+      documentType: 'SHIPPING WAYBILL',
+      documentNumber: awbCode,
+      issuedDate: new Date().toLocaleString('en-IN'),
+      rows: [
+        { label: 'Consignor / Sender', value: `${senderName} (${fromCity} - ${senderPincode})` },
+        { label: 'Consignee / Recipient', value: `${receiverName} (${toCity} - ${receiverPincode})` },
+        { label: 'Service Tier / Mode', value: mode },
+        { label: 'Chargeable Weight', value: `${weight} kg (Volumetric: ${volumetricWeight} kg | Scale: ${weightKg} kg)` },
+      ],
+      amountSummary: {
+        subtotal: baseAmt,
+        tax: gstAmt,
+        total,
+        currency: '₹',
+        paymentStatus: 'FREIGHT PAID (INCL. 18% GST)',
+      },
+      notes: ['Attach or retain this waybill copy for doorstep dispatch & live consignment tracking.'],
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?id=${encodeURIComponent(awbCode)}`,
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -171,7 +175,7 @@ export const CourierPage: React.FC = () => {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <span className="badge badge-gold">INSTANT PARCEL DISPATCH</span>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#0A192F', marginTop: '0.4rem' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 800, color: '#061A36', marginTop: '0.4rem' }}>
             Book Doorstep Parcel Pickup
           </h2>
           <p style={{ fontSize: '0.88rem', color: '#64748B' }}>
@@ -316,7 +320,7 @@ export const CourierPage: React.FC = () => {
                 justifyContent: 'center',
               }}>
                 <span style={{ fontSize: '0.75rem', color: '#64748B' }}>Volumetric Weight:</span>
-                <span style={{ fontWeight: 800, color: '#0A192F', fontSize: '1rem' }}>
+                <span style={{ fontWeight: 800, color: '#061A36', fontSize: '1rem' }}>
                   {volumetricWeight} kg
                 </span>
                 <span style={{ fontSize: '0.68rem', color: '#D97706' }}>
@@ -339,12 +343,12 @@ export const CourierPage: React.FC = () => {
                     style={{
                       padding: '0.85rem',
                       borderRadius: '12px',
-                      border: serviceType === m.mode ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                      border: serviceType === m.mode ? '2px solid #075ACB' : '1px solid #E2E8F0',
                       background: serviceType === m.mode ? '#EFF6FF' : '#FFFFFF',
                       textAlign: 'left',
                     }}
                   >
-                    <div style={{ fontWeight: 800, fontSize: '0.95rem', color: serviceType === m.mode ? '#1D4ED8' : '#0A192F' }}>
+                    <div style={{ fontWeight: 800, fontSize: '0.95rem', color: serviceType === m.mode ? '#075ACB' : '#061A36' }}>
                       {m.mode}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: '#059669', fontWeight: 600 }}>{m.speed}</div>
@@ -357,7 +361,7 @@ export const CourierPage: React.FC = () => {
 
           {/* Pricing & Booking Action */}
           <div style={{
-            background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 100%)',
+            background: 'linear-gradient(135deg, #061A36 0%, #031126 100%)',
             borderRadius: '20px',
             padding: '2rem',
             color: '#FFFFFF',
@@ -451,7 +455,7 @@ export const CourierPage: React.FC = () => {
 
       {/* Active Shipments Live Feed */}
       <div>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '1.25rem' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', marginBottom: '1.25rem' }}>
           Active Parcel Shipments in Transit
         </h3>
 
@@ -473,7 +477,7 @@ export const CourierPage: React.FC = () => {
             >
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#0A192F' }}>{shp.awb}</span>
+                  <span style={{ fontWeight: 800, fontSize: '1.1rem', color: '#061A36' }}>{shp.awb}</span>
                   <span className="badge badge-gold">{shp.status}</span>
                 </div>
                 <div style={{ fontSize: '0.85rem', color: '#475569' }}>
@@ -517,7 +521,7 @@ export const CourierPage: React.FC = () => {
         gap: '1rem',
       }}>
         <div>
-          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#075ACB', textTransform: 'uppercase' }}>
             AUTHORIZED STATUTORY & NATIONAL DISPATCH PORTALS
           </div>
           <div style={{ fontSize: '0.84rem', color: '#475569', marginTop: '0.2rem' }}>

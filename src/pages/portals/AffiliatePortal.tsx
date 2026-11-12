@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { 
   Sparkles, 
   Link as LinkIcon, 
@@ -61,9 +62,9 @@ export const AffiliatePortal: React.FC = () => {
     const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0A192F"/>
-      <stop offset="50%" stop-color="#0D2137"/>
-      <stop offset="100%" stop-color="#1D4ED8"/>
+      <stop offset="0%" stop-color="#061A36"/>
+      <stop offset="50%" stop-color="#031126"/>
+      <stop offset="100%" stop-color="#075ACB"/>
     </linearGradient>
   </defs>
   <rect width="1080" height="1920" fill="url(#bg)"/>
@@ -81,7 +82,7 @@ export const AffiliatePortal: React.FC = () => {
   <text x="180" y="1250" font-family="Arial, sans-serif" font-size="44" font-weight="bold" fill="#38BDF8">✓ Bharat BillPay &amp; Fast Cash AEPS</text>
 
   <rect x="180" y="1450" width="720" height="140" rx="70" fill="#F59E0B"/>
-  <text x="540" y="1535" font-family="Arial, sans-serif" font-size="48" font-weight="900" fill="#0A192F" text-anchor="middle">APPLY ONLINE TODAY</text>
+  <text x="540" y="1535" font-family="Arial, sans-serif" font-size="48" font-weight="900" fill="#061A36" text-anchor="middle">APPLY ONLINE TODAY</text>
   <text x="540" y="1700" font-family="Arial, sans-serif" font-size="34" fill="#FFFFFF" text-anchor="middle">Referral Link: ${referralUrl}</text>
   <text x="540" y="1760" font-family="Arial, sans-serif" font-size="28" fill="#64748B" text-anchor="middle">Authorized ADCS Partner Network • Govt Compliant</text>
 </svg>`;
@@ -102,7 +103,7 @@ export const AffiliatePortal: React.FC = () => {
   <defs>
     <linearGradient id="sqbg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#0F172A"/>
-      <stop offset="100%" stop-color="#1E3A8A"/>
+      <stop offset="100%" stop-color="#061A36"/>
     </linearGradient>
   </defs>
   <rect width="1080" height="1080" fill="url(#sqbg)"/>
@@ -155,16 +156,25 @@ COMPLIANCE & BRAND GUIDELINES:
 ================================================================================
 Authorized by: ADCS National Partner Growth Cell
 ================================================================================`;
-    const blob = new Blob([bundleSummary], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ADCS_Affiliate_Marketing_Kit_${referralCode}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    showToast('Bundle Downloaded', 'Complete Affiliate Marketing Kit saved to your device.', 'success');
+    printBrandedADCSDocument({
+      title: 'ADCS Affiliate Growth Partner Authorization & Marketing Brief',
+      documentType: 'PARTNER GROWTH KIT',
+      documentNumber: referralCode,
+      issuedDate: new Date().toLocaleDateString('en-IN'),
+      rows: [
+        { label: 'Affiliate Partner Role', value: 'Authorized ADCS Growth Partner' },
+        { label: 'Assigned Referral Code', value: referralCode },
+        { label: 'Tracking Referral Link', value: referralUrl },
+        { label: 'Commission Slabs', value: '15% E-Governance | 20% IT & Turnkey | 25% Vedic Advisory' },
+        { label: 'Payout Cycle', value: 'Real-time Wallet Credit with Weekly Bank Auto-Sweep' },
+        { label: 'Included Creative Assets', value: 'WhatsApp Story Flyer (SVG) & Social Feed Square (SVG)' },
+      ],
+      notes: [
+        'Use only official Akul Dravin Digital Services (ADCS) branding and master logo assets.',
+        'Ensure transparent ASCI-compliant disclosures and zero-spam promotional conduct.',
+      ],
+    });
+    showToast('Growth Kit Ready', 'Official ADCS Affiliate Partner Brief opened for print/PDF.', 'success');
     setShowCreativeKitModal(false);
   };
 
@@ -174,7 +184,7 @@ Authorized by: ADCS National Partner Growth Cell
         
         {/* Hero Header */}
         <div style={{
-          background: 'linear-gradient(135deg, #0A192F 0%, #151D33 50%, #4338CA 100%)',
+          background: 'linear-gradient(135deg, #061A36 0%, #151D33 50%, #4338CA 100%)',
           borderRadius: '24px',
           padding: '2.5rem',
           color: '#FFFFFF',
@@ -232,10 +242,10 @@ Authorized by: ADCS National Partner Growth Cell
           gap: '1.5rem'
         }}>
           <div>
-            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1D4ED8', textTransform: 'uppercase' }}>
+            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#075ACB', textTransform: 'uppercase' }}>
               YOUR PERSONAL TRACKED REFERRAL LINK
             </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', marginTop: '0.2rem', fontFamily: 'monospace' }}>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', marginTop: '0.2rem', fontFamily: 'monospace' }}>
               {referralUrl}
             </div>
             <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '0.3rem' }}>
@@ -263,9 +273,9 @@ Authorized by: ADCS National Partner Growth Cell
           <div className="card" style={{ padding: '1.5rem', borderRadius: '16px', background: '#FFFFFF', border: '1px solid #E2E8F0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: '#64748B', fontSize: '0.82rem', fontWeight: 600 }}>
               <span>TOTAL REFERRED LEADS</span>
-              <Users size={18} color="#1D4ED8" />
+              <Users size={18} color="#075ACB" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0A192F', margin: '0.4rem 0' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#061A36', margin: '0.4rem 0' }}>
               {totalReferrals} Enquiries
             </div>
             <div style={{ fontSize: '0.78rem', color: '#059669' }}>
@@ -278,7 +288,7 @@ Authorized by: ADCS National Partner Growth Cell
               <span>CONVERTED ORDER VOLUME</span>
               <TrendingUp size={18} color="#D97706" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#0A192F', margin: '0.4rem 0' }}>
+            <div style={{ fontSize: '2rem', fontWeight: 900, color: '#061A36', margin: '0.4rem 0' }}>
               ₹{totalVolume.toLocaleString('en-IN')}
             </div>
             <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
@@ -309,7 +319,7 @@ Authorized by: ADCS National Partner Growth Cell
           overflow: 'hidden'
         }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid #E2E8F0' }}>
-            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
               Referred Clients & Earnings Ledger
             </h2>
             <p style={{ fontSize: '0.82rem', color: '#64748B', margin: '2px 0 0' }}>
@@ -332,7 +342,7 @@ Authorized by: ADCS National Partner Growth Cell
               <tbody>
                 {affiliateReferrals.map((ref) => (
                   <tr key={ref.id} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                    <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#0A192F' }}>
+                    <td style={{ padding: '1rem 1.25rem', fontWeight: 700, color: '#061A36' }}>
                       {ref.customerName}
                     </td>
                     <td style={{ padding: '1rem 1.25rem', color: '#475569' }}>{ref.serviceEnquired}</td>
@@ -367,7 +377,7 @@ Authorized by: ADCS National Partner Growth Cell
             padding: '1rem'
           }}>
             <div style={{ background: '#FFFFFF', borderRadius: '20px', maxWidth: '480px', width: '100%', padding: '2rem', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#0A192F', marginBottom: '0.25rem' }}>
+              <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#061A36', marginBottom: '0.25rem' }}>
                 Instant Commission Withdrawal
               </h3>
               <p style={{ fontSize: '0.82rem', color: '#64748B', marginBottom: '1.25rem' }}>
@@ -442,7 +452,7 @@ Authorized by: ADCS National Partner Growth Cell
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <div>
                   <span className="badge badge-gold">GROWTH & AFFILIATE TOOLKIT</span>
-                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#0A192F', marginTop: '0.25rem' }}>
+                  <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#061A36', marginTop: '0.25rem' }}>
                     Official Promotional Creative Kit
                   </h3>
                 </div>
@@ -466,7 +476,7 @@ Authorized by: ADCS National Partner Growth Cell
                       <Image size={22} />
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0A192F' }}>WhatsApp Story Flyer (1080x1920)</div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#061A36' }}>WhatsApp Story Flyer (1080x1920)</div>
                       <div style={{ fontSize: '0.75rem', color: '#64748B' }}>PAN, Aadhaar, e-District & Government schemes with referral stamp</div>
                     </div>
                   </div>
@@ -481,11 +491,11 @@ Authorized by: ADCS National Partner Growth Cell
                 {/* Asset 2: Social Square */}
                 <div style={{ background: '#F8FAFC', borderRadius: '14px', padding: '1rem 1.25rem', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1D4ED8' }}>
+                    <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#075ACB' }}>
                       <Image size={22} />
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#0A192F' }}>Company Incorporation Square (1080x1080)</div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#061A36' }}>Company Incorporation Square (1080x1080)</div>
                       <div style={{ fontSize: '0.75rem', color: '#64748B' }}>Pvt Ltd ₹6,999 + GST registration promotion banner</div>
                     </div>
                   </div>
@@ -502,7 +512,7 @@ Authorized by: ADCS National Partner Growth Cell
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Video size={18} color="#7C3AED" />
-                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#0A192F' }}>Reels / Shorts Script (30 Seconds)</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: 700, color: '#061A36' }}>Reels / Shorts Script (30 Seconds)</span>
                     </div>
                     <button
                       onClick={() => {

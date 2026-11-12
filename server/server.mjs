@@ -12,7 +12,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = Number(process.env.PORT || 5000);
+
+app.set('trust proxy', 1);
 
 app.use(cors());
 app.use(express.json());
@@ -145,6 +147,16 @@ function readDB() {
     }
     const raw = fs.readFileSync(DB_FILE, 'utf-8');
     const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed.applications)) {
+      const seenAppIds = new Set();
+      parsed.applications = parsed.applications.filter(app => {
+        if (!app || !app.id || seenAppIds.has(app.id)) return false;
+        seenAppIds.add(app.id);
+        return true;
+      });
+    } else {
+      parsed.applications = initialDB.applications;
+    }
     if (!parsed.transactions) parsed.transactions = initialDB.transactions;
     if (!parsed.crmLeads) parsed.crmLeads = [];
     if (!parsed.journals) parsed.journals = [];
@@ -167,12 +179,28 @@ function readDB() {
     if (!parsed.documents) parsed.documents = [];
     if (!parsed.whiteLabel) parsed.whiteLabel = {
       brandName: 'AKUL DRAVIN DIGITAL SERVICES',
-      tagline: 'One Platform. Every Service.',
-      primaryColor: '#1D4ED8',
-      accentColor: '#F59E0B',
+      shortName: 'ADCS',
+      tagline: 'HAR KAAM DIGITAL • HAR SAMADHAAN EK JAGAH',
+      taglineHi: 'हर काम डिजिटल • हर समाधान एक जगह',
+      primaryColor: '#075ACB',
+      accentColor: '#D6A12B',
+      navyColor: '#061A36',
+      logoUrl: '/branding/adcs-logo-light.png',
+      darkLogoUrl: '/branding/adcs-logo-dark.png',
+      emblemUrl: '/branding/adcs-logo-emblem.png',
+      certificateLogoUrl: '/branding/adcs-logo-certificate.png',
       customDomain: 'cloud.akuldravin.com',
-      invoiceHeader: 'AKUL DRAVIN GROUP • GSTIN: 07AAAAA0000A1Z5'
+      invoiceHeader: 'AKUL DRAVIN DIGITAL SERVICES (ADCS) • GSTIN: 07AAAAA0000A1Z5',
+      footerText: 'AKUL DRAVIN DIGITAL SERVICES (ADCS) • HAR KAAM DIGITAL • HAR SAMADHAAN EK JAGAH',
+      approvedSignatoryName: 'Dr. Akul Dravin',
+      approvedSignatoryDesignation: 'Managing Director & Authorized Signatory',
+      certificateTemplateStyle: 'classic-navy-gold',
+      letterheadTemplateStyle: 'corporate-navy',
+      invoiceTemplateStyle: 'gst-standard',
+      approvalStatus: 'PUBLISHED',
+      version: 1
     };
+    if (!parsed.brandAuditLog) parsed.brandAuditLog = [];
     if (!parsed.workstations) parsed.workstations = [
       { id: 'PC-01', status: 'in-use', ip: '192.168.1.101', currentSession: { customerName: 'Rajesh Kumar', phone: '+91 98765 00001', startTime: '11:15 AM', elapsedMinutes: 45, activeTask: 'SSC CGL Application Form', hourlyRate: 40 } },
       { id: 'PC-02', status: 'available', ip: '192.168.1.102' },
@@ -263,19 +291,19 @@ app.get('/api/health', (req, res) => {
   <title>AKUL DRAVIN CLOUD AI • सर्वर स्वास्थ्य स्थिति</title>
   <style>
     body {
-      margin: 0; padding: 0; background: #0A192F; color: #FFFFFF;
+      margin: 0; padding: 0; background: linear-gradient(155deg, #031126 0%, #061A36 100%); color: #FFFFFF;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       display: flex; align-items: center; justify-content: center; min-height: 100vh;
     }
     .card {
-      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(214, 161, 43, 0.32);
       border-radius: 24px; padding: 2.5rem; max-width: 600px; width: 90%; text-align: center;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45);
     }
     .badge {
       display: inline-flex; align-items: center; gap: 8px;
-      background: rgba(16, 185, 129, 0.2); border: 1px solid #10B981;
-      color: #10B981; font-weight: 800; font-size: 0.85rem; padding: 0.4rem 1rem; border-radius: 9999px;
+      background: rgba(16, 185, 129, 0.18); border: 1px solid #10B981;
+      color: #6EE7B7; font-weight: 800; font-size: 0.85rem; padding: 0.4rem 1rem; border-radius: 9999px;
       margin-bottom: 1.5rem;
     }
     .pulse {
@@ -284,18 +312,18 @@ app.get('/api/health', (req, res) => {
     }
     @keyframes pulse { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
     h1 { font-size: 1.8rem; margin: 0 0 0.5rem; }
-    p { color: #94A3B8; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem; }
+    p { color: #CBD5E1; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1.5rem; }
     .grid {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; margin-bottom: 2rem;
     }
     .chip {
-      background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.1);
-      padding: 0.6rem; border-radius: 10px; font-size: 0.78rem; color: #CBD5E1; font-weight: 600;
+      background: rgba(7, 90, 203, 0.22); border: 1px solid rgba(8, 120, 249, 0.35);
+      padding: 0.6rem; border-radius: 10px; font-size: 0.78rem; color: #E2E8F0; font-weight: 600;
     }
     .btn {
-      display: inline-block; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
-      color: #0A192F; font-weight: 800; text-decoration: none; padding: 0.9rem 2rem;
-      border-radius: 12px; font-size: 1rem; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35);
+      display: inline-block; background: linear-gradient(135deg, #075ACB 0%, #0878F9 100%);
+      color: #FFFFFF; font-weight: 800; text-decoration: none; padding: 0.9rem 2rem;
+      border-radius: 12px; font-size: 1rem; box-shadow: 0 10px 25px rgba(7, 90, 203, 0.35);
       transition: all 0.2s ease;
     }
     .btn:hover { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(245, 158, 11, 0.5); }
@@ -388,9 +416,16 @@ app.get('/api/applications', (req, res) => {
 
 app.post('/api/applications', (req, res) => {
   const db = readDB();
-  const trackingNumber = 'AD-APP-' + Math.floor(10000 + Math.random() * 90000);
+  const existingAppIds = new Set((db.applications || []).map(a => a.id));
+  const suffix = String(Date.now()).slice(-4);
+  let candidateNum = Math.floor(10000 + Math.random() * 90000);
+  while (existingAppIds.has(`APP-${candidateNum}-${suffix}`)) {
+    candidateNum = Math.floor(10000 + Math.random() * 90000);
+  }
+  const uniqueCode = `${candidateNum}-${suffix}`;
+  const trackingNumber = 'AD-APP-' + uniqueCode;
   const newApp = {
-    id: 'APP-' + Math.floor(10000 + Math.random() * 90000),
+    id: 'APP-' + uniqueCode,
     trackingNumber,
     serviceId: req.body.serviceId || 'srv-pan-new',
     serviceName: req.body.serviceName || 'Standard Digital Service',
@@ -524,6 +559,114 @@ app.get('/api/auth/me', (req, res) => {
   } catch (err) {
     res.status(401).json({ success: false, message: 'Invalid token' });
   }
+});
+
+// 5b. Strict Panel-Locked Credential Authentication, UTR Verification & Admin Commission/AI Control
+const PANEL_ACCOUNTS_SEED = [
+  { loginId: 'RET-2026-101', password: 'Retailer@2026', panelKey: 'customer', role: 'customer', tier: 'none', designation: 'Verified Citizen & Retailer', department: 'Retail & Citizen Services' },
+  { loginId: 'VLE-RUR-245089', password: 'RuralVle@2026', panelKey: 'vle_rural', role: 'vle', tier: 'rural', designation: 'Rural VLE / Panchayat Operator', department: 'Rural Digital Seva Kendra' },
+  { loginId: 'DST-MGR-2026', password: 'DistrictMgr@2026', panelKey: 'vle_district', role: 'vle', tier: 'district', designation: 'District Manager / District Coordinator', department: 'District Operations & VLE Supervision' },
+  { loginId: 'STE-HEAD-2026', password: 'StateHead@2026', panelKey: 'vle_state', role: 'vle', tier: 'state', designation: 'State Head / State Manager', department: 'State Administration & Policy' },
+  { loginId: 'MAIN-HEAD-2026', password: 'MainHead@2026', panelKey: 'vle_main_head', role: 'vle', tier: 'main_head', designation: 'Main Head — National Digital Seva', department: 'National Command Center' },
+  { loginId: 'DIST-2026-301', password: 'Distributor@2026', panelKey: 'distributor', role: 'distributor', tier: 'none', designation: 'Territory Distributor', department: 'Distribution & Sub-VLE Network' },
+  { loginId: 'CAFE-2026-401', password: 'CafeDesk@2026', panelKey: 'cafe_operator', role: 'cafe_operator', tier: 'none', designation: 'Cyber Café Desk Manager', department: 'Kiosk & Print Operations' },
+  { loginId: 'FRAN-2026-501', password: 'Franchise@2026', panelKey: 'franchise', role: 'franchise', tier: 'none', designation: 'Master Franchise Head', department: 'Regional Franchise Network' },
+  { loginId: 'AFF-2026-601', password: 'Affiliate@2026', panelKey: 'affiliate', role: 'affiliate', tier: 'none', designation: 'Growth Affiliate Partner', department: 'Channel & Affiliate Growth' },
+  { loginId: 'PART-2026-701', password: 'Partner@2026', panelKey: 'partner', role: 'partner', tier: 'none', designation: 'Authorized API Partner', department: 'Channel & Affiliate Growth' },
+  { loginId: 'ADV-2026-801', password: 'Advocate@2026', panelKey: 'advocate', role: 'advocate', tier: 'none', designation: 'High Court Advocate', department: 'Legal & Compliance' },
+  { loginId: 'INST-2026-851', password: 'Instructor@2026', panelKey: 'instructor', role: 'instructor', tier: 'none', designation: 'Academy Faculty & Examiner', department: 'ADCS Academy' },
+  { loginId: 'STU-2026-904', password: 'Student@2026', panelKey: 'student', role: 'student', tier: 'none', designation: 'Academy Scholar', department: 'ADCS Academy' },
+  { loginId: 'TECH-2026-951', password: 'Technician@2026', panelKey: 'technician', role: 'technician', tier: 'none', designation: 'Field Engineer', department: 'Field Engineering' },
+  { loginId: 'EMP-2026-111', password: 'Executive@2026', panelKey: 'employee', role: 'employee', tier: 'none', designation: 'Service Executive / Operations', department: 'District Operations & VLE Supervision' },
+  { loginId: 'FIN-2026-009', password: 'Finance@2026', panelKey: 'finance', role: 'finance', tier: 'none', designation: 'Chief Finance & Settlement Officer', department: 'Finance & Clearing' },
+  { loginId: 'ADMIN-AKUL-01', password: 'SuperAdmin@2026', panelKey: 'admin', role: 'admin', tier: 'super_admin', designation: 'Super Admin / Managing Director', department: 'Sovereign Governance' },
+];
+
+app.post('/api/auth/panel-login', (req, res) => {
+  const { panelKey, loginId, password } = req.body || {};
+  if (!panelKey || !loginId || !password) {
+    return res.status(400).json({ success: false, message: 'panelKey, loginId, and password are required.' });
+  }
+  const normalized = String(loginId).trim().toUpperCase();
+  const db = readDB();
+  const accounts = db.panelAccounts || PANEL_ACCOUNTS_SEED;
+  const account = accounts.find((a) => String(a.loginId).toUpperCase() === normalized);
+  if (!account || account.password !== password) {
+    logAuditTrail('PANEL_LOGIN_FAILED', { loginId: normalized, panelKey }, 'BLOCKED');
+    return res.status(401).json({ success: false, message: 'Invalid Login ID or Password.' });
+  }
+  if (account.panelKey !== panelKey) {
+    logAuditTrail('CROSS_PANEL_LOGIN_BLOCKED', { loginId: normalized, attemptedPanel: panelKey, boundPanel: account.panelKey }, 'BLOCKED');
+    return res.status(403).json({
+      success: false,
+      code: 'PANEL_ISOLATION_VIOLATION',
+      message: `Access Denied: "${normalized}" is bound to "${account.panelKey}" (${account.designation}) and cannot sign into "${panelKey}".`,
+    });
+  }
+  const token = 'jwt-ad-' + Buffer.from(`${account.loginId}:${account.role}:${Date.now()}`).toString('base64');
+  logAuditTrail('PANEL_LOGIN_SUCCESS', { loginId: account.loginId, panelKey, designation: account.designation }, 'SUCCESS');
+  res.json({ success: true, token, account });
+});
+
+app.post('/api/payments/utr-submit', (req, res) => {
+  const { orderId, utrNumber, transactionId, paymentMethod = 'upi', amountPaid = 0, serviceTitle = 'ADCS Service' } = req.body || {};
+  const cleanUtr = String(utrNumber || '').trim().toUpperCase();
+  const cleanTxn = String(transactionId || '').trim().toUpperCase();
+  if (cleanUtr.length < 8 || cleanTxn.length < 6) {
+    return res.status(400).json({ success: false, message: 'Valid UTR Number (min 8 chars) and Transaction ID (min 6 chars) are mandatory before processing.' });
+  }
+  const db = readDB();
+  if (!db.utrPayments) db.utrPayments = [];
+  const entry = {
+    id: `UTR-${Date.now()}`,
+    orderId: orderId || `AD-ORD-${Date.now()}`,
+    utrNumber: cleanUtr,
+    transactionId: cleanTxn,
+    paymentMethod,
+    amountPaid: Number(amountPaid) || 0,
+    serviceTitle,
+    paymentStatus: 'UTR_SUBMITTED',
+    paidAt: new Date().toISOString(),
+  };
+  db.utrPayments.unshift(entry);
+  writeDB(db);
+  logAuditTrail('UTR_PAYMENT_SUBMITTED', entry, 'SUCCESS');
+  res.json({ success: true, utrRecord: entry });
+});
+
+app.get('/api/commissions', (req, res) => {
+  const db = readDB();
+  res.json({ success: true, rules: db.commissionRules || [] });
+});
+
+app.put('/api/commissions', (req, res) => {
+  const { actorRole, rules } = req.body || {};
+  if (actorRole !== 'admin') {
+    logAuditTrail('UNAUTHORIZED_COMMISSION_EDIT_BLOCKED', { actorRole }, 'BLOCKED');
+    return res.status(403).json({ success: false, message: 'Forbidden: Only Super Admin can configure commissions.' });
+  }
+  const db = readDB();
+  db.commissionRules = Array.isArray(rules) ? rules : (db.commissionRules || []);
+  writeDB(db);
+  logAuditTrail('ADMIN_COMMISSIONS_UPDATED', { count: db.commissionRules.length }, 'SUCCESS');
+  res.json({ success: true, rules: db.commissionRules });
+});
+
+app.get('/api/ai/control', (req, res) => {
+  const db = readDB();
+  res.json({ success: true, aiControl: db.aiControlConfig || { autonomousRoutingEnabled: true, autoUtrScrutinyEnabled: true, crossPanelIntrusionGuard: true, commissionAnomalyGuard: true } });
+});
+
+app.post('/api/ai/control', (req, res) => {
+  const { actorRole, config } = req.body || {};
+  if (actorRole !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Forbidden: Super Admin required for AI control.' });
+  }
+  const db = readDB();
+  db.aiControlConfig = { ...(db.aiControlConfig || {}), ...(config || {}), lastSyncedAt: new Date().toISOString() };
+  writeDB(db);
+  logAuditTrail('AI_CONTROL_UPDATED', db.aiControlConfig, 'SUCCESS');
+  res.json({ success: true, aiControl: db.aiControlConfig });
 });
 
 // 6. Vedic Astrology API
@@ -931,18 +1074,37 @@ app.post('/api/marketing/campaigns', (req, res) => {
   res.status(201).json({ success: true, campaign: newCampaign });
 });
 
-// 14. White-Label SaaS Settings API
+// 14. Enterprise Brand Management & White-Label SaaS Settings API
 app.get('/api/admin/whitelabel', (req, res) => {
   const db = readDB();
-  res.json({ success: true, config: db.whiteLabel || {} });
+  res.json({ success: true, config: db.whiteLabel || {}, auditLog: db.brandAuditLog || [] });
 });
 
 app.post('/api/admin/whitelabel', (req, res) => {
   const db = readDB();
-  db.whiteLabel = { ...(db.whiteLabel || {}), ...req.body };
+  const prevVersion = Number(db.whiteLabel?.version || 1);
+  const actor = req.body.actor || 'Super Admin';
+  db.whiteLabel = {
+    ...(db.whiteLabel || {}),
+    ...req.body,
+    version: prevVersion + 1,
+    approvalStatus: req.body.approvalStatus || 'PUBLISHED',
+    lastPublishedAt: new Date().toISOString(),
+    lastPublishedBy: actor,
+  };
+  if (!Array.isArray(db.brandAuditLog)) db.brandAuditLog = [];
+  db.brandAuditLog.unshift({
+    id: `br-aud-${Date.now()}`,
+    timestamp: new Date().toISOString(),
+    actor,
+    action: 'BRAND_PUBLISHED',
+    summary: `Brand config v${db.whiteLabel.version} saved for ${db.whiteLabel.brandName || 'ADCS'}`,
+    version: db.whiteLabel.version,
+  });
+  db.brandAuditLog = db.brandAuditLog.slice(0, 50);
   writeDB(db);
   broadcastEvent('whitelabel:updated', db.whiteLabel);
-  res.json({ success: true, config: db.whiteLabel });
+  res.json({ success: true, config: db.whiteLabel, auditLog: db.brandAuditLog });
 });
 
 // 14B. Citizen Document Vault & Upload Engine
@@ -2593,12 +2755,12 @@ if (fs.existsSync(DIST_DIR)) {
   });
 }
 
-// Start Server
-app.listen(PORT, () => {
+// Start Server (0.0.0.0 binding for Docker / Coolify / Traefik reverse proxy)
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`====================================================`);
   console.log(`  AKUL DRAVIN CLOUD AI • ENTERPRISE API GATEWAY`);
-  console.log(`  Listening on: http://localhost:${PORT}`);
-  console.log(`  Healthcheck:  http://localhost:${PORT}/api/health`);
-  console.log(`  Real-time SSE: http://localhost:${PORT}/api/events`);
+  console.log(`  Listening on: http://0.0.0.0:${PORT}`);
+  console.log(`  Healthcheck:  http://0.0.0.0:${PORT}/api/health`);
+  console.log(`  Real-time SSE: http://0.0.0.0:${PORT}/api/events`);
   console.log(`====================================================`);
 });

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { printBrandedADCSDocument } from '../../utils/documentBranding';
 import { ApplicationStatus } from '../../types';
 import { 
   UserCheck, 
@@ -43,35 +44,32 @@ export const EmployeePortal: React.FC = () => {
 
   const handleDownloadScrutinyMemo = () => {
     if (!selectedApp) return;
-    const content = [
-      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — EXECUTIVE SCRUTINY MEMO',
-      '==============================================================',
-      `Application ID : ${selectedApp.id}`,
-      `Service        : ${selectedApp.serviceName}`,
-      `Applicant      : ${selectedApp.applicantName} (${selectedApp.applicantPhone})`,
-      `Location       : ${selectedApp.city}, ${selectedApp.state}`,
-      `Fee Paid       : INR ${selectedApp.feePaid}`,
-      `Current Status : ${selectedApp.status}`,
-      `Docs Verified  : ${selectedApp.documentsUploaded.join(', ') || 'None'}`,
-      `Officer Notes  : ${selectedApp.notes || executiveNotes || 'Standard verification cleared'}`,
-      '==============================================================',
-    ].join('\n');
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ADCS_Scrutiny_Memo_${selectedApp.id}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    printBrandedADCSDocument({
+      title: 'ADCS Service Executive Verification & Scrutiny Memo',
+      documentType: 'INTERNAL SCRUTINY MEMO',
+      documentNumber: selectedApp.id,
+      issuedDate: new Date().toLocaleDateString('en-IN'),
+      rows: [
+        { label: 'Service Requested', value: selectedApp.serviceName },
+        { label: 'Applicant Details', value: `${selectedApp.applicantName} (${selectedApp.applicantPhone})` },
+        { label: 'Location / District', value: `${selectedApp.city}, ${selectedApp.state}` },
+        { label: 'Application Status', value: selectedApp.status },
+        { label: 'Documents Checked', value: (selectedApp.documentsUploaded || []).join(', ') || 'None' },
+        { label: 'Officer Scrutiny Notes', value: selectedApp.notes || executiveNotes || 'Standard verification cleared' },
+      ],
+      amountSummary: {
+        total: Number(selectedApp.feePaid || 0),
+        currency: '₹',
+        paymentStatus: 'RECORDED ON APPLICATION',
+      },
+    });
   };
 
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       {/* Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '2.5rem',
         color: '#FFFFFF',
@@ -121,7 +119,7 @@ export const EmployeePortal: React.FC = () => {
           border: '1px solid #E2E8F0',
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', margin: 0 }}>
               Assigned Applications ({filteredApps.length})
             </h3>
             <div style={{ display: 'flex', gap: '0.35rem' }}>
@@ -134,7 +132,7 @@ export const EmployeePortal: React.FC = () => {
                     padding: '0.25rem 0.65rem',
                     borderRadius: '6px',
                     border: '1px solid #CBD5E1',
-                    background: queueFilter === f ? '#1D4ED8' : '#FFFFFF',
+                    background: queueFilter === f ? '#075ACB' : '#FFFFFF',
                     color: queueFilter === f ? '#FFFFFF' : '#475569',
                     fontSize: '0.72rem',
                     fontWeight: 700,
@@ -159,16 +157,16 @@ export const EmployeePortal: React.FC = () => {
                     padding: '1rem',
                     borderRadius: '12px',
                     background: isSelected ? '#EFF6FF' : '#F8FAFC',
-                    border: isSelected ? '2px solid #1D4ED8' : '1px solid #E2E8F0',
+                    border: isSelected ? '2px solid #075ACB' : '1px solid #E2E8F0',
                     cursor: 'pointer',
                     transition: 'all 0.15s',
                   }}
                 >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.3rem' }}>
-                    <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0A192F' }}>{app.id}</span>
+                    <span style={{ fontWeight: 800, fontSize: '0.92rem', color: '#061A36' }}>{app.id}</span>
                     <span className="badge badge-blue">{app.status}</span>
                   </div>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#1D4ED8' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', color: '#075ACB' }}>
                     {app.serviceName}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: '0.2rem' }}>
@@ -195,10 +193,10 @@ export const EmployeePortal: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <span className="badge badge-gold" style={{ marginBottom: '0.4rem' }}>ACTIVE SCRUTINY</span>
-                  <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#0A192F' }}>
+                  <h2 style={{ fontSize: '1.4rem', fontWeight: 900, color: '#061A36' }}>
                     {selectedApp.id}
                   </h2>
-                  <div style={{ fontSize: '1rem', fontWeight: 700, color: '#1D4ED8', marginTop: '0.2rem' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 700, color: '#075ACB', marginTop: '0.2rem' }}>
                     {selectedApp.serviceName}
                   </div>
                 </div>
@@ -235,11 +233,11 @@ export const EmployeePortal: React.FC = () => {
 
             {/* Uploaded Documents Scrutiny List */}
             <div>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0A192F', marginBottom: '0.6rem' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#061A36', marginBottom: '0.6rem' }}>
                 Attached Verification Documents:
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {selectedApp.documentsUploaded.map((doc: string, dIdx: number) => (
+                {(selectedApp.documentsUploaded || []).map((doc: string, dIdx: number) => (
                   <div
                     key={dIdx}
                     style={{
@@ -314,7 +312,7 @@ export const EmployeePortal: React.FC = () => {
                   style={{ gap: '0.35rem' }}
                 >
                   <Download size={14} />
-                  <span>Scrutiny Memo (.txt)</span>
+                  <span>Scrutiny Memo (PDF)</span>
                 </button>
               </div>
           </div>

@@ -26,7 +26,7 @@ export const EducationPage: React.FC = () => {
   return (
     <div className="container-wide" style={{ padding: '2.5rem 1.5rem 4rem' }}>
       <div style={{
-        background: 'linear-gradient(135deg, #0A192F 0%, #0D2137 60%, #1D4ED8 100%)',
+        background: 'linear-gradient(135deg, #061A36 0%, #031126 60%, #075ACB 100%)',
         borderRadius: '24px',
         padding: '3rem 2.5rem',
         color: '#FFFFFF',
@@ -75,7 +75,7 @@ export const EducationPage: React.FC = () => {
                 <span className="badge badge-blue">STUDENT DESK</span>
                 <span className="badge badge-gold">{item.rate}</span>
               </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', marginBottom: '0.5rem' }}>
                 {item.title}
               </h3>
               <p style={{ fontSize: '0.85rem', color: '#64748B', lineHeight: 1.5, marginBottom: '1.25rem' }}>
@@ -184,8 +184,8 @@ export const EducationPage: React.FC = () => {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#0A192F', fontWeight: 800, fontSize: '1.05rem' }}>
-              <ShieldCheck size={18} color="#1D4ED8" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#061A36', fontWeight: 800, fontSize: '1.05rem' }}>
+              <ShieldCheck size={18} color="#075ACB" />
               <span>Authorized Examination, Admissions & Scholarship Portals</span>
             </div>
             <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0.25rem 0 0' }}>
