@@ -71,6 +71,14 @@ export const UnifiedCartModal: React.FC = () => {
 
   const handleCheckout = async () => {
     if (cart.length === 0) return;
+    if (paymentMethod === 'wallet' && walletBalance < grandTotal) {
+      showToast(
+        'Insufficient Wallet Balance',
+        `Wallet balance is ₹${walletBalance.toLocaleString('en-IN')}, required ₹${grandTotal.toLocaleString('en-IN')}. Top up wallet or pay via UPI.`,
+        'warning'
+      );
+      return;
+    }
     setIsProcessing(true);
 
     try {
@@ -176,7 +184,7 @@ export const UnifiedCartModal: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
             <ShoppingCart size={22} color="#F59E0B" />
             <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, letterSpacing: '-0.01em' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, letterSpacing: '-0.01em', color: '#FFFFFF' }}>
                 Unified Multi-Service Cart & Payment
               </h3>
               <p style={{ fontSize: '0.78rem', color: '#93C5FD', margin: 0 }}>

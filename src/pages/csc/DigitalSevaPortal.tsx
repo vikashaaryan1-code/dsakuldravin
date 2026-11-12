@@ -356,6 +356,25 @@ export const DigitalSevaPortal: React.FC = () => {
     return () => { isMounted = false; };
   }, []);
 
+  const downloadSevaRecord = (
+    filename: string,
+    content: string,
+    toastTitle: string,
+    toastMessage: string,
+    mimeType = 'text/plain;charset=utf-8'
+  ) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(toastTitle, toastMessage, 'success');
+  };
+
   // Save Connector Configuration
   const handleSaveConnector = async (id: string, config: { endpoint: string; apiKey: string; merchantId?: string; webhookSecret?: string; enabled: boolean }) => {
     const updated = {
@@ -1830,7 +1849,26 @@ export const DigitalSevaPortal: React.FC = () => {
                   Complete Wallet Passbook Ledger
                 </h3>
                 <button
-                  onClick={() => alert('Downloading official VLE Passbook PDF statement...')}
+                  onClick={() => {
+                    const csv = [
+                      ['Transaction ID', 'Date', 'Type', 'Description', 'Amount (INR)', 'Closing Balance (INR)'].join(','),
+                      ...passbook.map((t: any) => [
+                        t.id,
+                        t.date,
+                        t.type,
+                        `"${String(t.desc || '').replace(/"/g, '""')}"`,
+                        t.amount,
+                        t.balance
+                      ].join(','))
+                    ].join('\n');
+                    downloadSevaRecord(
+                      'ADCS_VLE_Passbook_Ledger.csv',
+                      csv,
+                      'Passbook Exported',
+                      `Exported ${passbook.length} VLE passbook entries to CSV.`
+                    );
+                    logAudit('VLE Passbook Exported', `${passbook.length} ledger rows downloaded`, 'Success');
+                  }}
                   style={{
                     background: '#F1F5F9',
                     border: '1px solid #CBD5E1',
@@ -1841,7 +1879,7 @@ export const DigitalSevaPortal: React.FC = () => {
                     fontWeight: 600
                   }}
                 >
-                  Export PDF Statement
+                  Export Passbook (.csv)
                 </button>
               </div>
 
@@ -2115,7 +2153,31 @@ export const DigitalSevaPortal: React.FC = () => {
 
               {aepsReceipt && (
                 <button
-                  onClick={() => alert(`Printing DigiPay thermal slip for RRN: ${aepsReceipt.rrn}...`)}
+                  onClick={() => {
+                    const slip = [
+                      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — DIGIPAY AEPS RECEIPT',
+                      '==========================================================',
+                      `RRN            : ${aepsReceipt.rrn}`,
+                      `Auth Code      : ${aepsReceipt.authCode}`,
+                      `Bank Name      : ${aepsReceipt.bankName}`,
+                      `Aadhaar (Mask) : XXXXXXXX${aepsAadhaar.slice(-4)}`,
+                      `Transaction    : ${aepsReceipt.txnType.toUpperCase()}`,
+                      `Amount Settled : Rs. ${aepsReceipt.amount.toFixed(2)}`,
+                      `Avail Balance  : Rs. ${aepsReceipt.customerRemainingBalance.toFixed(2)}`,
+                      `Status         : SUCCESS (APPROVED)`,
+                      `VLE Surcharge  : Rs. ${aepsReceipt.vleCommission}.00`,
+                      '==========================================================',
+                      'Zero raw biometric data stored • UIDAI RD L1 Verified',
+                    ].join('\n');
+                    downloadSevaRecord(
+                      `ADCS_AEPS_Receipt_${aepsReceipt.rrn}.txt`,
+                      slip,
+                      'Thermal Receipt Ready',
+                      `Saved ADCS_AEPS_Receipt_${aepsReceipt.rrn}.txt and opened print dialog.`
+                    );
+                    logAudit('AEPS Thermal Slip Exported', `RRN: ${aepsReceipt.rrn}`, 'Success');
+                    window.print();
+                  }}
                   style={{
                     background: '#16A34A',
                     color: '#FFFFFF',
@@ -2279,10 +2341,14 @@ export const DigitalSevaPortal: React.FC = () => {
                       <span style={{ fontSize: '0.75rem' }}>Live Secure Video Audio Link Active</span>
                     </div>
                     <button
-                      onClick={() => alert(`Joining High Court Panel Video Session for Case ${telelawScheduled.caseId}...`)}
+                      onClick={() => {
+                        logAudit('Tele-Law Consultation Session Launched', `Case: ${telelawScheduled.caseId} • Advocate: ${telelawScheduled.advocateName}`, 'Success');
+                        showToast('Connecting Tele-Law Desk', `Opening Legal Consultation Desk for Case ${telelawScheduled.caseId}.`, 'success');
+                        navigate('/portal/advocate');
+                      }}
                       style={{ background: '#16A34A', color: '#FFFFFF', border: 'none', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer' }}
                     >
-                      Launch Call
+                      Launch Advocate Desk
                     </button>
                   </div>
                 </div>
@@ -2710,7 +2776,26 @@ export const DigitalSevaPortal: React.FC = () => {
                     <span>Print ABHA Card (प्रिंट करें)</span>
                   </button>
                   <button
-                    onClick={() => alert(`Downloading ABHA Card PDF for ${abhaCard.citizenName} (ABHA: ${abhaCard.abhaNumber})...`)}
+                    onClick={() => {
+                      const slip = [
+                        'AKUL DRAVIN DIGITAL SERVICES (ADCS) — ABHA HEALTH CARD RECORD',
+                        '==============================================================',
+                        `Beneficiary Name : ${abhaCard.citizenName}`,
+                        `ABHA Number      : ${abhaCard.abhaNumber}`,
+                        `ABHA Address     : ${abhaCard.abhaAddress}`,
+                        `Verification     : UIDAI Aadhaar Auth Assisted`,
+                        `Card Status      : ACTIVE (PHR & EHR Linked)`,
+                        '==============================================================',
+                        'Facilitated via ADCS Digital Seva Desk.',
+                      ].join('\n');
+                      downloadSevaRecord(
+                        `ADCS_ABHA_Card_${abhaCard.abhaNumber}.txt`,
+                        slip,
+                        'ABHA Card Downloaded',
+                        `Saved ADCS_ABHA_Card_${abhaCard.abhaNumber}.txt.`
+                      );
+                      logAudit('ABHA Health Card Downloaded', `ABHA: ${abhaCard.abhaNumber}`, 'Success');
+                    }}
                     style={{
                       background: '#F1F5F9',
                       color: '#334155',
@@ -2721,7 +2806,7 @@ export const DigitalSevaPortal: React.FC = () => {
                       cursor: 'pointer'
                     }}
                   >
-                    Download PDF
+                    Download Record (.txt)
                   </button>
                 </div>
               )}
@@ -2964,7 +3049,27 @@ export const DigitalSevaPortal: React.FC = () => {
                     <span>Print eKYC Slip (पावती प्रिंट करें)</span>
                   </button>
                   <button
-                    onClick={() => alert(`Downloading PM-KISAN Acknowledgement Slip for ${pmkReceipt.farmerName} (Token: ${pmkReceipt.ackToken})...`)}
+                    onClick={() => {
+                      const slip = [
+                        'AKUL DRAVIN DIGITAL SERVICES (ADCS) — PM-KISAN eKYC ACKNOWLEDGEMENT',
+                        '===================================================================',
+                        `Farmer Name        : ${pmkReceipt.farmerName}`,
+                        `Ack Token          : ${pmkReceipt.ackToken}`,
+                        `Installments Paid  : ${pmkReceipt.totalInstallmentsPaid} (Rs. ${pmkReceipt.totalAmountDisbursed.toLocaleString('en-IN')})`,
+                        `Next Installment   : ${pmkReceipt.nextInstallmentStatus}`,
+                        `VLE Surcharge      : Rs. ${pmkReceipt.vleCommissionCredited}.00`,
+                        `Verified On        : ${new Date(pmkReceipt.verifiedAt).toLocaleDateString('en-IN')}`,
+                        '===================================================================',
+                        'Facilitated via ADCS Digital Seva Desk.',
+                      ].join('\n');
+                      downloadSevaRecord(
+                        `ADCS_PMKISAN_Ack_${pmkReceipt.ackToken}.txt`,
+                        slip,
+                        'PM-KISAN Slip Downloaded',
+                        `Saved ADCS_PMKISAN_Ack_${pmkReceipt.ackToken}.txt.`
+                      );
+                      logAudit('PM-KISAN Acknowledgement Downloaded', `Token: ${pmkReceipt.ackToken}`, 'Success');
+                    }}
                     style={{
                       background: '#F1F5F9',
                       color: '#334155',
@@ -2975,7 +3080,7 @@ export const DigitalSevaPortal: React.FC = () => {
                       cursor: 'pointer'
                     }}
                   >
-                    Download PDF
+                    Download Slip (.txt)
                   </button>
                 </div>
               )}
