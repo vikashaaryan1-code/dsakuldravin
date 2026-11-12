@@ -167,7 +167,7 @@ AKUL DRAVIN DIGITAL SERVICES (ADCS) - E-STAMPED RENTAL LEASE AGREEMENT
 ================================================================================
 Agreement ID       : ${agr.id}
 Registration State : Valid Legal Lease under Transfer of Property Act, 1882
-Stamp Certificate  : IN-DL${Date.now()}88102
+Stamp Certificate  : IN-DL${String(agr.id || '88102').replace(/[^A-Z0-9]/gi, '').toUpperCase()}88102
 Property Details   : ${agr.propertyTitle}
 Monthly Rent       : ₹${agr.monthlyRent.toLocaleString('en-IN')}/- (Payable by 5th of each month)
 Tenancy Period     : ${agr.startDate} to ${agr.endDate}
@@ -187,7 +187,7 @@ STANDARD COVENANTS:
 3. ADCS Digital Escrow & BBPS provides verified automated rent receipt generation.
 4. Either party may terminate this agreement with 30 days prior written notice.
 ================================================================================
-Digital e-Sign Hash: SHA256-${Math.random().toString(36).substring(2, 12).toUpperCase()}-LEGAL-VALID
+Digital e-Sign Hash: SHA256-${String(agr.id || 'LEASE').replace(/[^A-Z0-9]/gi, '').toUpperCase()}-${agr.monthlyRent}-LEGAL-VALID
 ADCS Legal Tech Division • BCI Compliant Automated Document Automation
 ================================================================================`;
     const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });

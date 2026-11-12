@@ -54,7 +54,7 @@ File Size       : ${doc.size}
 Upload Date     : ${doc.uploadDate}
 OCR Match Score : ${doc.ocrConfidence}%
 DPDP Act 2025   : Encrypted at rest (AES-256) under Purpose Limitation
-Cryptographic ID: SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-ADCS-RECORD
+Cryptographic ID: SHA256-${String(doc.id || 'VAULT').replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(-8)}-${doc.ocrConfidence || 99}-ADCS-RECORD
 Verification URL: https://akuldravindigital.com/verify-doc/${doc.id}
 ================================================================================
 This certified digital copy is authenticated against institutional registries.

@@ -128,9 +128,9 @@ Platform Charges      : ₹0.00
 TOTAL AMOUNT PAID     : ₹${fetchedBill.amount.toLocaleString('en-IN')}.00
 Payment Mode          : ADCS Instant Citizen Wallet / BBPS Clearing
 --------------------------------------------------------------------------------
-NPCI BBPS Approval Code: NPCI-ADCS-${Math.floor(10000000 + Math.random() * 90000000)}
+NPCI BBPS Approval Code: NPCI-ADCS-${String(fetchedBill.billNumber || consumerNumber).replace(/[^A-Z0-9]/gi, '').toUpperCase().slice(-8)}
 Agent Institution ID  : AI-ADCS-09821
-Digital Verification  : SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-BBPS-VALID
+Digital Verification  : SHA256-${String(fetchedBill.billNumber || 'BBPS').replace(/[^A-Z0-9]/gi, '').toUpperCase()}-${fetchedBill.amount}-BBPS-VALID
 ================================================================================
 This is a computer generated electronic receipt. No signature is required.
 ================================================================================`;
