@@ -262,7 +262,7 @@ export const QuantumAIPage: React.FC = () => {
         ...prev.slice(0, 5)
       ]);
 
-      logAudit(`Quantum AI Agent Response: ${reply.agentName}`, `Prompt: ${query.slice(0, 40)}`);
+      logAudit(`Quantum AI Agent Response: ${reply.agentName}`, `Prompt: ${query.slice(0, 40)}`, 'Success');
     } catch (err) {
       console.error('AI chat error:', err);
       setIsTyping(false);
@@ -283,7 +283,7 @@ export const QuantumAIPage: React.FC = () => {
     } else if (action.actionType === 'navigate') {
       if (typeof action.targetPayload === 'string') {
         if (action.targetPayload.startsWith('http')) {
-          window.location.href = action.targetPayload;
+          window.open(action.targetPayload, '_blank', 'noopener,noreferrer');
         } else {
           navigate(action.targetPayload);
         }

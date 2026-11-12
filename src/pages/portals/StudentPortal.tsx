@@ -322,20 +322,49 @@ export const StudentPortal: React.FC = () => {
     const courseTitle = courseObj ? courseObj.title : 'ADCS Professional Track';
 
     if (percent >= 66) {
+      const certId = 'ADCS-ACAD-2026-' + Math.floor(100000 + Math.random() * 900000);
       const certData = {
-        certId: 'ADCS-ACAD-2026-' + Math.floor(100000 + Math.random() * 900000),
+        certId,
         studentName: student.name,
         courseTitle: courseTitle,
         date: new Date().toISOString().split('T')[0],
         grade: percent >= 90 ? 'Grade A (Distinction)' : 'Grade A (Qualified)',
-        qrUrl: `https://akuldravin.com/verify-certificate/ADCS-ACAD-2026-991204`
+        qrUrl: `https://akuldravindigital.com/verify-certificate/${certId}`
       };
       setGeneratedCert(certData);
-      showToast('Examination Passed!', `Score: ${percent}%. Your official private training certificate is issued.`, 'success');
-      logAudit(`Student passed exam for ${activeExamCourseId} with ${percent}%`, 'ADCS Academy');
+      setCourses(prev => prev.map(c => c.id === activeExamCourseId ? { ...c, certId } : c));
+      showToast('Examination Passed!', `Score: ${percent}%. Your official private training certificate (${certId}) is issued.`, 'success');
+      logAudit(`Student passed exam for ${activeExamCourseId} with ${percent}%`, `ADCS Academy • Issued ${certId}`, 'Success');
     } else {
       showToast('Passing Criteria Not Met', `Score: ${percent}%. Minimum 66% required. Please review the tutorial modules and retake.`, 'error');
+      logAudit(`Exam attempt failed for ${activeExamCourseId} (${percent}%)`, 'ADCS Academy', 'Warning');
     }
+  };
+
+  const handleDownloadCertificate = () => {
+    if (!generatedCert) return;
+    const text = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — ACADEMY CREDENTIAL',
+      '======================================================',
+      `Certificate Serial : ${generatedCert.certId}`,
+      `Scholar Name       : ${generatedCert.studentName}`,
+      `Student UID        : ${student.studentId}`,
+      `Course Track       : ${generatedCert.courseTitle}`,
+      `Performance Grade  : ${generatedCert.grade}`,
+      `Issue Date         : ${generatedCert.date}`,
+      `Verification URL   : ${generatedCert.qrUrl}`,
+      '======================================================',
+      'Private vocational & professional competency credential.',
+      'Signatory: Dr. Alok Nath Verma (Dean of Academy)',
+    ].join('\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${generatedCert.certId}_ADCS_Certificate.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Credential Downloaded', `${generatedCert.certId}_ADCS_Certificate.txt saved.`, 'success');
   };
 
   // Open Tutorial Viewer
@@ -1238,9 +1267,9 @@ export const StudentPortal: React.FC = () => {
             <div style={{ fontSize: '0.78rem', color: '#92400E' }}>
               Signatory: <strong>Dr. Alok Nath Verma (Dean of Academy)</strong> • Akul Dravin Digital Services Private Limited
             </div>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <button
-                onClick={() => window.print()}
+                onClick={handleDownloadCertificate}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -1255,7 +1284,25 @@ export const StudentPortal: React.FC = () => {
                   cursor: 'pointer'
                 }}
               >
-                <Download size={14} /> Download Verified PDF Slip
+                <Download size={14} /> Download Credential (.txt)
+              </button>
+              <button
+                onClick={() => window.print()}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  background: '#B45309',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <Printer size={14} /> Print / PDF Slip
               </button>
               <button
                 onClick={() => navigate(`/verify-certificate/${generatedCert.certId}`)}
