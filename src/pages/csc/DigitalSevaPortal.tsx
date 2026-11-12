@@ -7855,7 +7855,7 @@ export const DigitalSevaPortal: React.FC = () => {
                   <Settings size={20} color="#FFFFFF" />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, letterSpacing: '0.02em' }}>
+                  <h3 style={{ fontSize: '1.15rem', fontWeight: 800, margin: 0, letterSpacing: '0.02em', color: '#FFFFFF' }}>
                     ADCS API & External Gateway Configuration Hub
                   </h3>
                   <p style={{ fontSize: '0.75rem', color: '#94A3B8', margin: 0 }}>

@@ -140,7 +140,7 @@ Certified valid by Akul Dravin Digital Services Council.
               QR VERIFIED • SERIAL NUMBERED
             </span>
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 900, margin: '0 0 0.35rem', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: '1.6rem', fontWeight: 900, margin: '0 0 0.35rem', letterSpacing: '-0.02em', color: '#FFFFFF' }}>
             Multi-Certificate Generation & Verification Studio
           </h2>
           <p style={{ fontSize: '0.86rem', color: '#CBD5E1', margin: 0, maxWidth: '640px' }}>

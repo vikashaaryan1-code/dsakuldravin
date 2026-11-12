@@ -200,7 +200,7 @@ export const CSCConnectLoginPage: React.FC = () => {
               <div style={{ display: 'inline-flex', padding: '0.5rem', background: '#16A34A', borderRadius: '50%', marginBottom: '0.5rem' }}>
                 <ShieldCheck size={28} color="#FFFFFF" />
               </div>
-              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0 0 0.2rem' }}>ADCS CONNECT LOGIN</h2>
+              <h2 style={{ fontSize: '1.35rem', fontWeight: 800, margin: '0 0 0.2rem', color: '#FFFFFF' }}>ADCS CONNECT LOGIN</h2>
               <p style={{ fontSize: '0.8rem', color: '#94A3B8', margin: 0 }}>
                 Single Sign-On for Akul Dravin Digital Services (ADCS) Operators & Partners
               </p>

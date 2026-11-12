@@ -173,7 +173,7 @@ Generated via ADCS Document Studio • Verify: https://akuldravindigital.com/ver
               LETTERHEAD READY • EDITABLE DRAFTS
             </span>
           </div>
-          <h2 style={{ fontSize: '1.6rem', fontWeight: 900, margin: '0 0 0.35rem', letterSpacing: '-0.02em' }}>
+          <h2 style={{ fontSize: '1.6rem', fontWeight: 900, margin: '0 0 0.35rem', letterSpacing: '-0.02em', color: '#FFFFFF' }}>
             Corporate & Citizen Letter Drafting Studio
           </h2>
           <p style={{ fontSize: '0.86rem', color: '#CBD5E1', margin: 0, maxWidth: '640px' }}>
