@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
+import { ApplicationStatus } from '../../types';
 import { 
   UserCheck, 
   Clock, 
@@ -10,21 +11,60 @@ import {
   ArrowRight,
   ShieldCheck,
   Check,
-  X
+  X,
+  Download
 } from 'lucide-react';
 
 export const EmployeePortal: React.FC = () => {
-  const { applications, updateApplicationStatus, showToast, logAudit, language } = useApp();
-  const [selectedApp, setSelectedApp] = useState<any | null>(applications[0] || null);
+  const { applications, updateApplicationStatus, showToast, logAudit } = useApp();
+  const [selectedAppId, setSelectedAppId] = useState<string>(applications[0]?.id || '');
   const [executiveNotes, setExecutiveNotes] = useState('');
+  const [queueFilter, setQueueFilter] = useState<'all' | 'pending' | 'completed'>('all');
 
-  const handleUpdateStatus = (status: any) => {
+  const selectedApp = applications.find(a => a.id === selectedAppId) || applications[0] || null;
+  const filteredApps = applications.filter(app => {
+    if (queueFilter === 'pending') return app.status !== 'Completed' && app.status !== 'Rejected';
+    if (queueFilter === 'completed') return app.status === 'Completed';
+    return true;
+  });
+
+  const handleUpdateStatus = (status: ApplicationStatus) => {
     if (!selectedApp) return;
-    updateApplicationStatus(selectedApp.id, status, executiveNotes);
-    setSelectedApp({ ...selectedApp, status });
+    if (status === 'Rejected' && !executiveNotes.trim()) {
+      showToast('Rejection Reason Required', 'Enter correction / objection remarks before returning application to citizen.', 'warning');
+      return;
+    }
+    const remark = executiveNotes.trim() || `Officer Rahul Sharma transitioned stage to ${status}`;
+    updateApplicationStatus(selectedApp.id, status, remark);
     showToast('Workflow Stage Advanced', `${selectedApp.id} status transitioned to "${status}".`, 'success');
-    logAudit(`Executive Advanced ${selectedApp.id}`, `New Status: ${status}`);
+    logAudit(`Executive Advanced ${selectedApp.id}`, `New Status: ${status}`, status === 'Rejected' ? 'Warning' : 'Success');
     setExecutiveNotes('');
+  };
+
+  const handleDownloadScrutinyMemo = () => {
+    if (!selectedApp) return;
+    const content = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — EXECUTIVE SCRUTINY MEMO',
+      '==============================================================',
+      `Application ID : ${selectedApp.id}`,
+      `Service        : ${selectedApp.serviceName}`,
+      `Applicant      : ${selectedApp.applicantName} (${selectedApp.applicantPhone})`,
+      `Location       : ${selectedApp.city}, ${selectedApp.state}`,
+      `Fee Paid       : INR ${selectedApp.feePaid}`,
+      `Current Status : ${selectedApp.status}`,
+      `Docs Verified  : ${selectedApp.documentsUploaded.join(', ') || 'None'}`,
+      `Officer Notes  : ${selectedApp.notes || executiveNotes || 'Standard verification cleared'}`,
+      '==============================================================',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Scrutiny_Memo_${selectedApp.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -80,17 +120,41 @@ export const EmployeePortal: React.FC = () => {
           padding: '1.75rem',
           border: '1px solid #E2E8F0',
         }}>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', marginBottom: '1rem' }}>
-            Assigned Applications
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0A192F', margin: 0 }}>
+              Assigned Applications ({filteredApps.length})
+            </h3>
+            <div style={{ display: 'flex', gap: '0.35rem' }}>
+              {(['all', 'pending', 'completed'] as const).map(f => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setQueueFilter(f)}
+                  style={{
+                    padding: '0.25rem 0.65rem',
+                    borderRadius: '6px',
+                    border: '1px solid #CBD5E1',
+                    background: queueFilter === f ? '#1D4ED8' : '#FFFFFF',
+                    color: queueFilter === f ? '#FFFFFF' : '#475569',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    textTransform: 'capitalize',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {applications.map(app => {
+            {filteredApps.map(app => {
               const isSelected = selectedApp?.id === app.id;
               return (
                 <div
                   key={app.id}
-                  onClick={() => setSelectedApp(app)}
+                  onClick={() => setSelectedAppId(app.id)}
                   style={{
                     padding: '1rem',
                     borderRadius: '12px',
@@ -228,21 +292,31 @@ export const EmployeePortal: React.FC = () => {
                 Mark Completed & Dispatch
               </button>
 
-              <button
-                onClick={() => handleUpdateStatus('Rejected')}
-                style={{
-                  padding: '0.65rem 1rem',
-                  borderRadius: '8px',
-                  background: '#FEE2E2',
-                  color: '#BE123C',
-                  border: '1px solid #FECDD3',
-                  fontWeight: 700,
-                  fontSize: '0.85rem',
-                }}
-              >
-                Reject / Correction Required
-              </button>
-            </div>
+                <button
+                  onClick={() => handleUpdateStatus('Rejected')}
+                  style={{
+                    padding: '0.65rem 1rem',
+                    borderRadius: '8px',
+                    background: '#FEE2E2',
+                    color: '#BE123C',
+                    border: '1px solid #FECDD3',
+                    fontWeight: 700,
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  Reject / Correction Required
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadScrutinyMemo}
+                  className="btn-secondary"
+                  style={{ gap: '0.35rem' }}
+                >
+                  <Download size={14} />
+                  <span>Scrutiny Memo (.txt)</span>
+                </button>
+              </div>
           </div>
         ) : (
           <div style={{ textAlign: 'center', padding: '3rem', color: '#64748B' }}>

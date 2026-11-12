@@ -15,11 +15,13 @@ import {
   Lock,
   Mic,
   Camera,
-  FolderOpen
+  FolderOpen,
+  Download,
+  ExternalLink
 } from 'lucide-react';
 
 export const AdvocatePortal: React.FC = () => {
-  const { showToast, logAudit } = useApp();
+  const { recordJournalEntry, showToast, logAudit } = useApp();
 
   const [advocateProfile] = useState({
     name: 'Adv. Rakesh C. Mishra',
@@ -82,10 +84,52 @@ export const AdvocatePortal: React.FC = () => {
   };
 
   const handleEndConsultation = (caseId: string) => {
+    const closingNote = newNote.trim();
+    const targetApt = appointments.find(a => a.id === caseId);
     setActiveCallCaseId(null);
-    setAppointments(prev => prev.map(a => a.id === caseId ? { ...a, status: 'COMPLETED' } : a));
-    showToast('Consultation Concluded', `Case ${caseId} marked as completed. Legal notes archived.`, 'success');
+    setAppointments(prev => prev.map(a => a.id === caseId ? {
+      ...a,
+      status: 'COMPLETED',
+      notes: closingNote ? `${a.notes} | Closing Advice: ${closingNote}` : a.notes
+    } : a));
+    recordJournalEntry({
+      date: new Date().toISOString().split('T')[0],
+      reference: `LEGAL-${caseId}`,
+      description: `Confidential Legal Consultation Fee (${targetApt?.clientName || caseId})`,
+      lines: [
+        { accountCode: '1010', accountName: 'Operating Bank Account', debit: 1180, credit: 0 },
+        { accountCode: '4050', accountName: 'Legal Advisory & Scrutiny Revenue', debit: 0, credit: 1000 },
+        { accountCode: '2010', accountName: 'GST Output Tax Payable (18%)', debit: 0, credit: 180 },
+      ],
+    });
+    setNewNote('');
+    showToast('Consultation Concluded', `Case ${caseId} completed, notes saved & legal ledger posted.`, 'success');
     logAudit(`Advocate concluded consultation for case ${caseId}`, 'ADCS Legal Desk');
+  };
+
+  const handleDownloadCaseSummary = (apt: (typeof appointments)[number]) => {
+    const content = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — BAR COUNCIL RULE 36 CONFIDENTIAL CONSULTATION MEMO',
+      '======================================================================================',
+      `Case Reference : ${apt.id}`,
+      `Advocate       : ${advocateProfile.name} (${advocateProfile.barCouncilNumber})`,
+      `Client         : ${apt.clientName} (${apt.clientPhone})`,
+      `Matter Category: ${apt.category}`,
+      `Session Slot   : ${apt.scheduledDate} (${apt.scheduledTime})`,
+      `Status         : ${apt.status}`,
+      `Verified Docs  : ${apt.documents.join(', ')}`,
+      `Case Notes     : ${apt.notes}`,
+      '======================================================================================',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Legal_Memo_${apt.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -199,6 +243,28 @@ export const AdvocatePortal: React.FC = () => {
                 Identity Verified via OTP & Aadhaar Masked
               </div>
             </div>
+          </div>
+
+          {/* Consultation Advice Note */}
+          <div style={{ marginBottom: '1.25rem' }}>
+            <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#94A3B8', marginBottom: '0.4rem' }}>
+              Confidential Hearing &amp; Document Scrutiny Remarks
+            </label>
+            <textarea
+              rows={2}
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              placeholder="Record legal opinion, statutory section reference, or next filing checklist before concluding..."
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                borderRadius: '10px',
+                border: '1px solid #334155',
+                background: '#1E293B',
+                color: '#F8FAFC',
+                fontSize: '0.85rem',
+              }}
+            />
           </div>
 
           {/* Control Bar */}
@@ -353,9 +419,30 @@ export const AdvocatePortal: React.FC = () => {
                     </button>
                   )}
                   {apt.status === 'COMPLETED' && (
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#059669', fontWeight: 700, fontSize: '0.82rem' }}>
-                      <CheckCircle2 size={16} /> Completed
-                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', color: '#059669', fontWeight: 700, fontSize: '0.82rem' }}>
+                        <CheckCircle2 size={16} /> Completed
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadCaseSummary(apt)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.3rem',
+                          padding: '0.35rem 0.65rem',
+                          borderRadius: '6px',
+                          background: '#EFF6FF',
+                          border: '1px solid #BFDBFE',
+                          color: '#1D4ED8',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Download size={12} /> Memo (.txt)
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -373,6 +460,54 @@ export const AdvocatePortal: React.FC = () => {
                 </div>
               </div>
             </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Official Statutory & Judicial Reference Links */}
+      <div style={{
+        marginTop: '2rem',
+        background: '#F8FAFC',
+        borderRadius: '16px',
+        padding: '1.25rem 1.5rem',
+        border: '1px solid #E2E8F0',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '1rem',
+      }}>
+        <div style={{ fontSize: '0.82rem', color: '#475569', fontWeight: 600 }}>
+          Statutory Court &amp; Legislative Research Portals (Authorized Official Access)
+        </div>
+        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+          {[
+            { label: 'e-Courts India Services', url: 'https://services.ecourts.gov.in/' },
+            { label: 'India Code Central Acts', url: 'https://www.indiacode.nic.in/' },
+            { label: 'Bar Council of India', url: 'https://www.barcouncilofindia.org/' },
+          ].map(portal => (
+            <a
+              key={portal.url}
+              href={portal.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.35rem',
+                padding: '0.4rem 0.75rem',
+                borderRadius: '8px',
+                background: '#FFFFFF',
+                border: '1px solid #CBD5E1',
+                color: '#1E293B',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              <span>{portal.label}</span>
+              <ExternalLink size={12} color="#2563EB" />
+            </a>
           ))}
         </div>
       </div>
