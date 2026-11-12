@@ -14,7 +14,8 @@ import {
   ArrowRight,
   ShieldCheck,
   Calendar,
-  Layers
+  Layers,
+  Download
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -38,41 +39,114 @@ export const DigitalCenterPortal: React.FC = () => {
   const [cashCollected, setCashCollected] = useState(199);
   const [vleCommission, setVleCommission] = useState(50);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [lastReceipt, setLastReceipt] = useState<{
+    appId: string;
+    customerName: string;
+    customerPhone: string;
+    serviceTitle: string;
+    cashCollected: number;
+    commission: number;
+    timestamp: string;
+  } | null>(null);
+  const [branchTotals, setBranchTotals] = useState({ tokens: 14, grossCash: 8450, netComm: 1850 });
+
+  const handleDownloadCounterReceipt = (receipt: NonNullable<typeof lastReceipt>) => {
+    const content = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — VLE COUNTER CASH RECEIPT',
+      '==============================================================',
+      `Application Token : ${receipt.appId}`,
+      `Branch Code       : AD-PAT-04 (Patna Center #104)`,
+      `Date & Time       : ${receipt.timestamp}`,
+      `Citizen Name      : ${receipt.customerName}`,
+      `Citizen Mobile    : ${receipt.customerPhone}`,
+      `Service Availed   : ${receipt.serviceTitle}`,
+      '--------------------------------------------------------------',
+      `Cash Collected    : Rs. ${receipt.cashCollected.toLocaleString('en-IN')}`,
+      `VLE Comm Share    : Rs. ${receipt.commission.toLocaleString('en-IN')}`,
+      `Platform Settlement: Rs. ${(receipt.cashCollected - receipt.commission).toLocaleString('en-IN')}`,
+      '==============================================================',
+      'Track anytime at: https://akuldravindigital.com/track',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Counter_Receipt_${receipt.appId}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Receipt Downloaded', `Saved ADCS_Counter_Receipt_${receipt.appId}.txt`, 'success');
+  };
 
   const handleWalkInSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!custName || !custPhone) return;
+    if (!custName.trim() || !custPhone.trim()) {
+      showToast('Missing Customer Info', 'Please enter citizen name and 10-digit mobile number.', 'warning');
+      return;
+    }
+    const phoneDigits = custPhone.replace(/\D/g, '');
+    if (phoneDigits.length !== 10 && phoneDigits.length !== 12) {
+      showToast('Invalid Phone Number', 'Please enter a valid 10-digit Indian mobile number.', 'warning');
+      return;
+    }
+    if (cashCollected <= 0) {
+      showToast('Invalid Cash Amount', 'Cash collected must be greater than ₹0.', 'warning');
+      return;
+    }
+    const effectiveComm = Math.max(0, Math.min(vleCommission, cashCollected));
+    if (vleCommission > cashCollected) {
+      showToast('Commission Capped', `Commission share capped at ₹${effectiveComm} to keep ledger balanced.`, 'info');
+    }
 
     setIsProcessing(true);
     const chosenService = services.find(s => s.id === selectedServiceId) || services[0];
+    const netPlatformFee = cashCollected - effectiveComm;
 
     setTimeout(() => {
       const appId = submitApplication({
         serviceId: chosenService.id,
         serviceName: chosenService.title,
         category: chosenService.category,
-        applicantName: custName,
-        applicantPhone: custPhone,
+        applicantName: custName.trim(),
+        applicantPhone: custPhone.trim(),
         feePaid: cashCollected,
         city: 'Patna Center #104',
         state: 'Bihar',
-        notes: `Walk-in counter registration at VLE Center. VLE Commission: ₹${vleCommission} credited to wallet.`,
+        notes: `Walk-in counter registration at VLE Center. VLE Commission: ₹${effectiveComm} credited to wallet.`,
       });
 
       // Credit commission to VLE wallet & record balanced ledger entry
-      setWalletBalance(prev => prev + vleCommission);
+      setWalletBalance(prev => prev + effectiveComm);
+      const journalLines = [
+        { accountCode: '1010', accountName: 'VLE Counter Cash-in-Hand', debit: cashCollected, credit: 0 },
+        ...(effectiveComm > 0
+          ? [{ accountCode: '2020', accountName: 'VLE Wallet Commission Credit', debit: 0, credit: effectiveComm }]
+          : []),
+        ...(netPlatformFee > 0
+          ? [{ accountCode: '4010', accountName: 'ADCS Statutory & Platform Revenue', debit: 0, credit: netPlatformFee }]
+          : []),
+      ];
       recordJournalEntry({
         reference: appId,
-        description: `VLE Counter Walk-In (${chosenService.title}) • Comm ₹${vleCommission}`,
+        description: `VLE Counter Walk-In (${chosenService.title}) • Comm ₹${effectiveComm}`,
         date: new Date().toISOString(),
-        lines: [
-          { accountCode: '1010', accountName: 'VLE Counter Cash-in-Hand', debit: cashCollected, credit: 0 },
-          { accountCode: '2020', accountName: 'VLE Wallet Commission Credit', debit: 0, credit: vleCommission },
-          { accountCode: '4010', accountName: 'ADCS Statutory & Platform Revenue', debit: 0, credit: Math.max(0, cashCollected - vleCommission) },
-        ],
+        lines: journalLines,
       });
-      logAudit(`VLE Counter Transaction: ${appId}`, `Commission Earned: ₹${vleCommission}`);
-      showToast('Counter Order Processed!', `Application ${appId} generated. ₹${vleCommission} commission credited to your wallet.`, 'success');
+      setBranchTotals(prev => ({
+        tokens: prev.tokens + 1,
+        grossCash: prev.grossCash + cashCollected,
+        netComm: prev.netComm + effectiveComm,
+      }));
+      setLastReceipt({
+        appId,
+        customerName: custName.trim(),
+        customerPhone: custPhone.trim(),
+        serviceTitle: chosenService.title,
+        cashCollected,
+        commission: effectiveComm,
+        timestamp: new Date().toLocaleString('en-IN'),
+      });
+      logAudit(`VLE Counter Transaction: ${appId}`, `Commission Earned: ₹${effectiveComm} • Cash: ₹${cashCollected}`, 'Success');
+      showToast('Counter Order Processed!', `Application ${appId} generated. ₹${effectiveComm} commission credited to your wallet.`, 'success');
 
       setIsProcessing(false);
       setCustName('');
@@ -270,6 +344,49 @@ export const DigitalCenterPortal: React.FC = () => {
               {isProcessing ? 'Issuing Token...' : `Issue Receipt & Collect ₹${cashCollected}`}
             </button>
           </form>
+
+          {lastReceipt && (
+            <div style={{
+              marginTop: '1.25rem',
+              background: '#ECFDF5',
+              border: '1px solid #A7F3D0',
+              borderRadius: '12px',
+              padding: '1rem 1.25rem',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '0.75rem'
+            }}>
+              <div>
+                <div style={{ fontWeight: 800, color: '#065F46', fontSize: '0.88rem' }}>
+                  Token Issued: {lastReceipt.appId}
+                </div>
+                <div style={{ fontSize: '0.78rem', color: '#047857' }}>
+                  {lastReceipt.customerName} • ₹{lastReceipt.cashCollected.toLocaleString('en-IN')} settled (Comm: ₹{lastReceipt.commission})
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDownloadCounterReceipt(lastReceipt)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  background: '#059669',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.5rem 0.9rem',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                <Download size={14} /> Download Counter Receipt (.txt)
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Right: Today's Center Tally */}
@@ -287,19 +404,23 @@ export const DigitalCenterPortal: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
                 <span style={{ color: '#64748B' }}>Walk-in Tokens Served:</span>
-                <span style={{ fontWeight: 800, color: '#0A192F' }}>14 Citizens</span>
+                <span style={{ fontWeight: 800, color: '#0A192F' }}>{branchTotals.tokens} Citizens</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
                 <span style={{ color: '#64748B' }}>Gross Cash Collected:</span>
-                <span style={{ fontWeight: 800, color: '#0A192F' }}>₹8,450</span>
+                <span style={{ fontWeight: 800, color: '#0A192F' }}>₹{branchTotals.grossCash.toLocaleString('en-IN')}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem' }}>
                 <span style={{ color: '#64748B' }}>Today's Net Commission:</span>
-                <span style={{ fontWeight: 800, color: '#059669' }}>+ ₹1,850</span>
+                <span style={{ fontWeight: 800, color: '#059669' }}>+ ₹{branchTotals.netComm.toLocaleString('en-IN')}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.88rem', borderTop: '1px solid #E2E8F0', paddingTop: '0.5rem' }}>
                 <span style={{ color: '#64748B' }}>Cash in Register:</span>
-                <span style={{ fontWeight: 800, color: '#1D4ED8' }}>₹6,600</span>
+                <span style={{ fontWeight: 800, color: '#1D4ED8' }}>₹{(branchTotals.grossCash - branchTotals.netComm).toLocaleString('en-IN')}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: '#64748B' }}>
+                <span>Live Platform Applications:</span>
+                <span style={{ fontWeight: 700, color: '#0A192F' }}>{applications.length} Tracked</span>
               </div>
             </div>
           </div>
