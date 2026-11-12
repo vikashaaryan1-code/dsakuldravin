@@ -87,6 +87,9 @@ export const TrackPage: React.FC = () => {
     const isApp = searchedEntity?.type === 'application';
     const entity = searchedEntity?.data;
     const trackingId = isApp ? (entity?.id || 'ADCS-APP-ACK') : (entity?.awb || 'ADCS-SHIP-ACK');
+    const latestStage = isApp
+      ? ([...(entity?.trackingSteps || [])].reverse().find((s: { done?: boolean; stage?: string }) => s.done)?.stage || entity?.status || 'Verification In Progress')
+      : entity?.status || 'Booked';
     const content = `================================================================================
 AKUL DRAVIN DIGITAL SERVICES (ADCS) - OFFICIAL TRACKING ACKNOWLEDGEMENT
 ================================================================================
@@ -96,21 +99,23 @@ Current Status     : ${entity?.status || 'Active / Processing'}
 Timestamp          : ${new Date().toLocaleString('en-IN')}
 --------------------------------------------------------------------------------
 DETAILS:
-${isApp ? `Service Name       : ${entity?.serviceTitle || 'E-Governance Service'}
+${isApp ? `Service Name       : ${entity?.serviceName || 'E-Governance Service'}
 Applicant Name     : ${entity?.applicantName || 'Citizen Applicant'}
 Contact Mobile     : ${entity?.applicantPhone || 'Verified'}
-Fee Paid           : ₹${entity?.feePaid || 0} (${entity?.paymentStatus || 'Verified'})
-Current SLA Stage  : ${entity?.currentStage || 'Verification In Progress'}
-Submission Date    : ${entity?.submittedAt ? new Date(entity.submittedAt).toLocaleDateString('en-IN') : 'Recent'}` : `Logistics Carrier  : ${entity?.courierPartner || 'ADCS Express Hub'}
-Origin             : ${entity?.origin || 'Regional Distribution Hub'}
-Destination        : ${entity?.destination || 'Destination Address'}
-Estimated Delivery : ${entity?.estimatedDelivery || 'Standard SLA'}`}
+Fee Paid           : ₹${entity?.feePaid || 0} (${entity?.feePaid > 0 ? 'Paid & Verified' : 'Pending'})
+Current SLA Stage  : ${latestStage}
+Submission Date    : ${entity?.submittedAt || 'Recent'}` : `Courier Service    : ${entity?.serviceType || 'ADCS Express Hub'}
+Origin Hub         : ${entity?.senderCity || 'Regional Distribution Hub'}
+Destination        : ${entity?.receiverCity || 'Destination Address'}
+Current Location   : ${entity?.currentLocation || 'In Transit'}
+Expected Delivery  : ${entity?.expectedDelivery || 'Standard SLA'}
+Chargeable Weight  : ${entity?.weightKg || 1} kg (₹${entity?.price || 0})`}
 --------------------------------------------------------------------------------
 STATUTORY & SECURITY COMPLIANCE:
 - DPDP Act 2025    : End-to-End Cryptographic Audit Logging
 - Digital Seal     : ADCS-TRACKING-VERIFIED-SEAL
 - Verification URL : https://akuldravindigital.com/track?q=${encodeURIComponent(trackingId)}
-- Audit Hash       : SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-ACK-VALID
+- Audit Hash       : SHA256-${trackingId.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-ACK-VALID
 ================================================================================
 This is an authentic computer-generated acknowledgement receipt.
 Akul Dravin Digital Services Private Trust Network

@@ -67,13 +67,51 @@ export const InstructorPortal: React.FC = () => {
   const [questionText, setQuestionText] = useState('');
   const [optionA, setOptionA] = useState('');
   const [optionB, setOptionB] = useState('');
-  const [correctOption, setCorrectOption] = useState('A');
+  const [correctOption, setCorrectOption] = useState<'A' | 'B'>('A');
+  const [questionBank, setQuestionBank] = useState([
+    {
+      id: 'Q-901',
+      courseId: 'CRS-AI-101',
+      question: 'Which parameter controls randomness/creativity of LLM token sampling?',
+      optionA: 'Temperature',
+      optionB: 'Batch Epoch Size',
+      correct: 'A' as 'A' | 'B',
+    },
+    {
+      id: 'Q-902',
+      courseId: 'CRS-CCTV-103',
+      question: 'Which Ethernet cable category is standard for PoE IP camera cabling up to 100m?',
+      optionA: 'Cat-6 Copper',
+      optionB: 'RG-11 Coaxial',
+      correct: 'A' as 'A' | 'B',
+    },
+  ]);
+
+  const totalEnrolled = courses.reduce((sum, c) => sum + c.enrolled, 0);
+  const totalCertified = courses.reduce((sum, c) => sum + c.certified, 0);
 
   const handleAddQuestion = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!questionText.trim()) return;
-    showToast('Question Added to Bank', `New question registered under course ${newQuestionCourse}.`, 'success');
-    logAudit(`Instructor added question to ${newQuestionCourse}`, 'ADCS Academy');
+    if (!questionText.trim() || !optionA.trim() || !optionB.trim()) {
+      showToast('Missing Fields', 'Provide question statement and both options A and B.', 'warning');
+      return;
+    }
+    if (optionA.trim().toLowerCase() === optionB.trim().toLowerCase()) {
+      showToast('Duplicate Options', 'Option A and Option B must be distinct choices.', 'warning');
+      return;
+    }
+    const qId = `Q-${Math.floor(100 + Math.random() * 900)}`;
+    setQuestionBank(prev => [{
+      id: qId,
+      courseId: newQuestionCourse,
+      question: questionText.trim(),
+      optionA: optionA.trim(),
+      optionB: optionB.trim(),
+      correct: correctOption,
+    }, ...prev]);
+    setCourses(prev => prev.map(c => c.id === newQuestionCourse ? { ...c, modules: c.modules + 1 } : c));
+    showToast('Question Added to Bank', `${qId} registered under ${newQuestionCourse}.`, 'success');
+    logAudit(`Instructor added question ${qId} to ${newQuestionCourse}`, 'ADCS Academy');
     setQuestionText('');
     setOptionA('');
     setOptionB('');
@@ -116,11 +154,11 @@ export const InstructorPortal: React.FC = () => {
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
           <div style={{ background: 'rgba(255, 255, 255, 0.08)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Total Enrolled</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#38BDF8' }}>1,873 Students</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#38BDF8' }}>{totalEnrolled.toLocaleString('en-IN')} Students</div>
           </div>
           <div style={{ background: 'rgba(255, 255, 255, 0.08)', padding: '1rem 1.25rem', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
             <div style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Certificates Issued</div>
-            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#10B981' }}>1,546 Validated</div>
+            <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#10B981' }}>{totalCertified.toLocaleString('en-IN')} Validated</div>
           </div>
         </div>
       </div>
@@ -232,7 +270,7 @@ export const InstructorPortal: React.FC = () => {
               </label>
               <select
                 value={correctOption}
-                onChange={e => setCorrectOption(e.target.value)}
+                onChange={e => setCorrectOption(e.target.value as 'A' | 'B')}
                 style={{ width: '100%', padding: '0.5rem', borderRadius: '6px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
               >
                 <option value="A">Option A</option>
@@ -260,6 +298,33 @@ export const InstructorPortal: React.FC = () => {
               <PlusCircle size={16} /> Save Question to Bank
             </button>
           </form>
+
+          {/* Live Registered Question Bank */}
+          <div style={{ marginTop: '1.5rem', borderTop: '1px solid #E2E8F0', paddingTop: '1rem' }}>
+            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.6rem' }}>
+              Active Question Bank ({questionBank.length} Items Registered)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '210px', overflowY: 'auto' }}>
+              {questionBank.map(q => (
+                <div
+                  key={q.id}
+                  style={{
+                    padding: '0.65rem 0.75rem',
+                    borderRadius: '8px',
+                    background: '#F8FAFC',
+                    border: '1px solid #E2E8F0',
+                    fontSize: '0.78rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, color: '#4338CA', marginBottom: '0.2rem' }}>
+                    <span>{q.id} • {q.courseId}</span>
+                    <span style={{ color: '#059669' }}>Answer: Option {q.correct}</span>
+                  </div>
+                  <div style={{ color: '#1E293B', fontWeight: 600 }}>{q.question}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

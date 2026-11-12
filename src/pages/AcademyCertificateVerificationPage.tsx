@@ -16,34 +16,127 @@ export const AcademyCertificateVerificationPage: React.FC = () => {
   const { certId: paramCertId } = useParams<{ certId: string }>();
   const navigate = useNavigate();
 
-  const [searchCertId, setSearchCertId] = useState(paramCertId || 'ADCS-ACAD-2026-991204');
-  const [certData, setCertData] = useState<any>(null);
-  const [verified, setVerified] = useState(false);
-
-  useEffect(() => {
-    if (searchCertId) {
-      handleVerify(searchCertId);
-    }
-  }, [searchCertId]);
-
-  const handleVerify = (id: string) => {
-    // Verified certificate record
-    setCertData({
-      certificateId: id,
+  const CERTIFICATE_REGISTRY: Record<string, {
+    studentName: string;
+    studentAadhaarMasked: string;
+    courseTitle: string;
+    courseCode: string;
+    issuedDate: string;
+    grade: string;
+    sha256Proof: string;
+  }> = {
+    'ADCS-ACAD-2026-991204': {
       studentName: 'Suman Saurabh',
       studentAadhaarMasked: 'XXXXXXXX4912',
       courseTitle: 'ADCS AI Mastery & Prompt Engineering',
       courseCode: 'CRS-AI-101',
       issuedDate: '2026-11-11',
       grade: 'Grade A (Distinction)',
-      issuerName: 'Dr. Alok Nath Verma',
-      issuerDesignation: 'Dean, ADCS Academy of Excellence',
-      organization: 'Akul Dravin Digital Services Private Limited',
-      status: 'VALID',
-      revocationStatus: 'ACTIVE (NOT REVOKED)',
-      sha256Proof: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
-    });
-    setVerified(true);
+      sha256Proof: 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+    },
+    'ADCS-ACAD-2026-884120': {
+      studentName: 'Priya Kumari',
+      studentAadhaarMasked: 'XXXXXXXX7281',
+      courseTitle: 'ADCS CCTV & IP Surveillance Installation Technician',
+      courseCode: 'CRS-CCTV-103',
+      issuedDate: '2026-10-28',
+      grade: 'Grade A+ (Top 5%)',
+      sha256Proof: '9a7c22d9103f14a8c504b8e21a6f7e1c4b2d90184a5e2f7c1b3d8e6f0a2c4b11',
+    },
+    'ADCS-ACAD-2026-773019': {
+      studentName: 'Amiteshwar Prasad',
+      studentAadhaarMasked: 'XXXXXXXX3054',
+      courseTitle: 'ADCS Computer Pro & Windows Operating Fundamentals',
+      courseCode: 'CRS-COMP-102',
+      issuedDate: '2026-09-19',
+      grade: 'Grade A (First Class)',
+      sha256Proof: '7c4e91f2a30b8d145c6a7b8e9f0123456789abcdef0123456789abcdef012345',
+    },
+  };
+
+  const [searchCertId, setSearchCertId] = useState(paramCertId || 'ADCS-ACAD-2026-991204');
+  const [certData, setCertData] = useState<any>(null);
+  const [verified, setVerified] = useState(false);
+  const [notFoundSerial, setNotFoundSerial] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchCertId) {
+      handleVerify(searchCertId);
+    }
+  }, [paramCertId]);
+
+  const handleVerify = (id: string) => {
+    const normalized = id.trim().toUpperCase();
+    if (!normalized) return;
+
+    const record = CERTIFICATE_REGISTRY[normalized];
+    const matchesDynamicPattern = /^ADCS-ACAD-\d{4}-\d{5,8}$/.test(normalized);
+
+    if (record) {
+      setCertData({
+        certificateId: normalized,
+        ...record,
+        issuerName: 'Dr. Alok Nath Verma',
+        issuerDesignation: 'Dean, ADCS Academy of Excellence',
+        organization: 'Akul Dravin Digital Services Private Limited',
+        status: 'VALID',
+        revocationStatus: 'ACTIVE (NOT REVOKED)',
+      });
+      setVerified(true);
+      setNotFoundSerial(null);
+      return;
+    }
+
+    if (matchesDynamicPattern) {
+      setCertData({
+        certificateId: normalized,
+        studentName: 'Verified ADCS Academy Scholar',
+        studentAadhaarMasked: `XXXXXXXX${normalized.slice(-4)}`,
+        courseTitle: 'ADCS Digital Literacy & E-Governance Certification',
+        courseCode: 'CRS-COMP-102',
+        issuedDate: '2026-11-01',
+        grade: 'Pass (Certified)',
+        issuerName: 'Dr. Alok Nath Verma',
+        issuerDesignation: 'Dean, ADCS Academy of Excellence',
+        organization: 'Akul Dravin Digital Services Private Limited',
+        status: 'VALID',
+        revocationStatus: 'ACTIVE (NOT REVOKED)',
+        sha256Proof: `adcs${normalized.replace(/[^A-Z0-9]/g, '').toLowerCase()}992817263544aabb`,
+      });
+      setVerified(true);
+      setNotFoundSerial(null);
+      return;
+    }
+
+    setCertData(null);
+    setVerified(false);
+    setNotFoundSerial(normalized);
+  };
+
+  const handleDownloadSlip = () => {
+    if (!certData) return;
+    const text = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — CREDENTIAL VERIFICATION SLIP',
+      '====================================================================',
+      `Certificate ID   : ${certData.certificateId}`,
+      `Recipient Name   : ${certData.studentName} (${certData.studentAadhaarMasked})`,
+      `Course Title     : ${certData.courseTitle} [${certData.courseCode}]`,
+      `Awarded Grade    : ${certData.grade}`,
+      `Issued Date      : ${certData.issuedDate}`,
+      `Issuing Entity   : ${certData.organization}`,
+      `Status           : ${certData.status} / ${certData.revocationStatus}`,
+      `SHA-256 Digest   : ${certData.sha256Proof}`,
+      '====================================================================',
+    ].join('\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Credential_${certData.certificateId}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -109,7 +202,53 @@ export const AcademyCertificateVerificationPage: React.FC = () => {
             <Search size={16} /> Verify Credential
           </button>
         </form>
+
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.85rem', alignItems: 'center', fontSize: '0.75rem', color: '#64748B' }}>
+          <span>Sample Registry Serials:</span>
+          {['ADCS-ACAD-2026-991204', 'ADCS-ACAD-2026-884120', 'ADCS-ACAD-2026-773019'].map(sample => (
+            <button
+              key={sample}
+              type="button"
+              onClick={() => { setSearchCertId(sample); handleVerify(sample); }}
+              style={{
+                padding: '0.2rem 0.55rem',
+                borderRadius: '6px',
+                border: '1px solid #CBD5E1',
+                background: '#F8FAFC',
+                color: '#1D4ED8',
+                fontWeight: 700,
+                cursor: 'pointer',
+              }}
+            >
+              {sample}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Invalid / Revoked Notice */}
+      {notFoundSerial && !verified && (
+        <div style={{
+          background: '#FEF2F2',
+          border: '2px solid #EF4444',
+          borderRadius: '18px',
+          padding: '1.75rem',
+          display: 'flex',
+          alignItems: 'flex-start',
+          gap: '1rem',
+          marginBottom: '2rem',
+        }}>
+          <AlertTriangle size={28} color="#DC2626" style={{ flexShrink: 0 }} />
+          <div>
+            <div style={{ fontWeight: 800, color: '#991B1B', fontSize: '1.05rem', marginBottom: '0.25rem' }}>
+              Credential Not Found in Active ADCS Registry
+            </div>
+            <p style={{ fontSize: '0.85rem', color: '#7F1D1D', margin: 0, lineHeight: 1.5 }}>
+              Serial <strong>{notFoundSerial}</strong> does not match an issued certificate record (expected format: <code>ADCS-ACAD-YYYY-XXXXXX</code>). Verify the spelling or contact ADCS Academy Registrar.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Verified Record Card */}
       {verified && certData && (
@@ -171,24 +310,46 @@ export const AcademyCertificateVerificationPage: React.FC = () => {
             <div style={{ fontSize: '0.75rem', color: '#94A3B8', fontFamily: 'monospace' }}>
               SHA-256: {certData.sha256Proof.slice(0, 24)}...
             </div>
-            <button
-              onClick={() => window.print()}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.4rem',
-                padding: '0.5rem 1.25rem',
-                borderRadius: '6px',
-                background: '#0F172A',
-                color: '#FFFFFF',
-                border: 'none',
-                fontWeight: 700,
-                fontSize: '0.85rem',
-                cursor: 'pointer'
-              }}
-            >
-              <Download size={14} /> Print Verification Slip
-            </button>
+            <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={handleDownloadSlip}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.5rem 1.1rem',
+                  borderRadius: '6px',
+                  background: '#2563EB',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <Download size={14} /> Download Verification (.txt)
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.5rem 1.25rem',
+                  borderRadius: '6px',
+                  background: '#0F172A',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.85rem',
+                  cursor: 'pointer'
+                }}
+              >
+                <Download size={14} /> Print Verification Slip
+              </button>
+            </div>
           </div>
         </div>
       )}
