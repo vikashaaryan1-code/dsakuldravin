@@ -44,7 +44,11 @@ export const CSCMainPortalPage: React.FC = () => {
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!tecNumber || !vleMobile) return;
+    const digitsOnly = vleMobile.replace(/\D/g, '');
+    if (!tecNumber.trim() || digitsOnly.length !== 10) {
+      showToast('Invalid Registration Input', 'Provide a valid TEC certificate number and 10-digit Aadhaar-linked mobile number.', 'warning');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -52,13 +56,13 @@ export const CSCMainPortalPage: React.FC = () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tecNumber,
-          name: vleName,
-          mobile: vleMobile,
-          email: vleEmail,
-          state: vleState,
-          district: vleDistrict,
-          centerAddress
+          tecNumber: tecNumber.trim(),
+          name: vleName.trim(),
+          mobile: digitsOnly,
+          email: vleEmail.trim(),
+          state: vleState.trim(),
+          district: vleDistrict.trim(),
+          centerAddress: centerAddress.trim()
         })
       }).then(r => r.json()).catch(() => null);
 
@@ -76,6 +80,31 @@ export const CSCMainPortalPage: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDownloadVleSlip = () => {
+    if (!regResult) return;
+    const content = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — VLE PARTNER ONBOARDING ACKNOWLEDGEMENT',
+      '==============================================================================',
+      `Reference No   : ${regResult.refNumber}`,
+      `TEC Certificate: ${tecNumber}`,
+      `Applicant Name : ${vleName}`,
+      `Mobile         : ${vleMobile}`,
+      `Location       : ${centerAddress}, ${vleDistrict}, ${vleState}`,
+      `Current Stage  : ${regResult.stage}`,
+      `Submitted At   : ${regResult.submittedAt}`,
+      '==============================================================================',
+    ].join('\n');
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_VLE_Onboarding_${regResult.refNumber}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -187,7 +216,7 @@ export const CSCMainPortalPage: React.FC = () => {
               <span style={{ background: '#16A34A', color: '#FFFFFF', fontSize: '0.72rem', fontWeight: 800, padding: '0.25rem 0.65rem', borderRadius: '4px', textTransform: 'uppercase' }}>
                 Pan-India Sovereign Digital Infrastructure
               </span>
-              <h1 style={{ fontSize: '2.4rem', fontWeight: 900, margin: '0.75rem 0 0.5rem', lineHeight: 1.2 }}>
+              <h1 style={{ fontSize: '2.4rem', fontWeight: 900, margin: '0.75rem 0 0.5rem', lineHeight: 1.2, color: '#FFFFFF' }}>
                 Empowering India Through Akul Dravin Digital Services (ADCS)
               </h1>
               <p style={{ fontSize: '1rem', color: '#CBD5E1', maxWidth: '750px', lineHeight: 1.6, margin: '0 0 1.75rem' }}>
@@ -345,20 +374,37 @@ export const CSCMainPortalPage: React.FC = () => {
                   <p style={{ fontSize: '0.85rem', color: '#475569', margin: '0.5rem 0 1.5rem' }}>
                     Status: <strong>{regResult.stage}</strong>. The Akul Dravin Digital Services Operations Desk will verify your center premises within 7 working days.
                   </p>
-                  <button
-                    onClick={() => navigate('/connect/csc')}
-                    style={{
-                      background: '#16A34A',
-                      color: '#FFFFFF',
-                      border: 'none',
-                      padding: '0.7rem 1.5rem',
-                      borderRadius: '8px',
-                      fontWeight: 700,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Proceed to ADCS Connect Login ➔
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      onClick={handleDownloadVleSlip}
+                      style={{
+                        background: '#0F172A',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '0.7rem 1.25rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Download Onboarding Slip (.txt)
+                    </button>
+                    <button
+                      onClick={() => navigate('/connect/csc')}
+                      style={{
+                        background: '#16A34A',
+                        color: '#FFFFFF',
+                        border: 'none',
+                        padding: '0.7rem 1.5rem',
+                        borderRadius: '8px',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Proceed to ADCS Connect Login ➔
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <form onSubmit={handleRegisterSubmit}>
@@ -376,7 +422,7 @@ export const CSCMainPortalPage: React.FC = () => {
                       style={{ width: '100%', padding: '0.65rem 0.75rem', borderRadius: '8px', border: '1px solid #CBD5E1', fontSize: '0.85rem' }}
                     />
                     <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.3rem' }}>
-                      Mandatory as per ADCS Network guidelines. Get certified at teccertificate.com.
+                      Mandatory as per ADCS Network guidelines. Complete assessment at official CSC Academy / ADCS Kendra training portal.
                     </div>
                   </div>
 

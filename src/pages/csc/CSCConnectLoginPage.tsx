@@ -50,9 +50,11 @@ export const CSCConnectLoginPage: React.FC = () => {
     refreshCaptcha();
   }, []);
 
-  const handleLogin = async (e?: React.FormEvent) => {
+  const handleLogin = async (e?: React.FormEvent, captchaOverride?: string) => {
     if (e) e.preventDefault();
     setErrorMsg('');
+
+    const effectiveCaptcha = captchaOverride !== undefined ? captchaOverride : captchaInput;
 
     if (!username.trim()) {
       setErrorMsg('Please enter your ADCS ID or Username.');
@@ -62,7 +64,7 @@ export const CSCConnectLoginPage: React.FC = () => {
       setErrorMsg('Please enter your Password.');
       return;
     }
-    if (captchaInput.toUpperCase() !== generatedCaptcha) {
+    if (effectiveCaptcha.toUpperCase() !== generatedCaptcha) {
       setErrorMsg('Captcha did not match. Please try again.');
       refreshCaptcha();
       return;
@@ -105,9 +107,7 @@ export const CSCConnectLoginPage: React.FC = () => {
     setUsername('245089123456');
     setPassword('VLE@DigitalSeva2026');
     setCaptchaInput(generatedCaptcha);
-    setTimeout(() => {
-      handleLogin();
-    }, 100);
+    handleLogin(undefined, generatedCaptcha);
   };
 
   return (

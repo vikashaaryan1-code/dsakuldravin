@@ -92,15 +92,49 @@ export const AboutPage: React.FC = () => {
 };
 
 export const ContactPage: React.FC = () => {
-  const { showToast } = useApp();
+  const { addLead, createSupportTicket, logAudit, showToast } = useApp();
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const [submittedRef, setSubmittedRef] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    showToast('Enquiry Transmitted', 'Our customer happiness executive will call you shortly.', 'success');
+    const cleanName = name.trim();
+    const cleanEmail = email.trim();
+    const cleanMsg = message.trim();
+    const cleanPhone = phone.trim() || '+91 98000 00000';
+    if (!cleanName || !cleanEmail.includes('@') || !cleanMsg) {
+      showToast('Incomplete Inquiry', 'Please provide your name, valid email address, and inquiry details.', 'warning');
+      return;
+    }
+
+    const ticketRef = `ENQ-${Date.now().toString().slice(-6)}`;
+    createSupportTicket({
+      customerName: cleanName,
+      customerPhone: cleanPhone,
+      serviceCategory: 'General & Citizen Support',
+      subject: `Contact Desk Inquiry (${ticketRef})`,
+      priority: 'Medium',
+      assignedAgent: 'Customer Care Desk',
+      initialMessage: `${cleanMsg} (Email: ${cleanEmail})`,
+    });
+    addLead({
+      name: cleanName,
+      company: 'Inbound Contact Form',
+      phone: cleanPhone,
+      email: cleanEmail,
+      serviceInterested: 'Platform Consultation & Inquiry',
+      estimatedValue: 1500,
+      stage: 'New',
+      assignedExecutive: 'Rahul Saxena',
+    });
+    logAudit('CONTACT_INQUIRY', `Logged inquiry ${ticketRef} from ${cleanName} (${cleanEmail})`, 'Success');
+    setSubmittedRef(ticketRef);
+    showToast('Enquiry Transmitted', `Reference ${ticketRef} logged to Support & CRM Desk.`, 'success');
     setName('');
+    setPhone('');
     setEmail('');
     setMessage('');
   };
@@ -167,6 +201,20 @@ export const ContactPage: React.FC = () => {
             Send Us an Instant Message
           </h3>
 
+          {submittedRef && (
+            <div style={{
+              background: '#ECFDF5',
+              border: '1.5px solid #10B981',
+              borderRadius: '12px',
+              padding: '0.9rem 1rem',
+              marginBottom: '1rem',
+              fontSize: '0.84rem',
+              color: '#065F46',
+            }}>
+              <strong>Enquiry Logged ({submittedRef}):</strong> Added to Customer Support Queue &amp; CRM Lead Pipeline.
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="form-group" style={{ marginBottom: 0 }}>
               <label className="form-label">Your Name</label>
@@ -177,6 +225,17 @@ export const ContactPage: React.FC = () => {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Ramesh Chandra"
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: 0 }}>
+              <label className="form-label">Mobile Number</label>
+              <input
+                type="tel"
+                className="form-input"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+91 98XXXXXXXX"
               />
             </div>
 
