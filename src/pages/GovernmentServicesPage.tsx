@@ -17,17 +17,102 @@ import {
   Award,
   Sparkles,
   Calculator,
-  ExternalLink
+  ExternalLink,
+  Download,
+  RotateCcw
 } from 'lucide-react';
 
 export const GovernmentServicesPage: React.FC = () => {
-  const { services, language } = useApp();
+  const { services, language, showToast, logAudit } = useApp();
   const [selectedSubCat, setSelectedSubCat] = useState<'all' | 'identity' | 'certificates' | 'employment' | 'welfare'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Interactive Scheme Matcher State
   const [citizenProfile, setCitizenProfile] = useState<'farmer' | 'worker' | 'women' | 'student' | 'general'>('farmer');
   const [incomeRange, setIncomeRange] = useState<'bpl' | 'middle' | 'higher'>('bpl');
+
+  const getMatchedSchemes = () => {
+    const list: { label: string; bg: string; color: string }[] = [];
+    if (citizenProfile === 'farmer') {
+      list.push(
+        { label: '✓ PM Kisan Samman Nidhi (₹6,000/वर्ष DBT)', bg: '#064E3B', color: '#6EE7B7' },
+        { label: '✓ PM Fasal Bima Yojana (फसल नुकसान बीमा)', bg: '#064E3B', color: '#6EE7B7' }
+      );
+    }
+    if (citizenProfile === 'worker') {
+      list.push(
+        { label: '✓ E-Shram Accident Cover (₹2,00,000 बीमा)', bg: '#1E3A8A', color: '#93C5FD' },
+        { label: '✓ PM Shram Yogi Maandhan (₹3,000/माह पेंशन)', bg: '#1E3A8A', color: '#93C5FD' }
+      );
+    }
+    if (citizenProfile === 'women') {
+      list.push(
+        { label: '✓ Sukanya Samriddhi Yojana (8.2% ब्याज दर)', bg: '#701A75', color: '#F5D0FE' },
+        { label: '✓ PM Ujjwala 2.0 (मुफ्त गैस कनेक्शन)', bg: '#701A75', color: '#F5D0FE' }
+      );
+    }
+    if (citizenProfile === 'student') {
+      list.push(
+        { label: '✓ National Scholarship Portal (NSP Pre/Post Matric)', bg: '#312E81', color: '#C7D2FE' },
+        { label: '✓ PMKVY 4.0 Skill India & Vidyalaxmi Loan', bg: '#312E81', color: '#C7D2FE' }
+      );
+    }
+    if (citizenProfile === 'general') {
+      list.push(
+        { label: '✓ PM Suraksha & Jeevan Jyoti Bima (PMSBY ₹20 / PMJJBY ₹436)', bg: '#1E293B', color: '#E2E8F0' },
+        { label: '✓ Atal Pension Yojana (₹1,000–₹5,000 मासिक पेंशन)', bg: '#1E293B', color: '#E2E8F0' }
+      );
+    }
+    if (incomeRange === 'bpl') {
+      list.push(
+        { label: '✓ Ayushman Bharat ABHA (₹5,00,000 मुफ्त इलाज)', bg: '#14532D', color: '#86EFAC' },
+        { label: '✓ NFSA राशन कार्ड (मुफ्त खाद्यान्न योजना)', bg: '#14532D', color: '#86EFAC' }
+      );
+    } else if (incomeRange === 'middle') {
+      list.push(
+        { label: '✓ PM Surya Ghar Muft Bijli Yojana (₹78,000 Solar Subsidy)', bg: '#78350F', color: '#FDE68A' },
+        { label: '✓ Income & EWS Certificate Eligibility Desk', bg: '#78350F', color: '#FDE68A' }
+      );
+    } else {
+      list.push(
+        { label: '✓ NPS Sovereign Tier-I Tax Deduction (80CCD)', bg: '#1E3A8A', color: '#BFDBFE' },
+        { label: '✓ Passport & Fast-Track PAN Compliance', bg: '#1E3A8A', color: '#BFDBFE' }
+      );
+    }
+    list.push({ label: '✓ DigiLocker सुरक्षित डिजिटल दस्तावेज वॉल्ट', bg: '#374151', color: '#E5E7EB' });
+    return list;
+  };
+
+  const handleDownloadEligibilityChecklist = () => {
+    const schemes = getMatchedSchemes();
+    const text = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — CITIZEN WELFARE ELIGIBILITY BRIEF',
+      '========================================================================',
+      `Generated Date   : ${new Date().toISOString().split('T')[0]}`,
+      `Citizen Profile  : ${citizenProfile.toUpperCase()}`,
+      `Income Bracket   : ${incomeRange.toUpperCase()}`,
+      '',
+      'RECOMMENDED WELFARE & STATUTORY SCHEMES:',
+      ...schemes.map((s, idx) => `  ${idx + 1}. ${s.label.replace(/^✓\s*/, '')}`),
+      '',
+      'REQUIRED STANDARD KYC DOCUMENTS:',
+      '  - Aadhaar Card (linked to active mobile for OTP verification)',
+      '  - State Income / Caste / Domicile Certificate (via State e-District)',
+      '  - Bank Account Passbook + IFSC for DBT transfers',
+      '========================================================================',
+      'Note: ADCS provides assisted form facilitation only. Final eligibility and',
+      'DBT disbursements rest solely with competent Central/State authorities.',
+    ].join('\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Welfare_Checklist_${citizenProfile}_${incomeRange}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    logAudit('Citizen Welfare Checklist Generated', `Profile: ${citizenProfile} • Bracket: ${incomeRange}`, 'Success');
+    showToast('Eligibility Checklist Ready', `Downloaded ADCS_Welfare_Checklist_${citizenProfile}_${incomeRange}.txt`, 'success');
+  };
 
   const govtServices = services.filter(s => s.category === 'government');
 
@@ -352,63 +437,94 @@ export const GovernmentServicesPage: React.FC = () => {
           padding: '1rem 1.25rem',
           border: '1px solid rgba(255,255,255,0.1)'
         }}>
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.6rem' }}>
-            {language === 'hi' ? 'पात्र सरकारी योजनाएं एवं आर्थिक लाभ:' : 'Eligible Central & State Welfare Benefits:'}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '0.75rem' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              {language === 'hi' ? 'पात्र सरकारी योजनाएं एवं आर्थिक लाभ:' : 'Eligible Central & State Welfare Benefits:'}
+            </div>
+            <button
+              onClick={handleDownloadEligibilityChecklist}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                background: '#F59E0B',
+                color: '#0A192F',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '0.4rem 0.85rem',
+                fontSize: '0.76rem',
+                fontWeight: 800,
+                cursor: 'pointer'
+              }}
+            >
+              <Download size={13} /> Download Eligibility Checklist (.txt)
+            </button>
           </div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
-            {citizenProfile === 'farmer' && (
-              <>
-                <span style={{ background: '#064E3B', color: '#6EE7B7', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-                  ✓ PM Kisan Samman Nidhi (₹6,000/वर्ष DBT)
-                </span>
-                <span style={{ background: '#064E3B', color: '#6EE7B7', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-                  ✓ PM Fasal Bima Yojana (फसल नुकसान बीमा)
-                </span>
-              </>
-            )}
-            {citizenProfile === 'worker' && (
-              <>
-                <span style={{ background: '#1E3A8A', color: '#93C5FD', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-                  ✓ E-Shram Accident Cover (₹2,00,000 बीमा)
-                </span>
-                <span style={{ background: '#1E3A8A', color: '#93C5FD', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-                  ✓ PM Shram Yogi Maandhan (₹3,000/माह पेंशन)
-                </span>
-              </>
-            )}
-            {citizenProfile === 'women' && (
-              <>
-                <span style={{ background: '#701A75', color: '#F472B6', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-                  ✓ Sukanya Samriddhi Yojana (8.2% ब्याज दर)
-                </span>
-                <span style={{ background: '#701A75', color: '#F472B6', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-                  ✓ PM Ujjwala 2.0 (मुफ्त गैस कनेक्शन)
-                </span>
-              </>
-            )}
-            {incomeRange === 'bpl' && (
-              <>
-                <span style={{ background: '#14532D', color: '#86EFAC', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-                  ✓ Ayushman Bharat ABHA (₹5,00,000 मुफ्त इलाज)
-                </span>
-                <span style={{ background: '#14532D', color: '#86EFAC', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-                  ✓ NFSA राशन कार्ड (मुफ्त खाद्यान्न योजना)
-                </span>
-              </>
-            )}
-            <span style={{ background: '#374151', color: '#E5E7EB', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.8rem', fontWeight: 600 }}>
-              ✓ DigiLocker सुरक्षित डिजिटल दस्तावेज वॉल्ट
-            </span>
+            {getMatchedSchemes().map((scheme, idx) => (
+              <span
+                key={idx}
+                style={{
+                  background: scheme.bg,
+                  color: scheme.color,
+                  padding: '0.35rem 0.75rem',
+                  borderRadius: '6px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600
+                }}
+              >
+                {scheme.label}
+              </span>
+            ))}
           </div>
         </div>
       </div>
 
       {/* Services Grid */}
-      <div className="grid-3" style={{ gap: '1.5rem', marginBottom: '3rem' }}>
-        {filteredServices.map(service => (
-          <ServiceCard key={service.id} service={service} />
-        ))}
-      </div>
+      {filteredServices.length > 0 ? (
+        <div className="grid-3" style={{ gap: '1.5rem', marginBottom: '3rem' }}>
+          {filteredServices.map(service => (
+            <ServiceCard key={service.id} service={service} />
+          ))}
+        </div>
+      ) : (
+        <div style={{
+          background: '#F8FAFC',
+          border: '1px dashed #CBD5E1',
+          borderRadius: '16px',
+          padding: '2.5rem',
+          textAlign: 'center',
+          marginBottom: '3rem'
+        }}>
+          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#0A192F', marginBottom: '0.4rem' }}>
+            No matching citizen services found
+          </div>
+          <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1rem' }}>
+            Try clearing your search filter or switch to "All Citizen Services" to view every assisted government desk.
+          </p>
+          <button
+            onClick={() => {
+              setSelectedSubCat('all');
+              setSearchQuery('');
+            }}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              background: '#1D4ED8',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '0.5rem 1rem',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            <RotateCcw size={14} /> Reset Filters
+          </button>
+        </div>
+      )}
 
       {/* Authorized Official Government Portals & State e-District Directory */}
       <div style={{
@@ -441,6 +557,10 @@ export const GovernmentServicesPage: React.FC = () => {
             { name: 'Parivahan Sewa (MoRTH)', desc: 'Driving License & Vehicle RC', url: 'https://parivahan.gov.in/' },
             { name: 'e-Shram National Portal', desc: 'Unorganized Worker UAN Card', url: 'https://eshram.gov.in/' },
             { name: 'NHA Ayushman Bharat', desc: 'PM-JAY ₹5L Health Card KYC', url: 'https://beneficiary.nha.gov.in/' },
+            { name: 'myScheme Official Finder', desc: 'Central & State Scheme Eligibility', url: 'https://www.myscheme.gov.in/' },
+            { name: 'PM-KISAN Samman Nidhi', desc: 'Farmer DBT Status & e-KYC', url: 'https://pmkisan.gov.in/' },
+            { name: 'National Scholarship (NSP)', desc: 'Pre/Post Matric & Merit Aid', url: 'https://scholarships.gov.in/' },
+            { name: 'UMANG Citizen Portal', desc: 'Unified Central/State Services', url: 'https://web.umang.gov.in/' },
           ].map((portal, i) => (
             <a
               key={i}
