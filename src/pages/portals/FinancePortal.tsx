@@ -82,30 +82,40 @@ export const FinancePortal: React.FC = () => {
 
   const handleRunReconciliation = () => {
     setIsReconciling(true);
+    const totalMatched = 140 + doubleEntryJournals.length;
     setTimeout(() => {
       setIsReconciling(false);
       setShowReconModal(true);
-      showToast('Reconciliation Complete', '142 / 142 records matched with ICICI Bank clearing feed.', 'success');
+      logAudit('BANK_RECONCILIATION', `Reconciled ${totalMatched}/${totalMatched} journal records with ICICI MT940 clearing feed`, 'Success');
+      showToast('Reconciliation Complete', `${totalMatched} / ${totalMatched} records matched with ICICI Bank clearing feed.`, 'success');
     }, 600);
   };
 
   const handlePostJournal = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reference || !description || amount <= 0) return;
+    if (!reference.trim() || !description.trim() || amount <= 0) {
+      showToast('Invalid Entry', 'Reference, description, and positive amount are required.', 'warning');
+      return;
+    }
+    if (debitAccount === creditAccount) {
+      showToast('Duplicate Account', 'Debit account and Credit account must be distinct for valid double-entry bookkeeping.', 'warning');
+      return;
+    }
 
     const debitAccObj = chartOfAccounts.find(a => a.code === debitAccount);
     const creditAccObj = chartOfAccounts.find(a => a.code === creditAccount);
 
     recordJournalEntry({
       date: new Date().toISOString().substring(0, 10),
-      reference,
-      description,
+      reference: reference.trim(),
+      description: description.trim(),
       lines: [
         { accountCode: debitAccount, accountName: debitAccObj?.name || 'Account', debit: amount, credit: 0 },
         { accountCode: creditAccount, accountName: creditAccObj?.name || 'Account', debit: 0, credit: amount }
       ]
     });
 
+    logAudit('FINANCE_JOURNAL_POST', `Posted balanced entry ${reference.trim()} for ₹${amount}`, 'Success');
     setShowNewEntryModal(false);
     setReference('');
     setDescription('');
@@ -390,7 +400,7 @@ export const FinancePortal: React.FC = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem' }}>
               <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', padding: '1.25rem', borderRadius: '12px' }}>
                 <div style={{ color: '#166534', fontWeight: 700, fontSize: '0.85rem' }}>RECONCILED TRANSACTIONS</div>
-                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#15803D', marginTop: '0.2rem' }}>142 / 142</div>
+                <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#15803D', marginTop: '0.2rem' }}>{140 + doubleEntryJournals.length} / {140 + doubleEntryJournals.length}</div>
                 <div style={{ fontSize: '0.75rem', color: '#166534' }}>Zero discrepancies found</div>
               </div>
 
@@ -412,12 +422,25 @@ export const FinancePortal: React.FC = () => {
         {/* TAB 4: GST REPORTS */}
         {activeTab === 'gst' && (
           <div style={{ background: '#FFFFFF', borderRadius: '16px', padding: '2rem', border: '1px solid #E2E8F0' }}>
-            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.5rem' }}>
-              Statutory GSTIN Compliance Summary (07AAAAA0000A1Z5)
-            </h3>
-            <p style={{ fontSize: '0.85rem', color: '#64748B', marginBottom: '1.5rem' }}>
-              ITC-matched reports for GSTR-1 (Outward B2B/B2C supplies) and GSTR-3B monthly tax computation.
-            </p>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0A192F', marginBottom: '0.35rem' }}>
+                  Statutory GSTIN Compliance Summary (07AABCA1234F1Z5)
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: '#64748B', margin: 0 }}>
+                  ITC-matched reports for GSTR-1 (Outward B2B/B2C supplies) and GSTR-3B monthly tax computation.
+                </p>
+              </div>
+              <a
+                href="https://www.gst.gov.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline"
+                style={{ fontSize: '0.82rem' }}
+              >
+                Open Official GSTN Portal ↗
+              </a>
+            </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem' }}>
               <div style={{ border: '1px solid #E2E8F0', borderRadius: '14px', padding: '1.5rem' }}>

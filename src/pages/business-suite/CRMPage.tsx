@@ -10,7 +10,7 @@ import {
 import { CRMLead } from '../../types';
 
 export const CRMPage: React.FC = () => {
-  const { crmLeads, addLead, updateLeadStage, logAudit } = useApp();
+  const { crmLeads, addLead, updateLeadStage, logAudit, showToast } = useApp();
   const [showAddModal, setShowAddModal] = useState(false);
   const [showQuoteModal, setShowQuoteModal] = useState<CRMLead | null>(null);
 
@@ -45,20 +45,24 @@ export const CRMPage: React.FC = () => {
 
   const handleCreateLead = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!leadName || !phone) return;
+    const digitsOnly = phone.replace(/\D/g, '');
+    if (!leadName.trim() || digitsOnly.length < 10) {
+      showToast('Invalid Lead Details', 'Enter prospect name and valid 10-digit mobile number.', 'warning');
+      return;
+    }
 
     addLead({
-      name: leadName,
-      company: company || 'Self / Individual',
-      phone: phone,
-      email: email || `${leadName.toLowerCase().replace(/\s+/g, '')}@example.com`,
+      name: leadName.trim(),
+      company: company.trim() || 'Self / Individual',
+      phone: phone.trim(),
+      email: email.trim() || `${leadName.toLowerCase().replace(/\s+/g, '')}@example.com`,
       serviceInterested: serviceInterested,
-      estimatedValue: Number(value),
+      estimatedValue: Math.max(100, Number(value) || 0),
       stage: 'New',
       assignedExecutive: assignedTo
     });
 
-    logAudit('CREATE_LEAD', `Created CRM lead: ${leadName} for ${serviceInterested}`, 'Success');
+    logAudit('CREATE_LEAD', `Created CRM lead: ${leadName.trim()} for ${serviceInterested}`, 'Success');
     setShowAddModal(false);
     setLeadName('');
     setCompany('');
@@ -66,7 +70,37 @@ export const CRMPage: React.FC = () => {
     setEmail('');
   };
 
+  const handleDownloadQuote = (lead: CRMLead) => {
+    const safeDisc = Math.max(0, Math.min(50, Number(quoteDiscount) || 0));
+    const discounted = (lead.estimatedValue * (100 - safeDisc)) / 100;
+    const gst = Math.round(discounted * 0.18);
+    const finalPayable = Math.round(discounted + gst);
+    const quoteText = [
+      'AKUL DRAVIN DIGITAL SERVICES (ADCS) — COMMERCIAL QUOTATION',
+      '===========================================================',
+      `Lead ID       : ${lead.id}`,
+      `Client        : ${lead.name} (${lead.company})`,
+      `Contact       : ${lead.phone} | ${lead.email}`,
+      `Package       : ${lead.serviceInterested}`,
+      `Base Price    : INR ${lead.estimatedValue.toLocaleString('en-IN')}`,
+      `Discount (${safeDisc}%) : -INR ${Math.round(lead.estimatedValue - discounted).toLocaleString('en-IN')}`,
+      `GST (18%)     : INR ${gst.toLocaleString('en-IN')}`,
+      `TOTAL PAYABLE : INR ${finalPayable.toLocaleString('en-IN')}`,
+      '===========================================================',
+    ].join('\n');
+    const blob = new Blob([quoteText], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ADCS_Quote_${lead.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleSendQuote = (lead: CRMLead) => {
+    handleDownloadQuote(lead);
     setQuoteSent(true);
     updateLeadStage(lead.id, 'Proposal');
     logAudit('SEND_QUOTE', `Generated and sent quotation to ${lead.name} (Value: ₹${lead.estimatedValue})`, 'Success');

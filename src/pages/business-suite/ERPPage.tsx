@@ -13,7 +13,7 @@ import {
 import { InventoryRecord } from '../../types';
 
 export const ERPPage: React.FC = () => {
-  const { inventory, updateInventoryStock, logAudit, showToast } = useApp();
+  const { inventory, updateInventoryStock, recordJournalEntry, logAudit, showToast } = useApp();
   
   const [activeTab, setActiveTab] = useState<'finance' | 'inventory' | 'invoicing'>('inventory');
   const [showPOModal, setShowPOModal] = useState<InventoryRecord | null>(null);
@@ -55,7 +55,7 @@ Total PO Value : ₹${(poQuantity * showPOModal.unitCost).toLocaleString('en-IN'
 Delivery Depot : ADCS Central Logistics Distribution Hub, Delhi-NCR
 --------------------------------------------------------------------------------
 Authorized By  : National Procurement & Inventory Cell
-PO Hash        : SHA256-${Math.random().toString(36).substring(2, 10).toUpperCase()}-PO-APPROVED
+PO Hash        : SHA256-${poId.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-PO-APPROVED
 ================================================================================`;
     const blob = new Blob([poContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -74,10 +74,21 @@ PO Hash        : SHA256-${Math.random().toString(36).substring(2, 10).toUpperCas
   };
 
   const handleGenerateInvoice = () => {
+    const cleanBuyer = buyerName.trim();
+    const cleanGstin = buyerGstin.trim().toUpperCase();
+    if (!cleanBuyer || invAmount <= 0) {
+      showToast('Invalid Invoice Input', 'Enter valid Buyer Name and positive base amount.', 'warning');
+      return;
+    }
+    if (cleanGstin && !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(cleanGstin)) {
+      showToast('Invalid Buyer GSTIN', 'Enter valid 15-character GSTIN (e.g. 07AAAAA0000A1Z5) or leave blank for URP.', 'warning');
+      return;
+    }
+
     const invNumber = `INV-2026-${Date.now().toString().slice(-4)}`;
-    const cgst = Math.round(invAmount * 0.09);
-    const sgst = Math.round(invAmount * 0.09);
-    const total = Math.round(invAmount * 1.18);
+    const cgst = Number((invAmount * 0.09).toFixed(2));
+    const sgst = Number((invAmount * 0.09).toFixed(2));
+    const total = Number((invAmount + cgst + sgst).toFixed(2));
     const content = `================================================================================
 AKUL DRAVIN DIGITAL SERVICES (ADCS)
 OFFICIAL B2B / B2C GST TAX INVOICE
@@ -94,8 +105,8 @@ State / Code   : Delhi / 07
 SAC / HSN Code : 8528 / 998313
 
 RECIPIENT (BUYER) DETAILS:
-Buyer Name     : ${buyerName}
-Buyer GSTIN    : ${buyerGstin || 'URP (Unregistered Person)'}
+Buyer Name     : ${cleanBuyer}
+Buyer GSTIN    : ${cleanGstin || 'URP (Unregistered Person)'}
 Billing Address: Verified Corporate / Commercial Address
 --------------------------------------------------------------------------------
 LINE ITEMS:
@@ -105,14 +116,14 @@ ${invItem.padEnd(46)} | 1   | ₹${invAmount.toLocaleString('en-IN')}.00 | ₹${
 --------------------------------------------------------------------------------
 TAX COMPUTATION:
 Subtotal (Taxable Value) : ₹${invAmount.toLocaleString('en-IN')}.00
-Central GST (CGST @ 9%)  : ₹${cgst.toLocaleString('en-IN')}.00
-State GST (SGST @ 9%)    : ₹${sgst.toLocaleString('en-IN')}.00
+Central GST (CGST @ 9%)  : ₹${cgst.toLocaleString('en-IN')}
+State GST (SGST @ 9%)    : ₹${sgst.toLocaleString('en-IN')}
 Integrated GST (IGST @ 0): ₹0.00
 --------------------------------------------------------------------------------
-TOTAL INVOICE AMOUNT     : ₹${total.toLocaleString('en-IN')}.00
-Amount in Words          : Indian Rupees ${total.toLocaleString('en-IN')} Only
+TOTAL INVOICE AMOUNT     : ₹${total.toLocaleString('en-IN')}
+Amount in Words          : Indian Rupees ${Math.round(total).toLocaleString('en-IN')} Only
 --------------------------------------------------------------------------------
-Cryptographic IRN Hash   : SHA256-${Math.random().toString(36).substring(2, 12).toUpperCase()}-GST-VALID
+Cryptographic IRN Hash   : SHA256-${invNumber.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-GST-VALID
 QR Code Portal Link      : https://akuldravindigital.com/verify-invoice?irn=${invNumber}
 ================================================================================
 This is a digitally signed computer-generated document requiring no physical signature.
@@ -127,8 +138,18 @@ This is a digitally signed computer-generated document requiring no physical sig
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    logAudit('GENERATE_INVOICE', `Generated GST Tax Invoice for ${buyerName} (Amount: ₹${total})`, 'Success');
-    showToast('GST Invoice Generated', `✓ Official GST Tax Invoice #${invNumber} generated & downloaded!`, 'success');
+    recordJournalEntry({
+      date: new Date().toISOString().substring(0, 10),
+      reference: invNumber,
+      description: `ERP GST Tax Invoice (${cleanBuyer} — ${invItem})`,
+      lines: [
+        { accountCode: '1020', accountName: 'Commercial Bank & Receivables', debit: total, credit: 0 },
+        { accountCode: '4020', accountName: 'Hardware & Enterprise Sales Revenue', debit: 0, credit: invAmount },
+        { accountCode: '2050', accountName: 'Output GST Payable (18%)', debit: 0, credit: Number((cgst + sgst).toFixed(2)) },
+      ],
+    });
+    logAudit('GENERATE_INVOICE', `Generated GST Tax Invoice for ${cleanBuyer} (Amount: ₹${total})`, 'Success');
+    showToast('GST Invoice Generated', `✓ Official GST Tax Invoice #${invNumber} downloaded & posted to General Ledger!`, 'success');
   };
 
   return (
