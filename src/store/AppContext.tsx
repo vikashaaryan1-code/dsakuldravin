@@ -765,6 +765,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ? 'AI Routing + UTR Screening Active'
         : undefined,
       documentsUploaded: appData.documentsUploaded || ['Uploaded_Document_1.pdf'],
+      uploadedDocumentRecords: appData.uploadedDocumentRecords,
+      formData: appData.formData,
       notes: appData.notes || 'Initial submission verified by Quantum Document AI.',
       trackingSteps: [
         {

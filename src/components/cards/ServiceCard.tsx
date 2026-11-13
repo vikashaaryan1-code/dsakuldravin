@@ -1,13 +1,15 @@
 import React from 'react';
 import { ServiceItem } from '../../types';
 import { useApp } from '../../store/AppContext';
+import { resolveStatutoryProfile } from '../../data/statutoryDocumentRegistry';
 import { 
   Clock, 
   FileText, 
   ArrowRight, 
   ShoppingCart, 
   CheckCircle2, 
-  Sparkles 
+  Sparkles,
+  ShieldCheck
 } from 'lucide-react';
 
 interface ServiceCardProps {
@@ -16,6 +18,15 @@ interface ServiceCardProps {
 
 export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
   const { openApplyModal, addToCart, language } = useApp();
+
+  const statutoryProfile = service.category === 'government' ? resolveStatutoryProfile(service.id || service.slug) : null;
+  const docsList = statutoryProfile 
+    ? statutoryProfile.documentChecklist.map(d => language === 'hi' ? d.nameHi : d.name) 
+    : service.requiredDocs;
+  const officialAuthority = statutoryProfile?.officialAuthority;
+  const displayTimeline = statutoryProfile 
+    ? (language === 'hi' ? statutoryProfile.slaTimelineHi : statutoryProfile.slaTimeline)
+    : (language === 'hi' ? service.timelineHi : service.timeline);
 
   return (
     <div 
@@ -45,10 +56,17 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
     >
       <div>
         {/* Top Badges */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-          <span className="badge badge-blue" style={{ textTransform: 'capitalize' }}>
-            {service.category.replace('-', ' ')}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem', flexWrap: 'wrap', gap: '0.35rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+            <span className="badge badge-blue" style={{ textTransform: 'capitalize' }}>
+              {service.category.replace('-', ' ')}
+            </span>
+            {officialAuthority && (
+              <span className="badge badge-gold" style={{ fontSize: '0.68rem', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={officialAuthority}>
+                🏛️ {officialAuthority.split('(')[0].trim()}
+              </span>
+            )}
+          </div>
           {service.badge && (
             <span className="badge badge-gold">
               {service.badge}
@@ -93,11 +111,11 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <Clock size={13} color="#D97706" />
-            <span><strong>Timeline:</strong> {language === 'hi' ? service.timelineHi : service.timeline}</span>
+            <span><strong>Timeline:</strong> {displayTimeline}</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <FileText size={13} color="#075ACB" />
-            <span><strong>Docs:</strong> {service.requiredDocs && Array.isArray(service.requiredDocs) && service.requiredDocs.length > 0 ? `${service.requiredDocs.slice(0, 2).join(', ')}...` : (language === 'hi' ? 'पहचान एवं पता प्रमाण' : 'Identity & Address Proof')}</span>
+            <span><strong>Docs:</strong> {docsList && docsList.length > 0 ? `${docsList.slice(0, 2).join(', ')}...` : (language === 'hi' ? 'पहचान एवं पता प्रमाण' : 'Identity & Address Proof')}</span>
           </div>
         </div>
       </div>
@@ -116,16 +134,19 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
             <span style={{ fontSize: '0.72rem', color: '#64748B', display: 'block' }}>Fee Breakdown:</span>
             <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#061A36' }}>
               {(() => {
-                const priceVal = Number(service.basePrice ?? (service as any).price ?? 0);
+                const priceVal = statutoryProfile ? statutoryProfile.adcsFacilitationFee : Number(service.basePrice ?? (service as any).price ?? 0);
                 return priceVal === 0 ? 'Free Consultation' : `₹${priceVal.toLocaleString('en-IN')}`;
               })()}
             </span>
           </div>
-          {service.govtFee && service.govtFee > 0 ? (
-            <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 500 }}>
-              + ₹{service.govtFee} Govt. Fee
-            </span>
-          ) : null}
+          {(() => {
+            const govtFeeVal = statutoryProfile ? statutoryProfile.statutoryGovtFee : (service.govtFee || 0);
+            return govtFeeVal > 0 ? (
+              <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 500 }}>
+                + ₹{govtFeeVal} Govt. Fee
+              </span>
+            ) : null;
+          })()}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.5rem' }}>

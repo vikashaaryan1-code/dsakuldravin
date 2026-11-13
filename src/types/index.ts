@@ -50,8 +50,16 @@ export interface ServiceCategory {
 export interface CustomFormField {
   id: string;
   label: string;
-  type: 'text' | 'number' | 'file' | 'date';
+  labelHi?: string;
+  type: 'text' | 'number' | 'file' | 'date' | 'select' | 'textarea';
   required: boolean;
+  placeholder?: string;
+  placeholderHi?: string;
+  options?: string[];
+  optionsHi?: string[];
+  helpText?: string;
+  helpTextHi?: string;
+  validationRegex?: string;
 }
 
 export interface ServiceItem {
@@ -95,6 +103,23 @@ export interface TrackingStep {
   isCurrent: boolean;
 }
 
+export interface UploadedDocumentRecord {
+  id: string;
+  documentKey: string;
+  name: string;
+  fileName: string;
+  size: string;
+  fileType: string;
+  category: 'Identity' | 'Address' | 'DOB' | 'Land' | 'Medical' | 'Income' | 'Photo' | 'Legal' | 'Business' | 'Tax' | 'Property' | 'Education' | 'Other';
+  uploadDate: string;
+  status: 'verified' | 'pending' | 'flagged';
+  ocrConfidence?: number;
+  sha256?: string;
+  previewUrl?: string;
+  dataUrl?: string;
+  source?: 'upload' | 'digilocker';
+}
+
 export interface Application {
   id: string; // e.g. AD-APP-8942
   serviceId: string;
@@ -116,6 +141,8 @@ export interface Application {
   paymentMode?: string;
   aiRoutingNote?: string;
   documentsUploaded: string[];
+  uploadedDocumentRecords?: UploadedDocumentRecord[];
+  formData?: Record<string, any>;
   notes?: string;
   trackingSteps: TrackingStep[];
 }

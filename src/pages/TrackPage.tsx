@@ -429,30 +429,73 @@ export const TrackPage: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Statutory Intake Details if present */}
+                {searchedEntity.data.formData && Object.keys(searchedEntity.data.formData).length > 0 && (
+                  <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #E2E8F0' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#061A36', marginBottom: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      Statutory Intake Profile
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.4rem', background: '#F8FAFC', padding: '0.75rem', borderRadius: '8px', border: '1px solid #E2E8F0', fontSize: '0.8rem' }}>
+                      {Object.entries(searchedEntity.data.formData).map(([k, v]) => (
+                        <div key={k} style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px dashed #E2E8F0', paddingBottom: '0.3rem' }}>
+                          <span style={{ color: '#64748B', textTransform: 'capitalize' }}>{k.replace(/([A-Z])/g, ' $1')}:</span>
+                          <span style={{ fontWeight: 600, color: '#061A36' }}>{String(v)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Uploaded Documents Scrutiny */}
-                <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #E2E8F0' }}>
+                <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid #E2E8F0' }}>
                   <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#475569', marginBottom: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     Verified Supporting Documents
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                    {searchedEntity.data.documentsUploaded?.map((doc: string, idx: number) => (
-                      <div key={idx} style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        background: '#F8FAFC',
-                        padding: '0.6rem 0.85rem',
-                        borderRadius: '8px',
-                        border: '1px solid #E2E8F0',
-                        fontSize: '0.8rem',
-                      }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <ShieldCheck size={16} color="#10B981" />
-                          <span style={{ color: '#334155', fontWeight: 600 }}>{doc}</span>
+                    {searchedEntity.data.uploadedDocumentRecords && searchedEntity.data.uploadedDocumentRecords.length > 0 ? (
+                      searchedEntity.data.uploadedDocumentRecords.map((docRec: any, idx: number) => (
+                        <div key={idx} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: '#F0FDF4',
+                          padding: '0.6rem 0.85rem',
+                          borderRadius: '8px',
+                          border: '1px solid #BBF7D0',
+                          fontSize: '0.8rem',
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <ShieldCheck size={16} color="#10B981" />
+                            <div>
+                              <div style={{ color: '#0F172A', fontWeight: 700 }}>{docRec.name}</div>
+                              <div style={{ fontSize: '0.7rem', color: '#64748B' }}>{docRec.fileName} ({docRec.size})</div>
+                            </div>
+                          </div>
+                          <span className="badge badge-green" style={{ fontSize: '0.7rem' }}>
+                            {docRec.ocrConfidence ? `OCR ${docRec.ocrConfidence}%` : 'Verified'}
+                          </span>
                         </div>
-                        <span className="badge badge-green" style={{ fontSize: '0.7rem' }}>OCR Validated</span>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      searchedEntity.data.documentsUploaded?.map((doc: string, idx: number) => (
+                        <div key={idx} style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          background: '#F8FAFC',
+                          padding: '0.6rem 0.85rem',
+                          borderRadius: '8px',
+                          border: '1px solid #E2E8F0',
+                          fontSize: '0.8rem',
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <ShieldCheck size={16} color="#10B981" />
+                            <span style={{ color: '#334155', fontWeight: 600 }}>{doc}</span>
+                          </div>
+                          <span className="badge badge-green" style={{ fontSize: '0.7rem' }}>OCR Validated</span>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
 
