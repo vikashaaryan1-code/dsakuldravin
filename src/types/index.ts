@@ -201,10 +201,13 @@ export interface UploadedDocumentRecord {
 
 export interface Application {
   id: string; // ADCS Application ID, e.g. ADCS-2026-00001245 or AD-APP-8942
+  adcsAppId?: string; // Enterprise alias
   paymentOrderId?: string; // Payment Order ID, e.g. PAY-2026-000098
   adcsReceiptNumber?: string; // ADCS Receipt Number, e.g. REC-2026-000045
   externalReferenceNumber?: string; // Government / Provider ARN, URN, EID, coupon number
+  externalAuthorityRef?: string; // Alias for externalReferenceNumber
   externalAuthorityName?: string; // e.g. UIDAI, Passport Seva, Income Tax Dept
+  trackingId?: string; // Logistics / status tracking alias
   serviceId: string;
   serviceName: string;
   category: ServiceCategoryKey;
