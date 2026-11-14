@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../../store/AppContext';
 import { apiClient } from '../../services/apiClient';
 import { printBrandedADCSDocument } from '../../utils/documentBranding';
+import { generateApplicationIdentifiers } from '../../utils/applicationStateMachine';
 import { 
   Store, 
   Wallet, 
@@ -101,13 +102,26 @@ export const DigitalCenterPortal: React.FC = () => {
     const netPlatformFee = cashCollected - effectiveComm;
 
     setTimeout(() => {
+      const ids = generateApplicationIdentifiers();
       const appId = submitApplication({
+        id: ids.adcsAppId,
+        paymentOrderId: ids.paymentOrderId,
+        adcsReceiptNumber: ids.adcsReceiptNumber,
+        externalAuthorityName: chosenService.officialAuthority || 'Competent Authority',
         serviceId: chosenService.id,
         serviceName: chosenService.title,
         category: chosenService.category,
         applicantName: custName.trim(),
         applicantPhone: custPhone.trim(),
         feePaid: cashCollected,
+        feeBreakdown: {
+          adcsServiceFee: Math.round(cashCollected * 0.7),
+          statutoryFee: Math.round(cashCollected * 0.3),
+          gst: Math.round(cashCollected * 0.18),
+          partnerFee: effectiveComm,
+          discount: 0,
+          total: cashCollected,
+        },
         city: 'Patna Center #104',
         state: 'Bihar',
         notes: `Walk-in counter registration at VLE Center. VLE Commission: ₹${effectiveComm} credited to wallet.`,

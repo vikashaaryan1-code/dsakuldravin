@@ -82,9 +82,31 @@ export interface ServiceItem {
   isCustomCreated?: boolean;
   customFields?: CustomFormField[];
   officialPortalUrl?: string;
+  officialAuthority?: string;
 }
 
 export type ApplicationStatus = 
+  // Master PRD Lifecycle States
+  | 'DRAFT'
+  | 'DOCUMENTS_PENDING'
+  | 'READY_FOR_PAYMENT'
+  | 'PAYMENT_PENDING'
+  | 'PAYMENT_FAILED'
+  | 'PAID_SUBMISSION_PENDING'
+  | 'SUBMITTED'
+  | 'UNDER_REVIEW'
+  | 'CORRECTION_REQUIRED'
+  | 'RESUBMITTED'
+  | 'READY_FOR_PROVIDER'
+  | 'PROVIDER_PROCESSING'
+  | 'EXTERNAL_QUERY'
+  | 'APPOINTMENT_SCHEDULED'
+  | 'APPROVED'
+  | 'REJECTED'
+  | 'ISSUED'
+  | 'DELIVERED'
+  | 'CLOSED'
+  // Legacy Display Variants
   | 'Submitted' 
   | 'Document Verification' 
   | 'Executive Assigned' 
@@ -103,6 +125,56 @@ export interface TrackingStep {
   isCurrent: boolean;
 }
 
+export interface CorrectionItem {
+  id: string;
+  fieldOrDocKey: string;
+  type: 'document' | 'field';
+  label: string;
+  labelHi?: string;
+  issueReason: string; // e.g. "Image blurry / unreadable", "Missing back page", "Name spelling mismatch"
+  actionRequired: string; // e.g. "Upload clear 300+ DPI scan", "Confirm exact spelling as per Aadhaar"
+  resolved: boolean;
+  newDocumentRecord?: UploadedDocumentRecord;
+  newValue?: string;
+  resolvedAt?: string;
+  // Aliases for convenience across portals
+  targetKey?: string;
+  targetName?: string;
+  itemType?: 'document' | 'field';
+  reason?: string;
+}
+
+export interface CorrectionRequest {
+  id: string; // e.g. COR-2026-00012
+  applicationId: string;
+  requestedAt: string;
+  deadline: string;
+  status: 'PENDING' | 'RESOLVED' | 'EXPIRED';
+  reviewerName: string;
+  reviewerRole: string;
+  notes?: string;
+  items: CorrectionItem[];
+}
+
+export interface FamilyApplicantProfile {
+  id: string;
+  fullName: string;
+  relation?: 'Self' | 'Spouse' | 'Father' | 'Mother' | 'Son' | 'Daughter' | 'Other';
+  relationship?: string; // alias
+  dob: string;
+  gender: 'Male' | 'Female' | 'Other';
+  aadhaarNumberMasked: string;
+  panNumberMasked?: string;
+  panNumber?: string; // alias
+  mobile?: string;
+  phone?: string; // alias
+  email?: string;
+  address: string;
+  state: string;
+  city: string;
+  pincode: string;
+}
+
 export interface UploadedDocumentRecord {
   id: string;
   documentKey: string;
@@ -118,10 +190,21 @@ export interface UploadedDocumentRecord {
   previewUrl?: string;
   dataUrl?: string;
   source?: 'upload' | 'digilocker';
+  previousVersions?: Array<{
+    fileName: string;
+    size: string;
+    uploadDate: string;
+    sha256?: string;
+    replacedReason?: string;
+  }>;
 }
 
 export interface Application {
-  id: string; // e.g. AD-APP-8942
+  id: string; // ADCS Application ID, e.g. ADCS-2026-00001245 or AD-APP-8942
+  paymentOrderId?: string; // Payment Order ID, e.g. PAY-2026-000098
+  adcsReceiptNumber?: string; // ADCS Receipt Number, e.g. REC-2026-000045
+  externalReferenceNumber?: string; // Government / Provider ARN, URN, EID, coupon number
+  externalAuthorityName?: string; // e.g. UIDAI, Passport Seva, Income Tax Dept
   serviceId: string;
   serviceName: string;
   category: ServiceCategoryKey;
@@ -135,6 +218,15 @@ export interface Application {
   updatedAt: string;
   assignedTo?: string;
   feePaid: number;
+  feeBreakdown?: {
+    adcsServiceFee: number;
+    statutoryFee: number;
+    statutoryGovtFee?: number;
+    gst: number;
+    partnerFee?: number;
+    discount?: number;
+    total: number;
+  };
   utrNumber?: string;
   transactionId?: string;
   paymentStatus?: 'UTR_SUBMITTED' | 'VERIFIED' | 'REJECTED';
@@ -143,6 +235,12 @@ export interface Application {
   documentsUploaded: string[];
   uploadedDocumentRecords?: UploadedDocumentRecord[];
   formData?: Record<string, any>;
+  correctionRequests?: CorrectionRequest[];
+  finalDeliverableUrl?: string;
+  finalDeliverableName?: string;
+  finalDeliverableIssuedAt?: string;
+  appointmentDate?: string;
+  appointmentVenue?: string;
   notes?: string;
   trackingSteps: TrackingStep[];
 }
@@ -150,7 +248,7 @@ export interface Application {
 export interface DocumentItem {
   id: string;
   name: string;
-  category: 'Identity' | 'Address' | 'Business' | 'Tax' | 'Property' | 'Education' | 'Other';
+  category: 'Identity' | 'Address' | 'Business' | 'Tax' | 'Property' | 'Education' | 'Income' | 'Other';
   fileType: string;
   uploadDate: string;
   expiryDate?: string;
@@ -338,6 +436,7 @@ export interface SupportTicket {
   customerName: string;
   customerPhone: string;
   serviceCategory: string;
+  category?: string; // alias
   subject: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical SLA';
   status: 'Open' | 'In Progress' | 'Escalated' | 'Resolved';
@@ -345,9 +444,13 @@ export interface SupportTicket {
   slaRemainingHours: number;
   createdAt: string;
   messages: {
+    id?: string;
     sender: string;
+    senderName?: string;
     role: string;
+    senderRole?: string;
     text: string;
+    message?: string;
     timestamp: string;
   }[];
 }

@@ -5,9 +5,10 @@ import { apiClient } from '../../services/apiClient';
 import { PANApplicationEngine } from '../pan/PANApplicationEngine';
 import { resolveOfficialPortal, STATE_EDISTRICT_PORTALS } from '../../data/officialPortalRegistry';
 import { resolveStatutoryProfile, StatutoryDocumentRequirement, ServiceStatutoryProfile } from '../../data/statutoryDocumentRegistry';
-import { CustomFormField, UploadedDocumentRecord } from '../../types';
+import { CustomFormField, UploadedDocumentRecord, FamilyApplicantProfile } from '../../types';
 import { DocumentHeader } from '../branding';
 import { printBrandedADCSDocument } from '../../utils/documentBranding';
+import { generateApplicationIdentifiers } from '../../utils/applicationStateMachine';
 import { UTRPaymentGate, UTRPaymentSubmission } from '../common/UTRPaymentGate';
 import { 
   X, 
@@ -70,10 +71,12 @@ export const ServiceApplicationModal: React.FC = () => {
     selectedServiceForApply, 
     submitApplication,
     setActiveTrackerQuery,
-    language 
+    language,
+    savedApplicants 
   } = useApp();
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [selectedApplicantProfileId, setSelectedApplicantProfileId] = useState<string>('');
   const [applicantName, setApplicantName] = useState('Rahul Verma');
   const [applicantPhone, setApplicantPhone] = useState('+91 98765 12340');
   const [applicantEmail, setApplicantEmail] = useState('rahul.verma@gmail.com');
@@ -98,9 +101,68 @@ export const ServiceApplicationModal: React.FC = () => {
   const [submittedProof, setSubmittedProof] = useState<UTRPaymentSubmission | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedAppId, setGeneratedAppId] = useState<string | null>(null);
+  const [generatedIds, setGeneratedIds] = useState<{
+    adcsAppId: string;
+    paymentOrderId: string;
+    adcsReceiptNumber: string;
+  } | null>(null);
   const [showPrintSlip, setShowPrintSlip] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [copiedSummary, setCopiedSummary] = useState(false);
+
+  // Draft auto-restore
+  useEffect(() => {
+    if (selectedServiceForApply && isApplyModalOpen) {
+      try {
+        const draftKey = `adcs_draft_${selectedServiceForApply.id}`;
+        const savedDraftStr = localStorage.getItem(draftKey);
+        if (savedDraftStr) {
+          const draft = JSON.parse(savedDraftStr);
+          if (draft.applicantName) setApplicantName(draft.applicantName);
+          if (draft.applicantPhone) setApplicantPhone(draft.applicantPhone);
+          if (draft.applicantEmail) setApplicantEmail(draft.applicantEmail);
+          if (draft.state) setState(draft.state);
+          if (draft.city) setCity(draft.city);
+          if (draft.customFieldValues) setCustomFieldValues(draft.customFieldValues);
+        }
+      } catch (e) {
+        // Ignore draft parse failure
+      }
+    }
+  }, [selectedServiceForApply, isApplyModalOpen]);
+
+  // Draft auto-save on input change
+  useEffect(() => {
+    if (selectedServiceForApply && isApplyModalOpen && step < 4) {
+      try {
+        const draftKey = `adcs_draft_${selectedServiceForApply.id}`;
+        localStorage.setItem(draftKey, JSON.stringify({
+          applicantName,
+          applicantPhone,
+          applicantEmail,
+          state,
+          city,
+          customFieldValues,
+          updatedAt: new Date().toISOString()
+        }));
+      } catch (e) {
+        // Ignore storage errors
+      }
+    }
+  }, [selectedServiceForApply, isApplyModalOpen, step, applicantName, applicantPhone, applicantEmail, state, city, customFieldValues]);
+
+  // Handle saved applicant prefill selection
+  const handleSelectSavedApplicant = (profileId: string) => {
+    setSelectedApplicantProfileId(profileId);
+    const profile = savedApplicants.find(p => p.id === profileId);
+    if (profile) {
+      setApplicantName(profile.fullName);
+      setApplicantPhone(profile.phone);
+      if (profile.email) setApplicantEmail(profile.email);
+      if (profile.state) setState(profile.state);
+      if (profile.city) setCity(profile.city);
+    }
+  };
 
   // File input refs map
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
@@ -380,7 +442,14 @@ export const ServiceApplicationModal: React.FC = () => {
       const documentRecordsList = Object.values(uploadedDocsMap);
       const documentFileNames = documentRecordsList.map(d => d.fileName);
 
+      const ids = generateApplicationIdentifiers();
+      setGeneratedIds(ids);
+
       const newId = submitApplication({
+        id: ids.adcsAppId,
+        paymentOrderId: ids.paymentOrderId,
+        adcsReceiptNumber: ids.adcsReceiptNumber,
+        externalAuthorityName: officialAuthority,
         serviceId: service.id,
         serviceName: service.title,
         category: service.category,
@@ -390,6 +459,14 @@ export const ServiceApplicationModal: React.FC = () => {
         city,
         state,
         feePaid: totalAmount,
+        feeBreakdown: {
+          adcsServiceFee: adcsFacilitationFee,
+          statutoryFee: statutoryGovtFee,
+          gst,
+          partnerFee: 0,
+          discount: 0,
+          total: totalAmount,
+        },
         utrNumber: proof.utrNumber,
         transactionId: proof.transactionId,
         paymentMode: proof.paymentMethod,
@@ -398,6 +475,13 @@ export const ServiceApplicationModal: React.FC = () => {
         formData: customFieldValues,
         notes: `Statutory preparation completed. Payment mode: ${proof.paymentMethod.toUpperCase()} • UTR: ${proof.utrNumber} • TXN ID: ${proof.transactionId}. Authority: ${officialAuthority}.${customSummary ? ` Intake Data: [${customSummary}]` : ''}`,
       });
+
+      // Clear draft after successful creation
+      try {
+        localStorage.removeItem(`adcs_draft_${service.id}`);
+      } catch (e) {
+        // Ignore
+      }
 
       setGeneratedAppId(newId);
       setIsSubmitting(false);
@@ -612,8 +696,36 @@ export const ServiceApplicationModal: React.FC = () => {
                 flexDirection: 'column',
                 gap: '0.85rem'
               }}>
-                <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#061A36', letterSpacing: '0.04em' }}>
-                  CITIZEN / APPLICANT CONTACT PROFILE
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#061A36', letterSpacing: '0.04em' }}>
+                    CITIZEN / APPLICANT CONTACT PROFILE
+                  </div>
+                  {savedApplicants.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.75rem' }}>
+                      <span style={{ color: '#64748B' }}>1-Click Prefill:</span>
+                      <select
+                        value={selectedApplicantProfileId}
+                        onChange={(e) => handleSelectSavedApplicant(e.target.value)}
+                        style={{
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '6px',
+                          border: '1px solid #CBD5E1',
+                          background: '#F8FAFC',
+                          fontSize: '0.74rem',
+                          color: '#075ACB',
+                          fontWeight: 700,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="">Choose Saved Profile (परिवार सदस्य)</option>
+                        {savedApplicants.map(p => (
+                          <option key={p.id} value={p.id}>
+                            {p.fullName} ({p.relationship})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group" style={{ marginBottom: 0 }}>
@@ -1516,23 +1628,86 @@ export const ServiceApplicationModal: React.FC = () => {
                   </div>
                 </div>
               ) : (
-                <div style={{
-                  background: '#EFF6FF',
-                  border: '1.5px dashed #93C5FD',
-                  borderRadius: '16px',
-                  padding: '1.25rem',
-                  marginBottom: '1.25rem',
-                  display: 'inline-block',
-                  minWidth: '280px',
-                }}>
-                  <div style={{ fontSize: '0.75rem', color: '#075ACB', fontWeight: 700, textTransform: 'uppercase' }}>
-                    YOUR UNIQUE APPLICATION TOKEN
-                  </div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#061A36', letterSpacing: '0.05em' }}>
-                    {generatedAppId}
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: '#475569', marginTop: '0.25rem' }}>
-                    Use this token anytime to track progress live
+                <div style={{ marginBottom: '1.25rem' }}>
+                  {/* The 4 Distinct Enterprise Identifiers Grid */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+                    gap: '0.85rem',
+                    textAlign: 'left',
+                    marginBottom: '1rem',
+                  }}>
+                    {/* ID 1: ADCS Application ID */}
+                    <div style={{
+                      background: '#EFF6FF',
+                      border: '1.5px solid #93C5FD',
+                      borderRadius: '12px',
+                      padding: '0.9rem',
+                    }}>
+                      <div style={{ fontSize: '0.68rem', color: '#075ACB', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        1. ADCS APPLICATION ID
+                      </div>
+                      <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#061A36', margin: '0.2rem 0' }}>
+                        {generatedIds?.adcsAppId || generatedAppId}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                        Universal lifecycle tracking token
+                      </div>
+                    </div>
+
+                    {/* ID 2: Payment Order ID */}
+                    <div style={{
+                      background: '#F8FAFC',
+                      border: '1.5px solid #E2E8F0',
+                      borderRadius: '12px',
+                      padding: '0.9rem',
+                    }}>
+                      <div style={{ fontSize: '0.68rem', color: '#475569', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        2. PAYMENT ORDER ID
+                      </div>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#0F172A', margin: '0.2rem 0', fontFamily: 'monospace' }}>
+                        {generatedIds?.paymentOrderId || `PAY-2026-${generatedAppId?.replace(/[^0-9]/g, '').slice(-4) || '9012'}`}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#64748B' }}>
+                        Settled via {submittedProof?.paymentMethod.toUpperCase() || 'UPI'} • UTR: {submittedProof?.utrNumber || 'Verified'}
+                      </div>
+                    </div>
+
+                    {/* ID 3: ADCS Receipt Number */}
+                    <div style={{
+                      background: '#FEFCE8',
+                      border: '1.5px solid #FEF08A',
+                      borderRadius: '12px',
+                      padding: '0.9rem',
+                    }}>
+                      <div style={{ fontSize: '0.68rem', color: '#854D0E', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        3. ADCS RECEIPT NUMBER
+                      </div>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#713F12', margin: '0.2rem 0', fontFamily: 'monospace' }}>
+                        {generatedIds?.adcsReceiptNumber || `REC-2026-${generatedAppId?.replace(/[^0-9]/g, '').slice(-4) || '7890'}`}
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#854D0E' }}>
+                        Legal GST Tax Invoice & Ledger
+                      </div>
+                    </div>
+
+                    {/* ID 4: External Authority Reference */}
+                    <div style={{
+                      background: '#F0FDF4',
+                      border: '1.5px solid #BBF7D0',
+                      borderRadius: '12px',
+                      padding: '0.9rem',
+                    }}>
+                      <div style={{ fontSize: '0.68rem', color: '#166534', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        4. EXTERNAL AUTHORITY REF
+                      </div>
+                      <div style={{ fontSize: '0.92rem', fontWeight: 700, color: '#15803D', margin: '0.2rem 0' }}>
+                        Pending Review Queue
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: '#166534' }}>
+                        {officialAuthority} (ARN / URN / EID assigned upon submission)
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

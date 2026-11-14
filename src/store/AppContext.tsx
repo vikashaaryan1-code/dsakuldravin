@@ -32,8 +32,13 @@ import {
   ServiceBannerItem,
   LoginPanelKey,
   PermissionFlag,
-  DigitalSevaTier
+  DigitalSevaTier,
+  FamilyApplicantProfile,
+  CorrectionRequest,
+  CorrectionItem,
+  UploadedDocumentRecord
 } from '../types';
+import { canTransition, getStatusMeta } from '../utils/applicationStateMachine';
 import {
   DEFAULT_AI_CONTROL_CONFIG,
   DEFAULT_COMMISSION_RULES,
@@ -228,6 +233,20 @@ interface AppContextType {
   // Multi-Service Promotional Banners
   serviceBanners: ServiceBannerItem[];
   saveServiceBanner: (banner: ServiceBannerItem) => void;
+
+  // PRD Master Application Lifecycle & Correction Operations
+  savedApplicants: FamilyApplicantProfile[];
+  addSavedApplicant: (applicant: Omit<FamilyApplicantProfile, 'id'>) => FamilyApplicantProfile;
+  updateSavedApplicant: (id: string, patch: Partial<FamilyApplicantProfile>) => void;
+  deleteSavedApplicant: (id: string) => void;
+
+  createCorrectionRequest: (applicationId: string, reviewerName: string, items: Omit<CorrectionItem, 'id' | 'resolved'>[], notes?: string) => void;
+  submitCorrectionResponse: (applicationId: string, resolvedItems: Array<{ id: string; newDocumentRecord?: UploadedDocumentRecord; newValue?: string }>) => void;
+  assignApplicationOperator: (applicationId: string, operatorName: string) => void;
+  updateApplicationReviewStatus: (applicationId: string, newStatus: ApplicationStatus, reviewerNotes?: string) => void;
+  recordExternalProviderSubmission: (applicationId: string, externalRefNumber: string, authorityName: string) => void;
+  deliverFinalDocument: (applicationId: string, deliverableName: string, deliverableUrl: string) => void;
+  processApplicationRefund: (applicationId: string, refundAmount: number, reason: string) => void;
 }
 
 export const defaultAppContextValue: AppContextType = {
@@ -341,9 +360,66 @@ export const defaultAppContextValue: AppContextType = {
   updateAiControlConfig: () => false,
   serviceBanners: SERVICE_BANNERS,
   saveServiceBanner: () => {},
+  savedApplicants: [],
+  addSavedApplicant: () => ({} as FamilyApplicantProfile),
+  updateSavedApplicant: () => {},
+  deleteSavedApplicant: () => {},
+  createCorrectionRequest: () => {},
+  submitCorrectionResponse: () => {},
+  assignApplicationOperator: () => {},
+  updateApplicationReviewStatus: () => {},
+  recordExternalProviderSubmission: () => {},
+  deliverFinalDocument: () => {},
+  processApplicationRefund: () => {},
 };
 
 const AppContext = createContext<AppContextType>(defaultAppContextValue);
+
+export const DEFAULT_SAVED_APPLICANTS: FamilyApplicantProfile[] = [
+  {
+    id: 'FAM-01',
+    fullName: 'Rahul Verma',
+    relation: 'Self',
+    dob: '1992-06-15',
+    gender: 'Male',
+    aadhaarNumberMasked: '9999 •••• 0019',
+    panNumberMasked: 'ABCDE••••F',
+    mobile: '+91 98765 12340',
+    email: 'rahul.verma@gmail.com',
+    address: 'Flat 402, Shanti Kunj Apartment, Boring Road',
+    state: 'Bihar',
+    city: 'Patna',
+    pincode: '800001',
+  },
+  {
+    id: 'FAM-02',
+    fullName: 'Pooja Verma',
+    relation: 'Spouse',
+    dob: '1995-09-22',
+    gender: 'Female',
+    aadhaarNumberMasked: '8888 •••• 4421',
+    panNumberMasked: 'XYZPA••••K',
+    mobile: '+91 98765 12341',
+    email: 'pooja.verma@gmail.com',
+    address: 'Flat 402, Shanti Kunj Apartment, Boring Road',
+    state: 'Bihar',
+    city: 'Patna',
+    pincode: '800001',
+  },
+  {
+    id: 'FAM-03',
+    fullName: 'Rameshwar Verma',
+    relation: 'Father',
+    dob: '1965-02-10',
+    gender: 'Male',
+    aadhaarNumberMasked: '7777 •••• 9912',
+    mobile: '+91 98765 12342',
+    address: 'House No 12, Ward 4, Gandhi Chowk',
+    state: 'Bihar',
+    city: 'Gaya',
+    pincode: '823001',
+  }
+];
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Persistent Settings
@@ -415,6 +491,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [inventory, setInventory] = useState<InventoryRecord[]>(initialInventory);
   const [documents, setDocuments] = useState<DocumentItem[]>(initialCustomerDocuments);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>(initialAuditLogs);
+
+  // Saved Applicants / Family Profiles (PRD Part D, §25)
+  const [savedApplicants, setSavedApplicants] = useState<FamilyApplicantProfile[]>(() => {
+    try {
+      const saved = localStorage.getItem('adcs_saved_applicants');
+      return saved ? JSON.parse(saved) : DEFAULT_SAVED_APPLICANTS;
+    } catch {
+      return DEFAULT_SAVED_APPLICANTS;
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('adcs_saved_applicants', JSON.stringify(savedApplicants));
+    } catch {}
+  }, [savedApplicants]);
 
   // Strict Role-Locked Accounts, Digital Seva Hierarchy & Governance State
   const [userAccounts, setUserAccounts] = useState<AuthUserAccount[]>(() => {
@@ -737,11 +829,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('Service Created Successfully', `"${newService.title}" is now live across the platform.`, 'success');
   };
 
-  // Submit Application
+  // Saved Applicant Profile Operations (PRD Part D, §25)
+  const addSavedApplicant = (applicant: Omit<FamilyApplicantProfile, 'id'>): FamilyApplicantProfile => {
+    const newProfile: FamilyApplicantProfile = {
+      ...applicant,
+      id: `FAM-${Date.now()}`,
+    };
+    setSavedApplicants(prev => [newProfile, ...prev]);
+    showToast('Applicant Profile Saved', `${newProfile.fullName} saved for 1-click application prefill.`, 'success');
+    return newProfile;
+  };
+
+  const updateSavedApplicant = (id: string, patch: Partial<FamilyApplicantProfile>) => {
+    setSavedApplicants(prev => prev.map(p => p.id === id ? { ...p, ...patch } : p));
+    showToast('Profile Updated', 'Saved applicant profile updated.', 'info');
+  };
+
+  const deleteSavedApplicant = (id: string) => {
+    setSavedApplicants(prev => prev.filter(p => p.id !== id));
+    showToast('Profile Removed', 'Applicant profile removed from saved list.', 'info');
+  };
+
+  // Submit Application (PRD Part A & B)
   const submitApplication = (appData: Partial<Application>): string => {
-    const newId = 'AD-APP-' + Math.floor(1000 + Math.random() * 9000);
+    const year = new Date().getFullYear();
+    const randomSuffix = String(Math.floor(100000 + Math.random() * 900000));
+    const newId = appData.id || `ADCS-${year}-${randomSuffix}`;
+    const paymentOrderId = appData.paymentOrderId || `PAY-${year}-${randomSuffix}`;
+    const adcsReceiptNumber = appData.adcsReceiptNumber || `REC-${year}-${randomSuffix}`;
+
     const newApp: Application = {
       id: newId,
+      paymentOrderId,
+      adcsReceiptNumber,
+      externalReferenceNumber: appData.externalReferenceNumber,
+      externalAuthorityName: appData.externalAuthorityName,
       serviceId: appData.serviceId || 'srv-custom',
       serviceName: appData.serviceName || 'Service Request',
       category: appData.category || 'government',
@@ -750,13 +872,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       applicantEmail: appData.applicantEmail || 'user@akuldravin.com',
       city: appData.city || 'Patna',
       state: appData.state || 'Bihar',
-      status: 'Submitted',
+      status: (appData.status || 'SUBMITTED') as ApplicationStatus,
       submittedAt: new Date().toLocaleString(),
       updatedAt: new Date().toLocaleString(),
       assignedTo: aiControlConfig.autonomousRoutingEnabled
         ? `QUANTUM AI Routed • ${appData.assignedTo || 'Regional Hub Executive'}`
         : (appData.assignedTo || 'Regional Hub Executive'),
       feePaid: appData.feePaid || 0,
+      feeBreakdown: appData.feeBreakdown || {
+        adcsServiceFee: appData.feePaid || 0,
+        statutoryFee: 0,
+        gst: Math.round(((appData.feePaid || 0) * 18) / 118),
+        total: appData.feePaid || 0,
+      },
       utrNumber: appData.utrNumber,
       transactionId: appData.transactionId,
       paymentStatus: appData.utrNumber ? (appData.paymentStatus || 'UTR_SUBMITTED') : undefined,
@@ -767,8 +895,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       documentsUploaded: appData.documentsUploaded || ['Uploaded_Document_1.pdf'],
       uploadedDocumentRecords: appData.uploadedDocumentRecords,
       formData: appData.formData,
+      correctionRequests: appData.correctionRequests,
+      finalDeliverableName: appData.finalDeliverableName,
+      finalDeliverableUrl: appData.finalDeliverableUrl,
+      finalDeliverableIssuedAt: appData.finalDeliverableIssuedAt,
+      appointmentDate: appData.appointmentDate,
+      appointmentVenue: appData.appointmentVenue,
       notes: appData.notes || 'Initial submission verified by Quantum Document AI.',
-      trackingSteps: [
+      trackingSteps: appData.trackingSteps || [
         {
           title: appData.utrNumber ? `Payment Proof Logged (UTR: ${appData.utrNumber})` : 'Application Created',
           titleHi: appData.utrNumber ? `भुगतान यूटीआर दर्ज (${appData.utrNumber})` : 'आवेदन दर्ज हुआ',
@@ -867,6 +1001,306 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Asynchronously dispatch to Backend API Gateway
     apiClient.updateApplicationStatus(appId, status, notes, currentRole).catch(() => {});
+  };
+
+  // PRD Correction Request Operations (PRD Part B, §7)
+  const createCorrectionRequest = (
+    applicationId: string, 
+    reviewerName: string, 
+    items: Omit<CorrectionItem, 'id' | 'resolved'>[], 
+    notes?: string
+  ) => {
+    const deadlineDate = new Date();
+    deadlineDate.setDate(deadlineDate.getDate() + 7);
+
+    const newRequest: CorrectionRequest = {
+      id: `COR-${Date.now()}`,
+      applicationId,
+      requestedAt: new Date().toLocaleString(),
+      deadline: deadlineDate.toLocaleDateString('en-IN'),
+      status: 'PENDING',
+      reviewerName,
+      reviewerRole: 'Senior Verification Officer',
+      notes,
+      items: items.map((item, idx) => ({
+        ...item,
+        id: `item-${idx + 1}-${Date.now()}`,
+        resolved: false,
+      })),
+    };
+
+    setApplications(prev => prev.map(app => {
+      if (app.id === applicationId) {
+        const existingReqs = app.correctionRequests || [];
+        const nextSteps = [
+          ...app.trackingSteps,
+          {
+            title: 'Correction Requested by Reviewer',
+            titleHi: 'समीक्षक द्वारा संशोधन की मांग',
+            description: notes || `${items.length} document/field discrepancy flagged. Customer notified.`,
+            descriptionHi: `${items.length} दस्तावेज़ों में सुधार आवश्यक है।`,
+            date: 'Just now',
+            isCompleted: true,
+            isCurrent: true,
+          }
+        ];
+        return {
+          ...app,
+          status: 'CORRECTION_REQUIRED',
+          correctionRequests: [newRequest, ...existingReqs],
+          updatedAt: new Date().toLocaleString(),
+          trackingSteps: nextSteps,
+        };
+      }
+      return app;
+    }));
+
+    logAudit(`Correction Requested for ${applicationId}`, `Items: ${items.length} • Reviewer: ${reviewerName}`, 'Success');
+    showToast('Correction Request Sent', `Applicant notified for ${items.length} flagged items on ${applicationId}.`, 'warning');
+  };
+
+  const submitCorrectionResponse = (
+    applicationId: string, 
+    resolvedItems: Array<{ id: string; newDocumentRecord?: UploadedDocumentRecord; newValue?: string }>
+  ) => {
+    setApplications(prev => prev.map(app => {
+      if (app.id === applicationId) {
+        const existingReqs = app.correctionRequests || [];
+        const updatedReqs = existingReqs.map(req => {
+          if (req.status === 'PENDING') {
+            const nextItems = req.items.map(item => {
+              const match = resolvedItems.find(r => r.id === item.id);
+              if (match) {
+                return {
+                  ...item,
+                  resolved: true,
+                  newDocumentRecord: match.newDocumentRecord,
+                  newValue: match.newValue,
+                  resolvedAt: new Date().toLocaleString(),
+                };
+              }
+              return item;
+            });
+            const allResolved = nextItems.every(i => i.resolved);
+            return {
+              ...req,
+              items: nextItems,
+              status: (allResolved ? 'RESOLVED' : 'PENDING') as 'RESOLVED' | 'PENDING',
+            };
+          }
+          return req;
+        });
+
+        // Update document records preserving previous versions
+        let updatedDocRecords = [...(app.uploadedDocumentRecords || [])];
+        resolvedItems.forEach(r => {
+          if (r.newDocumentRecord) {
+            const existingIdx = updatedDocRecords.findIndex(d => d.documentKey === r.newDocumentRecord!.documentKey);
+            if (existingIdx >= 0) {
+              const old = updatedDocRecords[existingIdx];
+              const prevs = old.previousVersions || [];
+              updatedDocRecords[existingIdx] = {
+                ...r.newDocumentRecord,
+                previousVersions: [
+                  ...prevs,
+                  {
+                    fileName: old.fileName,
+                    size: old.size,
+                    uploadDate: old.uploadDate,
+                    sha256: old.sha256,
+                    replacedReason: 'Correction re-upload by customer',
+                  }
+                ]
+              };
+            } else {
+              updatedDocRecords.push(r.newDocumentRecord);
+            }
+          }
+        });
+
+        const nextSteps = [
+          ...app.trackingSteps,
+          {
+            title: 'Corrections Resubmitted by Applicant',
+            titleHi: 'आवेदक द्वारा संशोधन प्रस्तुत',
+            description: 'Updated documents received. Priority scrutiny queue assigned.',
+            descriptionHi: 'संशोधित दस्तावेज़ प्राप्त हुए। प्राथमिकता से समीक्षा जारी है।',
+            date: 'Just now',
+            isCompleted: true,
+            isCurrent: true,
+          }
+        ];
+
+        return {
+          ...app,
+          status: 'RESUBMITTED',
+          correctionRequests: updatedReqs,
+          uploadedDocumentRecords: updatedDocRecords,
+          updatedAt: new Date().toLocaleString(),
+          trackingSteps: nextSteps,
+        };
+      }
+      return app;
+    }));
+
+    logAudit(`Corrections Resubmitted for ${applicationId}`, 'Applicant Portal Action', 'Success');
+    showToast('Corrections Submitted Successfully', `Application ${applicationId} moved to priority review queue.`, 'success');
+  };
+
+  const assignApplicationOperator = (applicationId: string, operatorName: string) => {
+    setApplications(prev => prev.map(app => {
+      if (app.id === applicationId) {
+        return {
+          ...app,
+          assignedTo: operatorName,
+          status: 'UNDER_REVIEW',
+          updatedAt: new Date().toLocaleString(),
+          trackingSteps: [
+            ...app.trackingSteps,
+            {
+              title: `Assigned to ${operatorName}`,
+              titleHi: `समीक्षा अधिकारी: ${operatorName}`,
+              description: `Case dossier transferred to ${operatorName} for statutory verification.`,
+              descriptionHi: `आवेदन की समीक्षा हेतु अधिकारी नियुक्त।`,
+              date: 'Just now',
+              isCompleted: true,
+              isCurrent: true,
+            }
+          ]
+        };
+      }
+      return app;
+    }));
+    logAudit(`Assigned ${applicationId} to ${operatorName}`, 'Operations Desk');
+    showToast('Officer Assigned', `Application assigned to ${operatorName}.`, 'info');
+  };
+
+  const updateApplicationReviewStatus = (applicationId: string, newStatus: ApplicationStatus, reviewerNotes?: string) => {
+    setApplications(prev => prev.map(app => {
+      if (app.id === applicationId) {
+        const meta = getStatusMeta(newStatus);
+        return {
+          ...app,
+          status: newStatus,
+          notes: reviewerNotes || app.notes,
+          updatedAt: new Date().toLocaleString(),
+          trackingSteps: [
+            ...app.trackingSteps,
+            {
+              title: meta.title,
+              titleHi: meta.titleHi,
+              description: reviewerNotes || meta.description,
+              descriptionHi: meta.descriptionHi,
+              date: 'Just now',
+              isCompleted: true,
+              isCurrent: true,
+            }
+          ]
+        };
+      }
+      return app;
+    }));
+    logAudit(`Review status of ${applicationId} updated to ${newStatus}`, 'Review Desk');
+    showToast('Review Status Updated', `Application status is now "${newStatus}".`, 'info');
+  };
+
+  const recordExternalProviderSubmission = (applicationId: string, externalRefNumber: string, authorityName: string) => {
+    setApplications(prev => prev.map(app => {
+      if (app.id === applicationId) {
+        return {
+          ...app,
+          externalReferenceNumber: externalRefNumber,
+          externalAuthorityName: authorityName,
+          status: 'PROVIDER_PROCESSING',
+          updatedAt: new Date().toLocaleString(),
+          trackingSteps: [
+            ...app.trackingSteps,
+            {
+              title: `Filing Logged: ${externalRefNumber}`,
+              titleHi: `आधिकारिक फाइलिंग: ${externalRefNumber}`,
+              description: `Dossier submitted to ${authorityName}. Official tracking reference logged.`,
+              descriptionHi: `${authorityName} में आवेदन दर्ज हुआ। आधिकारिक रेफरेंस आवंटित।`,
+              date: 'Just now',
+              isCompleted: true,
+              isCurrent: true,
+            }
+          ]
+        };
+      }
+      return app;
+    }));
+    logAudit(`External Filing Logged for ${applicationId}`, `Ref: ${externalRefNumber} • Authority: ${authorityName}`);
+    showToast('Official Filing Recorded', `External reference ${externalRefNumber} mapped to ${applicationId}.`, 'success');
+  };
+
+  const deliverFinalDocument = (applicationId: string, deliverableName: string, deliverableUrl: string) => {
+    setApplications(prev => prev.map(app => {
+      if (app.id === applicationId) {
+        return {
+          ...app,
+          status: 'DELIVERED',
+          finalDeliverableName: deliverableName,
+          finalDeliverableUrl: deliverableUrl,
+          finalDeliverableIssuedAt: new Date().toLocaleString(),
+          updatedAt: new Date().toLocaleString(),
+          trackingSteps: [
+            ...app.trackingSteps,
+            {
+              title: 'Official Certificate Vaulted & Ready',
+              titleHi: 'प्रमाणपत्र जारी एवं सुरक्षित',
+              description: `${deliverableName} has been vaulted and is ready in your Download Center.`,
+              descriptionHi: `${deliverableName} आपके डाउनलोड केंद्र में सुरक्षित उपलब्ध है।`,
+              date: 'Just now',
+              isCompleted: true,
+              isCurrent: true,
+            }
+          ]
+        };
+      }
+      return app;
+    }));
+    logAudit(`Final Deliverable Uploaded for ${applicationId}`, `File: ${deliverableName}`);
+    showToast('Final Document Delivered', `${deliverableName} is now ready for customer download.`, 'success');
+  };
+
+  const processApplicationRefund = (applicationId: string, refundAmount: number, reason: string) => {
+    setApplications(prev => prev.map(app => {
+      if (app.id === applicationId) {
+        return {
+          ...app,
+          status: 'CLOSED',
+          paymentStatus: 'REJECTED',
+          notes: `Refund of ₹${refundAmount} processed. Reason: ${reason}`,
+          updatedAt: new Date().toLocaleString(),
+          trackingSteps: [
+            ...app.trackingSteps,
+            {
+              title: `Refund Processed: ₹${refundAmount}`,
+              titleHi: `रिफंड स्वीकृत: ₹${refundAmount}`,
+              description: `Refund credited to source account. Reason: ${reason}`,
+              descriptionHi: `राशि मूल खाते में रिफंड की गई। कारण: ${reason}`,
+              date: 'Just now',
+              isCompleted: true,
+              isCurrent: true,
+            }
+          ]
+        };
+      }
+      return app;
+    }));
+
+    recordJournalEntry({
+      reference: `REF-${applicationId}`,
+      description: `Refund processed for application ${applicationId}: ₹${refundAmount} (${reason})`,
+      date: new Date().toISOString(),
+      lines: [
+        { accountCode: '4010', accountName: 'ADCS Service Revenue', debit: refundAmount, credit: 0 },
+        { accountCode: '2020', accountName: 'Customer Refund Clearing', debit: 0, credit: refundAmount }
+      ],
+    });
+
+    logAudit(`Refund Processed for ${applicationId}`, `Amount: ₹${refundAmount} • Reason: ${reason}`);
+    showToast('Refund Processed', `₹${refundAmount} refund recorded and ledger balanced.`, 'info');
   };
 
   // Cart operations
@@ -1598,6 +2032,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateAiControlConfig,
         serviceBanners,
         saveServiceBanner,
+        savedApplicants,
+        addSavedApplicant,
+        updateSavedApplicant,
+        deleteSavedApplicant,
+        createCorrectionRequest,
+        submitCorrectionResponse,
+        assignApplicationOperator,
+        updateApplicationReviewStatus,
+        recordExternalProviderSubmission,
+        deliverFinalDocument,
+        processApplicationRefund,
       }}
     >
       {children}
