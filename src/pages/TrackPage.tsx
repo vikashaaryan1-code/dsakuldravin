@@ -35,6 +35,11 @@ export const TrackPage: React.FC = () => {
     if (queryFromUrl) {
       const foundApp = applications.find(a => 
         a.id.toLowerCase() === queryFromUrl.toLowerCase() ||
+        (a.adcsAppId && a.adcsAppId.toLowerCase() === queryFromUrl.toLowerCase()) ||
+        (a.paymentOrderId && a.paymentOrderId.toLowerCase() === queryFromUrl.toLowerCase()) ||
+        (a.adcsReceiptNumber && a.adcsReceiptNumber.toLowerCase() === queryFromUrl.toLowerCase()) ||
+        (a.externalAuthorityRef && a.externalAuthorityRef.toLowerCase() === queryFromUrl.toLowerCase()) ||
+        (a.trackingId && a.trackingId.toLowerCase() === queryFromUrl.toLowerCase()) ||
         a.applicantPhone.includes(queryFromUrl)
       );
       if (foundApp) return { type: 'application', data: foundApp };
@@ -61,6 +66,11 @@ export const TrackPage: React.FC = () => {
     // Check applications
     const foundApp = applications.find(a => 
       a.id.toLowerCase() === trimmed.toLowerCase() ||
+      (a.adcsAppId && a.adcsAppId.toLowerCase() === trimmed.toLowerCase()) ||
+      (a.paymentOrderId && a.paymentOrderId.toLowerCase() === trimmed.toLowerCase()) ||
+      (a.adcsReceiptNumber && a.adcsReceiptNumber.toLowerCase() === trimmed.toLowerCase()) ||
+      (a.externalAuthorityRef && a.externalAuthorityRef.toLowerCase() === trimmed.toLowerCase()) ||
+      (a.trackingId && a.trackingId.toLowerCase() === trimmed.toLowerCase()) ||
       a.applicantPhone.includes(trimmed) ||
       a.applicantEmail.toLowerCase().includes(trimmed.toLowerCase())
     );
@@ -400,9 +410,27 @@ export const TrackPage: React.FC = () => {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.88rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9' }}>
-                    <span style={{ color: '#64748B' }}>Application Number:</span>
-                    <span style={{ fontWeight: 700, color: '#061A36' }}>{searchedEntity.data.id}</span>
+                    <span style={{ color: '#64748B' }}>ADCS App ID:</span>
+                    <span style={{ fontWeight: 700, color: '#075ACB', fontFamily: 'monospace' }}>{searchedEntity.data.adcsAppId || searchedEntity.data.id}</span>
                   </div>
+                  {searchedEntity.data.paymentOrderId && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9' }}>
+                      <span style={{ color: '#64748B' }}>Payment Order ID:</span>
+                      <span style={{ fontWeight: 600, color: '#475569', fontFamily: 'monospace', fontSize: '0.82rem' }}>{searchedEntity.data.paymentOrderId}</span>
+                    </div>
+                  )}
+                  {searchedEntity.data.adcsReceiptNumber && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9' }}>
+                      <span style={{ color: '#64748B' }}>Official Receipt No:</span>
+                      <span style={{ fontWeight: 600, color: '#059669', fontFamily: 'monospace', fontSize: '0.82rem' }}>{searchedEntity.data.adcsReceiptNumber}</span>
+                    </div>
+                  )}
+                  {searchedEntity.data.externalAuthorityRef && (
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9', background: '#FEF3C7', margin: '0 -0.5rem', padding: '0.5rem', borderRadius: '6px' }}>
+                      <span style={{ color: '#92400E', fontWeight: 600 }}>Govt ARN / External Ref:</span>
+                      <span style={{ fontWeight: 800, color: '#B45309', fontFamily: 'monospace' }}>{searchedEntity.data.externalAuthorityRef}</span>
+                    </div>
+                  )}
                   <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.6rem', borderBottom: '1px solid #F1F5F9' }}>
                     <span style={{ color: '#64748B' }}>Applicant Name:</span>
                     <span style={{ fontWeight: 700, color: '#061A36' }}>{searchedEntity.data.applicantName}</span>
@@ -501,6 +529,30 @@ export const TrackPage: React.FC = () => {
 
                 {/* Action Buttons */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1.75rem' }}>
+                  {searchedEntity.data.finalDeliverableUrl && (
+                    <a
+                      href={searchedEntity.data.finalDeliverableUrl}
+                      download={`Approved_Certificate_${searchedEntity.data.adcsAppId || searchedEntity.data.id}.pdf`}
+                      className="btn-success"
+                      style={{
+                        width: '100%',
+                        justifyContent: 'center',
+                        textDecoration: 'none',
+                        background: '#10B981',
+                        color: '#FFFFFF',
+                        fontWeight: 700,
+                        padding: '0.75rem 1rem',
+                        borderRadius: '10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      <CheckCircle2 size={16} />
+                      <span>Download Approved Certificate (PDF)</span>
+                    </a>
+                  )}
+
                   <button
                     onClick={handleDownloadReceipt}
                     className="btn-primary"

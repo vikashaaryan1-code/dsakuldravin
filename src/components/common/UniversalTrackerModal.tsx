@@ -36,6 +36,11 @@ export const UniversalTrackerModal: React.FC = () => {
     // Check in applications
     const foundApp = applications.find(a => 
       a.id.toLowerCase() === trimmed.toLowerCase() ||
+      (a.adcsAppId && a.adcsAppId.toLowerCase() === trimmed.toLowerCase()) ||
+      (a.paymentOrderId && a.paymentOrderId.toLowerCase() === trimmed.toLowerCase()) ||
+      (a.adcsReceiptNumber && a.adcsReceiptNumber.toLowerCase() === trimmed.toLowerCase()) ||
+      (a.externalAuthorityRef && a.externalAuthorityRef.toLowerCase() === trimmed.toLowerCase()) ||
+      (a.trackingId && a.trackingId.toLowerCase() === trimmed.toLowerCase()) ||
       a.applicantPhone.includes(trimmed) ||
       a.applicantEmail.toLowerCase().includes(trimmed.toLowerCase())
     );
@@ -300,7 +305,49 @@ export const UniversalTrackerModal: React.FC = () => {
                         <div style={{ color: '#64748B' }}>Location / Branch:</div>
                         <div style={{ fontWeight: 600, color: '#061A36' }}>{app.city}, {app.state}</div>
                       </div>
+                      {app.paymentOrderId && (
+                        <div>
+                          <div style={{ color: '#64748B' }}>Payment Order:</div>
+                          <div style={{ fontWeight: 600, color: '#475569', fontFamily: 'monospace' }}>{app.paymentOrderId}</div>
+                        </div>
+                      )}
+                      {app.adcsReceiptNumber && (
+                        <div>
+                          <div style={{ color: '#64748B' }}>Receipt Number:</div>
+                          <div style={{ fontWeight: 600, color: '#059669', fontFamily: 'monospace' }}>{app.adcsReceiptNumber}</div>
+                        </div>
+                      )}
+                      {app.externalAuthorityRef && (
+                        <div>
+                          <div style={{ color: '#92400E', fontWeight: 600 }}>Govt ARN / Ref:</div>
+                          <div style={{ fontWeight: 800, color: '#B45309', fontFamily: 'monospace' }}>{app.externalAuthorityRef}</div>
+                        </div>
+                      )}
                     </div>
+
+                    {app.finalDeliverableUrl && (
+                      <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #E2E8F0' }}>
+                        <a
+                          href={app.finalDeliverableUrl}
+                          download={`Approved_Certificate_${app.adcsAppId || app.id}.pdf`}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: '#10B981',
+                            color: '#FFFFFF',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '8px',
+                            fontWeight: 700,
+                            fontSize: '0.85rem',
+                            textDecoration: 'none',
+                          }}
+                        >
+                          <CheckCircle2 size={16} />
+                          <span>Download Approved Certificate (PDF)</span>
+                        </a>
+                      </div>
+                    )}
                   </div>
 
                   {/* Visual Milestone Timeline */}
