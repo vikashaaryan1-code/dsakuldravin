@@ -34,19 +34,21 @@ export const TrackPage: React.FC = () => {
   const [searchedEntity, setSearchedEntity] = useState<any>(() => {
     if (queryFromUrl) {
       const foundApp = applications.find(a => 
-        a.id.toLowerCase() === queryFromUrl.toLowerCase() ||
+        (a.id && a.id.toLowerCase() === queryFromUrl.toLowerCase()) ||
         (a.adcsAppId && a.adcsAppId.toLowerCase() === queryFromUrl.toLowerCase()) ||
         (a.paymentOrderId && a.paymentOrderId.toLowerCase() === queryFromUrl.toLowerCase()) ||
         (a.adcsReceiptNumber && a.adcsReceiptNumber.toLowerCase() === queryFromUrl.toLowerCase()) ||
         (a.externalAuthorityRef && a.externalAuthorityRef.toLowerCase() === queryFromUrl.toLowerCase()) ||
+        (a.externalReferenceNumber && a.externalReferenceNumber.toLowerCase() === queryFromUrl.toLowerCase()) ||
         (a.trackingId && a.trackingId.toLowerCase() === queryFromUrl.toLowerCase()) ||
-        a.applicantPhone.includes(queryFromUrl)
+        (a.applicantPhone && a.applicantPhone.includes(queryFromUrl)) ||
+        (a.applicantEmail && a.applicantEmail.toLowerCase().includes(queryFromUrl.toLowerCase()))
       );
       if (foundApp) return { type: 'application', data: foundApp };
 
       const foundShip = shipments.find(s => 
-        s.awb.toLowerCase() === queryFromUrl.toLowerCase() || 
-        s.id.toLowerCase() === queryFromUrl.toLowerCase()
+        (s.awb && s.awb.toLowerCase() === queryFromUrl.toLowerCase()) || 
+        (s.id && s.id.toLowerCase() === queryFromUrl.toLowerCase())
       );
       if (foundShip) return { type: 'shipment', data: foundShip };
     }
@@ -65,14 +67,15 @@ export const TrackPage: React.FC = () => {
 
     // Check applications
     const foundApp = applications.find(a => 
-      a.id.toLowerCase() === trimmed.toLowerCase() ||
+      (a.id && a.id.toLowerCase() === trimmed.toLowerCase()) ||
       (a.adcsAppId && a.adcsAppId.toLowerCase() === trimmed.toLowerCase()) ||
       (a.paymentOrderId && a.paymentOrderId.toLowerCase() === trimmed.toLowerCase()) ||
       (a.adcsReceiptNumber && a.adcsReceiptNumber.toLowerCase() === trimmed.toLowerCase()) ||
       (a.externalAuthorityRef && a.externalAuthorityRef.toLowerCase() === trimmed.toLowerCase()) ||
+      (a.externalReferenceNumber && a.externalReferenceNumber.toLowerCase() === trimmed.toLowerCase()) ||
       (a.trackingId && a.trackingId.toLowerCase() === trimmed.toLowerCase()) ||
-      a.applicantPhone.includes(trimmed) ||
-      a.applicantEmail.toLowerCase().includes(trimmed.toLowerCase())
+      (a.applicantPhone && a.applicantPhone.includes(trimmed)) ||
+      (a.applicantEmail && a.applicantEmail.toLowerCase().includes(trimmed.toLowerCase()))
     );
     if (foundApp) {
       setSearchedEntity({ type: 'application', data: foundApp });
@@ -82,8 +85,8 @@ export const TrackPage: React.FC = () => {
 
     // Check shipments
     const foundShipment = shipments.find(s => 
-      s.awb.toLowerCase() === trimmed.toLowerCase() ||
-      s.id.toLowerCase() === trimmed.toLowerCase()
+      (s.awb && s.awb.toLowerCase() === trimmed.toLowerCase()) ||
+      (s.id && s.id.toLowerCase() === trimmed.toLowerCase())
     );
     if (foundShipment) {
       setSearchedEntity({ type: 'shipment', data: foundShipment });
@@ -240,6 +243,7 @@ export const TrackPage: React.FC = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1.25rem' }}>
           <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#64748B' }}>Quick Samples:</span>
           {[
+            { label: 'Income Cert (AD-APP-5527)', val: 'AD-APP-5527' },
             { label: 'PAN Card (AD-APP-9102)', val: 'AD-APP-9102' },
             { label: 'Pvt Ltd Setup (AD-APP-8841)', val: 'AD-APP-8841' },
             { label: 'वैदिक ज्योतिष (AD-ASTRO-842915)', val: 'AD-ASTRO-842915' },

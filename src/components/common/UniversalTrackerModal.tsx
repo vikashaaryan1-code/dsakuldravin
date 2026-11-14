@@ -35,14 +35,15 @@ export const UniversalTrackerModal: React.FC = () => {
 
     // Check in applications
     const foundApp = applications.find(a => 
-      a.id.toLowerCase() === trimmed.toLowerCase() ||
+      (a.id && a.id.toLowerCase() === trimmed.toLowerCase()) ||
       (a.adcsAppId && a.adcsAppId.toLowerCase() === trimmed.toLowerCase()) ||
       (a.paymentOrderId && a.paymentOrderId.toLowerCase() === trimmed.toLowerCase()) ||
       (a.adcsReceiptNumber && a.adcsReceiptNumber.toLowerCase() === trimmed.toLowerCase()) ||
       (a.externalAuthorityRef && a.externalAuthorityRef.toLowerCase() === trimmed.toLowerCase()) ||
+      (a.externalReferenceNumber && a.externalReferenceNumber.toLowerCase() === trimmed.toLowerCase()) ||
       (a.trackingId && a.trackingId.toLowerCase() === trimmed.toLowerCase()) ||
-      a.applicantPhone.includes(trimmed) ||
-      a.applicantEmail.toLowerCase().includes(trimmed.toLowerCase())
+      (a.applicantPhone && a.applicantPhone.includes(trimmed)) ||
+      (a.applicantEmail && a.applicantEmail.toLowerCase().includes(trimmed.toLowerCase()))
     );
 
     if (foundApp) {
