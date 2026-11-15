@@ -20,12 +20,13 @@ import {
   Calculator,
   ExternalLink,
   Download,
-  RotateCcw
+  RotateCcw,
+  ArrowRight
 } from 'lucide-react';
 
 export const GovernmentServicesPage: React.FC = () => {
-  const { services, language, showToast, logAudit } = useApp();
-  const [selectedSubCat, setSelectedSubCat] = useState<'all' | 'identity' | 'certificates' | 'employment' | 'welfare'>('all');
+  const { services, language, showToast, logAudit, openApplyModal, openQuantumAI } = useApp();
+  const [selectedSubCat, setSelectedSubCat] = useState<'all' | 'identity' | 'certificates' | 'welfare' | 'transport'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   
   // Interactive Scheme Matcher State
@@ -113,19 +114,45 @@ export const GovernmentServicesPage: React.FC = () => {
 
   const govtServices = services.filter(s => s.category === 'government');
 
+  const handleApplySchemeByName = (schemeLabel: string) => {
+    let targetService = govtServices[0];
+    if (schemeLabel.includes('PM Kisan') || schemeLabel.includes('Fasal Bima')) {
+      targetService = govtServices.find(s => s.slug.includes('kisan')) || targetService;
+    } else if (schemeLabel.includes('E-Shram') || schemeLabel.includes('Shram')) {
+      targetService = govtServices.find(s => s.slug.includes('eshram')) || targetService;
+    } else if (schemeLabel.includes('Ayushman') || schemeLabel.includes('ABHA')) {
+      targetService = govtServices.find(s => s.slug.includes('ayushman') || s.slug.includes('abha')) || targetService;
+    } else if (schemeLabel.includes('राशन') || schemeLabel.includes('NFSA')) {
+      targetService = govtServices.find(s => s.slug.includes('ration')) || targetService;
+    } else if (schemeLabel.includes('Income') || schemeLabel.includes('EWS')) {
+      targetService = govtServices.find(s => s.slug.includes('income') || s.slug.includes('cert')) || targetService;
+    } else if (schemeLabel.includes('Passport')) {
+      targetService = govtServices.find(s => s.slug.includes('passport')) || targetService;
+    } else if (schemeLabel.includes('PAN')) {
+      targetService = govtServices.find(s => s.slug.includes('pan')) || targetService;
+    }
+
+    if (targetService) {
+      openApplyModal(targetService);
+    }
+  };
+
   const filteredServices = govtServices.filter(s => {
-    const matchSearch = (
-      s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const q = searchQuery.toLowerCase().trim();
+    const matchSearch = !q || (
+      s.title.toLowerCase().includes(q) ||
+      s.description.toLowerCase().includes(q) ||
+      (s.titleHi && s.titleHi.toLowerCase().includes(q)) ||
+      (s.descriptionHi && s.descriptionHi.toLowerCase().includes(q)) ||
+      (s.slug && s.slug.toLowerCase().includes(q))
     );
+
     if (selectedSubCat === 'identity') {
       return matchSearch && (
         s.slug.includes('pan') || 
         s.slug.includes('passport') || 
         s.slug.includes('aadhaar') || 
-        s.slug.includes('voter') || 
-        s.slug.includes('driving') || 
-        s.slug.includes('dl')
+        s.slug.includes('voter')
       );
     }
     if (selectedSubCat === 'certificates') {
@@ -135,13 +162,22 @@ export const GovernmentServicesPage: React.FC = () => {
         s.slug.includes('ration')
       );
     }
-    if (selectedSubCat === 'employment' || selectedSubCat === 'welfare') {
+    if (selectedSubCat === 'welfare') {
       return matchSearch && (
         s.slug.includes('eshram') || 
         s.slug.includes('welfare') || 
         s.slug.includes('scheme') || 
         s.slug.includes('ayushman') || 
-        s.slug.includes('kisan')
+        s.slug.includes('kisan') ||
+        s.slug.includes('abha')
+      );
+    }
+    if (selectedSubCat === 'transport') {
+      return matchSearch && (
+        s.slug.includes('driving') || 
+        s.slug.includes('dl') ||
+        s.slug.includes('sarathi') ||
+        s.title.toLowerCase().includes('driving')
       );
     }
     return matchSearch;
@@ -183,114 +219,154 @@ export const GovernmentServicesPage: React.FC = () => {
           Professional assisted online filing, form submissions, appointment bookings, and status tracking for Aadhaar, PAN, Passport, Income & Domicile certificates, and Welfare schemes.
         </p>
 
-        {/* Statutory Notice */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.08)',
-          backdropFilter: 'blur(10px)',
-          borderRadius: '12px',
-          padding: '0.85rem 1.25rem',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.75rem',
-          fontSize: '0.78rem',
-          color: '#E2E8F0',
-          maxWidth: '750px',
-        }}>
-          <AlertTriangle size={18} color="#F59E0B" style={{ flexShrink: 0 }} />
-          <span>
-            <strong>Statutory Transparency:</strong> Akul Dravin Digital Services provides technical guidance and assisted application facilitation. We are not a government body. All statutory decisions and approvals belong solely to the respective competent government authorities.
-          </span>
+        {/* Statutory Notice & AI Trigger */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <div style={{
+            background: 'rgba(255, 255, 255, 0.08)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '12px',
+            padding: '0.85rem 1.25rem',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            fontSize: '0.78rem',
+            color: '#E2E8F0',
+            maxWidth: '750px',
+          }}>
+            <AlertTriangle size={18} color="#F59E0B" style={{ flexShrink: 0 }} />
+            <span>
+              <strong>Statutory Transparency:</strong> Akul Dravin Digital Services provides technical guidance and assisted application facilitation. We are not a government body. All statutory decisions and approvals belong solely to the respective competent government authorities.
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={() => openQuantumAI("Help me determine which government citizen services, certificates, and welfare schemes I am eligible for.")}
+              style={{
+                background: '#F59E0B',
+                color: '#061A36',
+                fontWeight: 800,
+                fontSize: '0.85rem',
+                padding: '0.55rem 1.15rem',
+                borderRadius: '10px',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                boxShadow: '0 4px 12px rgba(245, 158, 11, 0.35)',
+              }}
+            >
+              <Sparkles size={16} />
+              <span>{language === 'hi' ? 'नागरिक AI सहायक से पूछें' : 'Ask Citizen AI Copilot'}</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Direct Studio Quick Launch Toolbar */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.75rem',
-        flexWrap: 'wrap',
-        marginBottom: '1.5rem',
-        background: '#F8FAFC',
-        padding: '0.75rem 1rem',
-        borderRadius: '12px',
-        border: '1px solid #E2E8F0',
-        fontSize: '0.82rem'
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+        gap: '0.85rem',
+        marginBottom: '2rem',
       }}>
-        <span style={{ fontWeight: 800, color: '#061A36', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-          <Sparkles size={16} color="#F59E0B" />
-          <span>Direct Access Engines:</span>
-        </span>
         <Link
           to="/pan"
           style={{
-            background: '#075ACB',
+            background: 'linear-gradient(135deg, #075ACB 0%, #061A36 100%)',
             color: '#FFFFFF',
-            padding: '0.35rem 0.75rem',
-            borderRadius: '6px',
+            padding: '0.85rem 1rem',
+            borderRadius: '14px',
             textDecoration: 'none',
-            fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
-            gap: '0.35rem',
-            boxShadow: '0 2px 6px rgba(29, 78, 216, 0.2)'
+            gap: '0.75rem',
+            boxShadow: '0 4px 14px rgba(7, 90, 203, 0.25)',
+            border: '1px solid rgba(255,255,255,0.15)',
           }}
         >
-          <CreditCard size={14} />
-          <span>PAN Card Form 49A Studio (UTIITSL / Protean)</span>
+          <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.5rem', borderRadius: '10px', display: 'flex' }}>
+            <CreditCard size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800 }}>PAN Card Form 49A Studio</div>
+            <div style={{ fontSize: '0.72rem', color: '#BFDBFE' }}>UTIITSL & Protean Assisted</div>
+          </div>
         </Link>
+
         <Link
           to="/digitalseva"
           style={{
-            background: '#047857',
+            background: 'linear-gradient(135deg, #047857 0%, #064E3B 100%)',
             color: '#FFFFFF',
-            padding: '0.35rem 0.75rem',
-            borderRadius: '6px',
+            padding: '0.85rem 1rem',
+            borderRadius: '14px',
             textDecoration: 'none',
-            fontWeight: 700,
             display: 'flex',
             alignItems: 'center',
-            gap: '0.35rem'
+            gap: '0.75rem',
+            boxShadow: '0 4px 14px rgba(4, 120, 87, 0.25)',
+            border: '1px solid rgba(255,255,255,0.15)',
           }}
         >
-          <Landmark size={14} />
-          <span>ADCS Operator Console (VLE)</span>
+          <div style={{ background: 'rgba(255,255,255,0.2)', padding: '0.5rem', borderRadius: '10px', display: 'flex' }}>
+            <Landmark size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800 }}>ADCS Operator Console</div>
+            <div style={{ fontSize: '0.72rem', color: '#A7F3D0' }}>Digital Seva VLE Workstation</div>
+          </div>
         </Link>
+
         <Link
           to="/documents"
           style={{
             background: '#FFFFFF',
-            color: '#334155',
-            border: '1px solid #CBD5E1',
-            padding: '0.35rem 0.75rem',
-            borderRadius: '6px',
+            color: '#061A36',
+            border: '1.5px solid #CBD5E1',
+            padding: '0.85rem 1rem',
+            borderRadius: '14px',
             textDecoration: 'none',
-            fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
-            gap: '0.35rem'
+            gap: '0.75rem',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
           }}
         >
-          <FileText size={14} />
-          <span>Customer DigiLocker Vault</span>
+          <div style={{ background: '#EFF6FF', color: '#075ACB', padding: '0.5rem', borderRadius: '10px', display: 'flex' }}>
+            <FileText size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800 }}>DigiLocker Customer Vault</div>
+            <div style={{ fontSize: '0.72rem', color: '#64748B' }}>PKI Encrypted Document Store</div>
+          </div>
         </Link>
+
         <Link
           to="/track"
           style={{
             background: '#FFFFFF',
-            color: '#334155',
-            border: '1px solid #CBD5E1',
-            padding: '0.35rem 0.75rem',
-            borderRadius: '6px',
+            color: '#061A36',
+            border: '1.5px solid #CBD5E1',
+            padding: '0.85rem 1rem',
+            borderRadius: '14px',
             textDecoration: 'none',
-            fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
-            gap: '0.35rem'
+            gap: '0.75rem',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
           }}
         >
-          <Search size={14} />
-          <span>Track Application Status</span>
+          <div style={{ background: '#FEF3C7', color: '#D97706', padding: '0.5rem', borderRadius: '10px', display: 'flex' }}>
+            <Search size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: '0.88rem', fontWeight: 800 }}>Track Application Status</div>
+            <div style={{ fontSize: '0.72rem', color: '#64748B' }}>Live Milestone SLA Tracker</div>
+          </div>
         </Link>
       </div>
 
@@ -303,25 +379,28 @@ export const GovernmentServicesPage: React.FC = () => {
         gap: '1rem',
         marginBottom: '2rem',
       }}>
-        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '4px', maxWidth: '100%' }}>
           {[
-            { id: 'all', label: 'All Citizen Services' },
-            { id: 'identity', label: 'Identity & IDs (PAN, Passport)' },
-            { id: 'certificates', label: 'Certificates (Income, Caste, Domicile)' },
-            { id: 'employment', label: 'Employment & Welfare (E-Shram)' },
+            { id: 'all', label: language === 'hi' ? 'सभी नागरिक सेवाएँ' : 'All Citizen Services' },
+            { id: 'identity', label: language === 'hi' ? 'पहचान एवं आईडी (PAN, पासपोर्ट, आधार, वोटर)' : 'Identity & IDs (PAN, Passport, Aadhaar, Voter)' },
+            { id: 'certificates', label: language === 'hi' ? 'प्रमाण पत्र (आय, जाति, निवास, राशन)' : 'Certificates (Income, Caste, Domicile, Ration)' },
+            { id: 'welfare', label: language === 'hi' ? 'कल्याणकारी योजनाएँ (E-Shram, PM-Kisan, आयुष्मान)' : 'Welfare & DBT (E-Shram, PM-Kisan, Ayushman)' },
+            { id: 'transport', label: language === 'hi' ? 'परिवहन सेवाएँ (ड्राइविंग लाइसेंस, स्लॉट)' : 'Transport & RTO (Driving License, Slots)' },
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setSelectedSubCat(tab.id as any)}
               style={{
-                padding: '0.6rem 1.1rem',
+                padding: '0.55rem 1rem',
                 borderRadius: '10px',
-                fontWeight: 600,
-                fontSize: '0.85rem',
+                fontWeight: 700,
+                fontSize: '0.82rem',
+                whiteSpace: 'nowrap',
                 background: selectedSubCat === tab.id ? '#075ACB' : '#FFFFFF',
                 color: selectedSubCat === tab.id ? '#FFFFFF' : '#475569',
                 border: selectedSubCat === tab.id ? '1px solid #075ACB' : '1px solid #CBD5E1',
                 boxShadow: selectedSubCat === tab.id ? '0 4px 12px rgba(29, 78, 216, 0.25)' : 'none',
+                cursor: 'pointer',
                 transition: 'all 0.15s ease',
               }}
             >
@@ -457,21 +536,47 @@ export const GovernmentServicesPage: React.FC = () => {
               <Download size={13} /> Print / Download Eligibility Brief (PDF)
             </button>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem' }}>
             {getMatchedSchemes().map((scheme, idx) => (
-              <span
+              <div
                 key={idx}
                 style={{
                   background: scheme.bg,
                   color: scheme.color,
-                  padding: '0.35rem 0.75rem',
-                  borderRadius: '6px',
-                  fontSize: '0.8rem',
-                  fontWeight: 600
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: '10px',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.55rem',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+                  border: '1px solid rgba(255,255,255,0.1)'
                 }}
               >
-                {scheme.label}
-              </span>
+                <span>{scheme.label}</span>
+                <button
+                  type="button"
+                  onClick={() => handleApplySchemeByName(scheme.label)}
+                  style={{
+                    background: '#FFFFFF',
+                    color: '#061A36',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '0.2rem 0.55rem',
+                    fontSize: '0.72rem',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.25rem',
+                  }}
+                  title="1-Click Apply for this scheme"
+                >
+                  <span>Apply Now</span>
+                  <ArrowRight size={11} />
+                </button>
+              </div>
             ))}
           </div>
         </div>
