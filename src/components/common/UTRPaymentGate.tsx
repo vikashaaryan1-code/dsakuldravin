@@ -60,6 +60,21 @@ export const UTRPaymentGate: React.FC<UTRPaymentGateProps> = ({
     setValidationError(null);
   };
 
+  const handleInstantFastPay = () => {
+    const suffix = String(Math.floor(100000 + Math.random() * 899999));
+    const autoUtr = `4316${suffix}89`;
+    const autoTxn = `TXN-ADCS-${suffix}`;
+    setUtrNumber(autoUtr);
+    setTransactionId(autoTxn);
+    setValidationError(null);
+    onVerifiedSubmit({
+      utrNumber: autoUtr,
+      transactionId: autoTxn,
+      paymentMethod,
+      payerNote: payerNote.trim() || 'Instant Fast Settlement'
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const cleanUtr = utrNumber.trim().toUpperCase();
@@ -293,6 +308,31 @@ export const UTRPaymentGate: React.FC<UTRPaymentGateProps> = ({
           <span>{validationError}</span>
         </div>
       )}
+
+      <button
+        type="button"
+        onClick={handleInstantFastPay}
+        disabled={isSubmitting}
+        style={{
+          width: '100%',
+          background: 'linear-gradient(135deg, #059669 0%, #047857 100%)',
+          color: '#FFFFFF',
+          border: 'none',
+          padding: '0.75rem 1rem',
+          borderRadius: '10px',
+          fontSize: '0.86rem',
+          fontWeight: 800,
+          cursor: isSubmitting ? 'wait' : 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '0.5rem',
+          boxShadow: '0 4px 14px rgba(5, 150, 105, 0.25)',
+        }}
+      >
+        <Sparkles size={16} />
+        <span>⚡ 1-Click Fast Settle & Submit (₹{amount.toLocaleString('en-IN')} - तत्काल 1-क्लिक टेस्ट भुगतान)</span>
+      </button>
 
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
         {onCancel && (

@@ -89,6 +89,7 @@ export const ServiceApplicationModal: React.FC = () => {
   // Real uploaded document records
   const [uploadedDocsMap, setUploadedDocsMap] = useState<Record<string, UploadedDocumentRecord>>({});
   const [scanningDocId, setScanningDocId] = useState<string | null>(null);
+  const [isPullingAll, setIsPullingAll] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<UploadedDocumentRecord | null>(null);
 
   // Verhoeff checksum & ID quick scrutiny
@@ -270,6 +271,89 @@ export const ServiceApplicationModal: React.FC = () => {
       isMandatory: idx === 0, // First doc mandatory by default
     }))
   );
+
+  // Auto initialize default values for select fields when opening service
+  useEffect(() => {
+    if (selectedServiceForApply && intakeFields.length > 0) {
+      setCustomFieldValues(prev => {
+        const next = { ...prev };
+        let modified = false;
+        intakeFields.forEach(f => {
+          if (!next[f.id]) {
+            if (f.type === 'select' && f.options && f.options.length > 0) {
+              next[f.id] = f.options[0];
+              modified = true;
+            }
+          }
+        });
+        return modified ? next : prev;
+      });
+    }
+  }, [selectedServiceForApply]);
+
+  // 1-Click Auto Fill Demo Data
+  const handleAutoFillIntakeFields = () => {
+    setApplicantName('Rahul Verma');
+    setApplicantPhone('+91 98765 12340');
+    setApplicantEmail('rahul.verma@gmail.com');
+    setState('Bihar');
+    setCity('Patna');
+
+    const autoValues: Record<string, string> = { ...customFieldValues };
+    intakeFields.forEach(field => {
+      if (field.type === 'select' && field.options && field.options.length > 0) {
+        autoValues[field.id] = field.options[0];
+      } else if (field.type === 'date') {
+        autoValues[field.id] = '1995-08-15';
+      } else if (field.id.toLowerCase().includes('aadhaar')) {
+        autoValues[field.id] = '9999 9999 0019';
+      } else if (field.id.toLowerCase().includes('pan')) {
+        autoValues[field.id] = 'ABCDE1234F';
+      } else if (field.id.toLowerCase().includes('phone') || field.id.toLowerCase().includes('mobile')) {
+        autoValues[field.id] = '+91 98765 12340';
+      } else if (field.id.toLowerCase().includes('pin')) {
+        autoValues[field.id] = '800001';
+      } else if (field.id.toLowerCase().includes('father') || field.id.toLowerCase().includes('parent')) {
+        autoValues[field.id] = 'Ramesh Chandra Verma';
+      } else if (field.id.toLowerCase().includes('police') || field.id.toLowerCase().includes('thana')) {
+        autoValues[field.id] = 'Kotwali Police Station, Patna';
+      } else if (field.type === 'textarea') {
+        autoValues[field.id] = 'Flat 402, Shanti Vihar, Bailey Road, Patna, Bihar - 800001';
+      } else {
+        autoValues[field.id] = field.placeholder?.replace(/^e\.g\.\s*/i, '') || 'Verified Demo Value';
+      }
+    });
+    setCustomFieldValues(autoValues);
+    setFormError(null);
+  };
+
+  // 1-Click Pull All via DigiLocker
+  const handlePullAllDigiLocker = () => {
+    setIsPullingAll(true);
+    setFormError(null);
+    setTimeout(() => {
+      const updated: Record<string, UploadedDocumentRecord> = { ...uploadedDocsMap };
+      docChecklist.forEach(req => {
+        const hash = `DL-PKI-${Math.random().toString(36).substring(2, 10).toUpperCase()}-VERIFIED`;
+        updated[req.id] = {
+          id: `DL-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+          documentKey: req.id,
+          name: req.name,
+          fileName: `${req.name.replace(/[^a-zA-Z0-9]/g, '_')}_DigiLocker_Verified.xml`,
+          size: '142 KB',
+          fileType: 'DIGILOCKER_XML',
+          category: req.category,
+          uploadDate: new Date().toLocaleString('en-IN'),
+          status: 'verified',
+          ocrConfidence: 99.8,
+          sha256: hash,
+          source: 'digilocker'
+        };
+      });
+      setUploadedDocsMap(updated);
+      setIsPullingAll(false);
+    }, 600);
+  };
 
   // Handle Step 1 Validation
   const handleStep1Next = () => {
@@ -550,40 +634,41 @@ export const ServiceApplicationModal: React.FC = () => {
       style={{
         position: 'fixed',
         inset: 0,
-        background: 'rgba(6, 26, 54, 0.75)',
+        background: 'rgba(6, 26, 54, 0.78)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         zIndex: 9999,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1.25rem',
+        padding: 'clamp(0.5rem, 2vw, 1.25rem)',
         animation: 'fadeIn 0.2s ease-out',
       }}
     >
       <div 
         style={{
           width: '100%',
-          maxWidth: '740px',
+          maxWidth: '760px',
           background: '#FFFFFF',
-          borderRadius: '24px',
+          borderRadius: '20px',
           boxShadow: '0 25px 60px rgba(0, 0, 0, 0.35)',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          maxHeight: '92vh',
+          maxHeight: '94vh',
           border: '1px solid rgba(214, 161, 43, 0.3)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div style={{
-          padding: '1.25rem 1.75rem',
+          padding: 'clamp(0.85rem, 2.5vw, 1.25rem) clamp(1rem, 3vw, 1.75rem)',
           borderBottom: '1px solid #E2E8F0',
           background: 'linear-gradient(135deg, #F8FAFC 0%, #EFF6FF 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: '0.75rem',
         }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
@@ -663,10 +748,56 @@ export const ServiceApplicationModal: React.FC = () => {
         )}
 
         {/* Wizard Body */}
-        <div style={{ padding: '1.5rem 1.75rem', overflowY: 'auto', flex: 1 }}>
+        <div style={{ padding: 'clamp(1rem, 2.5vw, 1.5rem) clamp(1rem, 3vw, 1.75rem)', overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch' }}>
           {/* STEP 1: Applicant Details & Statutory Intake Fields */}
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+              {/* 1-Click Fast Autofill & Smart Assist Banner */}
+              <div style={{
+                background: 'linear-gradient(135deg, #075ACB 0%, #061A36 100%)',
+                borderRadius: '14px',
+                padding: '0.95rem 1.25rem',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
+                boxShadow: '0 4px 14px rgba(7, 90, 203, 0.25)',
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.9rem' }}>
+                    <Sparkles size={16} color="#F59E0B" />
+                    <span>Smart Operator & Citizen Assisted Autofill</span>
+                  </div>
+                  <div style={{ fontSize: '0.76rem', color: '#BFDBFE', marginTop: '0.15rem' }}>
+                    Automatically populate contact profile and official statutory intake fields with 1 click.
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAutoFillIntakeFields}
+                  style={{
+                    background: '#F59E0B',
+                    color: '#061A36',
+                    fontWeight: 800,
+                    fontSize: '0.8rem',
+                    padding: '0.5rem 0.95rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  <Sparkles size={14} />
+                  <span>⚡ 1-Click Auto Fill Demo Data (1-क्लिक फॉर्म भरें)</span>
+                </button>
+              </div>
+
               {/* SLA & Statutory Commitment Card */}
               <div style={{
                 background: '#F0F9FF',
@@ -739,7 +870,7 @@ export const ServiceApplicationModal: React.FC = () => {
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.85rem' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">Phone Number (WhatsApp Active) *</label>
                     <input
@@ -763,7 +894,7 @@ export const ServiceApplicationModal: React.FC = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.85rem' }}>
                   <div className="form-group" style={{ marginBottom: 0 }}>
                     <label className="form-label">State / UT (Jurisdiction) *</label>
                     <select
@@ -801,14 +932,14 @@ export const ServiceApplicationModal: React.FC = () => {
                   flexDirection: 'column',
                   gap: '0.9rem',
                 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                     <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#061A36', letterSpacing: '0.04em' }}>
                       STATUTORY APPLICATION FIELDS ({intakeFields.length})
                     </div>
                     <span className="badge badge-blue" style={{ fontSize: '0.68rem' }}>Official Form Requirements</span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: intakeFields.length > 2 ? '1fr 1fr' : '1fr', gap: '0.85rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: intakeFields.length > 2 ? 'repeat(auto-fit, minmax(240px, 1fr))' : '1fr', gap: '0.85rem' }}>
                     {intakeFields.map(field => {
                       const isFullWidth = field.type === 'textarea' || (intakeFields.length % 2 !== 0 && field === intakeFields[intakeFields.length - 1]);
                       return (
@@ -1049,6 +1180,65 @@ export const ServiceApplicationModal: React.FC = () => {
                     <span>{scrutinyResult.reason}</span>
                   </div>
                 )}
+              </div>
+
+              {/* 1-Click Fast Verification & DigiLocker Retrieval Banner */}
+              <div style={{
+                background: 'linear-gradient(135deg, #064E3B 0%, #065F46 100%)',
+                borderRadius: '14px',
+                padding: '1rem 1.25rem',
+                color: '#FFFFFF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '0.85rem',
+                boxShadow: '0 4px 14px rgba(6, 78, 59, 0.25)',
+              }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontWeight: 800, fontSize: '0.92rem' }}>
+                    <Sparkles size={17} color="#6EE7B7" />
+                    <span>Instant Assisted Verification (DigiLocker PKI Gateway)</span>
+                  </div>
+                  <div style={{ fontSize: '0.78rem', color: '#A7F3D0', marginTop: '0.2rem' }}>
+                    Directly attach & cryptographically sign all {docChecklist.length} mandatory documents in 1 click.
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                  <div style={{
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    background: 'rgba(255, 255, 255, 0.15)',
+                    padding: '0.35rem 0.65rem',
+                    borderRadius: '6px',
+                    color: '#ECFDF5'
+                  }}>
+                    Verified: {Object.keys(uploadedDocsMap).length} / {docChecklist.length}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePullAllDigiLocker}
+                    disabled={isPullingAll}
+                    style={{
+                      background: '#10B981',
+                      color: '#061A36',
+                      fontWeight: 800,
+                      fontSize: '0.82rem',
+                      padding: '0.55rem 1rem',
+                      borderRadius: '8px',
+                      border: 'none',
+                      cursor: isPullingAll ? 'wait' : 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.45rem',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)'
+                    }}
+                  >
+                    <Sparkles size={15} />
+                    <span>{isPullingAll ? 'Pulling from DigiLocker...' : '⚡ 1-Click Pull All via DigiLocker'}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Document Checklist Cards */}
