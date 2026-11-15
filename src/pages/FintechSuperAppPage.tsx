@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { validateVerhoeff } from '../utils/verhoeff';
+import { serviceCategories } from '../data/servicesData';
+import { ServiceCard } from '../components/cards/ServiceCard';
+import { ServiceBanners } from '../components/common/ServiceBanners';
 import { 
   Smartphone, 
   Building2, 
@@ -32,7 +36,16 @@ import {
   Layers,
   Sparkles,
   RefreshCw,
-  FileText
+  FileText,
+  Landmark,
+  Monitor,
+  Briefcase,
+  FileCheck2,
+  Award,
+  BookOpen,
+  Compass,
+  MapPin,
+  Clock
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -43,8 +56,31 @@ export const FintechSuperAppPage: React.FC = () => {
     showToast, 
     logAudit, 
     recordJournalEntry, 
-    language 
+    language,
+    services,
+    openQuantumAI,
+    setIsQuantumAIOpen,
+    setIsTrackerOpen,
+    setIsSearchOpen
   } = useApp();
+
+  const popularServices = services.slice(0, 8);
+
+  const getCategoryIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'Landmark': return <Landmark size={22} />;
+      case 'Monitor': return <Monitor size={22} />;
+      case 'Briefcase': return <Briefcase size={22} />;
+      case 'FileText': return <FileText size={22} />;
+      case 'Zap': return <Zap size={22} />;
+      case 'Plane': return <Send size={22} />;
+      case 'Building2': return <Building2 size={22} />;
+      case 'Coins': return <Coins size={22} />;
+      case 'Shield': return <ShieldCheck size={22} />;
+      case 'ShieldCheck': return <ShieldCheck size={22} />;
+      default: return <Sparkles size={22} />;
+    }
+  };
 
   // Active Hub Tab
   const [activeTab, setActiveTab] = useState<'superapp' | 'dmt' | 'aeps' | 'bbps' | 'soundbox' | 'apikeys'>('superapp');
@@ -545,6 +581,209 @@ export const FintechSuperAppPage: React.FC = () => {
                 >
                   Check Instant Pre-Approved Limit &rarr;
                 </button>
+              </div>
+            </div>
+
+            {/* MULTI-SERVICE CAMPAIGN BANNERS CAROUSEL */}
+            <div style={{ marginTop: '1rem' }}>
+              <ServiceBanners mode="carousel" />
+            </div>
+
+            {/* 16 MASTER SERVICE SECTORS */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' }}>
+                <div>
+                  <span className="badge-pill" style={{ marginBottom: '0.5rem' }}>
+                    UNIFIED SERVICE ARCHITECTURE
+                  </span>
+                  <h2 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 900, color: 'var(--adcs-text)' }}>
+                    16 Master Service Sectors
+                  </h2>
+                  <p style={{ color: 'var(--adcs-muted)', fontSize: '0.96rem', marginTop: '0.25rem' }}>
+                    Every citizen, business, real-estate, and technical workflow organized clearly across 16 dedicated vertical portals.
+                  </p>
+                </div>
+                <Link to="/services" className="btn-secondary">
+                  <span>Browse Full Catalog</span>
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+
+              <div className="grid-4">
+                {serviceCategories.map((cat) => (
+                  <Link
+                    key={cat.id}
+                    to={cat.route || `/services?category=${cat.id}`}
+                    className="card adcs-card-interactive"
+                    style={{
+                      padding: '1.25rem',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.65rem',
+                      textDecoration: 'none',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div
+                        style={{
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '10px',
+                          background: 'var(--adcs-primary-soft)',
+                          color: '#075ACB',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {getCategoryIcon(cat.icon)}
+                      </div>
+                      <ArrowRight size={16} color="var(--adcs-muted)" />
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: '0.98rem', color: 'var(--adcs-text)' }}>
+                      {language === 'hi' && cat.nameHi ? cat.nameHi : cat.name}
+                    </div>
+                    <div style={{ fontSize: '0.8rem', color: 'var(--adcs-muted)', lineHeight: 1.45 }}>
+                      {cat.description}
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* MOST REQUESTED SERVICES */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' }}>
+                <div>
+                  <span className="badge-gold" style={{ marginBottom: '0.5rem' }}>FAST-TRACK DIGITAL COUNTER</span>
+                  <h2 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 900, color: 'var(--adcs-text)' }}>
+                    Most Requested Services
+                  </h2>
+                </div>
+                <Link to="/services" className="btn-primary">
+                  <span>Apply or Request Online</span>
+                  <ArrowRight size={16} />
+                </Link>
+              </div>
+
+              <div className="grid-4">
+                {popularServices.map((srv) => (
+                  <ServiceCard key={srv.id} service={srv} />
+                ))}
+              </div>
+            </div>
+
+            {/* DOCUMENT ASSISTANCE & QUANTUM AI SPLIT */}
+            <div className="grid-2">
+              <div className="card" style={{ padding: '2rem', borderTop: '4px solid #075ACB' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: '#075ACB', fontWeight: 800, fontSize: '0.8rem', marginBottom: '0.6rem' }}>
+                  <FileCheck2 size={18} />
+                  <span>ASSISTED DOCUMENTATION & VAULT</span>
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 900, marginBottom: '0.65rem', color: 'var(--adcs-text)' }}>
+                  Structured Document Assistance & Receipts
+                </h3>
+                <p style={{ color: 'var(--adcs-muted)', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  Prepare compliant applications, generate corporate letterheads, issue ADCS training credentials, and maintain verified payment receipts without altering official source records.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <Link to="/documents" className="btn-primary">
+                    Open Document Center
+                  </Link>
+                  <Link to="/verify-certificate" className="btn-secondary">
+                    <QrCode size={16} /> Verify ADCS Certificate
+                  </Link>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #061A36 0%, #031126 100%)',
+                  color: '#FFFFFF',
+                  borderRadius: '16px',
+                  padding: '2rem',
+                  border: '1px solid rgba(214, 161, 43, 0.45)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', color: '#F3D477', fontWeight: 800, fontSize: '0.8rem', marginBottom: '0.6rem' }}>
+                  <Sparkles size={17} />
+                  <span>ADCS INTELLIGENT ROUTING</span>
+                </div>
+                <h3 style={{ fontSize: '1.5rem', fontWeight: 900, color: '#FFFFFF', marginBottom: '0.65rem' }}>
+                  QUANTUM AI — Instant Eligibility & Checklist Guide
+                </h3>
+                <p style={{ color: '#CBD5E1', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  Ask in English or Hindi for exact required documents, Turn-Around-Time, statutory vs. service fees, or automated service routing across all 16 ADCS sectors.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <button
+                    type="button"
+                    onClick={() => openQuantumAI('Documents required for New PAN or Passport renewal')}
+                    className="btn-gold"
+                  >
+                    Launch QUANTUM AI
+                  </button>
+                  <Link
+                    to="/quantum-ai"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.65rem 1.2rem',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255,255,255,0.35)',
+                      color: '#FFFFFF',
+                      fontWeight: 700,
+                    }}
+                  >
+                    Explore AI Console
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* ACADEMY LMS & VEDIC ASTROLOGY SPLIT */}
+            <div className="grid-2">
+              <div className="card" style={{ padding: '2rem', borderTop: '4px solid #D6A12B' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#946809', fontWeight: 800, fontSize: '0.8rem', marginBottom: '0.6rem' }}>
+                  <Award size={18} color="#D6A12B" />
+                  <span>ADCS ACADEMY OF EXCELLENCE</span>
+                </div>
+                <h3 style={{ fontSize: '1.45rem', fontWeight: 900, marginBottom: '0.65rem', color: 'var(--adcs-text)' }}>
+                  Skill Development & QR-Verified Credentials
+                </h3>
+                <p style={{ color: 'var(--adcs-muted)', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  Complete structured modules in Applied AI, CSC/e-Gov Operations, CCTV Engineering, and Full-Stack Basics with digitally signed ADCS Academy certificates.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <Link to="/portal/student" className="btn-navy">
+                    <BookOpen size={16} /> Student Academy LMS
+                  </Link>
+                  <Link to="/portal/instructor" className="btn-secondary">
+                    Instructor Portal
+                  </Link>
+                </div>
+              </div>
+
+              <div className="card" style={{ padding: '2rem', borderTop: '4px solid #061A36' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#075ACB', fontWeight: 800, fontSize: '0.8rem', marginBottom: '0.6rem' }}>
+                  <Compass size={18} />
+                  <span>VEDIC ASTROLOGY & CONSULTATION</span>
+                </div>
+                <h3 style={{ fontSize: '1.45rem', fontWeight: 900, marginBottom: '0.65rem', color: 'var(--adcs-text)' }}>
+                  Janam Kundli, 36 Guna Milan & Report Desk
+                </h3>
+                <p style={{ color: 'var(--adcs-muted)', fontSize: '0.92rem', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  Generate planetary Lagna charts, Ashtakoota matchmaking compatibility summaries, daily Panchang, and printable ADCS Kundli reports.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                  <Link to="/astrology/kundli" className="btn-primary">
+                    Generate Janam Kundli
+                  </Link>
+                  <Link to="/astrology" className="btn-secondary">
+                    Astrology Suite
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

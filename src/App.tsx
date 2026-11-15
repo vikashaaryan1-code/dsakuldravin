@@ -123,8 +123,9 @@ export const App: React.FC = () => {
       <main id="main-content" style={{ flex: 1, paddingBottom: '60px' }}>
         <ErrorBoundary key={pathname}>
           <Routes>
-            {/* Public Super Marketplace Routes */}
-            <Route path="/" element={<HomePage />} />
+            {/* Master Super-App & Public Routes */}
+            <Route path="/" element={<FintechSuperAppPage />} />
+            <Route path="/home-classic" element={<HomePage />} />
             <Route path="/services" element={<ServicesMarketplacePage />} />
             <Route path="/digital-services" element={<ServicesMarketplacePage />} />
             <Route path="/government" element={<GovernmentServicesPage />} />
