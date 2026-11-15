@@ -31,7 +31,7 @@ export const AffiliatePortal: React.FC = () => {
   const [payoutUpi, setPayoutUpi] = useState('rahul.affiliate@okaxis');
 
   const referralCode = 'AD-REF-RAHUL99';
-  const referralUrl = `https://akuldravindigital.com/?ref=${referralCode}`;
+  const referralUrl = `https://ds.akuldravin.com/?ref=${referralCode}`;
 
   const totalReferrals = affiliateReferrals.length;
   const totalEarned = affiliateReferrals.reduce((sum, r) => sum + r.commissionAmount, 0);

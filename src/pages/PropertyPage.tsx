@@ -68,7 +68,7 @@ export const PropertyPage: React.FC = () => {
     addLead({
       name: visitorName.trim(),
       company: selectedPropertyForVisit.title,
-      email: 'property.desk@akuldravindigital.com',
+      email: 'property.desk@ds.akuldravin.com',
       phone: `+91 ${cleanPhone}`,
       serviceInterested: `${selectedPropertyForVisit.purpose.toUpperCase()} — ${selectedPropertyForVisit.title}`,
       estimatedValue: selectedPropertyForVisit.price || 0,
@@ -108,7 +108,7 @@ export const PropertyPage: React.FC = () => {
         { label: 'Listed Valuation', value: bookedVisit.priceFormatted },
         { label: 'Scheduled Inspection Date', value: bookedVisit.visitDate },
       ],
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?id=${encodeURIComponent(bookedVisit.appId)}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/track?id=${encodeURIComponent(bookedVisit.appId)}`,
     });
   };
 

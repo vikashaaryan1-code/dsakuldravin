@@ -72,7 +72,7 @@ export const DigitalCenterPortal: React.FC = () => {
         paymentStatus: 'COUNTER CASH COLLECTED',
       },
       notes: ['Track your ADCS service token anytime at the ADCS Application Tracker portal.'],
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?ref=${encodeURIComponent(receipt.appId)}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/track?ref=${encodeURIComponent(receipt.appId)}`,
     });
     showToast('Counter Receipt Ready', `ADCS Counter Receipt #${receipt.appId} opened for print/PDF.`, 'success');
   };

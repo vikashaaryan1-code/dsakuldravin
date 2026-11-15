@@ -130,7 +130,7 @@ export const ConsultingPage: React.FC = () => {
       'VERSION:2.0',
       'PRODID:-//Akul Dravin Digital Services//ADCS Advisory//EN',
       'BEGIN:VEVENT',
-      `UID:${confirmedPass.passId}@akuldravindigital.com`,
+      `UID:${confirmedPass.passId}@ds.akuldravin.com`,
       `DTSTAMP:${startIso}`,
       `DTSTART:${startIso}`,
       `DTEND:${endIso}`,

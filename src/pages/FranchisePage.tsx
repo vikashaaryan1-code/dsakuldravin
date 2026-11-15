@@ -91,7 +91,7 @@ export const FranchisePage: React.FC = () => {
     addLead({
       name: applicantName.trim(),
       company: `${selectedTier} — ${city} (${pincode.trim()})`,
-      email: 'franchise.desk@akuldravindigital.com',
+      email: 'franchise.desk@ds.akuldravin.com',
       phone: `+91 ${cleanPhone}`,
       serviceInterested: `${selectedTier} Territory License`,
       estimatedValue: tierObj.invNum,
@@ -123,7 +123,7 @@ export const FranchisePage: React.FC = () => {
       notes: [
         'Territorial allotment is subject to formal premise inspection and KYC clearance by Akul Dravin Digital Services.',
       ],
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?id=${encodeURIComponent(submittedRef)}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/track?id=${encodeURIComponent(submittedRef)}`,
     });
   };
 

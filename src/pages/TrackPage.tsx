@@ -136,7 +136,7 @@ export const TrackPage: React.FC = () => {
         paymentStatus: (isApp ? entity?.feePaid > 0 : entity?.price > 0) ? 'PAID & VERIFIED' : 'PENDING',
       },
       notes: ['Issued under Akul Dravin Digital Services DPDP Act 2025 cryptographic audit logging.'],
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?q=${encodeURIComponent(trackingId)}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/track?q=${encodeURIComponent(trackingId)}`,
     });
 
     showToast('Acknowledgement Ready', 'Official ADCS tracking acknowledgement opened for print/PDF.', 'success');

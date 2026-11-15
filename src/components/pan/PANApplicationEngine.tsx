@@ -267,7 +267,7 @@ export const PANApplicationEngine: React.FC<PANApplicationEngineProps> = ({ onCl
         'Statutory authority remains solely with the Income Tax Department of India (Rule 114, Income Tax Rules 1962 / DPDP Act 2025).',
         'This document is an ADCS assisted-filing acknowledgment receipt and not a government-issued PAN card.',
       ],
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?ref=${encodeURIComponent(ackDetails.agencyRef)}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/track?ref=${encodeURIComponent(ackDetails.agencyRef)}`,
     });
   };
 

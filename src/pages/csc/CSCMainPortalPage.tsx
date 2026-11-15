@@ -101,7 +101,7 @@ export const CSCMainPortalPage: React.FC = () => {
       notes: [
         'Akul Dravin Digital Services Operations Desk verifies new Kendra premises and TEC credentials prior to activation.',
       ],
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?ref=${encodeURIComponent(String(regResult.refNumber || ''))}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/track?ref=${encodeURIComponent(String(regResult.refNumber || ''))}`,
     });
   };
 

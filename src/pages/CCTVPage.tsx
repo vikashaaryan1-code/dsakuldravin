@@ -85,7 +85,7 @@ export const CCTVPage: React.FC = () => {
     addLead({
       name: siteContactName.trim(),
       company: `CCTV Setup (${siteCity})`,
-      email: 'security.desk@akuldravindigital.com',
+      email: 'security.desk@ds.akuldravin.com',
       phone: `+91 ${cleanPhone}`,
       serviceInterested: `${cameraCount}x ${cameraType} Surveillance Package`,
       estimatedValue: totalEstimate,

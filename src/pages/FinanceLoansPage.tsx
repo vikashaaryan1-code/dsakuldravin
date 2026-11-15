@@ -84,7 +84,7 @@ export const FinanceLoansPage: React.FC = () => {
     addLead({
       name: applicantName.trim(),
       company: `${selectedLoanType} (${bankName})`,
-      email: 'finance.desk@akuldravindigital.com',
+      email: 'finance.desk@ds.akuldravin.com',
       phone: `+91 ${cleanPhone}`,
       serviceInterested: `${selectedLoanType} (₹${loanAmount.toLocaleString('en-IN')})`,
       estimatedValue: loanAmount,
@@ -129,7 +129,7 @@ export const FinanceLoansPage: React.FC = () => {
       notes: [
         'ADCS acts solely as a digital credit facilitation desk. Final sanction rests exclusively with the regulated bank/NBFC lender.',
       ],
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?id=${encodeURIComponent(submittedLoanApp.appId)}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/track?id=${encodeURIComponent(submittedLoanApp.appId)}`,
     });
   };
 

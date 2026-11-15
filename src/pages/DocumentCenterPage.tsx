@@ -62,13 +62,13 @@ export const DocumentCenterPage: React.FC = () => {
         'This ADCS coversheet attests vault storage and checksum integrity only.',
         'Statutory documents (Aadhaar, PAN, Passport, etc.) remain original records of their respective government issuers without modification.',
       ],
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/verify-doc/${encodeURIComponent(String(doc.id || ''))}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/verify-doc/${encodeURIComponent(String(doc.id || ''))}`,
     });
     showToast('Verified Record Ready', `${doc.name} ADCS coversheet opened for print/PDF.`, 'success');
   };
 
   const handleShareDoc = (doc: any) => {
-    const url = `https://akuldravindigital.com/verify-doc/${doc.id}`;
+    const url = `https://ds.akuldravin.com/verify-doc/${doc.id}`;
     if (navigator?.clipboard?.writeText) {
       navigator.clipboard.writeText(url);
     }

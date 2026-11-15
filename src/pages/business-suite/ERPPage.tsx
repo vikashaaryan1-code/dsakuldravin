@@ -116,7 +116,7 @@ PO Hash        : SHA256-${poId.replace(/[^A-Z0-9]/gi, '').toUpperCase()}-PO-APPR
         `Amount in Words: Indian Rupees ${Math.round(total).toLocaleString('en-IN')} Only.`,
         'Generated through Akul Dravin Digital Services Enterprise ERP Invoicing Engine.',
       ],
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/verify-invoice?irn=${encodeURIComponent(invNumber)}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/verify-invoice?irn=${encodeURIComponent(invNumber)}`,
     });
 
     recordJournalEntry({

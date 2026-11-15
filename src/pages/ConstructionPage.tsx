@@ -66,7 +66,7 @@ export const ConstructionPage: React.FC = () => {
     addLead({
       name: clientName.trim(),
       company: `${grade} Turnkey Build (${projectCity})`,
-      email: 'civil.desk@akuldravindigital.com',
+      email: 'civil.desk@ds.akuldravin.com',
       phone: `+91 ${cleanPhone}`,
       serviceInterested: `${totalSqFt} sq.ft ${grade} Construction`,
       estimatedValue: totalCost,
@@ -107,7 +107,7 @@ export const ConstructionPage: React.FC = () => {
         currency: '₹',
         paymentStatus: `INDICATIVE BOQ (${(submittedQuote.totalCost / 100000).toFixed(2)} LAKHS)`,
       },
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?id=${encodeURIComponent(submittedQuote.appId)}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/track?id=${encodeURIComponent(submittedQuote.appId)}`,
     });
   };
 

@@ -331,7 +331,7 @@ export const StudentPortal: React.FC = () => {
         courseTitle: courseTitle,
         date: new Date().toISOString().split('T')[0],
         grade: percent >= 90 ? 'Grade A (Distinction)' : 'Grade A (Qualified)',
-        qrUrl: `https://akuldravindigital.com/verify-certificate/${certId}`
+        qrUrl: `https://ds.akuldravin.com/verify-certificate/${certId}`
       };
       setGeneratedCert(certData);
       setCourses(prev => prev.map(c => c.id === activeExamCourseId ? { ...c, certId } : c));

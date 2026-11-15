@@ -125,7 +125,7 @@ export const CourierPage: React.FC = () => {
         paymentStatus: 'FREIGHT PAID (INCL. 18% GST)',
       },
       notes: ['Attach or retain this waybill copy for doorstep dispatch & live consignment tracking.'],
-      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://akuldravindigital.com'}/track?id=${encodeURIComponent(awbCode)}`,
+      verificationUrl: `${typeof window !== 'undefined' ? window.location.origin : 'https://ds.akuldravin.com'}/track?id=${encodeURIComponent(awbCode)}`,
     });
   };
 
