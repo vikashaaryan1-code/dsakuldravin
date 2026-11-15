@@ -114,22 +114,31 @@ export const GovernmentServicesPage: React.FC = () => {
 
   const govtServices = services.filter(s => s.category === 'government');
 
+  const serviceMatches = (s: any, keywords: string[]): boolean => {
+    const target = `${s.id || ''} ${s.slug || ''} ${s.title || ''} ${s.titleHi || ''} ${s.description || ''} ${s.descriptionHi || ''}`.toLowerCase();
+    return keywords.some(k => target.includes(k.toLowerCase()));
+  };
+
   const handleApplySchemeByName = (schemeLabel: string) => {
-    let targetService = govtServices[0];
+    let targetService: any;
     if (schemeLabel.includes('PM Kisan') || schemeLabel.includes('Fasal Bima')) {
-      targetService = govtServices.find(s => s.slug.includes('kisan')) || targetService;
+      targetService = govtServices.find(s => serviceMatches(s, ['kisan', 'pm-kisan']));
     } else if (schemeLabel.includes('E-Shram') || schemeLabel.includes('Shram')) {
-      targetService = govtServices.find(s => s.slug.includes('eshram')) || targetService;
+      targetService = govtServices.find(s => serviceMatches(s, ['eshram', 'shram']));
     } else if (schemeLabel.includes('Ayushman') || schemeLabel.includes('ABHA')) {
-      targetService = govtServices.find(s => s.slug.includes('ayushman') || s.slug.includes('abha')) || targetService;
+      targetService = govtServices.find(s => serviceMatches(s, ['ayushman', 'abha']));
     } else if (schemeLabel.includes('राशन') || schemeLabel.includes('NFSA')) {
-      targetService = govtServices.find(s => s.slug.includes('ration')) || targetService;
-    } else if (schemeLabel.includes('Income') || schemeLabel.includes('EWS')) {
-      targetService = govtServices.find(s => s.slug.includes('income') || s.slug.includes('cert')) || targetService;
+      targetService = govtServices.find(s => serviceMatches(s, ['ration', 'राशन']));
+    } else if (schemeLabel.includes('Income') || schemeLabel.includes('EWS') || schemeLabel.includes('Caste') || schemeLabel.includes('Domicile')) {
+      targetService = govtServices.find(s => serviceMatches(s, ['income', 'caste', 'domicile', 'cert']));
     } else if (schemeLabel.includes('Passport')) {
-      targetService = govtServices.find(s => s.slug.includes('passport')) || targetService;
+      targetService = govtServices.find(s => serviceMatches(s, ['passport']));
     } else if (schemeLabel.includes('PAN')) {
-      targetService = govtServices.find(s => s.slug.includes('pan')) || targetService;
+      targetService = govtServices.find(s => serviceMatches(s, ['pan']));
+    }
+
+    if (!targetService) {
+      targetService = govtServices[0];
     }
 
     if (targetService) {
@@ -139,48 +148,23 @@ export const GovernmentServicesPage: React.FC = () => {
 
   const filteredServices = govtServices.filter(s => {
     const q = searchQuery.toLowerCase().trim();
-    const matchSearch = !q || (
-      s.title.toLowerCase().includes(q) ||
-      s.description.toLowerCase().includes(q) ||
-      (s.titleHi && s.titleHi.toLowerCase().includes(q)) ||
-      (s.descriptionHi && s.descriptionHi.toLowerCase().includes(q)) ||
-      (s.slug && s.slug.toLowerCase().includes(q))
-    );
+    const matchSearch = !q || serviceMatches(s, [q]);
+
+    if (!matchSearch) return false;
 
     if (selectedSubCat === 'identity') {
-      return matchSearch && (
-        s.slug.includes('pan') || 
-        s.slug.includes('passport') || 
-        s.slug.includes('aadhaar') || 
-        s.slug.includes('voter')
-      );
+      return serviceMatches(s, ['pan', 'passport', 'aadhaar', 'voter']);
     }
     if (selectedSubCat === 'certificates') {
-      return matchSearch && (
-        s.slug.includes('cert') || 
-        s.slug.includes('income') || 
-        s.slug.includes('ration')
-      );
+      return serviceMatches(s, ['cert', 'income', 'caste', 'domicile', 'ration']);
     }
     if (selectedSubCat === 'welfare') {
-      return matchSearch && (
-        s.slug.includes('eshram') || 
-        s.slug.includes('welfare') || 
-        s.slug.includes('scheme') || 
-        s.slug.includes('ayushman') || 
-        s.slug.includes('kisan') ||
-        s.slug.includes('abha')
-      );
+      return serviceMatches(s, ['eshram', 'shram', 'welfare', 'scheme', 'ayushman', 'kisan', 'abha']);
     }
     if (selectedSubCat === 'transport') {
-      return matchSearch && (
-        s.slug.includes('driving') || 
-        s.slug.includes('dl') ||
-        s.slug.includes('sarathi') ||
-        s.title.toLowerCase().includes('driving')
-      );
+      return serviceMatches(s, ['driving', 'dl', 'sarathi', 'license', 'licence', 'rto']);
     }
-    return matchSearch;
+    return true;
   });
 
   return (
