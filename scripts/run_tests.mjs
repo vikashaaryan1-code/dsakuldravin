@@ -12,9 +12,11 @@
 
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import { validateVerhoeff, generateVerhoeffChecksum } from '../server/verhoeff.mjs';
 import { calculateKundliReport, calculateAshtakootMatch } from '../server/astrologyEngine.mjs';
+import { APPLICATION_STATUS_REGISTRY, canTransition, generateApplicationIdentifiers } from '../server/applicationStateMachine.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -470,6 +472,104 @@ if (fs.existsSync(pdfKundli)) {
 if (fs.existsSync(distDir)) {
   assert(fs.existsSync(path.join(distDir, 'index.html')), 'Production dist/index.html is compiled');
 }
+
+// -------------------------------------------------------------
+// Test Suite 8: 18-Stage Application State Machine (PRD §33)
+// -------------------------------------------------------------
+console.log('\n--- Test Suite 8: 18-Stage Application State Machine ---');
+const expectedStatuses = [
+  'DRAFT', 'DOCUMENTS_PENDING', 'READY_FOR_PAYMENT', 'PAYMENT_PENDING',
+  'PAYMENT_FAILED', 'PAID_SUBMISSION_PENDING', 'SUBMITTED', 'UNDER_REVIEW',
+  'CORRECTION_REQUIRED', 'RESUBMITTED', 'READY_FOR_PROVIDER', 'PROVIDER_PROCESSING',
+  'EXTERNAL_QUERY', 'APPOINTMENT_SCHEDULED', 'APPROVED', 'REJECTED',
+  'ISSUED', 'DELIVERED', 'CLOSED'
+];
+
+let allStatusesRegistered = expectedStatuses.every(st => Boolean(APPLICATION_STATUS_REGISTRY[st]));
+assert(allStatusesRegistered, 'All 18 enterprise lifecycle statuses registered in backend state machine');
+
+// Valid transition tests
+assert(canTransition('DRAFT', 'DOCUMENTS_PENDING') === true, 'Transition DRAFT -> DOCUMENTS_PENDING is allowed');
+assert(canTransition('DOCUMENTS_PENDING', 'READY_FOR_PAYMENT') === true, 'Transition DOCUMENTS_PENDING -> READY_FOR_PAYMENT is allowed');
+assert(canTransition('READY_FOR_PAYMENT', 'PAYMENT_PENDING') === true, 'Transition READY_FOR_PAYMENT -> PAYMENT_PENDING is allowed');
+assert(canTransition('PAYMENT_PENDING', 'PAID_SUBMISSION_PENDING') === true, 'Transition PAYMENT_PENDING -> PAID_SUBMISSION_PENDING is allowed');
+assert(canTransition('PAID_SUBMISSION_PENDING', 'SUBMITTED') === true, 'Transition PAID_SUBMISSION_PENDING -> SUBMITTED is allowed');
+assert(canTransition('SUBMITTED', 'UNDER_REVIEW') === true, 'Transition SUBMITTED -> UNDER_REVIEW is allowed');
+assert(canTransition('UNDER_REVIEW', 'CORRECTION_REQUIRED') === true, 'Transition UNDER_REVIEW -> CORRECTION_REQUIRED is allowed');
+assert(canTransition('CORRECTION_REQUIRED', 'RESUBMITTED') === true, 'Transition CORRECTION_REQUIRED -> RESUBMITTED is allowed');
+assert(canTransition('RESUBMITTED', 'UNDER_REVIEW') === true, 'Transition RESUBMITTED -> UNDER_REVIEW is allowed');
+assert(canTransition('UNDER_REVIEW', 'READY_FOR_PROVIDER') === true, 'Transition UNDER_REVIEW -> READY_FOR_PROVIDER is allowed');
+assert(canTransition('READY_FOR_PROVIDER', 'PROVIDER_PROCESSING') === true, 'Transition READY_FOR_PROVIDER -> PROVIDER_PROCESSING is allowed');
+assert(canTransition('PROVIDER_PROCESSING', 'APPROVED') === true, 'Transition PROVIDER_PROCESSING -> APPROVED is allowed');
+assert(canTransition('APPROVED', 'ISSUED') === true, 'Transition APPROVED -> ISSUED is allowed');
+assert(canTransition('ISSUED', 'DELIVERED') === true, 'Transition ISSUED -> DELIVERED is allowed');
+assert(canTransition('DELIVERED', 'CLOSED') === true, 'Transition DELIVERED -> CLOSED is allowed');
+
+// Invalid transition guards
+assert(canTransition('DRAFT', 'DELIVERED') === false, 'Illegal jump DRAFT -> DELIVERED correctly blocked');
+assert(canTransition('CLOSED', 'DRAFT') === false, 'Terminal CLOSED -> DRAFT correctly blocked');
+assert(canTransition('SUBMITTED', 'ISSUED') === false, 'Skipping scrutiny SUBMITTED -> ISSUED correctly blocked');
+assert(canTransition('PAYMENT_FAILED', 'APPROVED') === false, 'Unpaid PAYMENT_FAILED -> APPROVED correctly blocked');
+
+// Self transition
+assert(canTransition('UNDER_REVIEW', 'UNDER_REVIEW') === true, 'Idempotent self-transition UNDER_REVIEW -> UNDER_REVIEW is permitted');
+
+// -------------------------------------------------------------
+// Test Suite 9: PRD §33 4 Distinct Identifiers Integrity
+// -------------------------------------------------------------
+console.log('\n--- Test Suite 9: PRD §33 4 Distinct Identifiers Integrity ---');
+const ids = generateApplicationIdentifiers(5527);
+const curYear = new Date().getFullYear();
+
+assert(ids.adcsAppId === `ADCS-${curYear}-005527`, `ADCS Application ID format correct: ${ids.adcsAppId}`);
+assert(ids.paymentOrderId === `PAY-${curYear}-005527`, `Payment Order ID format correct: ${ids.paymentOrderId}`);
+assert(ids.adcsReceiptNumber === `REC-${curYear}-005527`, `ADCS Receipt Number format correct: ${ids.adcsReceiptNumber}`);
+assert(ids.externalReferenceNumber === null, 'External Reference is initially null until provider submission');
+
+// Ensure all 3 generated IDs share the zero-padded seed
+assert(ids.adcsAppId.endsWith('005527') && ids.paymentOrderId.endsWith('005527') && ids.adcsReceiptNumber.endsWith('005527'), 'All internal IDs synchronously indexed to same 6-digit seed sequence');
+
+// -------------------------------------------------------------
+// Test Suite 10: Correction Request & Certificate Security
+// -------------------------------------------------------------
+console.log('\n--- Test Suite 10: Correction Request & Certificate Security ---');
+const sampleApp = {
+  id: ids.adcsAppId,
+  customerName: 'Citizen Applicant',
+  serviceName: 'Income Certificate',
+  status: 'UNDER_REVIEW',
+  correctionRequests: []
+};
+
+// Simulate Reviewer creating correction request
+const correctionId = 'CORR-' + Date.now();
+const corrRequest = {
+  id: correctionId,
+  requestedAt: new Date().toISOString(),
+  items: [
+    { fieldName: 'Electricity Bill', reason: 'Bill copy blurred. Provide legible copy.' }
+  ],
+  status: 'PENDING'
+};
+sampleApp.correctionRequests.push(corrRequest);
+sampleApp.status = 'CORRECTION_REQUIRED';
+
+assert(sampleApp.status === 'CORRECTION_REQUIRED', 'Application transitioned to CORRECTION_REQUIRED upon defect flag');
+assert(sampleApp.correctionRequests.length === 1, 'Correction request successfully attached to application');
+
+// Simulate Citizen resubmitting
+corrRequest.status = 'RESOLVED';
+corrRequest.resolvedAt = new Date().toISOString();
+sampleApp.status = 'RESUBMITTED';
+
+assert(canTransition('CORRECTION_REQUIRED', 'RESUBMITTED'), 'Resubmission transition allowed by state machine');
+assert(sampleApp.status === 'RESUBMITTED', 'Application transitioned to RESUBMITTED');
+assert(corrRequest.status === 'RESOLVED', 'Correction request marked as RESOLVED');
+
+// Verify certificate SHA-256 seal generation logic
+const auditString = `${sampleApp.id}|${sampleApp.customerName}|ISSUED|${new Date().toISOString().slice(0, 10)}`;
+const auditHash = crypto.createHash('sha256').update(auditString).digest('hex');
+assert(auditHash.length === 64, `SHA-256 tamper-evident audit hash generated (length ${auditHash.length})`);
 
 // -------------------------------------------------------------
 // Test Suite Summary

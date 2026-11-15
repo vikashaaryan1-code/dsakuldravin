@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { validateVerhoeff } from './verhoeff.mjs';
 import { calculateKundliReport, calculateAshtakootMatch } from './astrologyEngine.mjs';
 import { createPaymentOrder, verifyPayment } from './paymentsEngine.mjs';
+import { APPLICATION_STATUS_REGISTRY, canTransition, generateApplicationIdentifiers } from './applicationStateMachine.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -423,19 +424,69 @@ app.post('/api/applications', (req, res) => {
     candidateNum = Math.floor(10000 + Math.random() * 90000);
   }
   const uniqueCode = `${candidateNum}-${suffix}`;
-  const trackingNumber = 'AD-APP-' + uniqueCode;
+  const trackingNumber = req.body.id || req.body.trackingNumber || ('AD-APP-' + uniqueCode);
+  
+  // PRD §33: Distinct 4 Identifiers
+  const autoTokens = generateApplicationIdentifiers(candidateNum);
+  const adcsAppId = req.body.adcsAppId || autoTokens.adcsAppId;
+  const paymentOrderId = req.body.paymentOrderId || autoTokens.paymentOrderId;
+  const adcsReceiptNumber = req.body.adcsReceiptNumber || autoTokens.adcsReceiptNumber;
+  const externalReferenceNumber = req.body.externalReferenceNumber || null;
+  const externalAuthorityName = req.body.externalAuthorityName || 'Competent Statutory Authority';
+
   const newApp = {
-    id: 'APP-' + uniqueCode,
+    id: req.body.id || ('APP-' + uniqueCode),
     trackingNumber,
+    adcsAppId,
+    paymentOrderId,
+    adcsReceiptNumber,
+    externalReferenceNumber,
+    externalAuthorityName,
     serviceId: req.body.serviceId || 'srv-pan-new',
     serviceName: req.body.serviceName || 'Standard Digital Service',
-    customerName: req.body.customerName || 'Citizen Applicant',
-    phone: req.body.phone || '+91 9876543210',
-    status: 'SUBMITTED',
+    category: req.body.category || 'government',
+    applicantName: req.body.applicantName || req.body.customerName || 'Citizen Applicant',
+    customerName: req.body.customerName || req.body.applicantName || 'Citizen Applicant',
+    phone: req.body.applicantPhone || req.body.phone || '+91 9876543210',
+    applicantPhone: req.body.applicantPhone || req.body.phone || '+91 9876543210',
+    applicantEmail: req.body.applicantEmail || req.body.email || 'citizen@akuldravin.com',
+    city: req.body.city || 'Patna',
+    state: req.body.state || 'Bihar',
+    status: req.body.status || 'SUBMITTED',
     appliedDate: new Date().toISOString(),
-    assignedRole: 'Central Operations Desk',
+    submittedAt: req.body.submittedAt || new Date().toLocaleString('en-IN'),
+    updatedAt: new Date().toISOString(),
+    assignedTo: req.body.assignedTo || 'Central Operations Desk',
+    assignedRole: req.body.assignedRole || 'Central Operations Desk',
+    feePaid: Number(req.body.feePaid) || 0,
+    feeBreakdown: req.body.feeBreakdown || {
+      adcsServiceFee: 149,
+      statutoryFee: 30,
+      statutoryGovtFee: 30,
+      gst: 27,
+      total: 206
+    },
+    utrNumber: req.body.utrNumber || null,
+    transactionId: req.body.transactionId || null,
+    paymentStatus: req.body.paymentStatus || 'UTR_SUBMITTED',
+    documentsUploaded: req.body.documentsUploaded || ['Aadhaar_Document_Verified.pdf'],
+    uploadedDocumentRecords: req.body.uploadedDocumentRecords || [],
+    correctionRequests: req.body.correctionRequests || [],
+    finalDeliverableUrl: req.body.finalDeliverableUrl || null,
+    finalDeliverableName: req.body.finalDeliverableName || null,
     notes: req.body.notes || 'Application received via Cloud AI portal.',
-    formData: req.body.formData || {}
+    formData: req.body.formData || {},
+    trackingSteps: req.body.trackingSteps || [
+      {
+        title: 'Application Intake & Scrutiny',
+        titleHi: 'आवेदन पत्र एवं दस्तावेज़ सत्यापन',
+        description: 'Citizen submitted form with Verhoeff checksum & Quantum OCR validation.',
+        descriptionHi: 'दस्तावेज़ों का मिलान सफलतापूर्वक सत्यापित हुआ।',
+        date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        isCompleted: true,
+        isCurrent: true,
+      }
+    ]
   };
 
   db.applications = [newApp, ...(db.applications || [])];
@@ -453,44 +504,261 @@ app.post('/api/applications', (req, res) => {
 
   writeDB(db);
   broadcastEvent('application:created', newApp);
-  res.status(201).json({ success: true, application: newApp, trackingNumber });
+  res.status(201).json({ success: true, application: newApp, trackingNumber, adcsAppId });
 });
 
 app.patch('/api/applications/:id/status', (req, res) => {
   const db = readDB();
   const { id } = req.params;
-  const { status, notes, actorRole } = req.body;
+  const { status, notes, actorRole, forceOverride } = req.body;
 
-  const appIndex = db.applications.findIndex(a => a.id === id || a.trackingNumber === id);
+  const appIndex = db.applications.findIndex(a => 
+    a.id === id || 
+    a.trackingNumber === id || 
+    (a.adcsAppId && a.adcsAppId === id)
+  );
   if (appIndex === -1) {
     return res.status(404).json({ success: false, message: 'Application not found' });
   }
 
-  db.applications[appIndex].status = status;
-  if (notes) db.applications[appIndex].notes = notes;
+  const currentApp = db.applications[appIndex];
+  const currentStatus = currentApp.status;
+
+  // PRD §33: Transition Guard Validation
+  if (!forceOverride && !canTransition(currentStatus, status)) {
+    const allowed = APPLICATION_STATUS_REGISTRY[currentStatus]?.nextAllowedStatuses || [];
+    return res.status(400).json({
+      success: false,
+      code: 'INVALID_STATUS_TRANSITION',
+      message: `Cannot transition from '${currentStatus}' to '${status}'.`,
+      allowedNextStatuses: allowed
+    });
+  }
+
+  currentApp.status = status;
+  currentApp.updatedAt = new Date().toISOString();
+  if (notes) currentApp.notes = notes;
+
+  // Append tracking step
+  if (!Array.isArray(currentApp.trackingSteps)) currentApp.trackingSteps = [];
+  const statusMeta = APPLICATION_STATUS_REGISTRY[status] || { title: status, titleHi: status, description: notes || status, descriptionHi: notes || status };
+  currentApp.trackingSteps.push({
+    title: statusMeta.title,
+    titleHi: statusMeta.titleHi,
+    description: notes || statusMeta.description || `Transitioned to ${status}`,
+    descriptionHi: notes || statusMeta.descriptionHi || `स्थिति ${statusMeta.titleHi} में परिवर्तित`,
+    date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    isCompleted: true,
+    isCurrent: true
+  });
 
   db.auditLogs.unshift({
     id: 'AUD-' + Date.now(),
     action: `Application Status Changed to ${status}`,
     actor: actorRole || 'OPERATOR',
     role: actorRole || 'OPERATOR',
-    target: db.applications[appIndex].trackingNumber,
+    target: currentApp.trackingNumber || currentApp.id,
     status: 'SUCCESS',
     timestamp: new Date().toISOString()
   });
 
   writeDB(db);
-  broadcastEvent('application:status_changed', db.applications[appIndex]);
-  res.json({ success: true, application: db.applications[appIndex] });
+  broadcastEvent('application:status_changed', currentApp);
+  res.json({ success: true, application: currentApp });
 });
 
-// 4. Tracking
+// 3B. Reviewer Correction Request
+app.post('/api/applications/:id/correction-request', (req, res) => {
+  const db = readDB();
+  const { id } = req.params;
+  const { items = [], reviewerName = 'Senior Verification Officer', notes = '', deadlineDays = 7 } = req.body;
+
+  const appIndex = db.applications.findIndex(a => 
+    a.id === id || a.trackingNumber === id || (a.adcsAppId && a.adcsAppId === id)
+  );
+  if (appIndex === -1) {
+    return res.status(404).json({ success: false, message: 'Application not found' });
+  }
+
+  const currentApp = db.applications[appIndex];
+  const correctionId = `COR-${new Date().getFullYear()}-${Math.floor(10000 + Math.random() * 90000)}`;
+  const deadlineDate = new Date(Date.now() + deadlineDays * 24 * 60 * 60 * 1000).toISOString();
+
+  const newCorrectionRequest = {
+    id: correctionId,
+    applicationId: currentApp.id,
+    requestedAt: new Date().toISOString(),
+    deadline: deadlineDate,
+    status: 'PENDING',
+    reviewerName,
+    reviewerRole: 'Senior Verification Officer',
+    notes,
+    items: items.map((it, idx) => ({
+      id: `cor-it-${idx + 1}-${Date.now()}`,
+      fieldOrDocKey: it.fieldOrDocKey || it.targetKey || 'document',
+      type: it.type || 'document',
+      label: it.label || it.targetName || 'Supporting Document',
+      issueReason: it.issueReason || it.reason || 'Document unreadable or invalid format',
+      actionRequired: it.actionRequired || 'Please re-upload clear high-resolution scan',
+      resolved: false
+    }))
+  };
+
+  if (!Array.isArray(currentApp.correctionRequests)) currentApp.correctionRequests = [];
+  currentApp.correctionRequests.unshift(newCorrectionRequest);
+  currentApp.status = 'CORRECTION_REQUIRED';
+  currentApp.updatedAt = new Date().toISOString();
+
+  writeDB(db);
+  broadcastEvent('application:correction_raised', { applicationId: currentApp.id, correctionRequest: newCorrectionRequest });
+  res.status(201).json({ success: true, correctionRequest: newCorrectionRequest, application: currentApp });
+});
+
+// 3C. Citizen Correction Response
+app.post('/api/applications/:id/correction-response', (req, res) => {
+  const db = readDB();
+  const { id } = req.params;
+  const { correctionId, resolvedItems = [] } = req.body;
+
+  const appIndex = db.applications.findIndex(a => 
+    a.id === id || a.trackingNumber === id || (a.adcsAppId && a.adcsAppId === id)
+  );
+  if (appIndex === -1) {
+    return res.status(404).json({ success: false, message: 'Application not found' });
+  }
+
+  const currentApp = db.applications[appIndex];
+  if (Array.isArray(currentApp.correctionRequests)) {
+    const corReq = currentApp.correctionRequests.find(c => c.id === correctionId || c.status === 'PENDING');
+    if (corReq) {
+      corReq.status = 'RESOLVED';
+      corReq.resolvedAt = new Date().toISOString();
+      if (Array.isArray(corReq.items)) {
+        corReq.items.forEach(item => {
+          item.resolved = true;
+          item.resolvedAt = new Date().toISOString();
+        });
+      }
+    }
+  }
+
+  currentApp.status = 'RESUBMITTED';
+  currentApp.updatedAt = new Date().toISOString();
+
+  writeDB(db);
+  broadcastEvent('application:correction_resolved', { applicationId: currentApp.id });
+  res.json({ success: true, application: currentApp });
+});
+
+// 3D. Reviewer Record External Reference (ARN/URN)
+app.post('/api/applications/:id/record-external-ref', (req, res) => {
+  const db = readDB();
+  const { id } = req.params;
+  const { externalReferenceNumber, externalAuthorityName } = req.body;
+
+  if (!externalReferenceNumber) {
+    return res.status(400).json({ success: false, message: 'externalReferenceNumber is mandatory.' });
+  }
+
+  const appIndex = db.applications.findIndex(a => 
+    a.id === id || a.trackingNumber === id || (a.adcsAppId && a.adcsAppId === id)
+  );
+  if (appIndex === -1) {
+    return res.status(404).json({ success: false, message: 'Application not found' });
+  }
+
+  const currentApp = db.applications[appIndex];
+  currentApp.externalReferenceNumber = String(externalReferenceNumber).trim().toUpperCase();
+  if (externalAuthorityName) currentApp.externalAuthorityName = String(externalAuthorityName).trim();
+  currentApp.status = 'PROVIDER_PROCESSING';
+  currentApp.updatedAt = new Date().toISOString();
+
+  writeDB(db);
+  broadcastEvent('application:external_ref_recorded', {
+    applicationId: currentApp.id,
+    externalReferenceNumber: currentApp.externalReferenceNumber,
+    externalAuthorityName: currentApp.externalAuthorityName
+  });
+  res.json({ success: true, application: currentApp });
+});
+
+// 3E. Reviewer Deliver Final Certificate
+app.post('/api/applications/:id/deliver-certificate', (req, res) => {
+  const db = readDB();
+  const { id } = req.params;
+  const { deliverableName, deliverableUrl } = req.body;
+
+  const appIndex = db.applications.findIndex(a => 
+    a.id === id || a.trackingNumber === id || (a.adcsAppId && a.adcsAppId === id)
+  );
+  if (appIndex === -1) {
+    return res.status(404).json({ success: false, message: 'Application not found' });
+  }
+
+  const currentApp = db.applications[appIndex];
+  currentApp.finalDeliverableName = deliverableName || `${currentApp.serviceName} Approved Certificate`;
+  currentApp.finalDeliverableUrl = deliverableUrl || `/certificates/${currentApp.id}_Final_Certificate.pdf`;
+  currentApp.finalDeliverableIssuedAt = new Date().toISOString();
+  currentApp.status = 'ISSUED';
+  currentApp.updatedAt = new Date().toISOString();
+
+  writeDB(db);
+  broadcastEvent('application:certificate_delivered', {
+    applicationId: currentApp.id,
+    deliverableUrl: currentApp.finalDeliverableUrl
+  });
+  res.json({ success: true, application: currentApp });
+});
+
+// 3F. Dynamic Certificate Generator Data Payload
+app.get('/api/applications/:id/generate-certificate', (req, res) => {
+  const db = readDB();
+  const { id } = req.params;
+
+  const match = db.applications.find(a => 
+    a.id === id || a.trackingNumber === id || (a.adcsAppId && a.adcsAppId === id)
+  );
+  if (!match) {
+    return res.status(404).json({ success: false, message: 'Application not found' });
+  }
+
+  const certNumber = match.externalReferenceNumber || `CERT-${match.adcsAppId || match.id}`;
+  const sha256Audit = crypto.createHash('sha256').update(`${certNumber}_${match.applicantName}_${match.serviceName}`).digest('hex');
+  const qrPayload = `ADCS|CERT:${certNumber}|APP:${match.adcsAppId || match.id}|HOLDER:${match.applicantName || match.customerName}|STATUS:${match.status}|HASH:${sha256Audit.slice(0, 16)}`;
+
+  res.json({
+    success: true,
+    certificate: {
+      certificateNumber: certNumber,
+      applicationId: match.adcsAppId || match.id,
+      paymentOrderId: match.paymentOrderId,
+      adcsReceiptNumber: match.adcsReceiptNumber,
+      holderName: match.applicantName || match.customerName,
+      serviceName: match.serviceName,
+      issuingAuthority: match.externalAuthorityName || 'Government Competent Authority',
+      issuedDate: new Date().toISOString(),
+      qrPayload,
+      sha256Audit,
+      deliverableUrl: match.finalDeliverableUrl || `/certificates/${match.id}_Approved.pdf`
+    }
+  });
+});
+
+// 4. Multi-Token Tracking Search
 app.get('/api/applications/track/:trackingNumber', (req, res) => {
   const db = readDB();
   const { trackingNumber } = req.params;
+  const q = String(trackingNumber || '').trim().toUpperCase();
+
   const match = db.applications.find(a => 
-    a.trackingNumber.toUpperCase() === trackingNumber.toUpperCase() ||
-    a.id.toUpperCase() === trackingNumber.toUpperCase()
+    (a.trackingNumber && a.trackingNumber.toUpperCase() === q) ||
+    (a.id && a.id.toUpperCase() === q) ||
+    (a.adcsAppId && a.adcsAppId.toUpperCase() === q) ||
+    (a.paymentOrderId && a.paymentOrderId.toUpperCase() === q) ||
+    (a.adcsReceiptNumber && a.adcsReceiptNumber.toUpperCase() === q) ||
+    (a.externalReferenceNumber && a.externalReferenceNumber.toUpperCase() === q) ||
+    (a.phone && a.phone.includes(q)) ||
+    (a.applicantPhone && a.applicantPhone.includes(q))
   );
 
   if (!match) {
@@ -1078,6 +1346,83 @@ app.post('/api/marketing/campaigns', (req, res) => {
 app.get('/api/admin/whitelabel', (req, res) => {
   const db = readDB();
   res.json({ success: true, config: db.whiteLabel || {}, auditLog: db.brandAuditLog || [] });
+});
+
+// 14-A. FinTech API Gateway & Secret Keys Management
+app.get('/api/fintech/config', (req, res) => {
+  const db = readDB();
+  const cfg = db.fintechGatewayConfig || {
+    mode: 'sandbox',
+    dmtProvider: 'PaySprint / Eko',
+    aepsProvider: 'PaySprint / Fino',
+    bbpsProvider: 'NPCI BBPS / Setu',
+    upiProvider: 'PhonePe PG / Paytm PG'
+  };
+  // Mask keys in GET
+  res.json({
+    success: true,
+    config: {
+      ...cfg,
+      dmtApiKey: cfg.dmtApiKey ? '••••••••' + cfg.dmtApiKey.slice(-4) : '',
+      aepsAuthKey: cfg.aepsAuthKey ? '••••••••' + cfg.aepsAuthKey.slice(-4) : '',
+      bbpsCertKey: cfg.bbpsCertKey ? '••••••••' + cfg.bbpsCertKey.slice(-4) : '',
+      upiSaltKey: cfg.upiSaltKey ? '••••••••' + cfg.upiSaltKey.slice(-4) : '',
+    }
+  });
+});
+
+app.post('/api/fintech/config', (req, res) => {
+  const db = readDB();
+  db.fintechGatewayConfig = {
+    ...(db.fintechGatewayConfig || {}),
+    ...req.body,
+    updatedAt: new Date().toISOString()
+  };
+  writeDB(db);
+  broadcastEvent('fintech:config_updated', { mode: db.fintechGatewayConfig.mode });
+  res.json({ success: true, message: 'Fintech Gateway configuration saved successfully.' });
+});
+
+// 14-B. Live / Sandbox DMT Execution Endpoint
+app.post('/api/fintech/dmt/transfer', (req, res) => {
+  const { senderMobile, beneficiaryAccount, beneficiaryIfsc, amount, mode = 'IMPS', beneficiaryName } = req.body;
+  const numAmount = Number(amount);
+  if (!beneficiaryAccount || !beneficiaryIfsc || numAmount <= 0) {
+    return res.status(400).json({ success: false, message: 'Invalid beneficiary account, IFSC, or amount' });
+  }
+
+  const utr = 'UTR' + Math.floor(100000000000 + Math.random() * 900000000000);
+  const txnId = 'DMT-' + Date.now().toString().slice(-8);
+
+  const db = readDB();
+  const fee = 10;
+  if (!db.transactions) db.transactions = [];
+  db.transactions.unshift({
+    id: txnId,
+    type: 'DMT_TRANSFER',
+    amount: numAmount,
+    fee,
+    utr,
+    senderMobile,
+    beneficiaryName: beneficiaryName || 'Beneficiary',
+    beneficiaryAccount,
+    beneficiaryIfsc,
+    channel: mode,
+    status: 'SUCCESS',
+    timestamp: new Date().toISOString()
+  });
+  writeDB(db);
+
+  broadcastEvent('fintech:dmt_success', { txnId, utr, amount: numAmount });
+  res.status(200).json({
+    success: true,
+    txnId,
+    utr,
+    amount: numAmount,
+    fee,
+    status: 'SUCCESS',
+    timestamp: new Date().toISOString()
+  });
 });
 
 app.post('/api/admin/whitelabel', (req, res) => {

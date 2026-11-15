@@ -1057,6 +1057,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     logAudit(`Correction Requested for ${applicationId}`, `Items: ${items.length} • Reviewer: ${reviewerName}`, 'Success');
     showToast('Correction Request Sent', `Applicant notified for ${items.length} flagged items on ${applicationId}.`, 'warning');
+
+    // Async sync to Backend API Gateway
+    apiClient.createCorrectionRequest(applicationId, {
+      items,
+      reviewerName,
+      notes,
+    }).catch(() => {});
   };
 
   const submitCorrectionResponse = (
@@ -1145,6 +1152,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     logAudit(`Corrections Resubmitted for ${applicationId}`, 'Applicant Portal Action', 'Success');
     showToast('Corrections Submitted Successfully', `Application ${applicationId} moved to priority review queue.`, 'success');
+
+    // Async sync to Backend API Gateway
+    apiClient.submitCorrectionResponse(applicationId, {
+      resolvedItems
+    }).catch(() => {});
   };
 
   const assignApplicationOperator = (applicationId: string, operatorName: string) => {
@@ -1202,6 +1214,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
     logAudit(`Review status of ${applicationId} updated to ${newStatus}`, 'Review Desk');
     showToast('Review Status Updated', `Application status is now "${newStatus}".`, 'info');
+
+    // Async sync to Backend API Gateway
+    apiClient.updateApplicationStatus(applicationId, newStatus, reviewerNotes, currentRole).catch(() => {});
   };
 
   const recordExternalProviderSubmission = (applicationId: string, externalRefNumber: string, authorityName: string) => {
@@ -1231,6 +1246,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
     logAudit(`External Filing Logged for ${applicationId}`, `Ref: ${externalRefNumber} • Authority: ${authorityName}`);
     showToast('Official Filing Recorded', `External reference ${externalRefNumber} mapped to ${applicationId}.`, 'success');
+
+    // Async sync to Backend API Gateway
+    apiClient.recordExternalReference(applicationId, {
+      externalReferenceNumber: externalRefNumber,
+      externalAuthorityName: authorityName
+    }).catch(() => {});
   };
 
   const deliverFinalDocument = (applicationId: string, deliverableName: string, deliverableUrl: string) => {
@@ -1261,6 +1282,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
     logAudit(`Final Deliverable Uploaded for ${applicationId}`, `File: ${deliverableName}`);
     showToast('Final Document Delivered', `${deliverableName} is now ready for customer download.`, 'success');
+
+    // Async sync to Backend API Gateway
+    apiClient.deliverFinalCertificate(applicationId, {
+      deliverableName,
+      deliverableUrl
+    }).catch(() => {});
   };
 
   const processApplicationRefund = (applicationId: string, refundAmount: number, reason: string) => {

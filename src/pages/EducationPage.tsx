@@ -75,10 +75,10 @@ export const EducationPage: React.FC = () => {
                 <span className="badge badge-blue">STUDENT DESK</span>
                 <span className="badge badge-gold">{item.rate}</span>
               </div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#061A36', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--adcs-text)', marginBottom: '0.5rem' }}>
                 {item.title}
               </h3>
-              <p style={{ fontSize: '0.85rem', color: '#64748B', lineHeight: 1.5, marginBottom: '1.25rem' }}>
+              <p style={{ fontSize: '0.85rem', color: 'var(--adcs-muted)', lineHeight: 1.5, marginBottom: '1.25rem' }}>
                 {item.desc}
               </p>
             </div>
@@ -177,18 +177,18 @@ export const EducationPage: React.FC = () => {
 
       {/* Official Examination, Admissions & Scholarship Portals Directory */}
       <div style={{
-        background: '#F8FAFC',
+        background: 'var(--adcs-surface)',
         borderRadius: '20px',
         padding: '1.75rem',
-        border: '1px solid #E2E8F0',
+        border: '1px solid var(--adcs-border)',
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: '#061A36', fontWeight: 800, fontSize: '1.05rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', color: 'var(--adcs-text)', fontWeight: 800, fontSize: '1.05rem' }}>
               <ShieldCheck size={18} color="#075ACB" />
               <span>Authorized Examination, Admissions & Scholarship Portals</span>
             </div>
-            <p style={{ fontSize: '0.8rem', color: '#64748B', margin: '0.25rem 0 0' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--adcs-muted)', margin: '0.25rem 0 0' }}>
               Direct official government portals for applicant-authenticated OTP login and statutory submission. ADCS provides document compression & assisted filing only.
             </p>
           </div>
@@ -216,9 +216,9 @@ export const EducationPage: React.FC = () => {
                 gap: '0.4rem',
                 padding: '0.5rem 0.9rem',
                 borderRadius: '10px',
-                background: '#FFFFFF',
-                border: '1px solid #CBD5E1',
-                color: '#1E293B',
+                background: 'var(--adcs-background)',
+                border: '1px solid var(--adcs-border)',
+                color: 'var(--adcs-text)',
                 fontSize: '0.8rem',
                 fontWeight: 700,
                 textDecoration: 'none',

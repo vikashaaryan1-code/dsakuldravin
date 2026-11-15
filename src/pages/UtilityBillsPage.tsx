@@ -22,8 +22,86 @@ import confetti from 'canvas-confetti';
 export const UtilityBillsPage: React.FC = () => {
   const { walletBalance, setWalletBalance, showToast, logAudit, recordJournalEntry, language } = useApp();
   const [activeBiller, setActiveBiller] = useState<'electricity' | 'mobile' | 'dth' | 'fastag' | 'gas'>('electricity');
-  const [operator, setOperator] = useState('SBPDCL - South Bihar Power Distribution');
-  const [consumerNumber, setConsumerNumber] = useState('1029384756');
+
+  const billerConfig: Record<'electricity' | 'mobile' | 'dth' | 'fastag' | 'gas', {
+    label: string;
+    placeholder: string;
+    helper: string;
+    defaultNumber: string;
+    operators: string[];
+  }> = {
+    electricity: {
+      label: 'Consumer Number (CA Number) *',
+      placeholder: 'e.g. 1029384756',
+      helper: 'Enter 10-digit consumer / CA number from your paper electricity bill.',
+      defaultNumber: '1029384756',
+      operators: [
+        'SBPDCL - South Bihar Power Distribution',
+        'NBPDCL - North Bihar Power Distribution',
+        'UPPCL - Uttar Pradesh Power Corporation',
+        'Tata Power Delhi Distribution (TPDDL)',
+        'MSEDCL - Maharashtra State Electricity',
+        'BESCOM - Bangalore Electricity Supply',
+        'WBSEDCL - West Bengal State Electricity',
+        'TSSPDCL - Telangana Southern Power',
+      ]
+    },
+    mobile: {
+      label: 'Mobile Number *',
+      placeholder: 'e.g. 9876543210',
+      helper: 'Enter 10-digit prepaid/postpaid mobile number for instant recharge.',
+      defaultNumber: '9876543210',
+      operators: [
+        'Reliance Jio Prepaid / Postpaid',
+        'Bharti Airtel India',
+        'Vi - Vodafone Idea',
+        'BSNL Mobile GSM Prepaid'
+      ]
+    },
+    dth: {
+      label: 'Smart Card Number / Subscriber ID *',
+      placeholder: 'e.g. 1092837465',
+      helper: 'Press Home/Info on DTH remote to view your Subscriber ID.',
+      defaultNumber: '1092837465',
+      operators: [
+        'Tata Play (Tata Sky)',
+        'Airtel Digital TV',
+        'Dish TV India',
+        'Sun Direct DTH',
+        'D2H (Videocon)'
+      ]
+    },
+    fastag: {
+      label: 'Vehicle Registration / VRN *',
+      placeholder: 'e.g. BR01AB1234',
+      helper: 'Enter registered vehicle plate number without spaces.',
+      defaultNumber: 'BR01AB1234',
+      operators: [
+        'Paytm Payments Bank FASTag',
+        'ICICI Bank FASTag',
+        'State Bank of India (SBI) FASTag',
+        'HDFC Bank FASTag',
+        'Kotak Mahindra Bank FASTag',
+        'Axis Bank FASTag'
+      ]
+    },
+    gas: {
+      label: 'LPG Consumer ID / Registered Mobile *',
+      placeholder: 'e.g. 17-digit LPG ID or 10-digit Mobile',
+      helper: 'Found on your LPG subscription voucher / blue book.',
+      defaultNumber: '75001234567890123',
+      operators: [
+        'Indane Gas (Indian Oil Corporation)',
+        'Bharat Gas (BPCL)',
+        'HP Gas (HPCL)',
+        'Adani Total Gas (PNG)',
+        'Indraprastha Gas Limited (IGL PNG)'
+      ]
+    }
+  };
+
+  const [operator, setOperator] = useState(billerConfig.electricity.operators[0]);
+  const [consumerNumber, setConsumerNumber] = useState(billerConfig.electricity.defaultNumber);
   const [isFetching, setIsFetching] = useState(false);
   const [fetchedBill, setFetchedBill] = useState<{
     consumerName: string;
@@ -36,6 +114,14 @@ export const UtilityBillsPage: React.FC = () => {
   const [isPaid, setIsPaid] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
 
+  const handleSelectBiller = (catId: 'electricity' | 'mobile' | 'dth' | 'fastag' | 'gas') => {
+    setActiveBiller(catId);
+    setOperator(billerConfig[catId].operators[0]);
+    setConsumerNumber(billerConfig[catId].defaultNumber);
+    setFetchedBill(null);
+    setIsPaid(false);
+  };
+
   const handleFetchBill = () => {
     if (!consumerNumber) return;
     setIsFetching(true);
@@ -43,15 +129,36 @@ export const UtilityBillsPage: React.FC = () => {
     setIsPaid(false);
 
     setTimeout(() => {
+      let units = 240;
+      let amount = 1480;
+      let consumerName = 'Shri Raghunath Prasad';
+      if (activeBiller === 'mobile') {
+        units = 28; // days validity
+        amount = 299;
+        consumerName = `Mobile Subscriber (+91 ${consumerNumber})`;
+      } else if (activeBiller === 'dth') {
+        units = 30; // days
+        amount = 350;
+        consumerName = `DTH Subscriber (${consumerNumber})`;
+      } else if (activeBiller === 'fastag') {
+        units = 1;
+        amount = 500;
+        consumerName = `Vehicle Owner (${consumerNumber.toUpperCase()})`;
+      } else if (activeBiller === 'gas') {
+        units = 1; // 1 cylinder
+        amount = 853;
+        consumerName = `LPG Beneficiary (${consumerNumber})`;
+      }
+
       setFetchedBill({
-        consumerName: 'Shri Raghunath Prasad',
+        consumerName,
         dueDate: '28 Sep 2026',
-        units: 240,
-        amount: 1480,
+        units,
+        amount,
         billNumber: 'BBPS-' + Math.floor(100000 + Math.random() * 900000),
       });
       setIsFetching(false);
-      showToast('Bill Fetched Successfully', 'Verified with State Electricity Board via Bharat BillPay (BBPS).', 'success');
+      showToast('Bill Fetched Successfully', `Verified with ${operator} via Bharat BillPay (BBPS).`, 'success');
     }, 700);
   };
 
@@ -192,15 +299,11 @@ export const UtilityBillsPage: React.FC = () => {
             { id: 'mobile', label: 'Mobile', icon: <Smartphone size={20} /> },
             { id: 'dth', label: 'DTH TV', icon: <Tv size={20} /> },
             { id: 'fastag', label: 'FASTag', icon: <Car size={20} /> },
-            { id: 'gas', label: 'Piped Gas', icon: <Flame size={20} /> },
+            { id: 'gas', label: 'LPG Gas', icon: <Flame size={20} /> },
           ].map(cat => (
             <button
               key={cat.id}
-              onClick={() => {
-                setActiveBiller(cat.id as any);
-                setFetchedBill(null);
-                setIsPaid(false);
-              }}
+              onClick={() => handleSelectBiller(cat.id as any)}
               style={{
                 padding: '1rem 0.5rem',
                 borderRadius: '14px',
@@ -231,17 +334,15 @@ export const UtilityBillsPage: React.FC = () => {
               value={operator}
               onChange={(e) => setOperator(e.target.value)}
             >
-              <option value="SBPDCL - South Bihar Power Distribution">SBPDCL - South Bihar Power Distribution</option>
-              <option value="NBPDCL - North Bihar Power Distribution">NBPDCL - North Bihar Power Distribution</option>
-              <option value="UPPCL - Uttar Pradesh Power Corporation">UPPCL - Uttar Pradesh Power Corporation</option>
-              <option value="Tata Power Delhi Distribution (TPDDL)">Tata Power Delhi Distribution (TPDDL)</option>
-              <option value="MSEDCL - Maharashtra State Electricity">MSEDCL - Maharashtra State Electricity</option>
+              {billerConfig[activeBiller].operators.map((op) => (
+                <option key={op} value={op}>{op}</option>
+              ))}
             </select>
           </div>
 
           <div className="form-group">
             <label className="form-label">
-              {activeBiller === 'electricity' ? 'Consumer Number (CA Number) *' : 'Account / Identifier *'}
+              {billerConfig[activeBiller].label}
             </label>
             <div style={{ display: 'flex', gap: '0.75rem' }}>
               <input
@@ -249,7 +350,7 @@ export const UtilityBillsPage: React.FC = () => {
                 className="form-input"
                 value={consumerNumber}
                 onChange={(e) => setConsumerNumber(e.target.value)}
-                placeholder="e.g. 1029384756"
+                placeholder={billerConfig[activeBiller].placeholder}
               />
               <button
                 onClick={handleFetchBill}
@@ -261,7 +362,7 @@ export const UtilityBillsPage: React.FC = () => {
               </button>
             </div>
             <span style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.3rem', display: 'block' }}>
-              Enter consumer number printed on your paper electricity bill.
+              {billerConfig[activeBiller].helper}
             </span>
           </div>
 
@@ -285,8 +386,12 @@ export const UtilityBillsPage: React.FC = () => {
                   <div style={{ fontWeight: 700, color: '#061A36' }}>{fetchedBill.consumerName}</div>
                 </div>
                 <div>
-                  <div style={{ color: '#64748B' }}>Units Consumed:</div>
-                  <div style={{ fontWeight: 700, color: '#061A36' }}>{fetchedBill.units} kWh</div>
+                  <div style={{ color: '#64748B' }}>
+                    {activeBiller === 'electricity' ? 'Units Consumed:' : activeBiller === 'mobile' ? 'Plan Validity:' : activeBiller === 'dth' ? 'Cycle Period:' : activeBiller === 'fastag' ? 'Tag Status:' : 'Refill Qty:'}
+                  </div>
+                  <div style={{ fontWeight: 700, color: '#061A36' }}>
+                    {activeBiller === 'electricity' ? `${fetchedBill.units} kWh` : activeBiller === 'mobile' ? `${fetchedBill.units} Days (1.5GB/Day)` : activeBiller === 'dth' ? `${fetchedBill.units} Days` : activeBiller === 'fastag' ? 'ACTIVE (Min Bal ₹150)' : `${fetchedBill.units} Cylinder (14.2kg)`}
+                  </div>
                 </div>
               </div>
 

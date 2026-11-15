@@ -113,7 +113,10 @@ export type ApplicationStatus =
   | 'In Processing' 
   | 'Government Scrutiny' 
   | 'Completed' 
-  | 'Rejected';
+  | 'Rejected'
+  | 'UNDER_VERIFICATION'
+  | 'GOVT_PORTAL_FILED'
+  | 'APPROVED_CERTIFICATE_ISSUED';
 
 export interface TrackingStep {
   title: string;

@@ -428,6 +428,9 @@
   .desktop-nav {
     display: none !important;
   }
+  body, main {
+    padding-bottom: 76px !important;
+  }
 }
 
 .mobile-drawer {

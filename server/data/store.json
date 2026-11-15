@@ -102,6 +102,48 @@
   ],
   "applications": [
     {
+      "id": "AD-APP-5527",
+      "trackingNumber": "AD-APP-5527",
+      "adcsAppId": "ADCS-2026-0005527",
+      "paymentOrderId": "PAY-2026-0005527",
+      "adcsReceiptNumber": "REC-2026-0005527",
+      "externalReferenceNumber": "RTPS-PAT-2026-88124",
+      "externalAuthorityRef": "RTPS-PAT-2026-88124",
+      "externalAuthorityName": "RTPS / ServicePlus Bihar",
+      "serviceId": "gov-income-caste-domicile",
+      "serviceName": "Income / Caste / Domicile Certificate",
+      "category": "government",
+      "applicantName": "Rahul Verma",
+      "customerName": "Rahul Verma",
+      "phone": "+91 98765 12340",
+      "applicantPhone": "+91 98765 12340",
+      "applicantEmail": "rahul.verma@gmail.com",
+      "city": "Patna",
+      "state": "Bihar",
+      "status": "ISSUED",
+      "appliedDate": "2026-11-14T10:15:00.000Z",
+      "submittedAt": "2026-11-14 10:15 AM",
+      "updatedAt": "2026-11-14 11:30 AM",
+      "assignedRole": "Senior Executive Desk",
+      "assignedTo": "Rahul Sharma (Senior Executive Desk)",
+      "feePaid": 206,
+      "feeBreakdown": {
+        "adcsServiceFee": 149,
+        "statutoryFee": 30,
+        "statutoryGovtFee": 30,
+        "gst": 27,
+        "total": 206
+      },
+      "finalDeliverableUrl": "/certificates/Income_Certificate_ADCS_5527.pdf",
+      "finalDeliverableName": "State Legal Income Certificate (Tehsildar Digital Signature)",
+      "finalDeliverableIssuedAt": "2026-11-14 11:30 AM",
+      "documentsUploaded": ["Aadhaar_Card_Verified.pdf", "Ration_Card_Proof.pdf", "Self_Declaration.pdf"],
+      "notes": "Tehsildar SDM digital signature scrutiny completed. Stamped certificate ready for applicant download.",
+      "formData": {
+        "rtpsRef": "RTPS-PAT-2026-88124"
+      }
+    },
+    {
       "id": "APP-73863-7916",
       "trackingNumber": "AD-APP-73863-7916",
       "serviceId": "srv-abha-health-card",

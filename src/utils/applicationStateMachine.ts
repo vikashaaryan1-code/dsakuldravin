@@ -97,7 +97,7 @@ export const APPLICATION_STATUS_REGISTRY: Record<ApplicationStatus, ApplicationS
     color: '#059669',
     bgColor: '#DCFCE7',
     borderColor: '#86EFAC',
-    nextAllowedStatuses: ['UNDER_REVIEW', 'CORRECTION_REQUIRED', 'READY_FOR_PROVIDER', 'REJECTED'],
+    nextAllowedStatuses: ['UNDER_REVIEW', 'UNDER_VERIFICATION', 'CORRECTION_REQUIRED', 'READY_FOR_PROVIDER', 'REJECTED'],
   },
   UNDER_REVIEW: {
     code: 'UNDER_REVIEW',
@@ -236,6 +236,39 @@ export const APPLICATION_STATUS_REGISTRY: Record<ApplicationStatus, ApplicationS
   },
 
   // Legacy mappings for backward compatibility
+  UNDER_VERIFICATION: {
+    code: 'UNDER_REVIEW',
+    title: 'Under Verification',
+    titleHi: 'सत्यापन प्रक्रियाधीन',
+    description: 'Scrutiny officer inspecting uploaded records and checksums.',
+    descriptionHi: 'दस्तावेज़ों की जाँच प्रगति पर है।',
+    color: '#075ACB',
+    bgColor: '#EFF6FF',
+    borderColor: '#BFDBFE',
+    nextAllowedStatuses: ['GOVT_PORTAL_FILED', 'PROVIDER_PROCESSING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED'],
+  },
+  GOVT_PORTAL_FILED: {
+    code: 'PROVIDER_PROCESSING',
+    title: 'Filed on Government Portal',
+    titleHi: 'सरकारी पोर्टल पर दर्ज',
+    description: 'Transmitted to statutory department portal.',
+    descriptionHi: 'आधिकारिक सरकारी पोर्टल पर आवेदन प्रेषित।',
+    color: '#4F46E5',
+    bgColor: '#EEF2FF',
+    borderColor: '#C7D2FE',
+    nextAllowedStatuses: ['APPROVED_CERTIFICATE_ISSUED', 'PROVIDER_PROCESSING', 'APPROVED', 'EXTERNAL_QUERY', 'REJECTED'],
+  },
+  APPROVED_CERTIFICATE_ISSUED: {
+    code: 'ISSUED',
+    title: 'Approved & Certificate Issued',
+    titleHi: 'स्वीकृत एवं प्रमाणपत्र जारी',
+    description: 'Deliverable digitally signed and available.',
+    descriptionHi: 'प्रमाणपत्र डिजिटल हस्ताक्षरित एवं उपलब्ध।',
+    color: '#059669',
+    bgColor: '#ECFDF5',
+    borderColor: '#6EE7B7',
+    nextAllowedStatuses: ['DELIVERED', 'CLOSED'],
+  },
   Submitted: {
     code: 'SUBMITTED',
     title: 'Submitted to ADCS',

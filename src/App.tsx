@@ -40,6 +40,7 @@ import { FranchisePage } from './pages/FranchisePage';
 import { PricingPage } from './pages/PricingPage';
 import { TrackPage } from './pages/TrackPage';
 import { QuantumAIPage } from './pages/QuantumAIPage';
+import { FintechSuperAppPage } from './pages/FintechSuperAppPage';
 
 // Company & Support Pages
 import {
@@ -136,6 +137,11 @@ export const App: React.FC = () => {
             <Route path="/business" element={<BusinessServicesPage />} />
             <Route path="/documents" element={<DocumentCenterPage />} />
             <Route path="/bills" element={<UtilityBillsPage />} />
+            <Route path="/fintech" element={<FintechSuperAppPage />} />
+            <Route path="/pay" element={<FintechSuperAppPage />} />
+            <Route path="/superapp" element={<FintechSuperAppPage />} />
+            <Route path="/aeps" element={<FintechSuperAppPage />} />
+            <Route path="/dmt" element={<FintechSuperAppPage />} />
             <Route path="/travel" element={<TravelPage />} />
             <Route path="/visa" element={<TravelPage />} />
             <Route path="/property" element={<PropertyPage />} />

@@ -46,6 +46,7 @@ export const GlassNavbar: React.FC = () => {
 
   const primaryNavItems = [
     { label: language === 'en' ? 'Home' : 'होम', path: '/' },
+    { label: language === 'en' ? 'Pay / FinTech' : 'पे / फिनटेक', path: '/fintech', icon: <Coins size={15} /> },
     { label: language === 'en' ? 'All Services' : 'सेवाएँ', path: '/services', icon: <Landmark size={15} /> },
     { label: language === 'en' ? 'Government' : 'सरकारी सेवा', path: '/government', icon: <Landmark size={15} /> },
     { label: language === 'en' ? 'Cyber Café' : 'साइबर कैफ़े', path: '/cyber-cafe', icon: <Monitor size={15} /> },
@@ -57,6 +58,7 @@ export const GlassNavbar: React.FC = () => {
   ];
 
   const megaMenuServices = [
+    { name: 'ADCS Pay (PhonePe / Paytm Super-App)', path: '/fintech', desc: 'DMT Money Transfer, AEPS ATM, BBPS, Soundbox & Live API Keys' },
     { name: 'ADCS Portal (VLE / Kendra)', path: '/digitalseva', desc: 'ADCS Connect SSO, DigiPay AEPS, Tele-Law & PMGDISHA' },
     { name: 'ADCS Hub (Digital Seva)', path: '/csc', desc: 'Akul Dravin Digital Services Kendra & Partner Desk' },
     { name: 'Government & Citizen Docs', path: '/government', desc: 'PAN, Passport, Birth/Domicile & Assisted Filing' },

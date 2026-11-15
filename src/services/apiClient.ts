@@ -81,6 +81,38 @@ export const apiClient = {
     return fetchJSON<{ success: boolean; record: any }>(`${API_BASE}/applications/track/${encodeURIComponent(trackingNumber)}`);
   },
 
+  async createCorrectionRequest(id: string, correctionData: { items: any[]; reviewerName?: string; notes?: string; deadlineDays?: number }) {
+    return fetchJSON<{ success: boolean; correctionRequest: any; application: any }>(`${API_BASE}/applications/${id}/correction-request`, {
+      method: 'POST',
+      body: JSON.stringify(correctionData)
+    });
+  },
+
+  async submitCorrectionResponse(id: string, responseData: { correctionId?: string; resolvedItems?: any[] }) {
+    return fetchJSON<{ success: boolean; application: any }>(`${API_BASE}/applications/${id}/correction-response`, {
+      method: 'POST',
+      body: JSON.stringify(responseData)
+    });
+  },
+
+  async recordExternalReference(id: string, externalData: { externalReferenceNumber: string; externalAuthorityName?: string }) {
+    return fetchJSON<{ success: boolean; application: any }>(`${API_BASE}/applications/${id}/record-external-ref`, {
+      method: 'POST',
+      body: JSON.stringify(externalData)
+    });
+  },
+
+  async deliverFinalCertificate(id: string, deliveryData: { deliverableName?: string; deliverableUrl?: string }) {
+    return fetchJSON<{ success: boolean; application: any }>(`${API_BASE}/applications/${id}/deliver-certificate`, {
+      method: 'POST',
+      body: JSON.stringify(deliveryData)
+    });
+  },
+
+  async getCertificatePayload(id: string) {
+    return fetchJSON<{ success: boolean; certificate: any }>(`${API_BASE}/applications/${id}/generate-certificate`);
+  },
+
   /**
    * Authentication & OTP Verification
    */

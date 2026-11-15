@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useApp } from '../../store/AppContext';
-import { Home, Grid, Compass, Sparkles, User } from 'lucide-react';
+import { Home, Grid, Compass, Sparkles, User, Wallet } from 'lucide-react';
 
 export const MobileBottomNav: React.FC = () => {
   const navigate = useNavigate();
@@ -29,9 +29,9 @@ export const MobileBottomNav: React.FC = () => {
 
   const navItems = [
     { label: language === 'hi' ? 'होम' : 'Home', path: '/', icon: <Home size={19} /> },
-    { label: language === 'hi' ? 'सेवाएँ' : 'Services', path: '/services', icon: <Grid size={19} /> },
-    { label: language === 'hi' ? 'ट्रैक' : 'Track', action: () => setIsTrackerOpen(true), icon: <Compass size={19} /> },
+    { label: language === 'hi' ? 'पे / ATM' : 'Pay / AEPS', path: '/fintech', icon: <Wallet size={19} /> },
     { label: 'QUANTUM AI', action: () => setIsQuantumAIOpen(true), icon: <Sparkles size={19} />, isAI: true },
+    { label: language === 'hi' ? 'ट्रैक' : 'Track', action: () => setIsTrackerOpen(true), icon: <Compass size={19} /> },
     {
       label: language === 'hi' ? 'पोर्टल' : 'Portal',
       path: profileRouteMap[currentRole] || '/customer/dashboard',

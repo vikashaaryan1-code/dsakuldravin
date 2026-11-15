@@ -4,6 +4,7 @@ import { useApp } from '../store/AppContext';
 import { serviceCategories } from '../data/servicesData';
 import { ServiceCard } from '../components/cards/ServiceCard';
 import { ServiceBanners } from '../components/common/ServiceBanners';
+import { FintechSuperAppGrid } from '../components/fintech/FintechSuperAppGrid';
 import { ADCSLogo } from '../components/branding';
 import { ADCS_BRAND_IDENTITY } from '../config/brandAssets';
 import {
@@ -302,6 +303,11 @@ export const HomePage: React.FC = () => {
       {/* 1B. MULTI-SERVICE CAMPAIGN BANNERS CAROUSEL */}
       <section className="container-wide" style={{ marginTop: '-1.5rem' }}>
         <ServiceBanners mode="carousel" />
+      </section>
+
+      {/* 1C. PAYTM & PHONEPE FINTECH SUPER-APP QUICK ACTIONS & BBPS RECHARGE HUB */}
+      <section className="container-wide">
+        <FintechSuperAppGrid />
       </section>
 
       {/* 2. 16 MASTER SERVICE SECTORS */}
