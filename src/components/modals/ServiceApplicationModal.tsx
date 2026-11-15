@@ -111,7 +111,7 @@ export const ServiceApplicationModal: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [copiedSummary, setCopiedSummary] = useState(false);
 
-  // Draft auto-restore
+  // Draft auto-restore & default intake values initialization
   useEffect(() => {
     if (selectedServiceForApply && isApplyModalOpen) {
       try {
@@ -125,6 +125,19 @@ export const ServiceApplicationModal: React.FC = () => {
           if (draft.state) setState(draft.state);
           if (draft.city) setCity(draft.city);
           if (draft.customFieldValues) setCustomFieldValues(draft.customFieldValues);
+        } else {
+          // Initialize select field defaults from statutory profile if no draft exists
+          const profile = resolveStatutoryProfile(selectedServiceForApply.id || selectedServiceForApply.slug);
+          const fields = profile?.intakeFields || selectedServiceForApply.customFields || [];
+          if (fields && fields.length > 0) {
+            const defaults: Record<string, string> = {};
+            fields.forEach(f => {
+              if (f.type === 'select' && f.options && f.options.length > 0) {
+                defaults[f.id] = f.options[0];
+              }
+            });
+            setCustomFieldValues(defaults);
+          }
         }
       } catch (e) {
         // Ignore draft parse failure
@@ -271,25 +284,6 @@ export const ServiceApplicationModal: React.FC = () => {
       isMandatory: idx === 0, // First doc mandatory by default
     }))
   );
-
-  // Auto initialize default values for select fields when opening service
-  useEffect(() => {
-    if (selectedServiceForApply && intakeFields.length > 0) {
-      setCustomFieldValues(prev => {
-        const next = { ...prev };
-        let modified = false;
-        intakeFields.forEach(f => {
-          if (!next[f.id]) {
-            if (f.type === 'select' && f.options && f.options.length > 0) {
-              next[f.id] = f.options[0];
-              modified = true;
-            }
-          }
-        });
-        return modified ? next : prev;
-      });
-    }
-  }, [selectedServiceForApply]);
 
   // 1-Click Auto Fill Demo Data
   const handleAutoFillIntakeFields = () => {
