@@ -54,8 +54,10 @@ export const FintechSuperAppGrid: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'all' | 'recharge' | 'gov' | 'loans' | 'travel'>('all');
   const [showQrModal, setShowQrModal] = useState(false);
   const [copiedUpi, setCopiedUpi] = useState(false);
+  const [qrViewMode, setQrViewMode] = useState<'standee' | 'code'>('standee');
 
-  const merchantVpa = 'akuldravin@icici';
+  const merchantVpa = 'vikashaaryan@ptaxis';
+  const merchantName = 'Vikash Kumar';
 
   const handleCopyUpi = () => {
     navigator.clipboard?.writeText(merchantVpa);
@@ -1182,65 +1184,122 @@ export const FintechSuperAppGrid: React.FC = () => {
               color: '#075ACB',
               fontWeight: 800,
               fontSize: '0.76rem',
-              marginBottom: '1rem',
+              marginBottom: '0.75rem',
               alignItems: 'center',
               gap: '0.35rem'
             }}>
               <QrCode size={14} />
-              <span>BHARAT INTEROPERABLE UPI QR</span>
+              <span>OFFICIAL PAYTM & BHARAT UPI STAND</span>
             </div>
 
-            <h3 style={{ fontSize: '1.3rem', fontWeight: 900, color: '#061A36', margin: '0 0 0.5rem 0' }}>
-              Scan with Any UPI App
-            </h3>
-            <p style={{ fontSize: '0.84rem', color: '#64748B', marginBottom: '1.5rem' }}>
-              Paytm, PhonePe, Google Pay, BHIM, CRED or Any Bank App
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#061A36', margin: 0 }}>
+                {merchantName}
+              </h3>
+              <span style={{ display: 'inline-flex', alignItems: 'center', background: '#0284C7', color: '#FFFFFF', borderRadius: '999px', padding: '1px 7px', fontSize: '0.68rem', fontWeight: 800 }}>✓ Verified</span>
+            </div>
+
+            <p style={{ fontSize: '0.82rem', color: '#64748B', marginBottom: '0.85rem' }}>
+              Scan with Any UPI App: <strong>Paytm, PhonePe, Google Pay, BHIM</strong>
             </p>
 
-            {/* Generated UPI QR Code SVG */}
-            <div style={{
-              display: 'inline-block',
-              padding: '1.25rem',
-              background: '#FFFFFF',
-              borderRadius: '20px',
-              border: '2px solid #075ACB',
-              boxShadow: '0 8px 24px rgba(7, 90, 203, 0.15)',
-              marginBottom: '1.25rem'
-            }}>
-              <svg width="200" height="200" viewBox="0 0 200 200">
-                <rect width="200" height="200" fill="#FFFFFF" />
-                {/* QR corner blocks */}
-                <rect x="15" y="15" width="55" height="55" rx="8" fill="#061A36" />
-                <rect x="25" y="25" width="35" height="35" rx="4" fill="#FFFFFF" />
-                <rect x="33" y="33" width="19" height="19" rx="2" fill="#075ACB" />
-
-                <rect x="130" y="15" width="55" height="55" rx="8" fill="#061A36" />
-                <rect x="140" y="25" width="35" height="35" rx="4" fill="#FFFFFF" />
-                <rect x="148" y="33" width="19" height="19" rx="2" fill="#075ACB" />
-
-                <rect x="15" y="130" width="55" height="55" rx="8" fill="#061A36" />
-                <rect x="25" y="140" width="35" height="35" rx="4" fill="#FFFFFF" />
-                <rect x="33" y="148" width="19" height="19" rx="2" fill="#075ACB" />
-
-                {/* Central brand emblem */}
-                <circle cx="100" cy="100" r="22" fill="#075ACB" />
-                <text x="100" y="106" textAnchor="middle" fill="#FFFFFF" fontSize="14" fontWeight="900" fontFamily="sans-serif">AD</text>
-
-                {/* Data Matrix Dots */}
-                <rect x="80" y="20" width="10" height="10" fill="#061A36" />
-                <rect x="100" y="25" width="10" height="10" fill="#075ACB" />
-                <rect x="85" y="45" width="10" height="10" fill="#061A36" />
-                <rect x="105" y="55" width="10" height="10" fill="#075ACB" />
-                <rect x="25" y="85" width="10" height="10" fill="#061A36" />
-                <rect x="45" y="100" width="10" height="10" fill="#075ACB" />
-                <rect x="140" y="85" width="10" height="10" fill="#061A36" />
-                <rect x="160" y="100" width="10" height="10" fill="#075ACB" />
-                <rect x="85" y="140" width="10" height="10" fill="#061A36" />
-                <rect x="105" y="155" width="10" height="10" fill="#075ACB" />
-                <rect x="140" y="140" width="10" height="10" fill="#061A36" />
-                <rect x="160" y="155" width="10" height="10" fill="#075ACB" />
-              </svg>
+            {/* Toggle View Mode: Standee vs QR */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <button
+                type="button"
+                onClick={() => setQrViewMode('standee')}
+                style={{
+                  padding: '0.3rem 0.75rem',
+                  borderRadius: '20px',
+                  border: qrViewMode === 'standee' ? '2px solid #00BAF2' : '1px solid #CBD5E1',
+                  background: qrViewMode === 'standee' ? '#E0F2FE' : '#FFFFFF',
+                  color: qrViewMode === 'standee' ? '#0369A1' : '#64748B',
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                📱 Paytm Standee (पेटीएम स्टैंडी)
+              </button>
+              <button
+                type="button"
+                onClick={() => setQrViewMode('code')}
+                style={{
+                  padding: '0.3rem 0.75rem',
+                  borderRadius: '20px',
+                  border: qrViewMode === 'code' ? '2px solid #075ACB' : '1px solid #CBD5E1',
+                  background: qrViewMode === 'code' ? '#EFF6FF' : '#FFFFFF',
+                  color: qrViewMode === 'code' ? '#075ACB' : '#64748B',
+                  fontSize: '0.74rem',
+                  fontWeight: 800,
+                  cursor: 'pointer'
+                }}
+              >
+                🔲 Clean QR Code
+              </button>
             </div>
+
+            {/* Render Standee or Clean QR */}
+            {qrViewMode === 'standee' ? (
+              <div style={{
+                maxWidth: '280px',
+                margin: '0 auto 1.25rem',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                boxShadow: '0 8px 24px rgba(0, 186, 242, 0.2)',
+                border: '2px solid #00BAF2'
+              }}>
+                <img
+                  src="/paytm-qr-vikash.jpg"
+                  alt="Vikash Kumar Paytm UPI QR Standee"
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                />
+              </div>
+            ) : (
+              <div style={{
+                display: 'inline-block',
+                padding: '1.25rem',
+                background: '#FFFFFF',
+                borderRadius: '20px',
+                border: '2px solid #075ACB',
+                boxShadow: '0 8px 24px rgba(7, 90, 203, 0.15)',
+                marginBottom: '1.25rem'
+              }}>
+                <svg width="200" height="200" viewBox="0 0 200 200">
+                  <rect width="200" height="200" fill="#FFFFFF" />
+                  {/* QR corner blocks */}
+                  <rect x="15" y="15" width="55" height="55" rx="8" fill="#061A36" />
+                  <rect x="25" y="25" width="35" height="35" rx="4" fill="#FFFFFF" />
+                  <rect x="33" y="33" width="19" height="19" rx="2" fill="#075ACB" />
+
+                  <rect x="130" y="15" width="55" height="55" rx="8" fill="#061A36" />
+                  <rect x="140" y="25" width="35" height="35" rx="4" fill="#FFFFFF" />
+                  <rect x="148" y="33" width="19" height="19" rx="2" fill="#075ACB" />
+
+                  <rect x="15" y="130" width="55" height="55" rx="8" fill="#061A36" />
+                  <rect x="25" y="140" width="35" height="35" rx="4" fill="#FFFFFF" />
+                  <rect x="33" y="148" width="19" height="19" rx="2" fill="#075ACB" />
+
+                  {/* Central brand emblem */}
+                  <circle cx="100" cy="100" r="22" fill="#075ACB" />
+                  <text x="100" y="106" textAnchor="middle" fill="#FFFFFF" fontSize="14" fontWeight="900" fontFamily="sans-serif">AD</text>
+
+                  {/* Data Matrix Dots */}
+                  <rect x="80" y="20" width="10" height="10" fill="#061A36" />
+                  <rect x="100" y="25" width="10" height="10" fill="#075ACB" />
+                  <rect x="85" y="45" width="10" height="10" fill="#061A36" />
+                  <rect x="105" y="55" width="10" height="10" fill="#075ACB" />
+                  <rect x="25" y="85" width="10" height="10" fill="#061A36" />
+                  <rect x="45" y="100" width="10" height="10" fill="#075ACB" />
+                  <rect x="140" y="85" width="10" height="10" fill="#061A36" />
+                  <rect x="160" y="100" width="10" height="10" fill="#075ACB" />
+                  <rect x="85" y="140" width="10" height="10" fill="#061A36" />
+                  <rect x="105" y="155" width="10" height="10" fill="#075ACB" />
+                  <rect x="140" y="140" width="10" height="10" fill="#061A36" />
+                  <rect x="160" y="155" width="10" height="10" fill="#075ACB" />
+                </svg>
+              </div>
+            )}
 
             <div style={{
               background: '#F8FAFC',
@@ -1252,7 +1311,7 @@ export const FintechSuperAppGrid: React.FC = () => {
               marginBottom: '1rem',
               border: '1px solid #E2E8F0'
             }}>
-              <span style={{ fontSize: '0.84rem', fontWeight: 700, color: '#334155' }}>
+              <span style={{ fontSize: '0.84rem', fontWeight: 800, color: '#002E6E' }}>
                 {merchantVpa}
               </span>
               <button

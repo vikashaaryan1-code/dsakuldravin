@@ -47,14 +47,20 @@ export const UnifiedCartModal: React.FC = () => {
   const [taxInvoiceNumber, setTaxInvoiceNumber] = useState<string>('');
   const [copiedVpa, setCopiedVpa] = useState(false);
 
+  const [customDiscountAmt, setCustomDiscountAmt] = useState<number>(0);
+  const [customDiscountInput, setCustomDiscountInput] = useState<string>('');
+
   const subtotal = cart.reduce((sum, item) => sum + item.price, 0);
   const totalGovtFee = cart.reduce((sum, item) => sum + item.govtFee, 0);
-  const discountAmount = Math.round((subtotal * discountPercent) / 100);
+  const percentageDiscount = Math.round((subtotal * discountPercent) / 100);
+  const discountAmount = Math.min(subtotal, Math.max(percentageDiscount, customDiscountAmt));
   const gstAmount = Math.round(((subtotal - discountAmount) * 18) / 100);
-  const grandTotal = subtotal - discountAmount + gstAmount + totalGovtFee;
+  const grandTotal = Math.max(totalGovtFee, subtotal - discountAmount + gstAmount + totalGovtFee);
+  const originalGrossTotal = subtotal + Math.round((subtotal * 18) / 100) + totalGovtFee;
 
-  const vpaAddress = 'akuldravin@icici';
-  const upiUri = `upi://pay?pa=${vpaAddress}&pn=AKUL%20DRAVIN%20DIGITAL%20SERVICES&am=${grandTotal.toFixed(2)}&cu=INR&tn=Checkout%20Order`;
+  const vpaAddress = 'vikashaaryan@ptaxis';
+  const merchantName = 'Vikash Kumar';
+  const upiUri = `upi://pay?pa=${vpaAddress}&pn=${encodeURIComponent(merchantName)}&am=${grandTotal.toFixed(2)}&cu=INR&tn=Checkout%20Order`;
 
   const copyVpa = () => {
     navigator.clipboard?.writeText(vpaAddress);
@@ -66,10 +72,27 @@ export const UnifiedCartModal: React.FC = () => {
   const applyCoupon = () => {
     if (couponCode.toUpperCase() === 'DIGITALINDIA' || couponCode.toUpperCase() === 'AKUL10') {
       setDiscountPercent(10);
+      setCustomDiscountAmt(0);
       showToast('Coupon Applied!', '10% promotional discount applied.', 'success');
+    } else if (couponCode.toUpperCase() === 'FESTIVE50' || couponCode.toUpperCase() === 'VLE50') {
+      setCustomDiscountAmt(50);
+      setDiscountPercent(0);
+      showToast('Discount Applied!', '₹50 flat customer discount applied.', 'success');
     } else {
-      showToast('Invalid Coupon', 'Try "DIGITALINDIA" for 10% off.', 'warning');
+      showToast('Invalid Coupon', 'Try "DIGITALINDIA" or enter custom ₹ discount.', 'warning');
     }
+  };
+
+  const applyCustomCustomerDiscount = () => {
+    const parsed = parseFloat(customDiscountInput.trim());
+    if (isNaN(parsed) || parsed < 0) {
+      showToast('Invalid Amount', 'Please enter a valid ₹ discount amount.', 'warning');
+      return;
+    }
+    const val = Math.min(subtotal, Math.round(parsed));
+    setCustomDiscountAmt(val);
+    setDiscountPercent(0);
+    showToast('Customer Discount Applied!', `₹${val} custom discount applied.`, 'success');
   };
 
   const handleCheckout = async (proof: UTRPaymentSubmission) => {
@@ -423,6 +446,93 @@ export const UnifiedCartModal: React.FC = () => {
                 ))}
               </div>
 
+              {/* Customer Discount & Promo Section */}
+              <div style={{
+                background: '#F0FDF4',
+                padding: '0.85rem',
+                borderRadius: '12px',
+                border: '1px solid #BBF7D0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.5rem'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 800, color: '#166534' }}>
+                    🏷️ कस्टमर डिस्काउंट (अपने हिसाब से छूट दर्ज करें)
+                  </span>
+                  {discountAmount > 0 && (
+                    <button
+                      onClick={() => {
+                        setDiscountPercent(0);
+                        setCustomDiscountAmt(0);
+                        setCustomDiscountInput('');
+                        setCouponCode('');
+                      }}
+                      style={{ background: 'none', border: 'none', color: '#DC2626', fontSize: '0.74rem', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                      ✕ हटाएँ (Reset)
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+                  {[
+                    { label: '₹25 Flat', val: 25 },
+                    { label: '₹50 Flat', val: 50 },
+                    { label: '10% Off', val: Math.round((subtotal * 10) / 100) },
+                  ].map(p => (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => {
+                        setCustomDiscountAmt(p.val);
+                        setDiscountPercent(0);
+                        showToast('Discount Applied!', `₹${p.val} applied.`, 'success');
+                      }}
+                      style={{
+                        padding: '0.25rem 0.55rem',
+                        borderRadius: '6px',
+                        border: '1px solid #86EFAC',
+                        background: '#FFFFFF',
+                        color: '#166534',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  <input
+                    type="number"
+                    min="0"
+                    max={subtotal}
+                    value={customDiscountInput}
+                    onChange={(e) => setCustomDiscountInput(e.target.value)}
+                    placeholder="छूट राशि ₹ दर्ज करें (e.g. 50)"
+                    style={{
+                      flex: 1,
+                      border: '1px solid #86EFAC',
+                      borderRadius: '8px',
+                      background: '#FFFFFF',
+                      fontSize: '0.82rem',
+                      padding: '0.35rem 0.6rem',
+                      outline: 'none',
+                    }}
+                  />
+                  <button
+                    onClick={applyCustomCustomerDiscount}
+                    className="btn-gold btn-sm"
+                    style={{ padding: '0.35rem 0.75rem', fontSize: '0.76rem', fontWeight: 800 }}
+                  >
+                    Apply ₹
+                  </button>
+                </div>
+              </div>
+
               {/* Coupon Code Strip */}
               <div style={{
                 display: 'flex',
@@ -612,6 +722,8 @@ export const UnifiedCartModal: React.FC = () => {
               {/* Mandatory Pre-Execution UTR Number & Transaction ID Payment Verification Gate */}
               <UTRPaymentGate
                 amount={grandTotal}
+                originalAmount={originalGrossTotal}
+                discountAmount={discountAmount}
                 serviceTitle={`Unified Cart Checkout (${cart.length} ${cart.length === 1 ? 'Service' : 'Services'})`}
                 defaultMethod={paymentMethod === 'netbanking' ? 'bank_transfer' : paymentMethod}
                 ctaLabel={`Verify UTR & Dispatch ${cart.length} Orders (₹${grandTotal.toLocaleString('en-IN')})`}

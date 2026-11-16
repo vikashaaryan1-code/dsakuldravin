@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { QrCode, Copy, ShieldCheck, AlertCircle, CheckCircle2, Sparkles, ArrowRight } from 'lucide-react';
+import { QrCode, Copy, ShieldCheck, AlertCircle, CheckCircle2, Sparkles, ArrowRight, Smartphone } from 'lucide-react';
 import { ADCS_BRAND_IDENTITY } from '../../config/brandAssets';
 
 export interface UTRPaymentSubmission {
@@ -11,6 +11,8 @@ export interface UTRPaymentSubmission {
 
 interface UTRPaymentGateProps {
   amount: number;
+  originalAmount?: number;
+  discountAmount?: number;
   serviceTitle: string;
   defaultMethod?: 'upi' | 'bank_transfer' | 'card' | 'wallet';
   ctaLabel?: string;
@@ -27,6 +29,8 @@ interface UTRPaymentGateProps {
  */
 export const UTRPaymentGate: React.FC<UTRPaymentGateProps> = ({
   amount,
+  originalAmount,
+  discountAmount,
   serviceTitle,
   defaultMethod = 'upi',
   ctaLabel,
@@ -41,9 +45,12 @@ export const UTRPaymentGate: React.FC<UTRPaymentGateProps> = ({
   const [transactionId, setTransactionId] = useState('');
   const [payerNote, setPayerNote] = useState('');
   const [copiedVpa, setCopiedVpa] = useState(false);
+  const [showQrStandee, setShowQrStandee] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const vpaAddress = 'akuldravin@icici';
+  const vpaAddress = 'vikashaaryan@ptaxis';
+  const merchantName = 'Vikash Kumar';
+  const upiIntentUrl = `upi://pay?pa=${vpaAddress}&pn=${encodeURIComponent(merchantName)}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(serviceTitle.slice(0, 30))}`;
 
   const handleCopyVpa = () => {
     try {
@@ -127,40 +134,171 @@ export const UTRPaymentGate: React.FC<UTRPaymentGateProps> = ({
           <div style={{ fontSize: '0.96rem', fontWeight: 800, marginTop: '0.2rem' }}>
             {serviceTitle}
           </div>
-          <div style={{ fontSize: '0.78rem', color: '#CBD5E1', marginTop: '0.25rem' }}>
-            Merchant: {ADCS_BRAND_IDENTITY.legalName} • VPA: <strong style={{ color: '#FFFFFF' }}>{vpaAddress}</strong>
+          <div style={{ fontSize: '0.78rem', color: '#CBD5E1', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+            <span>Merchant: <strong style={{ color: '#FFFFFF' }}>{merchantName}</strong></span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', background: '#0284C7', color: '#FFFFFF', borderRadius: '999px', padding: '1px 6px', fontSize: '0.66rem', fontWeight: 800 }}>✓ Verified Paytm Merchant</span>
           </div>
-          <div style={{ fontSize: '0.72rem', color: '#94A3B8', marginTop: '0.15rem' }}>
-            NEFT/IMPS IFSC: ICIC0006281 • A/C: 628105004910
+          <div style={{ fontSize: '0.8rem', color: '#F3D477', marginTop: '0.2rem' }}>
+            UPI VPA: <strong style={{ color: '#FFFFFF', letterSpacing: '0.02em' }}>{vpaAddress}</strong>
+          </div>
+          <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: '0.15rem' }}>
+            {ADCS_BRAND_IDENTITY.legalName} • NEFT/IMPS: ICIC0006281
           </div>
         </div>
 
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '0.7rem', color: '#F3D477', fontWeight: 700 }}>PAYABLE AMOUNT</div>
+          <div style={{ fontSize: '0.7rem', color: '#F3D477', fontWeight: 700 }}>
+            {discountAmount && discountAmount > 0 ? 'NET DISCOUNTED PAYABLE' : 'PAYABLE AMOUNT'}
+          </div>
+          {discountAmount && discountAmount > 0 && originalAmount ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem', marginTop: '0.1rem' }}>
+              <span style={{ fontSize: '0.85rem', color: '#94A3B8', textDecoration: 'line-through' }}>
+                ₹{originalAmount.toLocaleString('en-IN')}
+              </span>
+              <span style={{ background: '#10B981', color: '#FFFFFF', fontSize: '0.68rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
+                -₹{discountAmount.toLocaleString('en-IN')} OFF
+              </span>
+            </div>
+          ) : null}
           <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#FFFFFF' }}>
             ₹{amount.toLocaleString('en-IN')}
           </div>
-          <button
-            type="button"
-            onClick={handleCopyVpa}
-            style={{
-              marginTop: '0.3rem',
-              padding: '0.28rem 0.65rem',
-              borderRadius: '6px',
-              background: 'rgba(255,255,255,0.12)',
-              color: '#F3D477',
-              fontSize: '0.72rem',
-              fontWeight: 700,
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.3rem',
-            }}
-          >
-            <Copy size={12} />
-            <span>{copiedVpa ? 'Copied VPA ✓' : 'Copy UPI ID'}</span>
-          </button>
+          <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: '0.35rem' }}>
+            <button
+              type="button"
+              onClick={handleCopyVpa}
+              style={{
+                padding: '0.28rem 0.65rem',
+                borderRadius: '6px',
+                background: 'rgba(255,255,255,0.12)',
+                color: '#F3D477',
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <Copy size={12} />
+              <span>{copiedVpa ? 'Copied VPA ✓' : 'Copy UPI'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowQrStandee(!showQrStandee)}
+              style={{
+                padding: '0.28rem 0.65rem',
+                borderRadius: '6px',
+                background: showQrStandee ? '#F59E0B' : '#075ACB',
+                color: '#FFFFFF',
+                fontSize: '0.72rem',
+                fontWeight: 800,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                border: 'none',
+                cursor: 'pointer'
+              }}
+            >
+              <QrCode size={12} />
+              <span>{showQrStandee ? 'Hide Standee' : 'Paytm QR Standee'}</span>
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Official Paytm QR Standee Accordion / Modal Preview */}
+      {showQrStandee && (
+        <div
+          style={{
+            background: '#FFFFFF',
+            border: '2px solid #00BAF2',
+            borderRadius: '16px',
+            padding: '1.25rem',
+            textAlign: 'center',
+            boxShadow: '0 8px 30px rgba(0, 186, 242, 0.15)',
+            animation: 'fadeIn 0.25s ease-out'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 800, color: '#002E6E', fontSize: '0.85rem' }}>
+              <span style={{ color: '#00BAF2', fontWeight: 900 }}>paytm</span>
+              <span>❤️ UPI Standee</span>
+              <span style={{ background: '#0284C7', color: '#FFFFFF', borderRadius: '999px', padding: '1px 6px', fontSize: '0.65rem' }}>✓ Verified</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowQrStandee(false)}
+              style={{ border: 'none', background: '#F1F5F9', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 800 }}
+            >
+              ✕
+            </button>
+          </div>
+
+          <div style={{ maxWidth: '300px', margin: '0 auto', position: 'relative' }}>
+            <img
+              src="/paytm-qr-vikash.jpg"
+              alt="Vikash Kumar Paytm UPI QR Standee"
+              style={{
+                width: '100%',
+                maxHeight: '440px',
+                objectFit: 'contain',
+                borderRadius: '12px',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
+              }}
+            />
+          </div>
+
+          <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', fontWeight: 800, color: '#0F172A' }}>
+            Merchant: {merchantName} • VPA: <span style={{ color: '#00BAF2' }}>{vpaAddress}</span>
+          </div>
+          <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.2rem' }}>
+            Scan with any UPI App: <strong>Paytm, PhonePe, Google Pay, BHIM</strong>
+          </div>
+
+          <div style={{ marginTop: '0.85rem', display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <a
+              href={upiIntentUrl}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                background: '#075ACB',
+                color: '#FFFFFF',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                fontWeight: 700,
+                fontSize: '0.76rem',
+                textDecoration: 'none'
+              }}
+            >
+              <Smartphone size={13} />
+              <span>📱 Open in UPI App (₹{amount})</span>
+            </a>
+            <button
+              type="button"
+              onClick={handleCopyVpa}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.4rem',
+                background: '#F1F5F9',
+                color: '#0F172A',
+                padding: '0.45rem 0.85rem',
+                borderRadius: '8px',
+                fontWeight: 700,
+                fontSize: '0.76rem',
+                border: '1px solid #CBD5E1',
+                cursor: 'pointer'
+              }}
+            >
+              <Copy size={13} />
+              <span>{copiedVpa ? 'Copied ✓' : 'Copy VPA'}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {showMethodSelector && (
         <div>

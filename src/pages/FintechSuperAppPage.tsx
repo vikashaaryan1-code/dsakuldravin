@@ -259,7 +259,8 @@ export const FintechSuperAppPage: React.FC = () => {
 
   // QR Modal State
   const [customQrAmount, setCustomQrAmount] = useState<number>(0);
-  const merchantVpa = 'akuldravin@icici';
+  const merchantVpa = 'vikashaaryan@ptaxis';
+  const merchantName = 'Vikash Kumar';
 
   return (
     <div style={{ minHeight: '100vh', background: '#F8FAFC', paddingBottom: '5rem' }}>
@@ -1349,19 +1350,39 @@ export const FintechSuperAppPage: React.FC = () => {
             {/* Merchant Static UPI QR Standee */}
             <div style={{
               background: '#F8FAFC',
-              borderRadius: '20px',
-              padding: '1.5rem',
-              border: '1px solid #E2E8F0',
-              textAlign: 'center'
+              borderRadius: '24px',
+              padding: '1.75rem',
+              border: '2px solid #00BAF2',
+              textAlign: 'center',
+              boxShadow: '0 8px 30px rgba(0, 186, 242, 0.12)'
             }}>
-              <div style={{ fontWeight: 800, color: '#061A36', fontSize: '0.94rem', marginBottom: '0.85rem' }}>
-                Official Merchant QR Standee • {merchantVpa}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', marginBottom: '0.4rem' }}>
+                <span style={{ fontWeight: 900, color: '#002E6E', fontSize: '1.1rem' }}>
+                  {merchantName}
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', background: '#0284C7', color: '#FFFFFF', borderRadius: '999px', padding: '1px 7px', fontSize: '0.68rem', fontWeight: 800 }}>✓ Verified</span>
               </div>
-              <div style={{ display: 'inline-block', padding: '1rem', background: '#FFFFFF', borderRadius: '16px', border: '1.5px solid #075ACB' }}>
-                <QrCode size={160} color="#061A36" />
+              <div style={{ fontSize: '0.82rem', color: '#00BAF2', fontWeight: 800, marginBottom: '1rem' }}>
+                Official Paytm UPI Standee • {merchantVpa}
               </div>
-              <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '0.75rem' }}>
-                Scan with PhonePe, Paytm, Google Pay, BHIM or Any Bank UPI App
+
+              <div style={{
+                maxWidth: '280px',
+                margin: '0 auto',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                boxShadow: '0 10px 28px rgba(0,0,0,0.12)',
+                border: '2px solid #00BAF2'
+              }}>
+                <img
+                  src="/paytm-qr-vikash.jpg"
+                  alt="Vikash Kumar Official Paytm UPI QR Standee"
+                  style={{ width: '100%', height: 'auto', display: 'block' }}
+                />
+              </div>
+
+              <div style={{ fontSize: '0.78rem', color: '#64748B', marginTop: '1rem' }}>
+                Scan with <strong>Paytm, PhonePe, Google Pay, BHIM</strong> or Any Bank UPI App
               </div>
             </div>
           </div>

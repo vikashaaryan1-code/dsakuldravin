@@ -111,6 +111,12 @@ export const ServiceApplicationModal: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [copiedSummary, setCopiedSummary] = useState(false);
 
+  // Flexible Customer Discount Engine ("अपने हिसाब से")
+  const [customDiscountInput, setCustomDiscountInput] = useState<string>('');
+  const [appliedDiscountAmount, setAppliedDiscountAmount] = useState<number>(0);
+  const [selectedPresetDiscount, setSelectedPresetDiscount] = useState<string | null>(null);
+  const [discountSuccessMsg, setDiscountSuccessMsg] = useState<string | null>(null);
+
   // Draft auto-restore & default intake values initialization
   useEffect(() => {
     if (selectedServiceForApply && isApplyModalOpen) {
@@ -253,7 +259,46 @@ export const ServiceApplicationModal: React.FC = () => {
   const statutoryGovtFee = statutoryProfile ? statutoryProfile.statutoryGovtFee : (service.govtFee || 0);
   const adcsFacilitationFee = statutoryProfile ? statutoryProfile.adcsFacilitationFee : (service.professionalFee || service.basePrice || 99);
   const gst = Math.round((adcsFacilitationFee * 18) / 100);
-  const totalAmount = statutoryGovtFee + adcsFacilitationFee + gst;
+  const grossTotalAmount = statutoryGovtFee + adcsFacilitationFee + gst;
+
+  // Maximum customer discount can cover facilitation fee + GST (statutory govt fee goes directly to treasury)
+  const maxAllowableDiscount = adcsFacilitationFee + gst;
+  const effectiveDiscount = Math.min(appliedDiscountAmount, maxAllowableDiscount);
+  const netPayableAmount = Math.max(statutoryGovtFee, grossTotalAmount - effectiveDiscount);
+  const totalAmount = netPayableAmount;
+
+  // Flexible Customer Discount Handler ("अपने हिसाब से")
+  const handleApplyCustomDiscount = (amountToApply?: number, presetName?: string) => {
+    let discAmt = 0;
+    if (typeof amountToApply === 'number') {
+      discAmt = amountToApply;
+    } else {
+      const parsed = parseFloat(customDiscountInput.trim());
+      if (isNaN(parsed) || parsed < 0) {
+        setFormError('कृपया सही छूट राशि (₹) दर्ज करें / Please enter a valid discount amount.');
+        return;
+      }
+      discAmt = Math.round(parsed);
+    }
+
+    if (discAmt > maxAllowableDiscount) {
+      discAmt = maxAllowableDiscount;
+      setDiscountSuccessMsg(`अधिकतम स्वीकार्य सेवा छूट ₹${maxAllowableDiscount} लागू की गई (सरकारी शुल्क ₹${statutoryGovtFee} सरकारी खजाने में देय है)`);
+    } else {
+      setDiscountSuccessMsg(`बधाई हो! ₹${discAmt} की कस्टमर छूट सफलतापूर्वक लागू हो गई!`);
+    }
+
+    setAppliedDiscountAmount(discAmt);
+    setSelectedPresetDiscount(presetName || 'custom');
+    setFormError(null);
+  };
+
+  const handleRemoveDiscount = () => {
+    setAppliedDiscountAmount(0);
+    setCustomDiscountInput('');
+    setSelectedPresetDiscount(null);
+    setDiscountSuccessMsg(null);
+  };
 
   // Resolve Official Portal and Guidelines
   const officialAuthority = statutoryProfile?.officialAuthority || 'Competent Statutory Authority';
@@ -536,14 +581,14 @@ export const ServiceApplicationModal: React.FC = () => {
         applicantEmail,
         city,
         state,
-        feePaid: totalAmount,
+        feePaid: netPayableAmount,
         feeBreakdown: {
           adcsServiceFee: adcsFacilitationFee,
           statutoryFee: statutoryGovtFee,
           gst,
           partnerFee: 0,
-          discount: 0,
-          total: totalAmount,
+          discount: effectiveDiscount,
+          total: netPayableAmount,
         },
         utrNumber: proof.utrNumber,
         transactionId: proof.transactionId,
@@ -603,12 +648,13 @@ export const ServiceApplicationModal: React.FC = () => {
         { label: 'Statutory Government Fee', value: `₹${statutoryGovtFee} (Direct Treasury / Portal Remittance)` },
         { label: 'ADCS Assisted Facilitation', value: `₹${adcsFacilitationFee}` },
         { label: 'GST (18% on Facilitation)', value: `₹${gst}` },
-        { label: 'Total Settled Amount', value: `₹${totalAmount} (${submittedProof?.paymentMethod.toUpperCase() || 'UPI'})` },
+        ...(effectiveDiscount > 0 ? [{ label: 'Customer Special Discount (छूट)', value: `-₹${effectiveDiscount}` }] : []),
+        { label: 'Total Settled Amount', value: `₹${netPayableAmount} (${submittedProof?.paymentMethod.toUpperCase() || 'UPI'})` },
         { label: 'Payment Proof (UTR)', value: submittedProof?.utrNumber || 'Verified' },
         { label: 'Transaction ID', value: submittedProof?.transactionId || 'Verified' },
       ],
       amountSummary: {
-        total: totalAmount,
+        total: netPayableAmount,
         currency: '₹',
         paymentStatus: 'PAID & VERIFIED (UTR LOGGED)',
       },
@@ -1569,6 +1615,130 @@ export const ServiceApplicationModal: React.FC = () => {
           {/* STEP 3: Transparent Pricing & Statutory Payment Gate */}
           {step === 3 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {/* Customer Flexible Discount Engine ("अपने हिसाब से छूट") */}
+              <div style={{
+                background: 'linear-gradient(135deg, #ECFDF5 0%, #F0FDF4 100%)',
+                borderRadius: '16px',
+                padding: '1.15rem 1.25rem',
+                border: '1.5px solid #A7F3D0',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.75rem',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+                    <Sparkles size={18} color="#059669" />
+                    <span style={{ fontWeight: 800, fontSize: '0.88rem', color: '#065F46' }}>
+                      कस्टमर डिस्काउंट (अपने हिसाब से छूट दर्ज करें) • Customer Special Discount
+                    </span>
+                  </div>
+                  {effectiveDiscount > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveDiscount}
+                      style={{
+                        background: '#FEE2E2',
+                        border: '1px solid #FCA5A5',
+                        color: '#991B1B',
+                        padding: '0.2rem 0.6rem',
+                        borderRadius: '6px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      ✕ हटाएँ (Remove Discount)
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ fontSize: '0.76rem', color: '#047857' }}>
+                  ऑपरेटर या नागरिक अपनी आवश्यकता अनुसार विशेष छूट दर्ज कर सकते हैं (अधिकतम सेवा छूट: ₹{maxAllowableDiscount})
+                </div>
+
+                {/* Preset Discount Chips */}
+                <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
+                  {[
+                    { id: 'flat25', label: '₹25 Flat Off (VLE स्पेशल)', amt: 25 },
+                    { id: 'flat50', label: '₹50 Flat Off (त्योहार ऑफर)', amt: 50 },
+                    { id: 'pct10', label: '10% Off (डिजिटल छूट)', amt: Math.round((adcsFacilitationFee * 10) / 100) },
+                    { id: 'freeFee', label: '100% Free Consultation (परामर्श शुल्क शून्य)', amt: maxAllowableDiscount },
+                  ].map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => handleApplyCustomDiscount(preset.amt, preset.id)}
+                      style={{
+                        padding: '0.35rem 0.75rem',
+                        borderRadius: '8px',
+                        border: selectedPresetDiscount === preset.id ? '2px solid #059669' : '1px solid #A7F3D0',
+                        background: selectedPresetDiscount === preset.id ? '#059669' : '#FFFFFF',
+                        color: selectedPresetDiscount === preset.id ? '#FFFFFF' : '#065F46',
+                        fontWeight: 700,
+                        fontSize: '0.74rem',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease-in-out'
+                      }}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Custom Amount Input Bar */}
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  <div style={{ position: 'relative', flex: 1 }}>
+                    <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#64748B' }}>₹</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max={maxAllowableDiscount}
+                      value={customDiscountInput}
+                      onChange={(e) => setCustomDiscountInput(e.target.value)}
+                      placeholder={`अपने हिसाब से छूट राशि दर्ज करें (e.g. 50)`}
+                      className="form-input"
+                      style={{ paddingLeft: '1.8rem', background: '#FFFFFF', borderColor: '#A7F3D0', fontWeight: 700, color: '#0F172A', fontSize: '0.82rem' }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleApplyCustomDiscount()}
+                    style={{
+                      background: '#059669',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '0.55rem 1rem',
+                      fontWeight: 800,
+                      fontSize: '0.78rem',
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    छूट लागू करें (Apply)
+                  </button>
+                </div>
+
+                {discountSuccessMsg && (
+                  <div style={{
+                    background: '#FFFFFF',
+                    border: '1px solid #6EE7B7',
+                    borderRadius: '8px',
+                    padding: '0.45rem 0.75rem',
+                    color: '#065F46',
+                    fontSize: '0.76rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.4rem'
+                  }}>
+                    <span>✓</span>
+                    <span>{discountSuccessMsg}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Transparent Fee Breakdown */}
               <div style={{
                 background: '#F8FAFC',
                 borderRadius: '16px',
@@ -1600,6 +1770,13 @@ export const ServiceApplicationModal: React.FC = () => {
                   <span style={{ fontWeight: 600 }}>₹{gst.toLocaleString('en-IN')}</span>
                 </div>
 
+                {effectiveDiscount > 0 && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#059669', fontWeight: 800 }}>
+                    <span>विशेष कस्टमर छूट (Customer Special Discount Applied)</span>
+                    <span>-₹{effectiveDiscount.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
+
                 <div style={{
                   borderTop: '1px solid #CBD5E1',
                   paddingTop: '0.75rem',
@@ -1608,9 +1785,17 @@ export const ServiceApplicationModal: React.FC = () => {
                   fontSize: '1.15rem',
                   fontWeight: 800,
                   color: '#061A36',
+                  alignItems: 'center'
                 }}>
-                  <span>Total Payable</span>
-                  <span style={{ color: '#075ACB' }}>₹{totalAmount.toLocaleString('en-IN')}</span>
+                  <div>
+                    <span>Total Net Payable</span>
+                    {effectiveDiscount > 0 && (
+                      <span style={{ fontSize: '0.85rem', color: '#94A3B8', textDecoration: 'line-through', marginLeft: '0.6rem' }}>
+                        ₹{grossTotalAmount.toLocaleString('en-IN')}
+                      </span>
+                    )}
+                  </div>
+                  <span style={{ color: '#075ACB', fontSize: '1.35rem' }}>₹{netPayableAmount.toLocaleString('en-IN')}</span>
                 </div>
               </div>
 
@@ -1634,10 +1819,12 @@ export const ServiceApplicationModal: React.FC = () => {
 
               {/* Mandatory Pre-Processing UTR Number & Transaction ID Gate */}
               <UTRPaymentGate
-                amount={totalAmount}
+                amount={netPayableAmount}
+                originalAmount={grossTotalAmount}
+                discountAmount={effectiveDiscount}
                 serviceTitle={service.title}
                 defaultMethod={paymentMethod}
-                ctaLabel={`Verify UTR & Submit Application (₹${totalAmount.toLocaleString('en-IN')})`}
+                ctaLabel={`Verify UTR & Submit Application (₹${netPayableAmount.toLocaleString('en-IN')})`}
                 cancelLabel="Back"
                 onCancel={() => setStep(2)}
                 isSubmitting={isSubmitting}
