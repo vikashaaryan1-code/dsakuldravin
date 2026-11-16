@@ -112,169 +112,113 @@ export const UTRPaymentGate: React.FC<UTRPaymentGateProps> = ({
 
   return (
     <form noValidate onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {/* Official ADCS Settlement / UPI Instruction Strip */}
+      {/* Official ADCS UPI Payment Gate & Verified Standee Card */}
       <div
         style={{
-          background: '#061A36',
+          background: 'linear-gradient(135deg, #061A36 0%, #0B2B5C 50%, #075ACB 100%)',
           color: '#FFFFFF',
-          borderRadius: '14px',
-          padding: '1rem 1.15rem',
-          border: '1.5px solid rgba(214, 161, 43, 0.55)',
+          borderRadius: '16px',
+          padding: '1.25rem',
+          border: '2px solid rgba(0, 186, 242, 0.45)',
+          boxShadow: '0 8px 25px rgba(2, 27, 58, 0.25)',
           display: 'flex',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
           alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '0.85rem',
+          gap: '1rem',
+          textAlign: 'center'
         }}
       >
-        <div style={{ flex: 1, minWidth: '210px' }}>
-          <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#F3D477', letterSpacing: '0.04em' }}>
-            STEP 1 • PAY FEE VIA OFFICIAL ADCS GATEWAY
-          </div>
-          <div style={{ fontSize: '0.96rem', fontWeight: 800, marginTop: '0.2rem' }}>
-            {serviceTitle}
-          </div>
-          <div style={{ fontSize: '0.78rem', color: '#CBD5E1', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
-            <span>Merchant: <strong style={{ color: '#FFFFFF' }}>{merchantName}</strong></span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', background: '#0284C7', color: '#FFFFFF', borderRadius: '999px', padding: '1px 6px', fontSize: '0.66rem', fontWeight: 800 }}>✓ Verified Paytm Merchant</span>
-          </div>
-          <div style={{ fontSize: '0.8rem', color: '#F3D477', marginTop: '0.2rem' }}>
-            UPI VPA: <strong style={{ color: '#FFFFFF', letterSpacing: '0.02em' }}>{vpaAddress}</strong>
-          </div>
-          <div style={{ fontSize: '0.7rem', color: '#94A3B8', marginTop: '0.15rem' }}>
-            {ADCS_BRAND_IDENTITY.legalName} • NEFT/IMPS: ICIC0006281
-          </div>
-        </div>
-
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontSize: '0.7rem', color: '#F3D477', fontWeight: 700 }}>
-            {discountAmount && discountAmount > 0 ? 'NET DISCOUNTED PAYABLE' : 'PAYABLE AMOUNT'}
-          </div>
-          {discountAmount && discountAmount > 0 && originalAmount ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem', marginTop: '0.1rem' }}>
-              <span style={{ fontSize: '0.85rem', color: '#94A3B8', textDecoration: 'line-through' }}>
-                ₹{originalAmount.toLocaleString('en-IN')}
+        {/* Top Header Strip */}
+        <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.15)', paddingBottom: '0.75rem' }}>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <span style={{ background: '#00BAF2', color: '#002E6E', fontWeight: 900, padding: '2px 8px', borderRadius: '999px', fontSize: '0.72rem', letterSpacing: '0.04em' }}>
+                PAYTM ❤️ UPI
               </span>
-              <span style={{ background: '#10B981', color: '#FFFFFF', fontSize: '0.68rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
-                -₹{discountAmount.toLocaleString('en-IN')} OFF
+              <span style={{ background: '#0284C7', color: '#FFFFFF', borderRadius: '999px', padding: '2px 8px', fontSize: '0.7rem', fontWeight: 800 }}>
+                ✓ Verified Merchant: {merchantName}
               </span>
             </div>
-          ) : null}
-          <div style={{ fontSize: '1.45rem', fontWeight: 900, color: '#FFFFFF' }}>
-            ₹{amount.toLocaleString('en-IN')}
+            <div style={{ fontSize: '0.92rem', fontWeight: 800, marginTop: '0.25rem', color: '#FFFFFF' }}>
+              {serviceTitle}
+            </div>
+            <div style={{ fontSize: '0.76rem', color: '#CBD5E1', marginTop: '0.15rem' }}>
+              UPI VPA: <strong style={{ color: '#F3D477', letterSpacing: '0.02em' }}>{vpaAddress}</strong> • {ADCS_BRAND_IDENTITY.legalName}
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.35rem', justifyContent: 'flex-end', flexWrap: 'wrap', marginTop: '0.35rem' }}>
-            <button
-              type="button"
-              onClick={handleCopyVpa}
-              style={{
-                padding: '0.28rem 0.65rem',
-                borderRadius: '6px',
-                background: 'rgba(255,255,255,0.12)',
-                color: '#F3D477',
-                fontSize: '0.72rem',
-                fontWeight: 700,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.3rem',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <Copy size={12} />
-              <span>{copiedVpa ? 'Copied VPA ✓' : 'Copy UPI'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowQrStandee(!showQrStandee)}
-              style={{
-                padding: '0.28rem 0.65rem',
-                borderRadius: '6px',
-                background: showQrStandee ? '#F59E0B' : '#075ACB',
-                color: '#FFFFFF',
-                fontSize: '0.72rem',
-                fontWeight: 800,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.3rem',
-                border: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              <QrCode size={12} />
-              <span>{showQrStandee ? 'Hide Standee' : 'Paytm QR Standee'}</span>
-            </button>
+
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '0.7rem', color: '#F3D477', fontWeight: 700 }}>
+              {discountAmount && discountAmount > 0 ? 'NET DISCOUNTED PAYABLE' : 'PAYABLE AMOUNT'}
+            </div>
+            {discountAmount && discountAmount > 0 && originalAmount ? (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.4rem', marginTop: '0.1rem' }}>
+                <span style={{ fontSize: '0.85rem', color: '#94A3B8', textDecoration: 'line-through' }}>
+                  ₹{originalAmount.toLocaleString('en-IN')}
+                </span>
+                <span style={{ background: '#10B981', color: '#FFFFFF', fontSize: '0.68rem', fontWeight: 800, padding: '2px 6px', borderRadius: '4px' }}>
+                  -₹{discountAmount.toLocaleString('en-IN')} OFF
+                </span>
+              </div>
+            ) : null}
+            <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#FFFFFF', lineHeight: 1.1 }}>
+              ₹{amount.toLocaleString('en-IN')}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Official Paytm QR Standee Accordion / Modal Preview */}
-      {showQrStandee && (
+        {/* 100% Uncropped Paytm Standee Graphic Card */}
         <div
           style={{
             background: '#FFFFFF',
-            border: '2px solid #00BAF2',
             borderRadius: '16px',
-            padding: '1.25rem',
-            textAlign: 'center',
-            boxShadow: '0 8px 30px rgba(0, 186, 242, 0.15)',
-            animation: 'fadeIn 0.25s ease-out'
+            padding: '0.5rem',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+            border: '2px solid #00BAF2',
+            display: 'inline-flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            maxWidth: '100%',
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 800, color: '#002E6E', fontSize: '0.85rem' }}>
-              <span style={{ color: '#00BAF2', fontWeight: 900 }}>paytm</span>
-              <span>❤️ UPI Standee</span>
-              <span style={{ background: '#0284C7', color: '#FFFFFF', borderRadius: '999px', padding: '1px 6px', fontSize: '0.65rem' }}>✓ Verified</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setShowQrStandee(false)}
-              style={{ border: 'none', background: '#F1F5F9', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 800 }}
-            >
-              ✕
-            </button>
-          </div>
+          <img
+            src="/paytm-qr-vikash.jpg"
+            alt="Vikash Kumar Paytm UPI QR Standee"
+            style={{
+              maxHeight: '260px',
+              width: 'auto',
+              maxWidth: '100%',
+              objectFit: 'contain',
+              display: 'block',
+              borderRadius: '10px',
+            }}
+          />
+        </div>
 
-          <div style={{ maxWidth: '300px', margin: '0 auto', position: 'relative' }}>
-            <img
-              src="/paytm-qr-vikash.jpg"
-              alt="Vikash Kumar Paytm UPI QR Standee"
-              style={{
-                width: '100%',
-                maxHeight: '440px',
-                objectFit: 'contain',
-                borderRadius: '12px',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.1)'
-              }}
-            />
+        {/* Interoperable UPI Actions & Intent */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.45rem', width: '100%' }}>
+          <div style={{ fontSize: '0.78rem', color: '#E2E8F0' }}>
+            Scan with any UPI App: <strong style={{ color: '#FFFFFF' }}>Paytm, PhonePe, Google Pay, BHIM</strong>
           </div>
-
-          <div style={{ marginTop: '0.75rem', fontSize: '0.8rem', fontWeight: 800, color: '#0F172A' }}>
-            Merchant: {merchantName} • VPA: <span style={{ color: '#00BAF2' }}>{vpaAddress}</span>
-          </div>
-          <div style={{ fontSize: '0.72rem', color: '#64748B', marginTop: '0.2rem' }}>
-            Scan with any UPI App: <strong>Paytm, PhonePe, Google Pay, BHIM</strong>
-          </div>
-
-          <div style={{ marginTop: '0.85rem', display: 'flex', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
             <a
               href={upiIntentUrl}
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                background: '#075ACB',
+                background: '#0284C7',
                 color: '#FFFFFF',
-                padding: '0.45rem 0.85rem',
+                padding: '0.5rem 1.1rem',
                 borderRadius: '8px',
-                fontWeight: 700,
-                fontSize: '0.76rem',
-                textDecoration: 'none'
+                fontWeight: 800,
+                fontSize: '0.8rem',
+                textDecoration: 'none',
+                boxShadow: '0 2px 10px rgba(2, 132, 199, 0.35)',
               }}
             >
-              <Smartphone size={13} />
-              <span>📱 Open in UPI App (₹{amount})</span>
+              <Smartphone size={15} />
+              <span>📱 Open in UPI App (₹{amount.toLocaleString('en-IN')})</span>
             </a>
             <button
               type="button"
@@ -283,22 +227,22 @@ export const UTRPaymentGate: React.FC<UTRPaymentGateProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '0.4rem',
-                background: '#F1F5F9',
-                color: '#0F172A',
-                padding: '0.45rem 0.85rem',
+                background: 'rgba(255,255,255,0.15)',
+                color: '#FFFFFF',
+                padding: '0.5rem 1rem',
                 borderRadius: '8px',
                 fontWeight: 700,
-                fontSize: '0.76rem',
-                border: '1px solid #CBD5E1',
-                cursor: 'pointer'
+                fontSize: '0.8rem',
+                border: '1px solid rgba(255,255,255,0.3)',
+                cursor: 'pointer',
               }}
             >
-              <Copy size={13} />
-              <span>{copiedVpa ? 'Copied ✓' : 'Copy VPA'}</span>
+              <Copy size={14} />
+              <span>{copiedVpa ? 'Copied VPA ✓' : `Copy UPI (${vpaAddress})`}</span>
             </button>
           </div>
         </div>
-      )}
+      </div>
 
       {showMethodSelector && (
         <div>

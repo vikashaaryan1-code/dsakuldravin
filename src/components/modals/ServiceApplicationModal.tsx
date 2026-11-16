@@ -111,6 +111,14 @@ export const ServiceApplicationModal: React.FC = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [copiedSummary, setCopiedSummary] = useState(false);
 
+  // Auto-scroll wizard body to top on every step transition
+  const wizardBodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (wizardBodyRef.current) {
+      wizardBodyRef.current.scrollTop = 0;
+    }
+  }, [step]);
+
   // Flexible Customer Discount Engine ("अपने हिसाब से")
   const [customDiscountInput, setCustomDiscountInput] = useState<string>('');
   const [appliedDiscountAmount, setAppliedDiscountAmount] = useState<number>(0);
@@ -831,7 +839,11 @@ export const ServiceApplicationModal: React.FC = () => {
         )}
 
         {/* Wizard Body */}
-        <div style={{ padding: 'clamp(1rem, 2.5vw, 1.5rem) clamp(1rem, 3vw, 1.75rem)', overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch' }}>
+        <div
+          ref={wizardBodyRef}
+          id="adcs-modal-wizard-body"
+          style={{ padding: 'clamp(1rem, 2.5vw, 1.5rem) clamp(1rem, 3vw, 1.75rem)', overflowY: 'auto', flex: 1, WebkitOverflowScrolling: 'touch' }}
+        >
           {/* STEP 1: Applicant Details & Statutory Intake Fields */}
           {step === 1 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
