@@ -21,13 +21,16 @@ import {
   ExternalLink,
   Download,
   RotateCcw,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  QrCode
 } from 'lucide-react';
 
 export const GovernmentServicesPage: React.FC = () => {
   const { services, language, showToast, logAudit, openApplyModal, openQuantumAI } = useApp();
   const [selectedSubCat, setSelectedSubCat] = useState<'all' | 'identity' | 'certificates' | 'welfare' | 'transport'>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showStandeePreview, setShowStandeePreview] = useState(false);
   
   // Interactive Scheme Matcher State
   const [citizenProfile, setCitizenProfile] = useState<'farmer' | 'worker' | 'women' | 'student' | 'general'>('farmer');
@@ -249,6 +252,172 @@ export const GovernmentServicesPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Official Paytm UPI Standee & Customer Discount Showcase Banner */}
+      <div style={{
+        background: 'linear-gradient(135deg, #021B3A 0%, #063970 50%, #002E6E 100%)',
+        borderRadius: '20px',
+        padding: '1.25rem 1.5rem',
+        marginBottom: '2rem',
+        border: '2px solid #00BAF2',
+        color: '#FFFFFF',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '1.25rem',
+        boxShadow: '0 8px 30px rgba(0, 186, 242, 0.25)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: '1 1 320px' }}>
+          <div
+            style={{
+              width: '80px',
+              height: '110px',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              border: '2px solid #00BAF2',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              flexShrink: 0,
+              background: '#FFFFFF',
+              cursor: 'pointer'
+            }}
+            onClick={() => setShowStandeePreview(true)}
+            title="क्लिक करके पूरा Paytm स्टैंडी देखें"
+          >
+            <img src="/paytm-qr-vikash.jpg" alt="Paytm QR Standee Vikash Kumar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
+              <span style={{ fontSize: '0.72rem', background: '#00BAF2', color: '#002E6E', fontWeight: 900, padding: '2px 8px', borderRadius: '999px' }}>
+                PAYTM ❤️ UPI
+              </span>
+              <span style={{ fontSize: '0.74rem', background: '#059669', color: '#FFFFFF', fontWeight: 800, padding: '2px 8px', borderRadius: '999px' }}>
+                ✓ Verified Merchant: Vikash Kumar
+              </span>
+            </div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '0.01em' }}>
+              UPI VPA: <span style={{ color: '#F3D477' }}>vikashaaryan@ptaxis</span>
+            </div>
+            <div style={{ fontSize: '0.82rem', color: '#93C5FD', marginTop: '0.35rem' }}>
+              🎁 <strong>कस्टमर डिस्काउंट (अपने हिसाब से छूट):</strong> किसी भी सेवा में Apply Now पर क्लिक करें और अपने हिसाब से फ्लैट ₹25, ₹50, 10% या अपनी मनपसंद छूट प्राप्त करें!
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard?.writeText('vikashaaryan@ptaxis');
+              showToast('VPA Copied', 'vikashaaryan@ptaxis copied to clipboard', 'success');
+            }}
+            style={{
+              background: 'rgba(255, 255, 255, 0.15)',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              color: '#FFFFFF',
+              borderRadius: '10px',
+              padding: '0.55rem 1rem',
+              fontSize: '0.8rem',
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+            }}
+          >
+            <Copy size={14} />
+            <span>Copy VPA</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowStandeePreview(true)}
+            style={{
+              background: '#00BAF2',
+              border: 'none',
+              color: '#002E6E',
+              borderRadius: '10px',
+              padding: '0.55rem 1.15rem',
+              fontSize: '0.82rem',
+              fontWeight: 900,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.4rem',
+              boxShadow: '0 4px 12px rgba(0, 186, 242, 0.4)'
+            }}
+          >
+            <QrCode size={16} />
+            <span>📱 Paytm Standee देखें</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Standee Fullscreen / Modal Preview */}
+      {showStandeePreview && (
+        <div
+          onClick={() => setShowStandeePreview(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(3, 17, 38, 0.82)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '1rem',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              maxWidth: '380px',
+              width: '100%',
+              padding: '1.5rem',
+              textAlign: 'center',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+              position: 'relative'
+            }}
+          >
+            <button
+              onClick={() => setShowStandeePreview(false)}
+              style={{
+                position: 'absolute',
+                top: '0.75rem',
+                right: '0.75rem',
+                background: '#F1F5F9',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                cursor: 'pointer',
+                fontWeight: 900,
+                color: '#64748B'
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{ fontSize: '1.05rem', fontWeight: 900, color: '#002E6E', marginBottom: '0.25rem' }}>
+              Vikash Kumar <span style={{ color: '#0284C7' }}>✓</span>
+            </div>
+            <div style={{ fontSize: '0.78rem', color: '#00BAF2', fontWeight: 800, marginBottom: '0.85rem' }}>
+              vikashaaryan@ptaxis
+            </div>
+
+            <div style={{ maxWidth: '280px', margin: '0 auto 1rem', borderRadius: '14px', overflow: 'hidden', border: '2px solid #00BAF2' }}>
+              <img src="/paytm-qr-vikash.jpg" alt="Vikash Kumar Paytm Standee" style={{ width: '100%', height: 'auto', display: 'block' }} />
+            </div>
+
+            <div style={{ fontSize: '0.75rem', color: '#64748B' }}>
+              Scan with Any UPI App: Paytm, PhonePe, Google Pay, BHIM
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Direct Studio Quick Launch Toolbar */}
       <div style={{

@@ -122,11 +122,29 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
 
       {/* Pricing & Actions */}
       <div>
+        {/* Customer Discount Highlight Badge */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.35rem',
+          background: '#ECFDF5',
+          color: '#065F46',
+          border: '1px solid #A7F3D0',
+          padding: '3px 8px',
+          borderRadius: '6px',
+          fontSize: '0.72rem',
+          fontWeight: 800,
+          marginBottom: '0.65rem'
+        }}>
+          <span>🎁</span>
+          <span>छूट उपलब्ध • Discount as per Customer</span>
+        </div>
+
         <div style={{
           display: 'flex',
           alignItems: 'baseline',
           justifyContent: 'space-between',
-          paddingTop: '0.75rem',
+          paddingTop: '0.65rem',
           borderTop: '1px solid #F1F5F9',
           marginBottom: '1rem',
         }}>
