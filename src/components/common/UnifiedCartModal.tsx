@@ -18,7 +18,8 @@ import {
   Receipt,
   Copy,
   Smartphone,
-  Download
+  Download,
+  FileText
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -358,7 +359,21 @@ export const UnifiedCartModal: React.FC = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => {
+                    setIsCompleted(false);
+                    setIsCartOpen(false);
+                    if (generatedAppIds.length > 0) {
+                      navigate('/receipt?id=' + generatedAppIds[0]);
+                    }
+                  }}
+                  className="btn-gold"
+                  style={{ flex: '1 1 140px', fontWeight: 800, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.35rem' }}
+                >
+                  <FileText size={15} />
+                  <span>रसीद देखें (Receipt)</span>
+                </button>
                 <button
                   onClick={() => {
                     setIsCompleted(false);
@@ -371,7 +386,7 @@ export const UnifiedCartModal: React.FC = () => {
                     }
                   }}
                   className="btn-primary"
-                  style={{ flex: 1 }}
+                  style={{ flex: '1 1 140px' }}
                 >
                   <span>Track Application</span>
                   <ArrowRight size={15} />

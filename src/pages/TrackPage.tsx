@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
 import { printBrandedADCSDocument } from '../utils/documentBranding';
 import { 
@@ -556,6 +556,15 @@ export const TrackPage: React.FC = () => {
                       <span>Download Approved Certificate (PDF)</span>
                     </a>
                   )}
+
+                  <Link
+                    to={`/receipt?id=${encodeURIComponent(searchedEntity.data.id)}`}
+                    className="btn-gold"
+                    style={{ width: '100%', justifyContent: 'center', textDecoration: 'none', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                  >
+                    <FileText size={16} />
+                    <span>View Official Tax Invoice / Receipt (रसीद देखें)</span>
+                  </Link>
 
                   <button
                     onClick={handleDownloadReceipt}

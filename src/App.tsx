@@ -39,6 +39,7 @@ import { EducationPage } from './pages/EducationPage';
 import { FranchisePage } from './pages/FranchisePage';
 import { PricingPage } from './pages/PricingPage';
 import { TrackPage } from './pages/TrackPage';
+import { OfficialReceiptPage } from './pages/OfficialReceiptPage';
 import { QuantumAIPage } from './pages/QuantumAIPage';
 import { FintechSuperAppPage } from './pages/FintechSuperAppPage';
 
@@ -169,6 +170,9 @@ export const App: React.FC = () => {
             <Route path="/login" element={<AuthPage />} />
             <Route path="/register" element={<AuthPage />} />
             <Route path="/track" element={<TrackPage />} />
+            <Route path="/receipt" element={<OfficialReceiptPage />} />
+            <Route path="/receipt/:id" element={<OfficialReceiptPage />} />
+            <Route path="/invoice" element={<OfficialReceiptPage />} />
             <Route path="/ai" element={<QuantumAIPage />} />
             <Route path="/quantum-ai" element={<QuantumAIPage />} />
 

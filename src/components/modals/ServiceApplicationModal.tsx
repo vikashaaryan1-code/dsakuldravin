@@ -599,6 +599,43 @@ export const ServiceApplicationModal: React.FC = () => {
         notes: `Statutory preparation completed. Payment mode: ${proof.paymentMethod.toUpperCase()} • UTR: ${proof.utrNumber} • TXN ID: ${proof.transactionId}. Authority: ${officialAuthority}.${customSummary ? ` Intake Data: [${customSummary}]` : ''}`,
       });
 
+      // Cache full receipt payload for instant rendering on /receipt page
+      try {
+        const fullReceiptPayload = {
+          id: ids.adcsAppId,
+          adcsAppId: ids.adcsAppId,
+          paymentOrderId: ids.paymentOrderId,
+          adcsReceiptNumber: ids.adcsReceiptNumber,
+          externalAuthorityName: officialAuthority,
+          serviceId: service.id,
+          serviceName: service.title,
+          category: service.category,
+          applicantName,
+          applicantPhone,
+          applicantEmail,
+          city,
+          state,
+          feePaid: netPayableAmount,
+          feeBreakdown: {
+            adcsServiceFee: adcsFacilitationFee,
+            statutoryFee: statutoryGovtFee,
+            gst,
+            partnerFee: 0,
+            discount: effectiveDiscount,
+            total: netPayableAmount,
+          },
+          utrNumber: proof.utrNumber,
+          transactionId: proof.transactionId,
+          paymentMode: proof.paymentMethod,
+          uploadedDocumentRecords: documentRecordsList,
+          formData: customFieldValues,
+          submittedAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+        };
+        localStorage.setItem('adcs_recent_receipt', JSON.stringify(fullReceiptPayload));
+      } catch (e) {
+        // Ignore
+      }
+
       // Clear draft after successful creation
       try {
         localStorage.removeItem(`adcs_draft_${service.id}`);
@@ -615,6 +652,12 @@ export const ServiceApplicationModal: React.FC = () => {
         spread: 75,
         origin: { y: 0.6 }
       });
+
+      // Seamless Auto-Redirect to Official Receipt Page
+      setTimeout(() => {
+        closeModal();
+        navigate(`/receipt?id=${newId}`);
+      }, 1500);
     }, 800);
   };
 
@@ -1853,6 +1896,22 @@ export const ServiceApplicationModal: React.FC = () => {
               <h3 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#061A36', marginBottom: '0.25rem' }}>
                 Application Generated Successfully!
               </h3>
+              <div style={{
+                background: '#ECFDF5',
+                border: '1.5px solid #6EE7B7',
+                borderRadius: '12px',
+                padding: '0.75rem 1.25rem',
+                color: '#065F46',
+                fontSize: '0.86rem',
+                fontWeight: 800,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                margin: '0.5rem auto 1.25rem',
+              }}>
+                <Sparkles size={18} color="#059669" />
+                <span>🎉 भुगतान सफल! आधिकारिक कर रसीद (Tax Invoice) पर भेजा जा रहा है...</span>
+              </div>
               <p style={{ fontSize: '0.88rem', color: '#64748B', marginBottom: '1.5rem' }}>
                 Pre-scrutiny completed. Assigned to verification queue with live SMS notification alerts.
               </p>
@@ -2167,6 +2226,20 @@ export const ServiceApplicationModal: React.FC = () => {
                     <span>Print Statutory Receipt (PDF)</span>
                   </button>
                 )}
+
+                <button
+                  onClick={() => {
+                    closeModal();
+                    if (generatedAppId) {
+                      navigate(`/receipt?id=${generatedAppId}`);
+                    }
+                  }}
+                  className="btn-gold"
+                  style={{ fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: '0.45rem' }}
+                >
+                  <FileText size={16} />
+                  <span>रसीद देखें (View Official Receipt)</span>
+                </button>
 
                 <button
                   onClick={() => {
