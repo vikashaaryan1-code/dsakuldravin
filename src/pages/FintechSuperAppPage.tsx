@@ -249,17 +249,28 @@ export const FintechSuperAppPage: React.FC = () => {
     setIsPlayingAudio(true);
     // Speech synthesis audio trigger in Hindi & English
     if ('speechSynthesis' in window) {
-      const msg = new SpeechSynthesisUtterance(`Akul Dravin Digital Services par ${amt} rupaye prapt hue. Received ${amt} rupees on Akul Dravin.`);
+      const msg = new SpeechSynthesisUtterance(`Paytm par ${amt} rupaye prapt hue. Received ${amt} rupees on Paytm.`);
       msg.lang = 'hi-IN';
       msg.rate = 0.95;
       window.speechSynthesis.speak(msg);
     }
-    showToast('Soundbox Alert', `🔊 "Akul Dravin पर ₹${amt} प्राप्त हुए!"`, 'info');
+    showToast('Paytm Soundbox', `🔊 "Paytm पर ₹${amt} प्राप्त हुए! (Received on Paytm)"`, 'success');
     setTimeout(() => setIsPlayingAudio(false), 2500);
   };
 
   // QR Modal State
   const [customQrAmount, setCustomQrAmount] = useState<number>(0);
+  const [showQrModal, setShowQrModal] = useState<boolean>(false);
+  const [qrViewMode, setQrViewMode] = useState<'standee' | 'code'>('standee');
+  const [copiedUpi, setCopiedUpi] = useState<boolean>(false);
+  const [scratchRevealed, setScratchRevealed] = useState<boolean>(false);
+
+  const handleCopyUpi = () => {
+    navigator.clipboard?.writeText('vikashaaryan@ptaxis');
+    setCopiedUpi(true);
+    showToast('Paytm UPI Copied', 'vikashaaryan@ptaxis copied to clipboard', 'success');
+    setTimeout(() => setCopiedUpi(false), 2000);
+  };
   const merchantVpa = 'vikashaaryan@ptaxis';
   const merchantName = 'Vikash Kumar';
 
@@ -305,41 +316,185 @@ export const FintechSuperAppPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Wallet Balance Chip */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.85rem',
-              background: 'rgba(255, 255, 255, 0.12)',
-              backdropFilter: 'blur(10px)',
-              padding: '0.5rem 1.15rem',
-              borderRadius: '999px',
-              border: '1px solid rgba(255, 255, 255, 0.25)'
-            }}>
-              <Wallet size={18} color="#F3D477" />
-              <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: '0.68rem', color: '#D4E0EE', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{language === 'hi' ? 'एडीसीएस वॉलेट' : 'ADCS Wallet'}</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#FFFFFF' }}>₹{walletBalance.toLocaleString('en-IN')}</div>
+            {/* Paytm UPI & Wallet Balance Cluster */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {/* Paytm Verified Merchant Pill */}
+              <div style={{
+                background: 'rgba(0, 186, 242, 0.2)',
+                border: '1.5px solid #00BAF2',
+                borderRadius: '999px',
+                padding: '0.4rem 0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                color: '#FFFFFF'
+              }}>
+                <span style={{ fontSize: '0.72rem', background: '#00BAF2', color: '#002E6E', fontWeight: 900, padding: '2px 7px', borderRadius: '999px' }}>
+                  paytm ❤️ UPI
+                </span>
+                <span style={{ fontSize: '0.76rem', fontWeight: 800 }}>vikashaaryan@ptaxis</span>
+                <button
+                  onClick={handleCopyUpi}
+                  style={{ background: 'none', border: 'none', color: '#F3D477', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  title="Copy UPI VPA"
+                >
+                  {copiedUpi ? <Check size={14} color="#34D399" /> : <Copy size={14} />}
+                </button>
               </div>
+
+              {/* Wallet Balance Chip */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.85rem',
+                background: 'rgba(255, 255, 255, 0.12)',
+                backdropFilter: 'blur(10px)',
+                padding: '0.5rem 1.15rem',
+                borderRadius: '999px',
+                border: '1px solid rgba(255, 255, 255, 0.25)'
+              }}>
+                <Wallet size={18} color="#F3D477" />
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '0.68rem', color: '#D4E0EE', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    {language === 'hi' ? 'Paytm / एडीसीएस वॉलेट' : 'Paytm / ADCS Wallet'}
+                  </div>
+                  <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#FFFFFF' }}>₹{walletBalance.toLocaleString('en-IN')}</div>
+                </div>
+                <button
+                  onClick={() => {
+                    setWalletBalance(prev => prev + 2000);
+                    showToast('Wallet Top-Up', '₹2,000 added to your wallet via UPI.', 'success');
+                  }}
+                  style={{
+                    background: '#F3D477',
+                    color: '#061A36',
+                    border: 'none',
+                    borderRadius: '999px',
+                    padding: '0.3rem 0.75rem',
+                    fontSize: '0.74rem',
+                    fontWeight: 800,
+                    cursor: 'pointer'
+                  }}
+                >
+                  {language === 'hi' ? '+ टॉप-अप' : '+ Top Up'}
+                </button>
+              </div>
+
+              {/* Paytm Iconic Scan Any QR Button */}
               <button
-                onClick={() => {
-                  setWalletBalance(prev => prev + 2000);
-                  showToast('Wallet Top-Up', '₹2,000 added to your ADCS wallet via UPI.', 'success');
-                }}
+                onClick={() => setShowQrModal(true)}
                 style={{
-                  background: '#F3D477',
-                  color: '#061A36',
-                  border: 'none',
+                  background: '#FFFFFF',
+                  color: '#002E6E',
+                  border: '2px solid #00BAF2',
                   borderRadius: '999px',
-                  padding: '0.3rem 0.75rem',
-                  fontSize: '0.74rem',
-                  fontWeight: 800,
-                  cursor: 'pointer'
+                  padding: '0.55rem 1.15rem',
+                  fontWeight: 900,
+                  fontSize: '0.84rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.45rem',
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 18px rgba(0, 186, 242, 0.35)',
+                  transition: 'transform 0.15s ease'
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-2px)')}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
               >
-                {language === 'hi' ? '+ टॉप-अप' : '+ Top Up'}
+                <QrCode size={18} color="#00BAF2" />
+                <span>{language === 'hi' ? 'QR स्कैन करें' : 'Scan Any QR'}</span>
               </button>
             </div>
+          </div>
+
+                    {/* Paytm Signature 4 Quick Money Transfer Actions */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+            gap: '0.85rem',
+            marginBottom: '1.25rem',
+          }}>
+            {[
+              {
+                id: 'scan-qr',
+                title: language === 'hi' ? 'QR स्कैन करें' : 'Scan Any QR',
+                sub: language === 'hi' ? 'Paytm / UPI कैमरा स्कैनर' : 'Instant UPI Scanner',
+                icon: <QrCode size={22} color="#FFFFFF" />,
+                bg: 'linear-gradient(135deg, #00BAF2 0%, #002E6E 100%)',
+                action: () => setShowQrModal(true)
+              },
+              {
+                id: 'to-mobile',
+                title: language === 'hi' ? 'मोबाइल नंबर पर' : 'To Mobile / Contact',
+                sub: language === 'hi' ? 'तुरंत मनी ट्रांसफर (DMT)' : 'DMT 24x7 Instant Send',
+                icon: <Send size={22} color="#FFFFFF" />,
+                bg: 'linear-gradient(135deg, #075ACB 0%, #0878F9 100%)',
+                action: () => setActiveTab('dmt')
+              },
+              {
+                id: 'to-bank',
+                title: language === 'hi' ? 'बैंक खाता / AEPS' : 'To Bank A/c / AEPS',
+                sub: language === 'hi' ? 'आधार एटीएम कैश आउट' : 'Biometric Cash Out',
+                icon: <Fingerprint size={22} color="#FFFFFF" />,
+                bg: 'linear-gradient(135deg, #6366F1 0%, #4F46E5 100%)',
+                action: () => setActiveTab('aeps')
+              },
+              {
+                id: 'passbook',
+                title: language === 'hi' ? 'बैलेंस व हिस्ट्री' : 'Balance & History',
+                sub: language === 'hi' ? 'पासबुक व UTR ट्रैकर' : 'Passbook & UTR Tracker',
+                icon: <Wallet size={22} color="#FFFFFF" />,
+                bg: 'linear-gradient(135deg, #0D9488 0%, #059669 100%)',
+                action: () => setIsTrackerOpen(true)
+              }
+            ].map(act => (
+              <div
+                key={act.id}
+                onClick={act.action}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.10)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  borderRadius: '16px',
+                  padding: '0.85rem 1rem',
+                  border: '1.5px solid rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-3px)';
+                  e.currentTarget.style.borderColor = '#00BAF2';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.18)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.10)';
+                }}
+              >
+                <div style={{
+                  width: '42px',
+                  height: '42px',
+                  borderRadius: '12px',
+                  background: act.bg,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)'
+                }}>
+                  {act.icon}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 800, fontSize: '0.88rem', color: '#FFFFFF' }}>{act.title}</div>
+                  <div style={{ fontSize: '0.7rem', color: '#CBD5E1' }}>{act.sub}</div>
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* 3D Glass Universal A to Z Services Hub with Rich Template Banners */}
@@ -427,6 +582,84 @@ export const FintechSuperAppPage: React.FC = () => {
                 >
                   <Fingerprint size={16} /> {language === 'hi' ? 'AEPS आधार ATM' : 'Open AEPS ATM'}
                 </button>
+              </div>
+            </div>
+
+                        {/* Paytm Cashback & Scratch Cards Section */}
+            <div style={{
+              background: 'linear-gradient(135deg, #002E6E 0%, #075ACB 50%, #00BAF2 100%)',
+              borderRadius: '24px',
+              padding: '1.75rem 2rem',
+              color: '#FFFFFF',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '1.5rem',
+              boxShadow: '0 12px 30px rgba(0, 46, 110, 0.25)',
+              border: '2px solid rgba(0, 186, 242, 0.4)'
+            }}>
+              <div style={{ maxWidth: '520px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.4rem' }}>
+                  <span style={{ background: '#F3D477', color: '#002E6E', fontWeight: 900, padding: '2px 8px', borderRadius: '999px', fontSize: '0.72rem' }}>
+                    PAYTM CASHBACK & OFFERS
+                  </span>
+                  <span style={{ fontSize: '0.76rem', color: '#E2E8F0' }}>🎉 Guaranteed Win</span>
+                </div>
+                <h3 style={{ fontSize: '1.4rem', fontWeight: 900, margin: '0 0 0.35rem 0', color: '#FFFFFF' }}>
+                  {language === 'hi' ? 'पेटीएम स्क्रैच कार्ड • फ्लैट ₹50 तक की छूट जीतें!' : 'Paytm Scratch Card • Win up to ₹50 Customer Discount!'}
+                </h3>
+                <p style={{ fontSize: '0.86rem', color: '#E0F2FE', margin: 0, lineHeight: 1.5 }}>
+                  {language === 'hi' 
+                    ? 'स्क्रैच कार्ड पर क्लिक करके अपना डिस्काउंट कोड रिवील करें और किसी भी सरकारी या नागरिक सेवा में तुरंत छूट प्राप्त करें।' 
+                    : 'Click to scratch and reveal your special concession code. Apply instantly for flat discount on any citizen service.'}
+                </p>
+              </div>
+
+              {/* Scratch Card Box */}
+              <div
+                onClick={() => {
+                  if (!scratchRevealed) {
+                    setScratchRevealed(true);
+                    confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+                    showToast('🎉 You Won Discount!', 'Code PAYTM50 unlocked! Flat ₹50 off on next application.', 'success');
+                  }
+                }}
+                style={{
+                  width: '180px',
+                  height: '110px',
+                  borderRadius: '16px',
+                  background: scratchRevealed 
+                    ? 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)' 
+                    : 'linear-gradient(135deg, #F3D477 0%, #F59E0B 100%)',
+                  color: scratchRevealed ? '#065F46' : '#002E6E',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: scratchRevealed ? 'default' : 'pointer',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                  border: scratchRevealed ? '2px dashed #059669' : '2px dashed #B45309',
+                  textAlign: 'center',
+                  padding: '0.75rem',
+                  userSelect: 'none',
+                  transition: 'transform 0.18s ease'
+                }}
+                title={scratchRevealed ? 'Code Unlocked!' : 'Click to Scratch & Win'}
+              >
+                {scratchRevealed ? (
+                  <>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 800 }}>🎉 CONGRATULATIONS!</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900, letterSpacing: '0.06em', margin: '0.2rem 0' }}>PAYTM50</div>
+                    <div style={{ fontSize: '0.68rem' }}>Flat ₹50 Instant Discount</div>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={24} color="#002E6E" />
+                    <div style={{ fontSize: '0.84rem', fontWeight: 900, marginTop: '0.3rem' }}>SCRATCH HERE</div>
+                    <div style={{ fontSize: '0.66rem', opacity: 0.9 }}>👉 Click to Reveal</div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1625,6 +1858,131 @@ export const FintechSuperAppPage: React.FC = () => {
           </div>
         )}
       </div>
+      {/* OFFICIAL PAYTM & BHARAT UPI QR MODAL */}
+      {showQrModal && (
+        <div
+          onClick={() => setShowQrModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(3, 17, 38, 0.82)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            padding: '1rem',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#FFFFFF',
+              borderRadius: '24px',
+              maxWidth: '420px',
+              width: '100%',
+              padding: '1.75rem',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+              textAlign: 'center',
+              position: 'relative'
+            }}
+          >
+            <button
+              onClick={() => setShowQrModal(false)}
+              style={{
+                position: 'absolute',
+                top: '0.85rem',
+                right: '0.85rem',
+                background: '#F1F5F9',
+                border: 'none',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                color: '#64748B',
+                fontWeight: 900
+              }}
+            >
+              ✕
+            </button>
+
+            <div style={{
+              display: 'inline-flex',
+              padding: '0.35rem 0.85rem',
+              borderRadius: '999px',
+              background: '#EFF6FF',
+              color: '#075ACB',
+              fontWeight: 800,
+              fontSize: '0.74rem',
+              marginBottom: '0.75rem',
+              alignItems: 'center',
+              gap: '0.35rem'
+            }}>
+              <QrCode size={14} color="#00BAF2" />
+              <span>OFFICIAL PAYTM & BHARAT UPI STANDEE</span>
+            </div>
+
+            <div style={{
+              maxWidth: '260px',
+              margin: '0 auto 1rem',
+              borderRadius: '16px',
+              overflow: 'hidden',
+              border: '2px solid #00BAF2',
+              boxShadow: '0 8px 24px rgba(0, 186, 242, 0.25)'
+            }}>
+              <img
+                src="/paytm-qr-vikash.jpg"
+                alt="Paytm QR Standee Vikash Kumar"
+                style={{ width: '100%', height: 'auto', display: 'block' }}
+              />
+            </div>
+
+            <div style={{ fontSize: '0.86rem', fontWeight: 800, color: '#061A36', marginBottom: '0.35rem' }}>
+              Merchant: Vikash Kumar • VPA: <span style={{ color: '#075ACB' }}>vikashaaryan@ptaxis</span>
+            </div>
+            <div style={{ fontSize: '0.74rem', color: '#64748B', marginBottom: '1.25rem' }}>
+              Scan with Any UPI App: <strong>Paytm, PhonePe, Google Pay, BHIM</strong>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.65rem', justifyContent: 'center' }}>
+              <a
+                href="upi://pay?pa=vikashaaryan@ptaxis&pn=Vikash%20Kumar&cu=INR"
+                className="btn-primary"
+                style={{
+                  borderRadius: '10px',
+                  padding: '0.6rem 1.25rem',
+                  fontSize: '0.86rem',
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem'
+                }}
+              >
+                <span>📱 Open in UPI App</span>
+              </a>
+              <button
+                type="button"
+                onClick={handleCopyUpi}
+                className="btn-secondary"
+                style={{
+                  borderRadius: '10px',
+                  padding: '0.6rem 1rem',
+                  fontSize: '0.86rem',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.45rem'
+                }}
+              >
+                <Copy size={14} />
+                <span>{copiedUpi ? 'Copied!' : 'Copy VPA'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

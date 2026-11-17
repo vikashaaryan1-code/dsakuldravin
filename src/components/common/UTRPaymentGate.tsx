@@ -171,23 +171,36 @@ export const UTRPaymentGate: React.FC<UTRPaymentGateProps> = ({
 
         {/* 100% Uncropped Paytm Standee Graphic Card */}
         <div
+          onClick={() => setShowQrStandee(true)}
+          title={language === 'hi' ? 'क्लिक करके पूरा स्टैंडी बड़े आकार में देखें' : 'Click to view full uncropped standee'}
           style={{
             background: '#FFFFFF',
             borderRadius: '16px',
-            padding: '0.5rem',
+            padding: '0.65rem',
             boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
             border: '2px solid #00BAF2',
             display: 'inline-flex',
+            flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             maxWidth: '100%',
+            cursor: 'pointer',
+            transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.02)';
+            e.currentTarget.style.boxShadow = '0 12px 28px rgba(0, 186, 242, 0.4)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.25)';
           }}
         >
           <img
             src="/paytm-qr-vikash.jpg"
             alt="Vikash Kumar Paytm UPI QR Standee"
             style={{
-              maxHeight: '260px',
+              maxHeight: '280px',
               width: 'auto',
               maxWidth: '100%',
               objectFit: 'contain',
@@ -195,7 +208,129 @@ export const UTRPaymentGate: React.FC<UTRPaymentGateProps> = ({
               borderRadius: '10px',
             }}
           />
+          <div style={{ marginTop: '0.35rem', fontSize: '0.7rem', color: '#002E6E', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+            <span>🔍 {language === 'hi' ? 'पूरा स्टैंडी बड़े आकार में देखें (ज़ूम)' : 'Tap to View Full Standee (Zoom)'}</span>
+          </div>
         </div>
+
+        {/* Full-Screen Standee High-Res Modal */}
+        {showQrStandee && (
+          <div
+            onClick={() => setShowQrStandee(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 99999,
+              background: 'rgba(6, 26, 54, 0.88)',
+              backdropFilter: 'blur(8px)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '1rem',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                background: '#FFFFFF',
+                borderRadius: '24px',
+                padding: '1.25rem',
+                maxWidth: '420px',
+                width: '100%',
+                maxHeight: '92vh',
+                overflowY: 'auto',
+                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.5)',
+                border: '3px solid #00BAF2',
+                textAlign: 'center',
+                position: 'relative',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => setShowQrStandee(false)}
+                style={{
+                  position: 'absolute',
+                  top: '12px',
+                  right: '12px',
+                  background: '#F1F5F9',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  cursor: 'pointer',
+                  fontWeight: 900,
+                  fontSize: '1rem',
+                  color: '#0F172A',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                ✕
+              </button>
+
+              <div style={{ fontSize: '0.75rem', background: '#00BAF2', color: '#002E6E', fontWeight: 900, padding: '3px 12px', borderRadius: '999px', display: 'inline-block', marginBottom: '0.65rem' }}>
+                PAYTM ❤️ UPI OFFICIAL STANDEE
+              </div>
+
+              <div style={{ borderRadius: '16px', overflow: 'hidden', border: '2px solid #E2E8F0', background: '#FFFFFF', marginBottom: '0.85rem' }}>
+                <img
+                  src="/paytm-qr-vikash.jpg"
+                  alt="Vikash Kumar Paytm Standee Full High Res"
+                  style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'contain' }}
+                />
+              </div>
+
+              <div style={{ fontSize: '0.88rem', fontWeight: 900, color: '#0F172A' }}>
+                Vikash Kumar • <span style={{ color: '#00BAF2' }}>vikashaaryan@ptaxis</span>
+              </div>
+              <div style={{ fontSize: '0.74rem', color: '#64748B', marginTop: '0.2rem' }}>
+                Scan with Any UPI App (Paytm, PhonePe, GPay, BHIM)
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem', justifyContent: 'center' }}>
+                <a
+                  href={upiIntentUrl}
+                  style={{
+                    background: '#00BAF2',
+                    color: '#002E6E',
+                    padding: '0.6rem 1.25rem',
+                    borderRadius: '10px',
+                    fontWeight: 900,
+                    fontSize: '0.82rem',
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                  }}
+                >
+                  <Smartphone size={16} />
+                  <span>{language === 'hi' ? 'UPI ऐप में खोलें' : 'Open in UPI App'}</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={handleCopyVpa}
+                  style={{
+                    background: '#0F172A',
+                    color: '#FFFFFF',
+                    padding: '0.6rem 1.25rem',
+                    borderRadius: '10px',
+                    fontWeight: 800,
+                    fontSize: '0.82rem',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                  }}
+                >
+                  <Copy size={16} />
+                  <span>{copiedVpa ? (language === 'hi' ? 'कॉपी हो गया!' : 'Copied!') : (language === 'hi' ? 'VPA कॉपी करें' : 'Copy VPA')}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Interoperable UPI Actions & Intent */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.45rem', width: '100%' }}>

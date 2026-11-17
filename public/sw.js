@@ -3,7 +3,7 @@
  * Network-first for HTML/navigation to guarantee immediate delivery of new releases.
  */
 
-const CACHE_NAME = 'adcs-cache-v2026-11-17-v1';
+const CACHE_NAME = 'adcs-cache-v2026-11-17-v2';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json'

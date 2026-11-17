@@ -287,12 +287,16 @@ export const GovernmentServicesPage: React.FC = () => {
               boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
               flexShrink: 0,
               background: '#FFFFFF',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '2px',
             }}
             onClick={() => setShowStandeePreview(true)}
             title="क्लिक करके पूरा Paytm स्टैंडी देखें"
           >
-            <img src="/paytm-qr-vikash.jpg" alt="Paytm QR Standee Vikash Kumar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src="/paytm-qr-vikash.jpg" alt="Paytm QR Standee Vikash Kumar" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap', marginBottom: '0.25rem' }}>
