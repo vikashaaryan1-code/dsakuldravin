@@ -1196,7 +1196,7 @@ export const ServiceApplicationModal: React.FC = () => {
                   className="btn-primary btn-lg"
                   style={{ flex: 2 }}
                 >
-                  <span>Continue to Document Checklist</span>
+                  <span>{language === 'hi' ? 'दस्तावेज़ चेकलिस्ट पर आगे बढ़ें' : 'Continue to Document Checklist'}</span>
                   <ArrowRight size={16} />
                 </button>
               </div>
@@ -1652,7 +1652,7 @@ export const ServiceApplicationModal: React.FC = () => {
                   className="btn-secondary"
                   style={{ flex: 1 }}
                 >
-                  Back
+                  {language === 'hi' ? 'पीछे जाएँ' : 'Back'}
                 </button>
                 <button
                   type="button"
@@ -1660,7 +1660,7 @@ export const ServiceApplicationModal: React.FC = () => {
                   className="btn-primary btn-lg"
                   style={{ flex: 2 }}
                 >
-                  <span>Review Quote & Proceed</span>
+                  <span>{language === 'hi' ? 'शुल्क देखें व आगे बढ़ें' : 'Review Quote & Proceed'}</span>
                   <ArrowRight size={16} />
                 </button>
               </div>
@@ -1879,8 +1879,8 @@ export const ServiceApplicationModal: React.FC = () => {
                 discountAmount={effectiveDiscount}
                 serviceTitle={service.title}
                 defaultMethod={paymentMethod}
-                ctaLabel={`Verify UTR & Submit Application (₹${netPayableAmount.toLocaleString('en-IN')})`}
-                cancelLabel="Back"
+                ctaLabel={language === 'hi' ? `भुगतान पुष्टि व आवेदन जमा करें (₹${netPayableAmount.toLocaleString('en-IN')})` : `Verify UTR & Submit Application (₹${netPayableAmount.toLocaleString('en-IN')})`}
+                cancelLabel={language === 'hi' ? 'पीछे जाएँ' : 'Back'}
                 onCancel={() => setStep(2)}
                 isSubmitting={isSubmitting}
                 onVerifiedSubmit={handleConfirmAndPay}

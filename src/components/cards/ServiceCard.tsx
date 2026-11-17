@@ -314,7 +314,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
             marginBottom: '0.65rem'
           }}>
             <span>🎁</span>
-            <span>छूट उपलब्ध • Discount as per Customer (₹25/₹50/10%)</span>
+            <span>{language === 'hi' ? 'छूट उपलब्ध • कस्टमर डिस्काउंट (₹25/₹50/10%)' : 'Discount Available • Special Offer (₹25/₹50/10%)'}</span>
           </div>
 
           <div style={{
@@ -326,11 +326,11 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
             marginBottom: '0.85rem',
           }}>
             <div>
-              <span style={{ fontSize: '0.7rem', color: '#64748B', display: 'block' }}>Fee Breakdown:</span>
+              <span style={{ fontSize: '0.7rem', color: '#64748B', display: 'block' }}>{language === 'hi' ? 'शुल्क विवरण:' : 'Fee Breakdown:'}</span>
               <span style={{ fontSize: '1.2rem', fontWeight: 900, color: '#061A36' }}>
                 {(() => {
                   const priceVal = statutoryProfile ? statutoryProfile.adcsFacilitationFee : Number(service.basePrice ?? (service as any).price ?? 0);
-                  return priceVal === 0 ? 'Free Consultation' : `₹${priceVal.toLocaleString('en-IN')}`;
+                  return priceVal === 0 ? (language === 'hi' ? 'निःशुल्क परामर्श' : 'Free Consultation') : `₹${priceVal.toLocaleString('en-IN')}`;
                 })()}
               </span>
             </div>
@@ -338,7 +338,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
               const govtFeeVal = statutoryProfile ? statutoryProfile.statutoryGovtFee : (service.govtFee || 0);
               return govtFeeVal > 0 ? (
                 <span style={{ fontSize: '0.74rem', color: '#64748B', fontWeight: 600 }}>
-                  + ₹{govtFeeVal} Govt. Fee
+                  + ₹{govtFeeVal} {language === 'hi' ? 'सरकारी शुल्क' : 'Govt. Fee'}
                 </span>
               ) : null;
             })()}
@@ -360,7 +360,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
                 boxShadow: '0 4px 14px rgba(7, 90, 203, 0.25)'
               }}
             >
-              <span>Apply Now</span>
+              <span>{language === 'hi' ? 'आवेदन करें (Apply)' : 'Apply Now'}</span>
               <ArrowRight size={15} />
             </button>
 
@@ -378,7 +378,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({ service }) => {
                 transition: 'all 0.15s ease',
                 cursor: 'pointer'
               }}
-              title="Add to Unified Cart"
+              title={language === 'hi' ? 'कार्ट में जोड़ें' : 'Add to Unified Cart'}
             >
               <ShoppingCart size={16} />
             </button>

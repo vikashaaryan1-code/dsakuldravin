@@ -296,11 +296,11 @@ export const FintechSuperAppPage: React.FC = () => {
                 <div style={{ fontSize: '1.15rem', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   <span>AKUL DRAVIN PAY</span>
                   <span style={{ fontSize: '0.65rem', background: '#F59E0B', color: '#061A36', padding: '0.15rem 0.5rem', borderRadius: '999px', fontWeight: 800 }}>
-                    SUPER-APP
+                    {language === 'hi' ? 'सुपर-ऐप' : 'SUPER-APP'}
                   </span>
                 </div>
                 <div style={{ fontSize: '0.76rem', color: '#CBD5E1' }}>
-                  UPI • AEPS • DMT • BBPS • SOUNDBOX • GOLD
+                  {language === 'hi' ? 'यूपीआई • आधार एटीएम • मनी ट्रांसफर • बिल भुगतान • साउंडबॉक्स • 24K गोल्ड' : 'UPI • AEPS • DMT • BBPS • SOUNDBOX • GOLD'}
                 </div>
               </div>
             </div>
@@ -318,7 +318,7 @@ export const FintechSuperAppPage: React.FC = () => {
             }}>
               <Wallet size={18} color="#F3D477" />
               <div style={{ textAlign: 'left' }}>
-                <div style={{ fontSize: '0.68rem', color: '#D4E0EE', textTransform: 'uppercase', letterSpacing: '0.04em' }}>ADCS Wallet</div>
+                <div style={{ fontSize: '0.68rem', color: '#D4E0EE', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{language === 'hi' ? 'एडीसीएस वॉलेट' : 'ADCS Wallet'}</div>
                 <div style={{ fontSize: '1.1rem', fontWeight: 900, color: '#FFFFFF' }}>₹{walletBalance.toLocaleString('en-IN')}</div>
               </div>
               <button
@@ -337,7 +337,7 @@ export const FintechSuperAppPage: React.FC = () => {
                   cursor: 'pointer'
                 }}
               >
-                + Top Up
+                {language === 'hi' ? '+ टॉप-अप' : '+ Top Up'}
               </button>
             </div>
           </div>
@@ -402,13 +402,13 @@ export const FintechSuperAppPage: React.FC = () => {
             }}>
               <div>
                 <span style={{ fontSize: '0.76rem', fontWeight: 800, color: '#075ACB', background: '#EFF6FF', padding: '0.25rem 0.75rem', borderRadius: '999px' }}>
-                  INSTANT SETTLEMENT • 0% CONVENIENCE FEE
+                  {language === 'hi' ? 'त्वरित निपटान • 0% सुविधा शुल्क' : 'INSTANT SETTLEMENT • 0% CONVENIENCE FEE'}
                 </span>
                 <h2 style={{ fontSize: '1.6rem', fontWeight: 900, color: '#061A36', marginTop: '0.45rem', marginBottom: '0.35rem' }}>
-                  Unified Indian FinTech Ecosystem
+                  {language === 'hi' ? 'एकीकृत भारतीय फिनटेक व डिजिटल सेवा केंद्र' : 'Unified Indian FinTech Ecosystem'}
                 </h2>
                 <p style={{ color: '#64748B', fontSize: '0.92rem', maxWidth: '580px', margin: 0 }}>
-                  Manage Money Transfers (DMT), Aadhaar Cashout (AEPS), Bharat Bill Payments (BBPS), Live Soundbox Voice Notifications, and Plug-and-Play API Keys.
+                  {language === 'hi' ? 'मनी ट्रांसफर (DMT), आधार एटीएम (AEPS) निकासी, भारत बिल पे (BBPS), लाइव साउंडबॉक्स वॉइस अलर्ट एवं डेवलपर API गेटवे।' : 'Manage Money Transfers (DMT), Aadhaar Cashout (AEPS), Bharat Bill Payments (BBPS), Live Soundbox Voice Notifications, and Plug-and-Play API Keys.'}
                 </p>
               </div>
 
@@ -418,14 +418,14 @@ export const FintechSuperAppPage: React.FC = () => {
                   className="btn-primary"
                   style={{ borderRadius: '12px' }}
                 >
-                  <Send size={16} /> Open DMT Desk
+                  <Send size={16} /> {language === 'hi' ? 'DMT ट्रांसफर डेस्क' : 'Open DMT Desk'}
                 </button>
                 <button
                   onClick={() => setActiveTab('aeps')}
                   className="btn-gold"
                   style={{ borderRadius: '12px' }}
                 >
-                  <Fingerprint size={16} /> Open AEPS ATM
+                  <Fingerprint size={16} /> {language === 'hi' ? 'AEPS आधार ATM' : 'Open AEPS ATM'}
                 </button>
               </div>
             </div>
@@ -441,15 +441,15 @@ export const FintechSuperAppPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                 <div>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 900, color: '#061A36', margin: 0 }}>
-                    Recharges & Bill Payments (BBPS)
+                    {language === 'hi' ? 'रिचार्ज एवं उपयोगिता बिल भुगतान (भारत बिल पे)' : 'Recharges & Bill Payments (BBPS)'}
                   </h3>
-                  <div style={{ fontSize: '0.8rem', color: '#64748B' }}>NPCI Authorized Bharat BillPay Network</div>
+                  <div style={{ fontSize: '0.8rem', color: '#64748B' }}>{language === 'hi' ? 'NPCI द्वारा अधिकृत भारत बिलपे नेटवर्क' : 'NPCI Authorized Bharat BillPay Network'}</div>
                 </div>
                 <button
                   onClick={() => setActiveTab('bbps')}
                   style={{ background: 'none', border: 'none', color: '#075ACB', fontWeight: 800, fontSize: '0.85rem', cursor: 'pointer' }}
                 >
-                  View All Bills &rarr;
+                  {language === 'hi' ? 'सभी बिल देखें &rarr;' : 'View All Bills &rarr;'}
                 </button>
               </div>
 
@@ -499,13 +499,13 @@ export const FintechSuperAppPage: React.FC = () => {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', color: '#B45309', fontWeight: 800, fontSize: '0.78rem', marginBottom: '0.5rem' }}>
                   <Coins size={16} />
-                  <span>24K 99.99% PURE DIGITAL GOLD</span>
+                  <span>{language === 'hi' ? '24K 99.99% शुद्ध डिजिटल गोल्ड' : '24K 99.99% PURE DIGITAL GOLD'}</span>
                 </div>
                 <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#78350F', marginBottom: '0.45rem' }}>
-                  Invest in Gold Starting at ₹10
+                  {language === 'hi' ? '₹10 से डिजिटल गोल्ड में निवेश शुरू करें' : 'Invest in Gold Starting at ₹10'}
                 </h3>
                 <p style={{ fontSize: '0.86rem', color: '#92400E', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                  Insured in world-class Brink's vaults. Instant liquidity—sell anytime or convert to physical gold coins.
+                  {language === 'hi' ? 'ब्रिंक्स वॉल्ट में 100% बीमित। जब चाहें बेचें या असली सोने के सिक्कों में बदलें।' : "Insured in world-class Brink's vaults. Instant liquidity—sell anytime or convert to physical gold coins."}
                 </p>
                 <div style={{ display: 'flex', gap: '0.75rem' }}>
                   <button
@@ -520,7 +520,7 @@ export const FintechSuperAppPage: React.FC = () => {
                     className="btn-gold"
                     style={{ borderRadius: '10px', fontSize: '0.86rem' }}
                   >
-                    Buy ₹100 Gold
+                    {language === 'hi' ? '₹100 का सोना खरीदें' : 'Buy ₹100 Gold'}
                   </button>
                   <button
                     onClick={() => {
@@ -534,7 +534,7 @@ export const FintechSuperAppPage: React.FC = () => {
                     className="btn-navy"
                     style={{ borderRadius: '10px', fontSize: '0.86rem' }}
                   >
-                    Buy ₹500 Gold
+                    {language === 'hi' ? '₹500 का सोना खरीदें' : 'Buy ₹500 Gold'}
                   </button>
                 </div>
               </div>
@@ -548,13 +548,13 @@ export const FintechSuperAppPage: React.FC = () => {
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', color: '#15803D', fontWeight: 800, fontSize: '0.78rem', marginBottom: '0.5rem' }}>
                   <ShieldCheck size={16} />
-                  <span>PRE-APPROVED MUDRA & MSME LOANS</span>
+                  <span>{language === 'hi' ? 'पूर्व-स्वीकृत मुद्रा व एमएसएमई लोन' : 'PRE-APPROVED MUDRA & MSME LOANS'}</span>
                 </div>
                 <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: '#14532D', marginBottom: '0.45rem' }}>
-                  Instant Business Credit Up to ₹5 Lakhs
+                  {language === 'hi' ? '₹5 लाख तक त्वरित बिजनेस क्रेडिट' : 'Instant Business Credit Up to ₹5 Lakhs'}
                 </h3>
                 <p style={{ fontSize: '0.86rem', color: '#166534', lineHeight: 1.5, marginBottom: '1.25rem' }}>
-                  100% paperless Aadhaar + PAN verification with 0% foreclosure charges and low interest rates from partner banks.
+                  {language === 'hi' ? 'आधार व पैन द्वारा 100% पेपरलेस सत्यापन, 0% प्रीपेमेंट पेनल्टी एवं कम ब्याज दर।' : '100% paperless Aadhaar + PAN verification with 0% foreclosure charges and low interest rates from partner banks.'}
                 </p>
                 <button
                   onClick={() => {
@@ -563,7 +563,7 @@ export const FintechSuperAppPage: React.FC = () => {
                   className="btn-primary"
                   style={{ borderRadius: '10px', fontSize: '0.86rem', background: '#16A34A', borderColor: '#16A34A' }}
                 >
-                  Check Instant Pre-Approved Limit &rarr;
+                  {language === 'hi' ? 'त्वरित प्री-अप्रूव्ड लिमिट जांचें &rarr;' : 'Check Instant Pre-Approved Limit &rarr;'}
                 </button>
               </div>
             </div>
@@ -578,17 +578,17 @@ export const FintechSuperAppPage: React.FC = () => {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' }}>
                 <div>
                   <span className="badge-pill" style={{ marginBottom: '0.5rem' }}>
-                    UNIFIED SERVICE ARCHITECTURE
+                    {language === 'hi' ? 'एकीकृत सेवा व्यवस्था' : 'UNIFIED SERVICE ARCHITECTURE'}
                   </span>
                   <h2 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 900, color: 'var(--adcs-text)' }}>
-                    16 Master Service Sectors
+                    {language === 'hi' ? '16 मुख्य सेवा क्षेत्र' : '16 Master Service Sectors'}
                   </h2>
                   <p style={{ color: 'var(--adcs-muted)', fontSize: '0.96rem', marginTop: '0.25rem' }}>
-                    Every citizen, business, real-estate, and technical workflow organized clearly across 16 dedicated vertical portals.
+                    {language === 'hi' ? 'नागरिक, व्यापार, संपत्ति व तकनीकी सुविधाओं का 16 समर्पित पोर्टल्स में सुव्यवस्थित वर्गीकरण।' : 'Every citizen, business, real-estate, and technical workflow organized clearly across 16 dedicated vertical portals.'}
                   </p>
                 </div>
                 <Link to="/services" className="btn-secondary">
-                  <span>Browse Full Catalog</span>
+                  <span>{language === 'hi' ? 'पूरा कैटलॉग देखें' : 'Browse Full Catalog'}</span>
                   <ArrowRight size={16} />
                 </Link>
               </div>
@@ -639,13 +639,13 @@ export const FintechSuperAppPage: React.FC = () => {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.75rem' }}>
                 <div>
-                  <span className="badge-gold" style={{ marginBottom: '0.5rem' }}>FAST-TRACK DIGITAL COUNTER</span>
+                  <span className="badge-gold" style={{ marginBottom: '0.5rem' }}>{language === 'hi' ? 'फास्ट-ट्रैक डिजिटल काउंटर' : 'FAST-TRACK DIGITAL COUNTER'}</span>
                   <h2 style={{ fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 900, color: 'var(--adcs-text)' }}>
-                    Most Requested Services
+                    {language === 'hi' ? 'सर्वाधिक लोकप्रिय एवं त्वरित सेवाएँ' : 'Most Requested Services'}
                   </h2>
                 </div>
                 <Link to="/services" className="btn-primary">
-                  <span>Apply or Request Online</span>
+                  <span>{language === 'hi' ? 'ऑनलाइन आवेदन करें' : 'Apply or Request Online'}</span>
                   <ArrowRight size={16} />
                 </Link>
               </div>

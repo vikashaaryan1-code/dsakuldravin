@@ -34,6 +34,8 @@ export const GlassNavbar: React.FC = () => {
     setIsAuthModalOpen,
     currentRole,
     language,
+    setLanguage,
+    showToast,
     theme,
     whiteLabelConfig,
   } = useApp();
@@ -337,6 +339,67 @@ export const GlassNavbar: React.FC = () => {
             <span className="hide-mobile">QUANTUM AI</span>
           </button>
 
+          {/* 3D Glass Dual Language Switcher (English / हिंदी) */}
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              background: isDark ? 'rgba(11, 36, 71, 0.85)' : 'rgba(239, 246, 255, 0.95)',
+              border: isDark ? '1.5px solid rgba(0, 186, 242, 0.45)' : '1.5px solid #00BAF2',
+              borderRadius: '999px',
+              padding: '2px',
+              boxShadow: '0 4px 14px rgba(0, 186, 242, 0.22)',
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setLanguage('en');
+                showToast('Language Changed', 'Website switched to English', 'info');
+              }}
+              style={{
+                padding: '0.28rem 0.65rem',
+                borderRadius: '999px',
+                fontSize: '0.74rem',
+                fontWeight: 800,
+                border: 'none',
+                cursor: 'pointer',
+                background: language === 'en' ? 'linear-gradient(135deg, #075ACB 0%, #0878F9 100%)' : 'transparent',
+                color: language === 'en' ? '#FFFFFF' : (isDark ? '#CBD5E1' : '#475569'),
+                boxShadow: language === 'en' ? '0 2px 8px rgba(7, 90, 203, 0.4)' : 'none',
+                transition: 'all 0.18s ease-in-out',
+              }}
+              title="Switch to English"
+            >
+              🌐 EN
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setLanguage('hi');
+                showToast('भाषा परिवर्तित', 'पूरी वेबसाइट अब हिंदी में उपलब्ध है', 'success');
+              }}
+              style={{
+                padding: '0.28rem 0.65rem',
+                borderRadius: '999px',
+                fontSize: '0.74rem',
+                fontWeight: 800,
+                border: 'none',
+                cursor: 'pointer',
+                background: language === 'hi' ? 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)' : 'transparent',
+                color: language === 'hi' ? '#061A36' : (isDark ? '#CBD5E1' : '#475569'),
+                boxShadow: language === 'hi' ? '0 2px 8px rgba(245, 158, 11, 0.4)' : 'none',
+                transition: 'all 0.18s ease-in-out',
+              }}
+              title="हिंदी में बदलें"
+            >
+              🇮🇳 हिंदी
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
@@ -451,6 +514,64 @@ export const GlassNavbar: React.FC = () => {
             gap: '0.45rem',
           }}
         >
+          {/* Mobile Language Switcher Strip */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'var(--adcs-background)',
+              padding: '0.55rem 0.85rem',
+              borderRadius: '12px',
+              border: '1.5px solid #00BAF2',
+              marginBottom: '0.35rem',
+            }}
+          >
+            <span style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--adcs-text)' }}>
+              {language === 'hi' ? 'वेबसाइट भाषा:' : 'Language:'}
+            </span>
+            <div style={{ display: 'inline-flex', gap: '0.35rem' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setLanguage('en');
+                  showToast('Language: English', 'Switched to English', 'info');
+                }}
+                style={{
+                  padding: '0.3rem 0.85rem',
+                  borderRadius: '999px',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: language === 'en' ? '#075ACB' : 'rgba(0,0,0,0.06)',
+                  color: language === 'en' ? '#FFFFFF' : 'var(--adcs-text)',
+                }}
+              >
+                English
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLanguage('hi');
+                  showToast('भाषा: हिंदी', 'पूरी वेबसाइट हिंदी में सक्रिय है', 'success');
+                }}
+                style={{
+                  padding: '0.3rem 0.85rem',
+                  borderRadius: '999px',
+                  fontSize: '0.78rem',
+                  fontWeight: 800,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: language === 'hi' ? '#F59E0B' : 'rgba(0,0,0,0.06)',
+                  color: language === 'hi' ? '#061A36' : 'var(--adcs-text)',
+                }}
+              >
+                🇮🇳 हिंदी
+              </button>
+            </div>
+          </div>
+
           {primaryNavItems.map((item) => (
             <Link
               key={item.path}

@@ -6,7 +6,7 @@ import { ADCSLogo } from '../branding';
 import { ADCS_BRAND_IDENTITY } from '../../config/brandAssets';
 
 export const Footer: React.FC = () => {
-  const { currentRole, whiteLabelConfig } = useApp();
+  const { currentRole, whiteLabelConfig, language } = useApp();
   const showPrivilegedLinks = ['admin', 'finance', 'executive', 'employee'].includes(currentRole);
 
   return (
@@ -35,10 +35,22 @@ export const Footer: React.FC = () => {
           }}
         >
           {[
-            { title: 'Structured Data Isolation', desc: 'Role-based access boundaries and auditable document logs' },
-            { title: 'Assisted Citizen Network', desc: 'Unified Kendra, cyber café, and enterprise digital counters' },
-            { title: 'Transparent Billing', desc: 'Itemized ADCS service fees clearly separated from statutory charges' },
-            { title: 'QUANTUM AI Workflows', desc: 'Guided intake checklists, status tracking, and verification' },
+            { 
+              title: language === 'hi' ? 'सुरक्षित डेटा आइसोलेशन' : 'Structured Data Isolation', 
+              desc: language === 'hi' ? 'भूमिका-आधारित सुरक्षा सीमाएं और ऑडिट योग्य दस्तावेज़ लॉग' : 'Role-based access boundaries and auditable document logs' 
+            },
+            { 
+              title: language === 'hi' ? 'सहायक नागरिक नेटवर्क' : 'Assisted Citizen Network', 
+              desc: language === 'hi' ? 'एकीकृत केंद्र, साइबर कैफे एवं एंटरप्राइज डिजिटल काउंटर' : 'Unified Kendra, cyber café, and enterprise digital counters' 
+            },
+            { 
+              title: language === 'hi' ? 'पारदर्शी बिलिंग प्रणाली' : 'Transparent Billing', 
+              desc: language === 'hi' ? 'सरकारी शुल्क और एडीसीएस सुविधा शुल्क का स्पष्ट पृथक्करण' : 'Itemized ADCS service fees clearly separated from statutory charges' 
+            },
+            { 
+              title: language === 'hi' ? 'क्वांटम AI वर्कफ़्लो' : 'QUANTUM AI Workflows', 
+              desc: language === 'hi' ? 'दस्तावेज़ चेकलिस्ट, स्टेटस ट्रैकिंग व स्वचालित सत्यापन' : 'Guided intake checklists, status tracking, and verification' 
+            },
           ].map((item, idx) => (
             <div key={idx} style={{ display: 'flex', gap: '0.85rem', alignItems: 'flex-start' }}>
               <div

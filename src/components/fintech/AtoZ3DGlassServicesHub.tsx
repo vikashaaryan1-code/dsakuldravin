@@ -736,7 +736,7 @@ export const AtoZ3DGlassServicesHub: React.FC<AtoZ3DGlassServicesHubProps> = ({
                 gap: '0.35rem'
               }}>
                 <ShieldCheck size={13} color="#10B981" />
-                <span>100% DPDP Act Compliant • Zero OTP Bypass Guarantee</span>
+                <span>{language === 'hi' ? '100% DPDP Act 2025 अनुपालन • Zero OTP Bypass गारंटी' : '100% DPDP Act Compliant • Zero OTP Bypass Guarantee'}</span>
               </span>
             </div>
 
@@ -783,8 +783,8 @@ export const AtoZ3DGlassServicesHub: React.FC<AtoZ3DGlassServicesHubProps> = ({
             }}>
               <span style={{ fontSize: '1rem' }}>🎁</span>
               <div>
-                <div style={{ color: '#FFFFFF', fontWeight: 900 }}>कस्टमर स्पेशल डिस्काउंट</div>
-                <div style={{ fontSize: '0.7rem', color: '#6EE7B7' }}>अपने हिसाब से छूट पाएँ (₹25, ₹50, 10%)</div>
+                <div style={{ color: '#FFFFFF', fontWeight: 900 }}>{language === 'hi' ? 'कस्टमर स्पेशल डिस्काउंट' : 'Customer Special Discount'}</div>
+                <div style={{ fontSize: '0.7rem', color: '#6EE7B7' }}>{language === 'hi' ? 'अपने हिसाब से छूट पाएँ (₹25, ₹50, 10%)' : 'Flexible Customer Discount (₹25, ₹50, 10%)'}</div>
               </div>
             </div>
 

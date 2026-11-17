@@ -196,14 +196,14 @@ export const GovernmentServicesPage: React.FC = () => {
           marginBottom: '1rem',
         }}>
           <ShieldCheck size={14} />
-          <span>AUTHORIZED FACILITATOR & CITIZEN ASSISTANCE</span>
+          <span>{language === 'hi' ? 'अधिकृत सहायक एवं नागरिक सहायता केंद्र' : 'AUTHORIZED FACILITATOR & CITIZEN ASSISTANCE'}</span>
         </div>
 
         <h1 style={{ fontSize: 'clamp(2rem, 3.5vw, 2.8rem)', fontWeight: 900, marginBottom: '0.75rem', color: '#FFFFFF' }}>
           {language === 'hi' ? 'सरकारी एवं नागरिक सहायता सेवाएँ' : 'Government & Citizen Services'}
         </h1>
         <p style={{ fontSize: '1rem', color: '#CBD5E1', maxWidth: '680px', lineHeight: 1.6, marginBottom: '1.5rem' }}>
-          Professional assisted online filing, form submissions, appointment bookings, and status tracking for Aadhaar, PAN, Passport, Income & Domicile certificates, and Welfare schemes.
+          {language === 'hi' ? 'आधार कार्ड, पैन कार्ड, पासपोर्ट तत्काल स्लॉट, आय व निवास प्रमाण-पत्र और सरकारी कल्याणकारी योजनाओं हेतु पेशेवर सहायक ऑनलाइन आवेदन एवं ट्रैकिंग।' : 'Professional assisted online filing, form submissions, appointment bookings, and status tracking for Aadhaar, PAN, Passport, Income & Domicile certificates, and Welfare schemes.'}
         </p>
 
         {/* Statutory Notice & AI Trigger */}
@@ -223,7 +223,15 @@ export const GovernmentServicesPage: React.FC = () => {
           }}>
             <AlertTriangle size={18} color="#F59E0B" style={{ flexShrink: 0 }} />
             <span>
-              <strong>Statutory Transparency:</strong> Akul Dravin Digital Services provides technical guidance and assisted application facilitation. We are not a government body. All statutory decisions and approvals belong solely to the respective competent government authorities.
+              {language === 'hi' ? (
+                <>
+                  <strong>पारदर्शी वैधानिक सूचना:</strong> अकुल द्राविन डिजिटल सर्विसेज तकनीकी मार्गदर्शन और सहायक आवेदन सुविधा प्रदान करता है। हम कोई सरकारी निकाय नहीं हैं। सभी अंतिम अनुमोदन सक्षम सरकारी अधिकारियों के अधीन हैं।
+                </>
+              ) : (
+                <>
+                  <strong>Statutory Transparency:</strong> Akul Dravin Digital Services provides technical guidance and assisted application facilitation. We are not a government body. All statutory decisions and approvals belong solely to the respective competent government authorities.
+                </>
+              )}
             </span>
           </div>
 

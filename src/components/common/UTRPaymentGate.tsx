@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { QrCode, Copy, ShieldCheck, AlertCircle, CheckCircle2, Sparkles, ArrowRight, Smartphone } from 'lucide-react';
 import { ADCS_BRAND_IDENTITY } from '../../config/brandAssets';
+import { useApp } from '../../store/AppContext';
 
 export interface UTRPaymentSubmission {
   utrNumber: string;
@@ -47,6 +48,7 @@ export const UTRPaymentGate: React.FC<UTRPaymentGateProps> = ({
   const [copiedVpa, setCopiedVpa] = useState(false);
   const [showQrStandee, setShowQrStandee] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const { language } = useApp();
 
   const vpaAddress = 'vikashaaryan@ptaxis';
   const merchantName = 'Vikash Kumar';

@@ -36,7 +36,8 @@ export const UnifiedCartModal: React.FC = () => {
     setWalletBalance,
     setActiveTrackerQuery,
     logAudit,
-    showToast
+    showToast,
+    language
   } = useApp();
 
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'card' | 'wallet' | 'netbanking'>('upi');
