@@ -1,3 +1,4 @@
+import { AtoZ3DGlassServicesHub } from '../components/fintech/AtoZ3DGlassServicesHub';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../store/AppContext';
@@ -341,63 +342,45 @@ export const FintechSuperAppPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Money 4-Grid (Paytm / PhonePe Signature) */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-            gap: '1rem',
-            background: 'rgba(255, 255, 255, 0.08)',
-            padding: '1.25rem',
-            borderRadius: '20px',
-            border: '1px solid rgba(255, 255, 255, 0.16)'
-          }}>
-            {[
-              { id: 'dmt', title: 'To Mobile / Bank', sub: 'DMT Transfer', icon: <Send size={22} />, tab: 'dmt' },
-              { id: 'aeps', title: 'Aadhaar ATM', sub: 'AEPS Cash Out', icon: <Fingerprint size={22} />, tab: 'aeps' },
-              { id: 'bbps', title: 'Recharge & Bills', sub: 'BBPS Bharat', icon: <Zap size={22} />, tab: 'bbps' },
-              { id: 'soundbox', title: 'Soundbox Audio', sub: 'UPI Voice Alerts', icon: <Volume2 size={22} />, tab: 'soundbox' },
-              { id: 'apikeys', title: 'Gateway API Keys', sub: 'Connect APIs', icon: <Key size={22} />, tab: 'apikeys' },
-            ].map(act => (
-              <button
-                key={act.id}
-                onClick={() => setActiveTab(act.tab as any)}
-                style={{
-                  background: activeTab === act.tab ? '#FFFFFF' : 'rgba(255, 255, 255, 0.12)',
-                  color: activeTab === act.tab ? '#075ACB' : '#FFFFFF',
-                  border: activeTab === act.tab ? '2px solid #F3D477' : '1px solid rgba(255, 255, 255, 0.2)',
-                  borderRadius: '16px',
-                  padding: '1rem 0.75rem',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  gap: '0.45rem',
-                  cursor: 'pointer',
-                  transition: 'all 0.18s ease-in-out',
-                  textAlign: 'center'
-                }}
-              >
-                <div style={{
-                  width: '42px',
-                  height: '42px',
-                  borderRadius: '50%',
-                  background: activeTab === act.tab ? '#EFF6FF' : 'rgba(255, 255, 255, 0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: activeTab === act.tab ? '#075ACB' : '#F3D477'
-                }}>
-                  {act.icon}
-                </div>
-                <div style={{ fontSize: '0.84rem', fontWeight: 800 }}>{act.title}</div>
-                <div style={{ fontSize: '0.7rem', opacity: 0.85 }}>{act.sub}</div>
-              </button>
-            ))}
-          </div>
+          {/* 3D Glass Universal A to Z Services Hub with Rich Template Banners */}
+          <AtoZ3DGlassServicesHub 
+            currentHubTab={activeTab}
+            onSelectTab={(tab) => setActiveTab(tab)}
+          />
         </div>
       </div>
 
       {/* 2. MAIN INTERACTIVE CONTENT AREA */}
       <div className="container-wide" style={{ marginTop: '-1.5rem' }}>
+
+        {activeTab !== 'superapp' && (
+          <div style={{ marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <button
+              onClick={() => setActiveTab('superapp')}
+              style={{
+                background: '#FFFFFF',
+                color: '#075ACB',
+                border: '1.5px solid #00BAF2',
+                borderRadius: '999px',
+                padding: '0.5rem 1.25rem',
+                fontSize: '0.82rem',
+                fontWeight: 800,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                boxShadow: '0 4px 14px rgba(0, 186, 242, 0.25)'
+              }}
+            >
+              <span>&larr;</span>
+              <span>{language === 'hi' ? 'सभी ए टू जेड सेवाएँ देखें (Back to All Services)' : 'Return to All A to Z Services Overview'}</span>
+            </button>
+
+            <div style={{ fontSize: '0.78rem', color: '#64748B', fontWeight: 700 }}>
+              Active Terminal: <strong style={{ color: '#075ACB', textTransform: 'uppercase' }}>{activeTab}</strong>
+            </div>
+          </div>
+        )}
 
         {/* ========================================================= */}
         {/* TAB 1: SUPER-APP HOMEPAGE OVERVIEW */}

@@ -142,7 +142,7 @@
       if (typeof window !== 'undefined' && 'caches' in window) {
         caches.keys().then(function(names) {
           for (let name of names) {
-            if (name !== 'adcs-cache-v2026-11-16-v3') {
+            if (name !== 'adcs-cache-v2026-11-17-v1') {
               caches.delete(name);
             }
           }
